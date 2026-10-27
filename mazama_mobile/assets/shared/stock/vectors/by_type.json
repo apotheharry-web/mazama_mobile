@@ -1,0 +1,986 @@
+[
+ {
+  "by_type": {
+   "slices": [
+    {
+     "name": "Freeze dried",
+     "pct": 60,
+     "slot": "s1",
+     "value": 285.6
+    },
+    {
+     "name": "Extract",
+     "pct": 21,
+     "slot": "s2",
+     "value": 100.0
+    },
+    {
+     "name": "Homogenized",
+     "pct": 13,
+     "slot": "s3",
+     "value": 60.0
+    },
+    {
+     "name": "Dehydrated",
+     "pct": 6,
+     "slot": "s4",
+     "value": 30.599999999999998
+    }
+   ],
+   "total": 476.2
+  },
+  "mg_mode": "tpe",
+  "name": "mixed typed rows with mg",
+  "rows": [
+   {
+    "analyteWeight": null,
+    "description": "Golden Teacher 25 mg TPE",
+    "expired": false,
+    "id": 1,
+    "mazama": true,
+    "productGuid": "PKPR-0001",
+    "quantity": 10,
+    "strain": "Golden Teacher",
+    "type": "FD",
+    "unitMgTpe": 24.6,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Penis Envy 10 mg",
+    "expired": false,
+    "id": 2,
+    "mazama": true,
+    "productGuid": "PKPR-0002",
+    "quantity": 4,
+    "strain": "Penis Envy",
+    "type": "FD",
+    "unitMgTpe": 9.9,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Bluey 5 mg",
+    "expired": false,
+    "id": 3,
+    "mazama": true,
+    "productGuid": "PKPR-0003",
+    "quantity": 6,
+    "strain": "Bluey",
+    "type": "DH",
+    "unitMgTpe": 5.1,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Bluey 20 mg",
+    "expired": true,
+    "id": 4,
+    "mazama": true,
+    "productGuid": "PKPR-0004",
+    "quantity": 3,
+    "strain": "Bluey",
+    "type": "HG",
+    "unitMgTpe": 20.0,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Avery extract",
+    "expired": false,
+    "id": 5,
+    "mazama": false,
+    "productGuid": "PKPR-0005",
+    "quantity": 2,
+    "strain": "Avery",
+    "type": "EX",
+    "unitMgTpe": 50.0,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Avery 25 mg",
+    "expired": false,
+    "id": 6,
+    "mazama": true,
+    "productGuid": "PKPR-0006",
+    "quantity": 0,
+    "strain": "Avery",
+    "type": "LOT",
+    "unitMgTpe": 25.0,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Avery 25 mg",
+    "expired": false,
+    "id": 7,
+    "mazama": true,
+    "productGuid": "PKPR-0007",
+    "quantity": 5,
+    "strain": "Avery",
+    "type": "LOT",
+    "unitMgTpe": 25.0,
+    "weightPerUnit": null,
+    "zeroOut": true
+   }
+  ]
+ },
+ {
+  "by_type": {
+   "slices": [
+    {
+     "name": "Freeze dried",
+     "pct": 90,
+     "slot": "s1",
+     "value": 285.6
+    },
+    {
+     "name": "Dehydrated",
+     "pct": 10,
+     "slot": "s2",
+     "value": 30.599999999999998
+    }
+   ],
+   "total": 316.2
+  },
+  "mg_mode": "tpe",
+  "name": "mixed typed rows with mg, mazama only",
+  "rows": [
+   {
+    "analyteWeight": null,
+    "description": "Golden Teacher 25 mg TPE",
+    "expired": false,
+    "id": 1,
+    "mazama": true,
+    "productGuid": "PKPR-0001",
+    "quantity": 10,
+    "strain": "Golden Teacher",
+    "type": "FD",
+    "unitMgTpe": 24.6,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Penis Envy 10 mg",
+    "expired": false,
+    "id": 2,
+    "mazama": true,
+    "productGuid": "PKPR-0002",
+    "quantity": 4,
+    "strain": "Penis Envy",
+    "type": "FD",
+    "unitMgTpe": 9.9,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Bluey 5 mg",
+    "expired": false,
+    "id": 3,
+    "mazama": true,
+    "productGuid": "PKPR-0003",
+    "quantity": 6,
+    "strain": "Bluey",
+    "type": "DH",
+    "unitMgTpe": 5.1,
+    "weightPerUnit": null,
+    "zeroOut": false
+   }
+  ]
+ },
+ {
+  "by_type": {
+   "slices": [
+    {
+     "name": "Freeze dried",
+     "pct": 50,
+     "slot": "s1",
+     "value": 49.6
+    },
+    {
+     "name": "Chocolate",
+     "pct": 38,
+     "slot": "s2",
+     "value": 37.46
+    },
+    {
+     "name": "Gummy",
+     "pct": 9,
+     "slot": "s3",
+     "value": 9.0
+    },
+    {
+     "name": "Honey",
+     "pct": 3,
+     "slot": "s4",
+     "value": 3.0
+    }
+   ],
+   "total": 99.06
+  },
+  "mg_mode": "tpe",
+  "name": "edibles by product words",
+  "rows": [
+   {
+    "analyteWeight": null,
+    "description": "GT 5 mg TPE CH (2027-02-03)",
+    "expired": false,
+    "id": 1,
+    "mazama": true,
+    "productGuid": "PKPR-0001",
+    "quantity": 5,
+    "strain": "Golden Teacher",
+    "type": "CH",
+    "unitMgTpe": 5.1,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Huautla chocolate squares 2.99 mg",
+    "expired": false,
+    "id": 2,
+    "mazama": true,
+    "productGuid": "PKPR-0002",
+    "quantity": 4,
+    "strain": "Huautla",
+    "type": "CH",
+    "unitMgTpe": 2.99,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Avery gummy bears",
+    "expired": false,
+    "id": 3,
+    "mazama": true,
+    "productGuid": "PKPR-0003",
+    "quantity": 6,
+    "strain": "Avery",
+    "type": "GM",
+    "unitMgTpe": 1.5,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Avery honey sticks",
+    "expired": false,
+    "id": 4,
+    "mazama": true,
+    "productGuid": "PKPR-0004",
+    "quantity": 1,
+    "strain": "Avery",
+    "type": "HN",
+    "unitMgTpe": 3.0,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Bluey 25 mg",
+    "expired": false,
+    "id": 5,
+    "mazama": true,
+    "productGuid": "PKPR-0005",
+    "quantity": 2,
+    "strain": "Bluey",
+    "type": "FD",
+    "unitMgTpe": 24.8,
+    "weightPerUnit": null,
+    "zeroOut": false
+   }
+  ]
+ },
+ {
+  "by_type": {
+   "slices": [
+    {
+     "name": "Freeze dried",
+     "pct": 52,
+     "slot": "s1",
+     "value": 99.2
+    },
+    {
+     "name": "Other type",
+     "pct": 26,
+     "slot": "s2",
+     "value": 50.0
+    },
+    {
+     "name": "Dehydrated",
+     "pct": 8,
+     "slot": "s3",
+     "value": 15.0
+    },
+    {
+     "name": "Extract",
+     "pct": 5,
+     "slot": "s4",
+     "value": 10.0
+    },
+    {
+     "name": "Chocolate",
+     "pct": 5,
+     "slot": "s5",
+     "value": 9.0
+    },
+    {
+     "name": "Honey",
+     "pct": 2,
+     "slot": "s6",
+     "value": 4.0
+    },
+    {
+     "name": "Gummy",
+     "pct": 2,
+     "slot": "s7",
+     "value": 3.0
+    }
+   ],
+   "total": 190.2
+  },
+  "mg_mode": "tpe",
+  "name": "untyped rows: keyword, TPE code, none",
+  "rows": [
+   {
+    "analyteWeight": null,
+    "description": "Bluey 25 mg TPE FD",
+    "expired": false,
+    "id": 1,
+    "mazama": true,
+    "productGuid": "PKPR-0001",
+    "quantity": 4,
+    "strain": "Bluey",
+    "unitMgTpe": 24.8,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Bluey milk chocolate 3 mg",
+    "expired": false,
+    "id": 2,
+    "mazama": true,
+    "productGuid": "PKPR-0002",
+    "quantity": 3,
+    "strain": "Bluey",
+    "unitMgTpe": 3.0,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Avery gummy bears",
+    "expired": false,
+    "id": 3,
+    "mazama": true,
+    "productGuid": "PKPR-0003",
+    "quantity": 2,
+    "strain": "Avery",
+    "unitMgTpe": 1.5,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Avery 10 mg",
+    "expired": false,
+    "id": 4,
+    "mazama": true,
+    "productGuid": "PKPR-0004",
+    "quantity": 5,
+    "strain": "Avery",
+    "unitMgTpe": 10.0,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Avery honey sticks",
+    "expired": false,
+    "id": 5,
+    "mazama": true,
+    "productGuid": "PKPR-0005",
+    "quantity": 1,
+    "strain": "Avery",
+    "unitMgTpe": 4.0,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "PE EXTRACT 5 mg",
+    "expired": false,
+    "id": 6,
+    "mazama": true,
+    "productGuid": "PKPR-0006",
+    "quantity": 2,
+    "strain": "Penis Envy",
+    "unitMgTpe": 5.0,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "PE 15 mg TPE DH",
+    "expired": false,
+    "id": 7,
+    "mazama": true,
+    "productGuid": "PKPR-0007",
+    "quantity": 1,
+    "strain": "Penis Envy",
+    "type": "",
+    "unitMgTpe": 15.0,
+    "weightPerUnit": null,
+    "zeroOut": false
+   }
+  ]
+ },
+ {
+  "by_type": {
+   "slices": [
+    {
+     "name": "Freeze dried",
+     "pct": 50,
+     "slot": "s1",
+     "value": 5.0
+    },
+    {
+     "name": "Gummy",
+     "pct": 40,
+     "slot": "s2",
+     "value": 4.0
+    },
+    {
+     "name": "Chocolate",
+     "pct": 10,
+     "slot": "s3",
+     "value": 1.0
+    }
+   ],
+   "total": 10.0
+  },
+  "mg_mode": "tpe",
+  "name": "no mg figures, weighed by units",
+  "rows": [
+   {
+    "analyteWeight": null,
+    "description": "Bluey 25 mg",
+    "expired": false,
+    "id": 1,
+    "mazama": true,
+    "productGuid": "PKPR-0001",
+    "quantity": 2,
+    "strain": "Bluey",
+    "type": "FD",
+    "unitMgTpe": null,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Avery 5 mg",
+    "expired": false,
+    "id": 2,
+    "mazama": true,
+    "productGuid": "PKPR-0002",
+    "quantity": 3,
+    "strain": "Avery",
+    "type": "FD",
+    "unitMgTpe": null,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Avery gummy bears",
+    "expired": false,
+    "id": 3,
+    "mazama": true,
+    "productGuid": "PKPR-0003",
+    "quantity": 4,
+    "strain": "Avery",
+    "type": "GM",
+    "unitMgTpe": null,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Bluey 10 mg",
+    "expired": true,
+    "id": 4,
+    "mazama": true,
+    "productGuid": "PKPR-0004",
+    "quantity": 1,
+    "strain": "Bluey",
+    "type": "CH",
+    "unitMgTpe": null,
+    "weightPerUnit": null,
+    "zeroOut": false
+   }
+  ]
+ },
+ {
+  "by_type": {
+   "slices": [
+    {
+     "name": "Freeze dried",
+     "pct": 16,
+     "slot": "s1",
+     "value": 180.0
+    },
+    {
+     "name": "Dehydrated",
+     "pct": 15,
+     "slot": "s2",
+     "value": 176.0
+    },
+    {
+     "name": "Homogenized",
+     "pct": 15,
+     "slot": "s3",
+     "value": 168.0
+    },
+    {
+     "name": "Chocolate",
+     "pct": 14,
+     "slot": "s4",
+     "value": 156.0
+    },
+    {
+     "name": "Extract",
+     "pct": 12,
+     "slot": "s5",
+     "value": 140.0
+    },
+    {
+     "name": "Honey",
+     "pct": 11,
+     "slot": "s6",
+     "value": 120.0
+    },
+    {
+     "name": "Gummy",
+     "pct": 8,
+     "slot": "s7",
+     "value": 96.0
+    },
+    {
+     "name": "Other (2)",
+     "pct": 9,
+     "slot": "oth",
+     "value": 104.0
+    }
+   ],
+   "total": 1140.0
+  },
+  "mg_mode": "tpe",
+  "name": "more than 7 types",
+  "rows": [
+   {
+    "analyteWeight": null,
+    "description": "Bluey lot 0",
+    "expired": false,
+    "id": 1,
+    "mazama": true,
+    "productGuid": "PKPR-0001",
+    "quantity": 18,
+    "strain": "Bluey",
+    "type": "FD",
+    "unitMgTpe": 10.0,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Bluey lot 1",
+    "expired": false,
+    "id": 2,
+    "mazama": true,
+    "productGuid": "PKPR-0002",
+    "quantity": 16,
+    "strain": "Bluey",
+    "type": "DH",
+    "unitMgTpe": 11.0,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Bluey lot 2",
+    "expired": false,
+    "id": 3,
+    "mazama": true,
+    "productGuid": "PKPR-0003",
+    "quantity": 14,
+    "strain": "Bluey",
+    "type": "HG",
+    "unitMgTpe": 12.0,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Bluey lot 3",
+    "expired": false,
+    "id": 4,
+    "mazama": true,
+    "productGuid": "PKPR-0004",
+    "quantity": 12,
+    "strain": "Bluey",
+    "type": "CH",
+    "unitMgTpe": 13.0,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Bluey lot 4",
+    "expired": false,
+    "id": 5,
+    "mazama": true,
+    "productGuid": "PKPR-0005",
+    "quantity": 10,
+    "strain": "Bluey",
+    "type": "EX",
+    "unitMgTpe": 14.0,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Bluey lot 5",
+    "expired": false,
+    "id": 6,
+    "mazama": true,
+    "productGuid": "PKPR-0006",
+    "quantity": 8,
+    "strain": "Bluey",
+    "type": "HN",
+    "unitMgTpe": 15.0,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Bluey lot 6",
+    "expired": false,
+    "id": 7,
+    "mazama": true,
+    "productGuid": "PKPR-0007",
+    "quantity": 6,
+    "strain": "Bluey",
+    "type": "GM",
+    "unitMgTpe": 16.0,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Bluey lot 7",
+    "expired": false,
+    "id": 8,
+    "mazama": true,
+    "productGuid": "PKPR-0008",
+    "quantity": 4,
+    "strain": "Bluey",
+    "type": "LOT",
+    "unitMgTpe": 17.0,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Bluey lot 8",
+    "expired": false,
+    "id": 9,
+    "mazama": true,
+    "productGuid": "PKPR-0009",
+    "quantity": 2,
+    "strain": "Bluey",
+    "type": "WF",
+    "unitMgTpe": 18.0,
+    "weightPerUnit": null,
+    "zeroOut": false
+   }
+  ]
+ },
+ {
+  "by_type": {
+   "slices": [
+    {
+     "name": "Freeze dried",
+     "pct": 88,
+     "slot": "s1",
+     "value": 175.0
+    },
+    {
+     "name": "Chocolate",
+     "pct": 12,
+     "slot": "s2",
+     "value": 25.0
+    }
+   ],
+   "total": 200.0
+  },
+  "mg_mode": "tpe",
+  "name": "percent half to even",
+  "rows": [
+   {
+    "analyteWeight": null,
+    "description": "Big 25 mg",
+    "expired": false,
+    "id": 1,
+    "mazama": true,
+    "productGuid": "PKPR-0001",
+    "quantity": 7,
+    "strain": "Big",
+    "type": "FD",
+    "unitMgTpe": 25,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Small 25 mg",
+    "expired": false,
+    "id": 2,
+    "mazama": true,
+    "productGuid": "PKPR-0002",
+    "quantity": 1,
+    "strain": "Small",
+    "type": "CH",
+    "unitMgTpe": 25,
+    "weightPerUnit": null,
+    "zeroOut": false
+   }
+  ]
+ },
+ {
+  "by_type": {
+   "slices": [
+    {
+     "name": "Other type",
+     "pct": 82,
+     "slot": "s1",
+     "value": 72.6375
+    },
+    {
+     "name": "Freeze dried",
+     "pct": 11,
+     "slot": "s2",
+     "value": 10.0
+    },
+    {
+     "name": "Chocolate",
+     "pct": 7,
+     "slot": "s3",
+     "value": 6.25
+    }
+   ],
+   "total": 88.8875
+  },
+  "mg_mode": "psilocybin",
+  "name": "psilocybin mode",
+  "rows": [
+   {
+    "analyteWeight": 10,
+    "description": "Bluey 10 mg",
+    "expired": false,
+    "id": 1,
+    "mazama": true,
+    "productGuid": "PKPR-0001",
+    "quantity": 2,
+    "strain": "Bluey",
+    "type": "FD",
+    "unitMgTpe": 10.1,
+    "weightPerUnit": 0.5,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Bluey 10 mg",
+    "expired": false,
+    "id": 2,
+    "mazama": true,
+    "productGuid": "PKPR-0002",
+    "quantity": 4,
+    "strain": "Bluey",
+    "type": "DH",
+    "unitMgTpe": 10.1,
+    "weightPerUnit": 0.5,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": 12.5,
+    "description": "Avery chocolate",
+    "expired": false,
+    "id": 3,
+    "mazama": true,
+    "productGuid": "PKPR-0003",
+    "quantity": 1,
+    "strain": "Avery",
+    "type": "CH",
+    "unitMgTpe": null,
+    "weightPerUnit": 0.5,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": 19.37,
+    "description": "PE 25 mg",
+    "expired": false,
+    "id": 4,
+    "mazama": true,
+    "productGuid": "PKPR-0004",
+    "quantity": 3,
+    "strain": "Avery",
+    "unitMgTpe": null,
+    "weightPerUnit": 1.25,
+    "zeroOut": false
+   }
+  ]
+ },
+ {
+  "by_type": {
+   "slices": [
+    {
+     "name": "Freeze dried",
+     "pct": 70,
+     "slot": "s1",
+     "value": 14.0
+    },
+    {
+     "name": "Dehydrated",
+     "pct": 30,
+     "slot": "s2",
+     "value": 6.0
+    }
+   ],
+   "total": 20.0
+  },
+  "mg_mode": "psilocybin",
+  "name": "psilocybin mode, tpe figures only: weighed by units",
+  "rows": [
+   {
+    "analyteWeight": null,
+    "description": "Golden Teacher 25 mg TPE",
+    "expired": false,
+    "id": 1,
+    "mazama": true,
+    "productGuid": "PKPR-0001",
+    "quantity": 10,
+    "strain": "Golden Teacher",
+    "type": "FD",
+    "unitMgTpe": 24.6,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Penis Envy 10 mg",
+    "expired": false,
+    "id": 2,
+    "mazama": true,
+    "productGuid": "PKPR-0002",
+    "quantity": 4,
+    "strain": "Penis Envy",
+    "type": "FD",
+    "unitMgTpe": 9.9,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Bluey 5 mg",
+    "expired": false,
+    "id": 3,
+    "mazama": true,
+    "productGuid": "PKPR-0003",
+    "quantity": 6,
+    "strain": "Bluey",
+    "type": "DH",
+    "unitMgTpe": 5.1,
+    "weightPerUnit": null,
+    "zeroOut": false
+   }
+  ]
+ },
+ {
+  "by_type": null,
+  "mg_mode": "tpe",
+  "name": "nothing on hand",
+  "rows": [
+   {
+    "analyteWeight": null,
+    "description": "Bluey 25 mg",
+    "expired": false,
+    "id": 1,
+    "mazama": true,
+    "productGuid": "PKPR-0001",
+    "quantity": 0,
+    "strain": "Bluey",
+    "type": "FD",
+    "unitMgTpe": 25,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Avery 25 mg",
+    "expired": false,
+    "id": 2,
+    "mazama": true,
+    "productGuid": "PKPR-0002",
+    "quantity": 5,
+    "strain": "Avery",
+    "unitMgTpe": 25,
+    "weightPerUnit": null,
+    "zeroOut": true
+   },
+   {
+    "analyteWeight": null,
+    "description": "Avery 5 mg",
+    "expired": false,
+    "id": 3,
+    "mazama": true,
+    "productGuid": "PKPR-0003",
+    "quantity": null,
+    "strain": "Avery",
+    "unitMgTpe": 5,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Avery 5 mg",
+    "expired": false,
+    "id": 4,
+    "mazama": true,
+    "productGuid": "PKPR-0004",
+    "quantity": -2,
+    "strain": "Avery",
+    "unitMgTpe": 5,
+    "weightPerUnit": null,
+    "zeroOut": false
+   }
+  ]
+ },
+ {
+  "by_type": null,
+  "mg_mode": "tpe",
+  "name": "no rows",
+  "rows": []
+ }
+]

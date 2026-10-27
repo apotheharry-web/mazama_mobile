@@ -1,0 +1,5 @@
+// The cart timers widget extension's build settings base: only Flutter's generated values (FLUTTER_BUILD_NAME and
+// FLUTTER_BUILD_NUMBER, so the extension's version always matches the app's, as the App Store requires). Deliberately
+// not Flutter/Debug.xcconfig or Release.xcconfig: anything CocoaPods or a plugin adds to those is the app's, never
+// the extension's.
+#include "../Flutter/Generated.xcconfig"

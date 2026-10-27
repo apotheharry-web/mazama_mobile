@@ -1,0 +1,293 @@
+[
+ {
+  "allowed": true,
+  "lines": [],
+  "name": "nothing",
+  "psilocybin_mg": "0",
+  "session_minutes": 30
+ },
+ {
+  "allowed": true,
+  "lines": [
+   {
+    "qty": 1,
+    "record": {
+     "analyteWeight": 4.5,
+     "weightPerUnit": 0.5
+    }
+   }
+  ],
+  "name": "one small unit",
+  "psilocybin_mg": "2.25",
+  "session_minutes": 30
+ },
+ {
+  "allowed": true,
+  "lines": [
+   {
+    "qty": 1,
+    "record": {
+     "analyteWeight": 4.98,
+     "weightPerUnit": 0.5
+    }
+   }
+  ],
+  "name": "just under 2.5 mg",
+  "psilocybin_mg": "2.490",
+  "session_minutes": 30
+ },
+ {
+  "allowed": true,
+  "lines": [
+   {
+    "qty": 1,
+    "record": {
+     "analyteWeight": 5.0,
+     "weightPerUnit": 0.5
+    }
+   }
+  ],
+  "name": "exactly 2.5 mg",
+  "psilocybin_mg": "2.50",
+  "session_minutes": 60
+ },
+ {
+  "allowed": true,
+  "lines": [
+   {
+    "qty": 1,
+    "record": {
+     "analyteWeight": 5.0,
+     "weightPerUnit": 1.0
+    }
+   }
+  ],
+  "name": "exactly 5 mg",
+  "psilocybin_mg": "5.00",
+  "session_minutes": 120
+ },
+ {
+  "allowed": true,
+  "lines": [
+   {
+    "qty": 1,
+    "record": {
+     "analyteWeight": 10.0,
+     "weightPerUnit": 0.99
+    }
+   }
+  ],
+  "name": "9.9 mg",
+  "psilocybin_mg": "9.900",
+  "session_minutes": 120
+ },
+ {
+  "allowed": true,
+  "lines": [
+   {
+    "qty": 1,
+    "record": {
+     "analyteWeight": 5.0,
+     "weightPerUnit": 2.0
+    }
+   }
+  ],
+  "name": "exactly 10 mg",
+  "psilocybin_mg": "10.00",
+  "session_minutes": 180
+ },
+ {
+  "allowed": true,
+  "lines": [
+   {
+    "qty": 2,
+    "record": {
+     "analyteWeight": 5.0,
+     "weightPerUnit": 1.0
+    }
+   },
+   {
+    "qty": 1,
+    "record": {
+     "analyteWeight": 8.0,
+     "weightPerUnit": 0.5
+    }
+   }
+  ],
+  "name": "two lines, 14 mg",
+  "psilocybin_mg": "14.00",
+  "session_minutes": 180
+ },
+ {
+  "allowed": true,
+  "lines": [
+   {
+    "qty": 1,
+    "record": {
+     "analyteWeight": 10.0,
+     "weightPerUnit": 1.5
+    }
+   }
+  ],
+  "name": "exactly 15 mg",
+  "psilocybin_mg": "15.00",
+  "session_minutes": 240
+ },
+ {
+  "allowed": true,
+  "lines": [
+   {
+    "qty": 7,
+    "record": {
+     "analyteWeight": 7.0,
+     "weightPerUnit": 0.5
+    }
+   }
+  ],
+  "name": "24.5 mg",
+  "psilocybin_mg": "24.50",
+  "session_minutes": 240
+ },
+ {
+  "allowed": true,
+  "lines": [
+   {
+    "qty": 1,
+    "record": {
+     "analyteWeight": 10.0,
+     "weightPerUnit": 2.5
+    }
+   }
+  ],
+  "name": "exactly 25 mg",
+  "psilocybin_mg": "25.00",
+  "session_minutes": 300
+ },
+ {
+  "allowed": true,
+  "lines": [
+   {
+    "qty": 1,
+    "record": {
+     "analyteWeight": 10.0,
+     "weightPerUnit": 3.5
+    }
+   }
+  ],
+  "name": "exactly 35 mg",
+  "psilocybin_mg": "35.00",
+  "session_minutes": 360
+ },
+ {
+  "allowed": true,
+  "lines": [
+   {
+    "qty": 10,
+    "record": {
+     "analyteWeight": 9.9,
+     "weightPerUnit": 0.5
+    }
+   }
+  ],
+  "name": "49.5 mg",
+  "psilocybin_mg": "49.50",
+  "session_minutes": 360
+ },
+ {
+  "allowed": true,
+  "lines": [
+   {
+    "qty": 2,
+    "record": {
+     "analyteWeight": 10.0,
+     "weightPerUnit": 2.5
+    }
+   }
+  ],
+  "name": "exactly 50 mg: allowed",
+  "psilocybin_mg": "50.00",
+  "session_minutes": 360
+ },
+ {
+  "allowed": false,
+  "lines": [
+   {
+    "qty": 10,
+    "record": {
+     "analyteWeight": 10.1,
+     "weightPerUnit": 0.5
+    }
+   }
+  ],
+  "name": "50.5 mg: over",
+  "psilocybin_mg": "50.50",
+  "session_minutes": null
+ },
+ {
+  "allowed": true,
+  "lines": [
+   {
+    "qty": 5,
+    "record": {
+     "analyteWeight": 10.4,
+     "weightPerUnit": 0.48
+    }
+   }
+  ],
+  "name": "a real edible line",
+  "psilocybin_mg": "24.960",
+  "session_minutes": 240
+ },
+ {
+  "allowed": false,
+  "lines": [
+   {
+    "qty": 11,
+    "record": {
+     "analyteWeight": 10.4,
+     "weightPerUnit": 0.48
+    }
+   }
+  ],
+  "name": "10 of them: over",
+  "psilocybin_mg": "54.912",
+  "session_minutes": null
+ },
+ {
+  "allowed": true,
+  "lines": [
+   {
+    "qty": 3,
+    "record": {
+     "analyteWeight": null,
+     "weightPerUnit": 0.5
+    }
+   },
+   {
+    "qty": 1,
+    "record": {
+     "analyteWeight": 5.0,
+     "weightPerUnit": 1.0
+    }
+   }
+  ],
+  "name": "no potency known counts as 0",
+  "psilocybin_mg": "5.00",
+  "session_minutes": 120
+ },
+ {
+  "allowed": true,
+  "lines": [
+   {
+    "qty": 3,
+    "record": {
+     "analyteWeight": 10.0,
+     "weightPerUnit": null
+    }
+   }
+  ],
+  "name": "no weight known counts as 0",
+  "psilocybin_mg": "0.0",
+  "session_minutes": 30
+ }
+]

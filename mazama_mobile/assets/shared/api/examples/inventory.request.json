@@ -1,0 +1,42 @@
+{
+ "workerEmail": "worker@example.com",
+ "deviceId": "7f3c2a9e-4b1d-4e8a-9c55-0d2f6b8e1a34",
+ "records": [
+  {
+   "id": 6600,
+   "productGuid": "PKPR-aaaa0001",
+   "productType": "Edible Psilocybin Product",
+   "description": "GT 5 mg TPE CH (2027-02-03)",
+   "quantity": 120,
+   "weightPerUnit": 0.48,
+   "analyteWeight": 10.4,
+   "harvestBatchGuid": "HB-9bc7d118",
+   "processLotGuid": "",
+   "location": "safe",
+   "zeroOut": false,
+   "locked": true,
+   "reasonLocked": "hold",
+   "flagged": false,
+   "pendingTransfer": false,
+   "serviceCenterId": 225,
+   "manufacturerLicenseId": "MF-1e72fc8f"
+  },
+  {
+   "id": 101,
+   "productGuid": "PKPR-ab12c",
+   "productType": "Extract",
+   "weightPerUnit": 5.0,
+   "analyteWeight": 4.5,
+   "quantity": 10,
+   "zeroOut": false,
+   "harvestBatchGuid": null,
+   "processLotGuid": "PL-de20657a",
+   "locked": false,
+   "reasonLocked": null,
+   "flagged": false,
+   "reasonFlagged": null,
+   "pendingTransfer": false,
+   "expirationDate": "2027-01-31T00:00:00"
+  }
+ ]
+}

@@ -1,0 +1,620 @@
+{
+ "codes": [
+  {
+   "coa_code": "",
+   "code": "CH",
+   "description": "GT 5 mg TPE CH (2027-02-03)"
+  },
+  {
+   "coa_code": "FD",
+   "code": "CH",
+   "description": "GT 5 mg TPE CH (2027-02-03)"
+  },
+  {
+   "coa_code": "FD",
+   "code": "FD",
+   "description": "GT 5 mg"
+  },
+  {
+   "coa_code": "",
+   "code": "CH",
+   "description": "Chocolate microdoses"
+  },
+  {
+   "coa_code": "",
+   "code": "GM",
+   "description": "Gummies"
+  },
+  {
+   "coa_code": "",
+   "code": "HN",
+   "description": "honey sticks"
+  },
+  {
+   "coa_code": "",
+   "code": "EX",
+   "description": "Extract 5 mg"
+  },
+  {
+   "coa_code": "",
+   "code": "",
+   "description": "Plain 5 mg"
+  },
+  {
+   "coa_code": "",
+   "code": "",
+   "description": "Freeze dried GT"
+  },
+  {
+   "coa_code": "",
+   "code": "",
+   "description": ""
+  }
+ ],
+ "product_names": [
+  {
+   "code": "FD",
+   "dose": "10",
+   "expiry": "2027-02-03",
+   "label": null,
+   "name": "Maztapec 10 mg TPE FD (2027-02-03)",
+   "note": null,
+   "status": "ok",
+   "strain": "Maztapec",
+   "strain_raw": "Maztapec"
+  },
+  {
+   "code": "CH",
+   "dose": "7.5",
+   "expiry": "2027-12-31",
+   "label": null,
+   "name": "Golden Teacher 7.5 mg TPE CH (2027-12-31)",
+   "note": null,
+   "status": "ok",
+   "strain": "Golden Teacher",
+   "strain_raw": "Golden Teacher"
+  },
+  {
+   "code": null,
+   "dose": "25",
+   "expiry": "2027-01-31",
+   "label": null,
+   "name": "GT 25 mg TPE (2027-01-31)",
+   "note": null,
+   "status": "ok",
+   "strain": "Golden Teacher",
+   "strain_raw": "GT"
+  },
+  {
+   "code": "DH",
+   "dose": "5",
+   "expiry": "2027-01-31",
+   "label": null,
+   "name": "gt 5mg tpe dh (2027-01-31)",
+   "note": null,
+   "status": "ok",
+   "strain": "Golden Teacher",
+   "strain_raw": "gt"
+  },
+  {
+   "code": "HG",
+   "dose": "5",
+   "expiry": "2027-01-31",
+   "label": null,
+   "name": "Mazatapec 5 mg TPE HG (2027-01-31)",
+   "note": null,
+   "status": "ok",
+   "strain": "Maztapec",
+   "strain_raw": "Mazatapec"
+  },
+  {
+   "code": null,
+   "dose": "25",
+   "expiry": null,
+   "label": null,
+   "name": "Bluey 25 mg TPE",
+   "note": "no expiration date in the name",
+   "status": "partial",
+   "strain": "Bluey",
+   "strain_raw": "Bluey"
+  },
+  {
+   "code": "CH",
+   "dose": "25",
+   "expiry": "2027-01-31",
+   "label": null,
+   "name": "Bluey 25 mg TPE choc (2027-01-31)",
+   "note": null,
+   "status": "ok",
+   "strain": "Bluey",
+   "strain_raw": "Bluey"
+  },
+  {
+   "code": "EX",
+   "dose": "25",
+   "expiry": "2027-01-31",
+   "label": null,
+   "name": "Bluey 25 mg TPE Extract (2027-01-31)",
+   "note": null,
+   "status": "ok",
+   "strain": "Bluey",
+   "strain_raw": "Bluey"
+  },
+  {
+   "code": "HN",
+   "dose": "10",
+   "expiry": "2027-01-31",
+   "label": null,
+   "name": "Huautla 10 mg TPE hn (2027-01-31)",
+   "note": null,
+   "status": "ok",
+   "strain": "Huautla",
+   "strain_raw": "Huautla"
+  },
+  {
+   "code": "GM",
+   "dose": "15",
+   "expiry": "2027-01-31",
+   "label": null,
+   "name": "Shakti 15 mg TPE GM (2027-01-31)",
+   "note": null,
+   "status": "ok",
+   "strain": "Shakti",
+   "strain_raw": "Shakti"
+  },
+  {
+   "code": "CH",
+   "dose": "7.5",
+   "expiry": null,
+   "label": null,
+   "name": "Golden Teacher 7.5 mg TPE CH (2027-13-40)",
+   "note": "2027-13-40 is not a real date",
+   "status": "partial",
+   "strain": "Golden Teacher",
+   "strain_raw": "Golden Teacher"
+  },
+  {
+   "code": null,
+   "dose": "5",
+   "expiry": null,
+   "label": null,
+   "name": "GT 5 mg <TPE>",
+   "note": "the name does not follow '<strain> <mg> mg TPE <code> (<date>)'",
+   "status": "partial",
+   "strain": "Golden Teacher",
+   "strain_raw": "GT"
+  },
+  {
+   "code": null,
+   "dose": "5",
+   "expiry": "2027-01-31",
+   "label": null,
+   "name": "GT 5 mg TPE chocolate bar (2027-01-31)",
+   "note": "the name does not follow '<strain> <mg> mg TPE <code> (<date>)'",
+   "status": "partial",
+   "strain": "Golden Teacher",
+   "strain_raw": "GT"
+  },
+  {
+   "code": null,
+   "dose": "5",
+   "expiry": "2027-01-01",
+   "label": null,
+   "name": "Golden Teacher Albino Blend Mega Gold 5 mg TPE (2027-01-01)",
+   "note": "the strain name is longer than 30 characters and was shortened",
+   "status": "partial",
+   "strain": "Golden Teacher Albino Blend Me",
+   "strain_raw": "Golden Teacher Albino Blend Mega Gold"
+  },
+  {
+   "code": "FD",
+   "dose": "20",
+   "expiry": "2027-01-01",
+   "label": null,
+   "name": "Mazatapec Gold 20 mg TPE FD (2027-01-01)",
+   "note": null,
+   "status": "ok",
+   "strain": "Maztapec Gold",
+   "strain_raw": "Mazatapec Gold"
+  },
+  {
+   "code": null,
+   "dose": "10",
+   "expiry": null,
+   "label": null,
+   "name": "sk 10 mg TPE",
+   "note": "no expiration date in the name",
+   "status": "partial",
+   "strain": "Shakti",
+   "strain_raw": "sk"
+  },
+  {
+   "code": null,
+   "dose": "5",
+   "expiry": null,
+   "label": null,
+   "name": "Starry 5 mg",
+   "note": "no expiration date in the name",
+   "status": "partial",
+   "strain": "Starry Night",
+   "strain_raw": "Starry"
+  },
+  {
+   "code": "DH",
+   "dose": "2.25",
+   "expiry": "2027-06-30",
+   "label": null,
+   "name": "Blue Meanie 2.25 mg TPE DH (2027-06-30)",
+   "note": null,
+   "status": "ok",
+   "strain": "Blue Meanie",
+   "strain_raw": "Blue Meanie"
+  },
+  {
+   "code": "FD",
+   "dose": "25",
+   "expiry": "2027-06-30",
+   "label": null,
+   "name": "  Penis Envy   25 mg TPE FD (2027-06-30)  ",
+   "note": null,
+   "status": "ok",
+   "strain": "Penis Envy",
+   "strain_raw": "Penis Envy"
+  },
+  {
+   "code": null,
+   "dose": null,
+   "expiry": null,
+   "label": null,
+   "name": "",
+   "note": "the name is empty",
+   "status": "unparsed",
+   "strain": null,
+   "strain_raw": null
+  },
+  {
+   "code": null,
+   "dose": null,
+   "expiry": null,
+   "label": null,
+   "name": "Golden Teacher chocolates",
+   "note": "no dose in mg found in the name",
+   "status": "unparsed",
+   "strain": null,
+   "strain_raw": null
+  },
+  {
+   "code": null,
+   "dose": "10",
+   "expiry": null,
+   "label": null,
+   "name": "10 mg TPE (2027-01-01)",
+   "note": "no strain name",
+   "status": "unparsed",
+   "strain": null,
+   "strain_raw": null
+  },
+  {
+   "code": null,
+   "dose": null,
+   "expiry": null,
+   "label": null,
+   "name": "<b>x</b> 5 mg TPE (2027-01-01)",
+   "note": "the strain name has characters that are not allowed: / < >",
+   "status": "unparsed",
+   "strain": null,
+   "strain_raw": "<b>x</b>"
+  },
+  {
+   "code": "FD",
+   "dose": "5",
+   "expiry": "2027-01-01",
+   "label": null,
+   "name": "B+ 5 mg TPE FD (2027-01-01)",
+   "note": null,
+   "status": "ok",
+   "strain": "B+",
+   "strain_raw": "B+"
+  },
+  {
+   "code": null,
+   "dose": "5",
+   "expiry": "2027-01-01",
+   "label": null,
+   "name": "Golden Teacher 5 mg TPE XX (2027-01-01)",
+   "note": "the name does not follow '<strain> <mg> mg TPE <code> (<date>)'",
+   "status": "partial",
+   "strain": "Golden Teacher",
+   "strain_raw": "Golden Teacher"
+  },
+  {
+   "code": null,
+   "dose": "1234",
+   "expiry": "2027-01-01",
+   "label": null,
+   "name": "GT 1234 mg TPE (2027-01-01)",
+   "note": null,
+   "status": "ok",
+   "strain": "Golden Teacher",
+   "strain_raw": "GT"
+  },
+  {
+   "code": null,
+   "dose": null,
+   "expiry": null,
+   "label": null,
+   "name": "GT 12345 mg TPE (2027-01-01)",
+   "note": "no dose in mg found in the name",
+   "status": "unparsed",
+   "strain": null,
+   "strain_raw": null
+  }
+ ],
+ "source_names": [
+  {
+   "code": "DH",
+   "dose": null,
+   "expiry": null,
+   "label": null,
+   "name": "Golden Teacher DH",
+   "note": null,
+   "status": "ok",
+   "strain": "Golden Teacher",
+   "strain_raw": "Golden Teacher"
+  },
+  {
+   "code": null,
+   "dose": null,
+   "expiry": null,
+   "label": "6.26",
+   "name": "GT 6.26",
+   "note": null,
+   "status": "ok",
+   "strain": "Golden Teacher",
+   "strain_raw": "GT"
+  },
+  {
+   "code": null,
+   "dose": null,
+   "expiry": null,
+   "label": null,
+   "name": "SK",
+   "note": null,
+   "status": "ok",
+   "strain": "Shakti",
+   "strain_raw": "SK"
+  },
+  {
+   "code": "CH",
+   "dose": null,
+   "expiry": null,
+   "label": null,
+   "name": "Mazatapec choc",
+   "note": null,
+   "status": "ok",
+   "strain": "Maztapec",
+   "strain_raw": "Mazatapec"
+  },
+  {
+   "code": "HN",
+   "dose": null,
+   "expiry": null,
+   "label": null,
+   "name": "Huautla hn",
+   "note": null,
+   "status": "ok",
+   "strain": "Huautla",
+   "strain_raw": "Huautla"
+  },
+  {
+   "code": "EX",
+   "dose": null,
+   "expiry": null,
+   "label": null,
+   "name": "Bluey Extract",
+   "note": null,
+   "status": "ok",
+   "strain": "Bluey",
+   "strain_raw": "Bluey"
+  },
+  {
+   "code": "GM",
+   "dose": null,
+   "expiry": null,
+   "label": "3",
+   "name": "Bluey GM 3",
+   "note": null,
+   "status": "ok",
+   "strain": "Bluey",
+   "strain_raw": "Bluey"
+  },
+  {
+   "code": "HG",
+   "dose": null,
+   "expiry": null,
+   "label": "10.25",
+   "name": "Penis Envy HG 10.25",
+   "note": null,
+   "status": "ok",
+   "strain": "Penis Envy",
+   "strain_raw": "Penis Envy"
+  },
+  {
+   "code": null,
+   "dose": null,
+   "expiry": null,
+   "label": null,
+   "name": "12.5",
+   "note": "no strain name",
+   "status": "unparsed",
+   "strain": null,
+   "strain_raw": "12.5"
+  },
+  {
+   "code": null,
+   "dose": null,
+   "expiry": null,
+   "label": null,
+   "name": "<b>evil</b>",
+   "note": "the strain name has characters that are not allowed: / < >",
+   "status": "unparsed",
+   "strain": null,
+   "strain_raw": "<b>evil</b>"
+  },
+  {
+   "code": null,
+   "dose": null,
+   "expiry": null,
+   "label": null,
+   "name": "   ",
+   "note": "the name is empty",
+   "status": "unparsed",
+   "strain": null,
+   "strain_raw": null
+  }
+ ],
+ "strains": [
+  {
+   "canonical": "Golden Teacher",
+   "clean": "GT",
+   "text": "GT"
+  },
+  {
+   "canonical": "Golden Teacher",
+   "clean": "golden",
+   "text": "golden"
+  },
+  {
+   "canonical": "Golden Teacher",
+   "clean": "Golden Teacher",
+   "text": "Golden Teacher"
+  },
+  {
+   "canonical": "Maztapec",
+   "clean": "mz",
+   "text": "mz"
+  },
+  {
+   "canonical": "Maztapec",
+   "clean": "MAZ",
+   "text": "MAZ"
+  },
+  {
+   "canonical": "Maztapec",
+   "clean": "Maztapec",
+   "text": "Mazatapec"
+  },
+  {
+   "canonical": "Maztapec Gold",
+   "clean": "Maztapec Gold",
+   "text": "Mazatapec Gold"
+  },
+  {
+   "canonical": "Huautla",
+   "clean": "Hua",
+   "text": "Hua"
+  },
+  {
+   "canonical": "Starry Night",
+   "clean": "sn",
+   "text": "sn"
+  },
+  {
+   "canonical": "Starry Night",
+   "clean": "Starry",
+   "text": "Starry"
+  },
+  {
+   "canonical": "Unknown One",
+   "clean": "Unknown One",
+   "text": "Unknown One"
+  },
+  {
+   "canonical": "Bluey b",
+   "clean": "Bluey b",
+   "text": "Blue/y <b> "
+  },
+  {
+   "canonical": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   "clean": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  },
+  {
+   "canonical": "Golden Teacher",
+   "clean": "Golden-Teacher",
+   "text": "  Golden-Teacher!! "
+  },
+  {
+   "canonical": "Bluey",
+   "clean": "Bluey",
+   "text": "..Bluey.."
+  },
+  {
+   "canonical": "",
+   "clean": "",
+   "text": ""
+  }
+ ],
+ "subtypes": [
+  {
+   "code": "FD",
+   "product_type": "",
+   "subtype": "Freeze dried"
+  },
+  {
+   "code": "DH",
+   "product_type": "",
+   "subtype": "Dehydrated"
+  },
+  {
+   "code": "CH",
+   "product_type": "",
+   "subtype": "Chocolate"
+  },
+  {
+   "code": "HN",
+   "product_type": "",
+   "subtype": "Honey"
+  },
+  {
+   "code": "HG",
+   "product_type": "",
+   "subtype": "Homogenized"
+  },
+  {
+   "code": "EX",
+   "product_type": "",
+   "subtype": "Extract"
+  },
+  {
+   "code": "GM",
+   "product_type": "",
+   "subtype": "Gummy"
+  },
+  {
+   "code": "",
+   "product_type": "",
+   "subtype": "x"
+  },
+  {
+   "code": "",
+   "product_type": "",
+   "subtype": ""
+  },
+  {
+   "code": "HG",
+   "product_type": "Homogenized Fungi",
+   "subtype": ""
+  },
+  {
+   "code": "FD",
+   "product_type": "",
+   "subtype": " Freeze dried "
+  },
+  {
+   "code": "",
+   "product_type": "",
+   "subtype": "freeze dried"
+  }
+ ]
+}

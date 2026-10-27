@@ -1,0 +1,735 @@
+{
+ "cases": [
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": [
+    7000
+   ],
+   "error": null,
+   "line_errors": [
+    null
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 5,
+     "qty": 1
+    }
+   ],
+   "mode": "total",
+   "name": "one total over one line",
+   "per_mg": "",
+   "tax": false,
+   "tax_percent": 15,
+   "total": "70"
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": [
+    2334,
+    2333
+   ],
+   "error": null,
+   "line_errors": [
+    null,
+    null
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 5,
+     "qty": 2
+    },
+    {
+     "group": "A",
+     "mg": 5,
+     "qty": 1
+    }
+   ],
+   "mode": "total",
+   "name": "a total over two lines of one group, by mg x units",
+   "per_mg": "",
+   "tax": false,
+   "tax_percent": 15,
+   "total": "70"
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": [
+    2684,
+    2683
+   ],
+   "error": null,
+   "line_errors": [
+    null,
+    null
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 5,
+     "qty": 2
+    },
+    {
+     "group": "A",
+     "mg": 5,
+     "qty": 1
+    }
+   ],
+   "mode": "total",
+   "name": "tax goes on the total before it is shared",
+   "per_mg": "",
+   "tax": true,
+   "tax_percent": 15,
+   "total": "70"
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": [
+    4000,
+    9000
+   ],
+   "error": null,
+   "line_errors": [
+    null,
+    null
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 5,
+     "qty": 1
+    },
+    {
+     "group": "B",
+     "mg": 9,
+     "qty": 1
+    }
+   ],
+   "mode": "total",
+   "name": "both groups split by the agreement",
+   "per_mg": "",
+   "tax": false,
+   "tax_percent": 15,
+   "total": "130"
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": [
+    1538,
+    5193,
+    3077,
+    1731
+   ],
+   "error": null,
+   "line_errors": [
+    null,
+    null,
+    null,
+    null
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 5,
+     "qty": 3
+    },
+    {
+     "group": "B",
+     "mg": 9,
+     "qty": 2
+    },
+    {
+     "group": "A",
+     "mg": 10,
+     "qty": 1
+    },
+    {
+     "group": "B",
+     "mg": 3,
+     "qty": 4
+    }
+   ],
+   "mode": "total",
+   "name": "both groups, several lines each",
+   "per_mg": "",
+   "tax": false,
+   "tax_percent": 15,
+   "total": "250"
+  },
+  {
+   "agreement": [
+    1,
+    1
+   ],
+   "each": [
+    5500,
+    5499
+   ],
+   "error": null,
+   "line_errors": [
+    null,
+    null
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 25,
+     "qty": 1
+    },
+    {
+     "group": "B",
+     "mg": 35,
+     "qty": 1
+    }
+   ],
+   "mode": "total",
+   "name": "both groups with tax and another split",
+   "per_mg": "",
+   "tax": true,
+   "tax_percent": 10,
+   "total": "99.99"
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": [
+    3333
+   ],
+   "error": null,
+   "line_errors": [
+    null
+   ],
+   "lines": [
+    {
+     "group": "B",
+     "mg": 9,
+     "qty": 3
+    }
+   ],
+   "mode": "total",
+   "name": "a line's share that doesn't divide by its units",
+   "per_mg": "",
+   "tax": false,
+   "tax_percent": 15,
+   "total": "100"
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": [
+    3
+   ],
+   "error": null,
+   "line_errors": [
+    null
+   ],
+   "lines": [
+    {
+     "group": "B",
+     "mg": 9,
+     "qty": 2
+    }
+   ],
+   "mode": "total",
+   "name": "a half cent per unit rounds up",
+   "per_mg": "",
+   "tax": false,
+   "tax_percent": 15,
+   "total": "0.05"
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": [
+    0,
+    0
+   ],
+   "error": null,
+   "line_errors": [
+    null,
+    null
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 5,
+     "qty": 2
+    },
+    {
+     "group": "B",
+     "mg": 9,
+     "qty": 1
+    }
+   ],
+   "mode": "total",
+   "name": "a total of nothing",
+   "per_mg": "",
+   "tax": false,
+   "tax_percent": 15,
+   "total": "0"
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": [
+    1000,
+    1000
+   ],
+   "error": null,
+   "line_errors": [
+    null,
+    null
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 0,
+     "qty": 3
+    },
+    {
+     "group": "A",
+     "mg": 5,
+     "qty": 1
+    }
+   ],
+   "mode": "total",
+   "name": "unknown mg on a line shares by units",
+   "per_mg": "",
+   "tax": false,
+   "tax_percent": 15,
+   "total": "40"
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": null,
+   "error": "total",
+   "line_errors": [
+    null
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 5,
+     "qty": 1
+    }
+   ],
+   "mode": "total",
+   "name": "a total that isn't a price",
+   "per_mg": "",
+   "tax": false,
+   "tax_percent": 15,
+   "total": "abc"
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": null,
+   "error": "total",
+   "line_errors": [
+    null
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 5,
+     "qty": 1
+    }
+   ],
+   "mode": "total",
+   "name": "a blank total",
+   "per_mg": "",
+   "tax": false,
+   "tax_percent": 15,
+   "total": ""
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": null,
+   "error": "total",
+   "line_errors": [
+    null
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 5,
+     "qty": 1
+    }
+   ],
+   "mode": "total",
+   "name": "a total over the cart ceiling",
+   "per_mg": "",
+   "tax": false,
+   "tax_percent": 15,
+   "total": "10000000.01"
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": null,
+   "error": "unit_cap",
+   "line_errors": [
+    null
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 5,
+     "qty": 1
+    }
+   ],
+   "mode": "total",
+   "name": "a total that puts one unit over $10,000",
+   "per_mg": "",
+   "tax": false,
+   "tax_percent": 15,
+   "total": "10000.01"
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": null,
+   "error": "empty",
+   "line_errors": [],
+   "lines": [],
+   "mode": "total",
+   "name": "nothing in the cart",
+   "per_mg": "",
+   "tax": false,
+   "tax_percent": 15,
+   "total": "70"
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": [
+    1000,
+    1800
+   ],
+   "error": null,
+   "line_errors": [
+    null,
+    null
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 5,
+     "qty": 2
+    },
+    {
+     "group": "B",
+     "mg": 9,
+     "qty": 1
+    }
+   ],
+   "mode": "per_mg",
+   "name": "a rate per mg",
+   "per_mg": "2",
+   "tax": false,
+   "tax_percent": 15,
+   "total": ""
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": [
+    950
+   ],
+   "error": null,
+   "line_errors": [
+    null
+   ],
+   "lines": [
+    {
+     "group": "B",
+     "mg": 25,
+     "qty": 1
+    }
+   ],
+   "mode": "per_mg",
+   "name": "tax on the rate, whole cents (SM-D26)",
+   "per_mg": "0.33",
+   "tax": true,
+   "tax_percent": 15,
+   "total": ""
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": [
+    130
+   ],
+   "error": null,
+   "line_errors": [
+    null
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 10,
+     "qty": 1
+    }
+   ],
+   "mode": "per_mg",
+   "name": "a fraction of a cent per mg is rounded when typed",
+   "per_mg": "0.125",
+   "tax": false,
+   "tax_percent": 15,
+   "total": ""
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": [
+    369,
+    861
+   ],
+   "error": null,
+   "line_errors": [
+    null,
+    null
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 3,
+     "qty": 4
+    },
+    {
+     "group": "B",
+     "mg": 7,
+     "qty": 1
+    }
+   ],
+   "mode": "per_mg",
+   "name": "tax on a rate, another tax",
+   "per_mg": "1.15",
+   "tax": true,
+   "tax_percent": 7,
+   "total": ""
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": [
+    0
+   ],
+   "error": null,
+   "line_errors": [
+    null
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 5,
+     "qty": 1
+    }
+   ],
+   "mode": "per_mg",
+   "name": "a rate of nothing",
+   "per_mg": "0",
+   "tax": false,
+   "tax_percent": 15,
+   "total": ""
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": null,
+   "error": "no_mg",
+   "line_errors": [
+    null,
+    "no_mg"
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 5,
+     "qty": 1
+    },
+    {
+     "group": "B",
+     "mg": 0,
+     "qty": 2
+    }
+   ],
+   "mode": "per_mg",
+   "name": "a line with no mg can't be priced per mg",
+   "per_mg": "2",
+   "tax": false,
+   "tax_percent": 15,
+   "total": ""
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": null,
+   "error": "rate",
+   "line_errors": [
+    null
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 5,
+     "qty": 1
+    }
+   ],
+   "mode": "per_mg",
+   "name": "a rate that isn't a price",
+   "per_mg": "1e1",
+   "tax": false,
+   "tax_percent": 15,
+   "total": ""
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": null,
+   "error": "rate",
+   "line_errors": [
+    null
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 5,
+     "qty": 1
+    }
+   ],
+   "mode": "per_mg",
+   "name": "a rate over $1,000 per mg",
+   "per_mg": "1000.01",
+   "tax": false,
+   "tax_percent": 15,
+   "total": ""
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": null,
+   "error": "unit_cap",
+   "line_errors": [
+    null
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 11,
+     "qty": 1
+    }
+   ],
+   "mode": "per_mg",
+   "name": "a rate that puts one unit over $10,000",
+   "per_mg": "1000",
+   "tax": false,
+   "tax_percent": 15,
+   "total": ""
+  }
+ ],
+ "groups": [
+  {
+   "group": "A",
+   "product_type": "Edible Psilocybin Product"
+  },
+  {
+   "group": "A",
+   "product_type": "Psilocybin Extract"
+  },
+  {
+   "group": "A",
+   "product_type": "EXTRACT"
+  },
+  {
+   "group": "B",
+   "product_type": "Whole Fungi"
+  },
+  {
+   "group": "B",
+   "product_type": "Dried Fungi"
+  },
+  {
+   "group": "B",
+   "product_type": "Homogenized Fungi"
+  },
+  {
+   "group": "A",
+   "product_type": "edible"
+  },
+  {
+   "group": "B",
+   "product_type": ""
+  },
+  {
+   "group": "B",
+   "product_type": "Something new"
+  }
+ ],
+ "rules": {
+  "agreement": [
+   40,
+   90
+  ],
+  "default_mode": "total",
+  "group_a_words": [
+   "edible",
+   "extract"
+  ],
+  "tax_percent": 15
+ }
+}

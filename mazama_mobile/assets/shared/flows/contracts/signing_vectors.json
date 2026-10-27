@@ -1,0 +1,255 @@
+{
+ "about": "The owner's Ed25519 signature on sign-in host lists and hosted specs (SL-D13; global constraints of specs/state-login/06-phase5b.plan.md). verify(payload, signature, public_key) must give `valid` for every case: payload is the exact signed bytes (payload_b64 decoded), signature a .sig file's text, public_key a signing.pub file's text. Run by mazama_sales/tests/unit/test_signing.py and mazama_mobile/test/signing_test.dart. Written by tools/gen_signing_vectors.py.",
+ "test_only": "TEST KEYS ONLY. test_key and other_key are made from fixed labels for these vectors; they are NOT Mazama's signing key, sign nothing real, and must never be put in signing.pub or a sops file.",
+ "test_key": {
+  "label": "TEST key: sha256 of 'mazama signing vectors: TEST key, never a real one'",
+  "private_key": "13oDZzUeof7UMoS1ydHzD14j8h9YVd0NUqXmmhDeumE=",
+  "public_key": "YcNzjqtNhrAj3aZNQIt+PmgCBxYnIA/gr+IAZnutYj0="
+ },
+ "other_key": {
+  "label": "TEST key: sha256 of 'mazama signing vectors: a second TEST key, for the wrong-key case'",
+  "public_key": "cNF5GXM0HYTrZY17mFrlx4xUUQryPJRkm0gyOrbzmWo="
+ },
+ "cases": [
+  {
+   "name": "good",
+   "why": "a host list signed by the key in signing.pub",
+   "valid": true,
+   "public_key": "YcNzjqtNhrAj3aZNQIt+PmgCBxYnIA/gr+IAZnutYj0=",
+   "payload_b64": "eyJ2ZXJzaW9uIjogIjIwMjYtMTAtMjQuMSIsICJob3N0cyI6IFsibG9naW4uZXhhbXBsZS5nb3YiXX0K",
+   "signature": "qjUAIrDnyYSABrpUs3DgKY3kGNMutk1iQ5RnmUGYHXS2x8iElREVhQR5TUINxM0eJ7Nrw2T0qnyfgfL1BtIrBA=="
+  },
+  {
+   "name": "trailing_newlines",
+   "why": "the .sig file and signing.pub each end with one newline",
+   "valid": true,
+   "public_key": "YcNzjqtNhrAj3aZNQIt+PmgCBxYnIA/gr+IAZnutYj0=\n",
+   "payload_b64": "eyJ2ZXJzaW9uIjogIjIwMjYtMTAtMjQuMSIsICJob3N0cyI6IFsibG9naW4uZXhhbXBsZS5nb3YiXX0K",
+   "signature": "qjUAIrDnyYSABrpUs3DgKY3kGNMutk1iQ5RnmUGYHXS2x8iElREVhQR5TUINxM0eJ7Nrw2T0qnyfgfL1BtIrBA==\n"
+  },
+  {
+   "name": "empty_payload",
+   "why": "an empty file can be signed like any other",
+   "valid": true,
+   "public_key": "YcNzjqtNhrAj3aZNQIt+PmgCBxYnIA/gr+IAZnutYj0=",
+   "payload_b64": "",
+   "signature": "fllV1rpzMwhzfNYRAdno6qfolnyP5x0XAdtYZsnM0O7usDCNKwDkK7A3fSjkussi4SQm0wzfyhHDFlzEVIaYAw=="
+  },
+  {
+   "name": "wrong_key",
+   "why": "signed by another key than the one in signing.pub",
+   "valid": false,
+   "public_key": "cNF5GXM0HYTrZY17mFrlx4xUUQryPJRkm0gyOrbzmWo=",
+   "payload_b64": "eyJ2ZXJzaW9uIjogIjIwMjYtMTAtMjQuMSIsICJob3N0cyI6IFsibG9naW4uZXhhbXBsZS5nb3YiXX0K",
+   "signature": "qjUAIrDnyYSABrpUs3DgKY3kGNMutk1iQ5RnmUGYHXS2x8iElREVhQR5TUINxM0eJ7Nrw2T0qnyfgfL1BtIrBA=="
+  },
+  {
+   "name": "signed_by_other_key",
+   "why": "a signature made by another key, checked against signing.pub",
+   "valid": false,
+   "public_key": "YcNzjqtNhrAj3aZNQIt+PmgCBxYnIA/gr+IAZnutYj0=",
+   "payload_b64": "eyJ2ZXJzaW9uIjogIjIwMjYtMTAtMjQuMSIsICJob3N0cyI6IFsibG9naW4uZXhhbXBsZS5nb3YiXX0K",
+   "signature": "3Qtu3889i+WYgBOHWDNVM/gBzhL6Ks2hMnNdqeO7npaRlwfdvr+lq55UNHG57VeTNKakLTgq3vHq94hcohPTDw=="
+  },
+  {
+   "name": "flipped_payload_byte",
+   "why": "one bit of the list changed after signing",
+   "valid": false,
+   "public_key": "YcNzjqtNhrAj3aZNQIt+PmgCBxYnIA/gr+IAZnutYj0=",
+   "payload_b64": "eyJ2ZXJzaW9uIjogIjIwMjYtMTAsMjQuMSIsICJob3N0cyI6IFsibG9naW4uZXhhbXBsZS5nb3YiXX0K",
+   "signature": "qjUAIrDnyYSABrpUs3DgKY3kGNMutk1iQ5RnmUGYHXS2x8iElREVhQR5TUINxM0eJ7Nrw2T0qnyfgfL1BtIrBA=="
+  },
+  {
+   "name": "flipped_signature_byte_r",
+   "why": "one bit of the signature's first half (R) changed",
+   "valid": false,
+   "public_key": "YcNzjqtNhrAj3aZNQIt+PmgCBxYnIA/gr+IAZnutYj0=",
+   "payload_b64": "eyJ2ZXJzaW9uIjogIjIwMjYtMTAtMjQuMSIsICJob3N0cyI6IFsibG9naW4uZXhhbXBsZS5nb3YiXX0K",
+   "signature": "qzUAIrDnyYSABrpUs3DgKY3kGNMutk1iQ5RnmUGYHXS2x8iElREVhQR5TUINxM0eJ7Nrw2T0qnyfgfL1BtIrBA=="
+  },
+  {
+   "name": "flipped_signature_byte_s",
+   "why": "one bit of the signature's second half (S) changed",
+   "valid": false,
+   "public_key": "YcNzjqtNhrAj3aZNQIt+PmgCBxYnIA/gr+IAZnutYj0=",
+   "payload_b64": "eyJ2ZXJzaW9uIjogIjIwMjYtMTAtMjQuMSIsICJob3N0cyI6IFsibG9naW4uZXhhbXBsZS5nb3YiXX0K",
+   "signature": "qjUAIrDnyYSABrpUs3DgKY3kGNMutk1iQ5RnmUGYHXS2x8iElREVhQV5TUINxM0eJ7Nrw2T0qnyfgfL1BtIrBA=="
+  },
+  {
+   "name": "signature_s_plus_l",
+   "why": "S replaced by S + L (the group order): the same signature, malleated; S must be below L (RFC 8032)",
+   "valid": false,
+   "public_key": "YcNzjqtNhrAj3aZNQIt+PmgCBxYnIA/gr+IAZnutYj0=",
+   "payload_b64": "eyJ2ZXJzaW9uIjogIjIwMjYtMTAtMjQuMSIsICJob3N0cyI6IFsibG9naW4uZXhhbXBsZS5nb3YiXX0K",
+   "signature": "qjUAIrDnyYSABrpUs3DgKY3kGNMutk1iQ5RnmUGYHXSjm77hr3Qn3doVReXrvawzJ7Nrw2T0qnyfgfL1BtIrFA=="
+  },
+  {
+   "name": "crlf_payload",
+   "why": "CRLF line ends are part of the signed bytes: signed as CRLF, read as CRLF",
+   "valid": true,
+   "public_key": "YcNzjqtNhrAj3aZNQIt+PmgCBxYnIA/gr+IAZnutYj0=",
+   "payload_b64": "Zm9ybWF0OiAzDQp2YXJzOg0KICBzcGVjX3ZlcnNpb246ICIyMDI2LTEwLTI0LjEiDQo=",
+   "signature": "wnRUHVtGDSwwMPHVZ3GKAQZAVBO1mEDMRZU8W9ZZnml5InjwLRYMLYtluyrMAKU/cD9EzVkQAO9vrEFJq24VDQ=="
+  },
+  {
+   "name": "crlf_payload_read_as_lf",
+   "why": "the same signature over the file with its CRLFs turned into LFs",
+   "valid": false,
+   "public_key": "YcNzjqtNhrAj3aZNQIt+PmgCBxYnIA/gr+IAZnutYj0=",
+   "payload_b64": "Zm9ybWF0OiAzCnZhcnM6CiAgc3BlY192ZXJzaW9uOiAiMjAyNi0xMC0yNC4xIgo=",
+   "signature": "wnRUHVtGDSwwMPHVZ3GKAQZAVBO1mEDMRZU8W9ZZnml5InjwLRYMLYtluyrMAKU/cD9EzVkQAO9vrEFJq24VDQ=="
+  },
+  {
+   "name": "signature_bad_base64",
+   "why": "the .sig file isn't base64",
+   "valid": false,
+   "public_key": "YcNzjqtNhrAj3aZNQIt+PmgCBxYnIA/gr+IAZnutYj0=",
+   "payload_b64": "eyJ2ZXJzaW9uIjogIjIwMjYtMTAtMjQuMSIsICJob3N0cyI6IFsibG9naW4uZXhhbXBsZS5nb3YiXX0K",
+   "signature": "not base64!"
+  },
+  {
+   "name": "public_key_bad_base64",
+   "why": "signing.pub isn't base64",
+   "valid": false,
+   "public_key": "not a key!",
+   "payload_b64": "eyJ2ZXJzaW9uIjogIjIwMjYtMTAtMjQuMSIsICJob3N0cyI6IFsibG9naW4uZXhhbXBsZS5nb3YiXX0K",
+   "signature": "qjUAIrDnyYSABrpUs3DgKY3kGNMutk1iQ5RnmUGYHXS2x8iElREVhQR5TUINxM0eJ7Nrw2T0qnyfgfL1BtIrBA=="
+  },
+  {
+   "name": "signature_url_safe_alphabet",
+   "why": "base64url ('-', '_') instead of standard base64",
+   "valid": false,
+   "public_key": "YcNzjqtNhrAj3aZNQIt+PmgCBxYnIA/gr+IAZnutYj0=",
+   "payload_b64": "dXJsLXNhZmUgYWxwaGFiZXQgY2FzZSAwCg==",
+   "signature": "IT7kcAidJ7D9Xf-HutTHZPGOTAFskOLDedlgpbRdIxxhtesWqPl1TmDDXt-odUjppmxQ-rO6bfGm7FPORHkcBQ=="
+  },
+  {
+   "name": "signature_url_safe_alphabet_control",
+   "why": "the same signature in standard base64",
+   "valid": true,
+   "public_key": "YcNzjqtNhrAj3aZNQIt+PmgCBxYnIA/gr+IAZnutYj0=",
+   "payload_b64": "dXJsLXNhZmUgYWxwaGFiZXQgY2FzZSAwCg==",
+   "signature": "IT7kcAidJ7D9Xf+HutTHZPGOTAFskOLDedlgpbRdIxxhtesWqPl1TmDDXt+odUjppmxQ+rO6bfGm7FPORHkcBQ=="
+  },
+  {
+   "name": "signature_missing_padding",
+   "why": "the '==' at the end left out",
+   "valid": false,
+   "public_key": "YcNzjqtNhrAj3aZNQIt+PmgCBxYnIA/gr+IAZnutYj0=",
+   "payload_b64": "eyJ2ZXJzaW9uIjogIjIwMjYtMTAtMjQuMSIsICJob3N0cyI6IFsibG9naW4uZXhhbXBsZS5nb3YiXX0K",
+   "signature": "qjUAIrDnyYSABrpUs3DgKY3kGNMutk1iQ5RnmUGYHXS2x8iElREVhQR5TUINxM0eJ7Nrw2T0qnyfgfL1BtIrBA"
+  },
+  {
+   "name": "signature_non_canonical",
+   "why": "decodes to the right 64 bytes, but its spare bits aren't zero",
+   "valid": false,
+   "public_key": "YcNzjqtNhrAj3aZNQIt+PmgCBxYnIA/gr+IAZnutYj0=",
+   "payload_b64": "eyJ2ZXJzaW9uIjogIjIwMjYtMTAtMjQuMSIsICJob3N0cyI6IFsibG9naW4uZXhhbXBsZS5nb3YiXX0K",
+   "signature": "qjUAIrDnyYSABrpUs3DgKY3kGNMutk1iQ5RnmUGYHXS2x8iElREVhQR5TUINxM0eJ7Nrw2T0qnyfgfL1BtIrBB=="
+  },
+  {
+   "name": "signature_63_bytes",
+   "why": "a signature one byte short",
+   "valid": false,
+   "public_key": "YcNzjqtNhrAj3aZNQIt+PmgCBxYnIA/gr+IAZnutYj0=",
+   "payload_b64": "eyJ2ZXJzaW9uIjogIjIwMjYtMTAtMjQuMSIsICJob3N0cyI6IFsibG9naW4uZXhhbXBsZS5nb3YiXX0K",
+   "signature": "qjUAIrDnyYSABrpUs3DgKY3kGNMutk1iQ5RnmUGYHXS2x8iElREVhQR5TUINxM0eJ7Nrw2T0qnyfgfL1BtIr"
+  },
+  {
+   "name": "signature_65_bytes",
+   "why": "a signature one byte long",
+   "valid": false,
+   "public_key": "YcNzjqtNhrAj3aZNQIt+PmgCBxYnIA/gr+IAZnutYj0=",
+   "payload_b64": "eyJ2ZXJzaW9uIjogIjIwMjYtMTAtMjQuMSIsICJob3N0cyI6IFsibG9naW4uZXhhbXBsZS5nb3YiXX0K",
+   "signature": "qjUAIrDnyYSABrpUs3DgKY3kGNMutk1iQ5RnmUGYHXS2x8iElREVhQR5TUINxM0eJ7Nrw2T0qnyfgfL1BtIrBAA="
+  },
+  {
+   "name": "public_key_31_bytes",
+   "why": "a public key one byte short",
+   "valid": false,
+   "public_key": "YcNzjqtNhrAj3aZNQIt+PmgCBxYnIA/gr+IAZnutYg==",
+   "payload_b64": "eyJ2ZXJzaW9uIjogIjIwMjYtMTAtMjQuMSIsICJob3N0cyI6IFsibG9naW4uZXhhbXBsZS5nb3YiXX0K",
+   "signature": "qjUAIrDnyYSABrpUs3DgKY3kGNMutk1iQ5RnmUGYHXS2x8iElREVhQR5TUINxM0eJ7Nrw2T0qnyfgfL1BtIrBA=="
+  },
+  {
+   "name": "public_key_33_bytes",
+   "why": "a public key one byte long",
+   "valid": false,
+   "public_key": "YcNzjqtNhrAj3aZNQIt+PmgCBxYnIA/gr+IAZnutYj0A",
+   "payload_b64": "eyJ2ZXJzaW9uIjogIjIwMjYtMTAtMjQuMSIsICJob3N0cyI6IFsibG9naW4uZXhhbXBsZS5nb3YiXX0K",
+   "signature": "qjUAIrDnyYSABrpUs3DgKY3kGNMutk1iQ5RnmUGYHXS2x8iElREVhQR5TUINxM0eJ7Nrw2T0qnyfgfL1BtIrBA=="
+  },
+  {
+   "name": "none_key",
+   "why": "signing.pub is the shipped placeholder `none`: nothing verifies",
+   "valid": false,
+   "public_key": "none",
+   "payload_b64": "eyJ2ZXJzaW9uIjogIjIwMjYtMTAtMjQuMSIsICJob3N0cyI6IFsibG9naW4uZXhhbXBsZS5nb3YiXX0K",
+   "signature": "qjUAIrDnyYSABrpUs3DgKY3kGNMutk1iQ5RnmUGYHXS2x8iElREVhQR5TUINxM0eJ7Nrw2T0qnyfgfL1BtIrBA=="
+  },
+  {
+   "name": "none_key_with_newline",
+   "why": "the placeholder as the file holds it",
+   "valid": false,
+   "public_key": "none\n",
+   "payload_b64": "eyJ2ZXJzaW9uIjogIjIwMjYtMTAtMjQuMSIsICJob3N0cyI6IFsibG9naW4uZXhhbXBsZS5nb3YiXX0K",
+   "signature": "qjUAIrDnyYSABrpUs3DgKY3kGNMutk1iQ5RnmUGYHXS2x8iElREVhQR5TUINxM0eJ7Nrw2T0qnyfgfL1BtIrBA=="
+  },
+  {
+   "name": "signature_two_newlines",
+   "why": "a second line after the signature",
+   "valid": false,
+   "public_key": "YcNzjqtNhrAj3aZNQIt+PmgCBxYnIA/gr+IAZnutYj0=",
+   "payload_b64": "eyJ2ZXJzaW9uIjogIjIwMjYtMTAtMjQuMSIsICJob3N0cyI6IFsibG9naW4uZXhhbXBsZS5nb3YiXX0K",
+   "signature": "qjUAIrDnyYSABrpUs3DgKY3kGNMutk1iQ5RnmUGYHXS2x8iElREVhQR5TUINxM0eJ7Nrw2T0qnyfgfL1BtIrBA==\n\n"
+  },
+  {
+   "name": "signature_crlf_line_end",
+   "why": "a CR before the newline",
+   "valid": false,
+   "public_key": "YcNzjqtNhrAj3aZNQIt+PmgCBxYnIA/gr+IAZnutYj0=",
+   "payload_b64": "eyJ2ZXJzaW9uIjogIjIwMjYtMTAtMjQuMSIsICJob3N0cyI6IFsibG9naW4uZXhhbXBsZS5nb3YiXX0K",
+   "signature": "qjUAIrDnyYSABrpUs3DgKY3kGNMutk1iQ5RnmUGYHXS2x8iElREVhQR5TUINxM0eJ7Nrw2T0qnyfgfL1BtIrBA==\r\n"
+  },
+  {
+   "name": "signature_leading_space",
+   "why": "a space before the signature",
+   "valid": false,
+   "public_key": "YcNzjqtNhrAj3aZNQIt+PmgCBxYnIA/gr+IAZnutYj0=",
+   "payload_b64": "eyJ2ZXJzaW9uIjogIjIwMjYtMTAtMjQuMSIsICJob3N0cyI6IFsibG9naW4uZXhhbXBsZS5nb3YiXX0K",
+   "signature": " qjUAIrDnyYSABrpUs3DgKY3kGNMutk1iQ5RnmUGYHXS2x8iElREVhQR5TUINxM0eJ7Nrw2T0qnyfgfL1BtIrBA=="
+  },
+  {
+   "name": "public_key_crlf_line_end",
+   "why": "a CR before signing.pub's newline",
+   "valid": false,
+   "public_key": "YcNzjqtNhrAj3aZNQIt+PmgCBxYnIA/gr+IAZnutYj0=\r\n",
+   "payload_b64": "eyJ2ZXJzaW9uIjogIjIwMjYtMTAtMjQuMSIsICJob3N0cyI6IFsibG9naW4uZXhhbXBsZS5nb3YiXX0K",
+   "signature": "qjUAIrDnyYSABrpUs3DgKY3kGNMutk1iQ5RnmUGYHXS2x8iElREVhQR5TUINxM0eJ7Nrw2T0qnyfgfL1BtIrBA=="
+  },
+  {
+   "name": "signature_empty",
+   "why": "an empty .sig file",
+   "valid": false,
+   "public_key": "YcNzjqtNhrAj3aZNQIt+PmgCBxYnIA/gr+IAZnutYj0=",
+   "payload_b64": "eyJ2ZXJzaW9uIjogIjIwMjYtMTAtMjQuMSIsICJob3N0cyI6IFsibG9naW4uZXhhbXBsZS5nb3YiXX0K",
+   "signature": ""
+  },
+  {
+   "name": "public_key_empty",
+   "why": "an empty signing.pub",
+   "valid": false,
+   "public_key": "",
+   "payload_b64": "eyJ2ZXJzaW9uIjogIjIwMjYtMTAtMjQuMSIsICJob3N0cyI6IFsibG9naW4uZXhhbXBsZS5nb3YiXX0K",
+   "signature": "qjUAIrDnyYSABrpUs3DgKY3kGNMutk1iQ5RnmUGYHXS2x8iElREVhQR5TUINxM0eJ7Nrw2T0qnyfgfL1BtIrBA=="
+  },
+  {
+   "name": "signature_non_ascii",
+   "why": "a non-ASCII character in the .sig file",
+   "valid": false,
+   "public_key": "YcNzjqtNhrAj3aZNQIt+PmgCBxYnIA/gr+IAZnutYj0=",
+   "payload_b64": "eyJ2ZXJzaW9uIjogIjIwMjYtMTAtMjQuMSIsICJob3N0cyI6IFsibG9naW4uZXhhbXBsZS5nb3YiXX0K",
+   "signature": "qjUAIrDnyYSABrpUs3DgKY3kGNMutk1iQ5RnmUGYHXS2x8iElREVhQR5TUINxM0eJ7Nrw2T0qnyfgfL1BtIrBé=="
+  }
+ ]
+}

@@ -1,0 +1,14 @@
+{
+ "configured": true,
+ "cart": {
+  "minutes": 1080,
+  "tax_percent": 15,
+  "agreement_edible": 40,
+  "agreement_dried": 90,
+  "dedupe_seconds": 20,
+  "max_units_per_line": 999
+ },
+ "mazamaLicenses": [
+  "mf-1e72fc8f"
+ ]
+}

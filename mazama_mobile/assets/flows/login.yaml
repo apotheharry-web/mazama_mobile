@@ -1,0 +1,198 @@
+# The Oregon product-tracking system's sign-in: an Azure AD B2C authorization-code + PKCE flow, replayed over plain
+# HTTP the way the state's own site's JS (MSAL) does it. See ../SPEC.md for the step format.
+#
+# Inputs every run needs: email, password.
+# Inputs `renew` needs instead: refresh_token.
+# Outputs on success: access_token, refresh_token, expires_in, and refresh_token_expires_in when the state sends it.
+# `login` also leaves signin_page (the whole sign-in page body) so a caller can look at it when the page changes.
+# Every check carries a `reason` (structure, credentials, unavailable, refused): see specs/state-login SL-R2.
+
+format: 1
+
+vars:
+  # Changed with every edit to this file (specs/state-login SL-R2): YYYY-MM-DD.N, see ../SPEC.md "Format and version".
+  spec_version: "2026-10-24.4"
+  # The part of the sign-in page the server's page fingerprint reads "key": names from (specs/state-login SL-R6): group 1
+  # of this regex over the page body. It is the object that holds csrf/transId/policy;
+  # the rest of the page embeds JavaScript libraries (an HTML-entity table, jQuery) whose own keys change whenever
+  # Microsoft updates them, which is not a change to the sign-in. Not read by a step; a plain var, so it is not a template.
+  fingerprint_scope: 'var SETTINGS = (\{[\s\S]*?\});'
+  # Per-request limit, seconds (SM-D1, specs/shared-modules/decisions.md). See ../SPEC.md "Timeouts".
+  timeout_seconds: 60
+  tenant: oregonpsilocybinprodb2c
+  policy: b2c_1_oha_ph_psilocybin_prod_susi
+  b2c: "https://{{tenant}}.b2clogin.com/{{tenant}}.onmicrosoft.com"
+  b2c_host: "https://{{tenant}}.b2clogin.com"
+  client_id: "4dd36aed-93b7-41a6-a17a-5c367fe71f31"
+  scope: "openid https://{{tenant}}.onmicrosoft.com/{{client_id}}/User.Access profile offline_access"
+  site: "https://psilocybin.oregon.gov/"
+  site_origin: "https://psilocybin.oregon.gov"
+  redirect_uri: "{{site}}"
+  # Renew the access token once it is this many seconds or less from expiry (SM-20). Read by the server's
+  # StateSession (REFRESH_MARGIN) and the phone's session.dart (refreshMarginOf); not used by a step here.
+  refresh_margin_seconds: 120
+
+flows:
+  login:
+    - id: pkce
+      type: generate
+      make: pkce
+      into: [verifier, challenge]
+
+    - id: ids
+      type: generate
+      make: random_hex
+      into: [state, nonce, client_request]
+
+    - id: authorize
+      type: request
+      method: GET
+      url: "{{b2c}}/{{policy}}/oauth2/v2.0/authorize"
+      params:
+        client_id: "{{client_id}}"
+        scope: "{{scope}}"
+        redirect_uri: "{{redirect_uri}}"
+        client-request-id: "{{client_request}}"
+        response_mode: fragment
+        response_type: code
+        x-client-SKU: msal.js.browser
+        x-client-VER: "4.27.0"
+        client_info: "1"
+        code_challenge: "{{challenge}}"
+        code_challenge_method: S256
+        nonce: "{{nonce}}"
+        state: "{{state}}"
+      require:
+        - check: status_in
+          values: [200]
+          reason: unavailable
+          error: "the sign-in page was not available: HTTP {status}"
+      extract:
+        - {var: csrf, source: body, regex: '"csrf"\s*:\s*"([^"]+)"'}
+        - {var: trans, source: body, regex: '"transId"\s*:\s*"([^"]+)"'}
+        - {var: pol, source: body, regex: '"policy"\s*:\s*"([^"]+)"'}
+        - {var: page_url, source: url}
+        - {var: signin_page, source: body, regex: '([\s\S]*)'}
+
+    - id: require_page_fields
+      type: assert                 # no network call: just checks what `authorize` captured
+      require:
+        - check: truthy
+          vars: [csrf, trans, pol]
+          reason: structure
+          error: "the sign-in page did not have the expected fields"
+
+    - id: self_asserted
+      type: request
+      method: POST
+      url: "{{b2c}}/{{pol}}/SelfAsserted"
+      params: {tx: "{{trans}}", p: "{{pol}}"}
+      headers:
+        X-CSRF-TOKEN: "{{csrf}}"
+        X-Requested-With: XMLHttpRequest
+        Origin: "{{b2c_host}}"
+        Referer: "{{page_url}}"
+      form:
+        request_type: RESPONSE
+        email: "{{email}}"
+        password: "{{password}}"
+      # In this order: B2C busy or down (429, 5xx: any status not listed) is an outage, not a changed page; any other
+      # non-200 means the form or its transaction was rejected (the flow changed); a 200 that is not B2C's JSON is a
+      # changed page too; only B2C's own JSON refusal is the email/password.
+      require:
+        - check: status_in
+          values: [200, 400, 401, 403, 404, 405, 409, 410, 415, 422]
+          reason: unavailable
+          error: "the state's sign-in did not answer: HTTP {status}"
+        - check: status_in
+          values: [200]
+          reason: structure
+          error: "the sign-in form was not accepted: HTTP {status}"
+      extract:
+        - {var: b2c_status, source: body, json: status}
+      then_require:
+        - check: truthy
+          vars: [b2c_status]
+          reason: structure
+          error: "the sign-in form answered with something unexpected"
+        - check: json_equals
+          path: status
+          value: "200"
+          reason: credentials
+          error: "the state system refused the login: {{b2c_message}}"
+      capture_on_fail:
+        - {var: b2c_message, source: body, json: message, default: "check the email and password"}
+
+    - id: confirmed
+      type: request
+      method: GET
+      url: "{{b2c}}/{{pol}}/api/CombinedSigninAndSignup/confirmed"
+      params: {rememberMe: "false", csrf_token: "{{csrf}}", tx: "{{trans}}", p: "{{pol}}"}
+      follow_redirects: false
+      require:
+        - check: status_in
+          values: [301, 302, 303]
+          reason: structure
+          error: "the sign-in did not return an authorization code: HTTP {status}"
+      extract:
+        - {var: code, source: header, name: location, fragment: code}
+      then_require:
+        - check: truthy
+          vars: [code]
+          reason: structure
+          error: "the sign-in did not return an authorization code: HTTP {status}"
+
+    - id: token
+      type: request
+      method: POST
+      url: "{{b2c}}/{{policy}}/oauth2/v2.0/token"
+      headers: {Origin: "{{site_origin}}"}
+      form:
+        client_id: "{{client_id}}"
+        scope: "{{scope}}"
+        code: "{{code}}"
+        redirect_uri: "{{redirect_uri}}"
+        code_verifier: "{{verifier}}"
+        grant_type: authorization_code
+      require:
+        - check: status_in
+          values: [200]
+          reason: refused
+          error: "the token request was refused: HTTP {status}"
+      extract:
+        - {var: access_token, source: body, json: access_token}
+        - {var: refresh_token, source: body, json: refresh_token}
+        - {var: expires_in, source: body, json: expires_in}
+        - {var: refresh_token_expires_in, source: body, json: refresh_token_expires_in}
+      then_require:
+        - check: truthy
+          vars: [access_token]
+          reason: structure
+          error: "the token request returned no access token"
+
+  renew:
+    - id: token
+      type: request
+      method: POST
+      url: "{{b2c}}/{{policy}}/oauth2/v2.0/token"
+      headers: {Origin: "{{site_origin}}"}
+      form:
+        client_id: "{{client_id}}"
+        scope: "{{scope}}"
+        grant_type: refresh_token
+        refresh_token: "{{refresh_token}}"
+      require:
+        - check: status_in
+          values: [200]
+          reason: refused
+          error: "the token refresh was refused: HTTP {status}"
+      extract:
+        - {var: access_token, source: body, json: access_token}
+        - {var: refresh_token, source: body, json: refresh_token}
+        - {var: expires_in, source: body, json: expires_in}
+        - {var: refresh_token_expires_in, source: body, json: refresh_token_expires_in}
+      then_require:
+        - check: truthy
+          vars: [access_token]
+          reason: structure
+          error: "the token refresh returned no access token"

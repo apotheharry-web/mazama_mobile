@@ -1,0 +1,171 @@
+[
+ {
+  "productGuid": "PKPR-aaaa0001",
+  "productType": "Edible Psilocybin Product",
+  "id": 6600,
+  "weightPerUnit": 0.48,
+  "analyteWeight": 10.4,
+  "strain": "Golden Teacher",
+  "tpeMg": 5,
+  "quantity": 120,
+  "coaAvailable": true,
+  "labelAvailable": true,
+  "expires": "2027-06-01",
+  "mazama": true,
+  "expired": false,
+  "unitMgTpe": 4.992,
+  "description": "Golden Teacher 5 mg TPE DH (2027-06-01)",
+  "type": "DH",
+  "labelInput": {
+   "package": {
+    "pkpr": "PKPR-aaaa0001",
+    "description": "Golden Teacher 5 mg TPE DH (2027-06-01)",
+    "weight_per_unit": 0.48,
+    "product_type": "Edible Psilocybin Product",
+    "analyte_weight": 10.4,
+    "lot": "HB-1e72aa01",
+    "strain": "Golden Teacher",
+    "subtype": "Dehydrated"
+   },
+   "section": {
+    "uid": "HB-1e72aa01",
+    "uid_folded": false,
+    "page": 1,
+    "is_fd": false,
+    "sample": "",
+    "unit_found": "mg/g",
+    "analytes": {
+     "psilocybin": {
+      "kind": "number",
+      "value": 10.4
+     },
+     "psilocin": {
+      "kind": "number",
+      "value": 0.42
+     },
+     "baeocystin": {
+      "kind": "number",
+      "value": 0.31
+     },
+     "norbaeocystin": {
+      "kind": "number",
+      "value": 0.0
+     },
+     "norpsilocin": {
+      "kind": "number",
+      "value": 0.0
+     },
+     "aeruginascin": {
+      "kind": "missing"
+     }
+    },
+    "lab_totals": {},
+    "tpe": null,
+    "analyzed_date": null,
+    "status": "ok",
+    "reasons": []
+   },
+   "settings": {
+    "shelf_months": 12,
+    "fd_months": 24,
+    "shelf_days": null,
+    "fd_days": null
+   },
+   "test_date": "2026-08-27"
+  }
+ },
+ {
+  "productGuid": "PKPR-aaaa0001",
+  "productType": "Edible Psilocybin Product",
+  "id": 6612,
+  "weightPerUnit": 0.48,
+  "analyteWeight": 10.4,
+  "strain": "Golden Teacher",
+  "tpeMg": 5,
+  "quantity": 7,
+  "coaAvailable": true,
+  "labelAvailable": true,
+  "expires": "2027-03-01",
+  "mazama": true,
+  "expired": false,
+  "unitMgTpe": 4.992,
+  "description": "Golden Teacher 5 mg TPE DH (2027-03-01)",
+  "type": "DH",
+  "labelInput": {
+   "package": {
+    "pkpr": "PKPR-aaaa0001",
+    "description": "Golden Teacher 5 mg TPE DH (2027-03-01)",
+    "weight_per_unit": 0.48,
+    "product_type": "Edible Psilocybin Product",
+    "analyte_weight": 10.4,
+    "lot": "HB-1e72aa01",
+    "strain": "Golden Teacher",
+    "subtype": "Dehydrated"
+   },
+   "section": {
+    "uid": "HB-1e72aa01",
+    "uid_folded": false,
+    "page": 1,
+    "is_fd": false,
+    "sample": "",
+    "unit_found": "mg/g",
+    "analytes": {
+     "psilocybin": {
+      "kind": "number",
+      "value": 10.4
+     },
+     "psilocin": {
+      "kind": "number",
+      "value": 0.42
+     },
+     "baeocystin": {
+      "kind": "number",
+      "value": 0.31
+     },
+     "norbaeocystin": {
+      "kind": "number",
+      "value": 0.0
+     },
+     "norpsilocin": {
+      "kind": "number",
+      "value": 0.0
+     },
+     "aeruginascin": {
+      "kind": "missing"
+     }
+    },
+    "lab_totals": {},
+    "tpe": null,
+    "analyzed_date": null,
+    "status": "ok",
+    "reasons": []
+   },
+   "settings": {
+    "shelf_months": 12,
+    "fd_months": 24,
+    "shelf_days": null,
+    "fd_days": null
+   },
+   "test_date": "2026-08-27"
+  }
+ },
+ {
+  "productGuid": "PKPR-ab12c",
+  "productType": "Extract",
+  "id": 101,
+  "weightPerUnit": 5.0,
+  "analyteWeight": null,
+  "strain": "",
+  "tpeMg": 0,
+  "quantity": 10,
+  "coaAvailable": false,
+  "labelAvailable": false,
+  "expires": "2027-09-01",
+  "mazama": false,
+  "expired": false,
+  "unitMgTpe": null,
+  "description": "Extract 50 mg (2027-09-01)",
+  "type": "EX",
+  "labelInput": null
+ }
+]

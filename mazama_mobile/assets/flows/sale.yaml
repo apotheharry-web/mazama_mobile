@@ -1,0 +1,56 @@
+# Recording a sale against the state product-tracking API, once already signed in via login.yaml.
+#
+# Unlike login, this is one plain authenticated POST - no multi-step B2C choreography to replay - so the only
+# real reason it's a shared spec at all, rather than two hand-written functions, is that the endpoint path and
+# required headers are state-system surface that can drift the same way B2C's can. The *contents* of a sale
+# record (price, weight, dose split, Pacific-midnight date conversion) are this app's own business logic, not
+# state-system protocol, and deliberately stay out of this file - see selling.py (Python) / selling.dart (Dart),
+# which build the `records` value this flow just sends. Nothing here recognizes it as money or a legal record.
+#
+# Inputs: access_token (from login/renew), records (the already-built list of sale-record objects).
+# Outputs on success: created (the state's own copy of each record - now with its real id and saleNumber filled
+# in, and all given the same sale number since they went up in one request).
+#
+# What's deliberately NOT here, per SPEC.md's "what stays out of the spec": retrying a write, or telling apart
+# "definitely not sent" (safe to retry) from "maybe sent" (not safe to retry blindly). That's the caller's job
+# (the phone's sale_outcome.dart; the server sends sales through StateSession._write instead), reading the
+# `stage` and `status` every FlowError carries (SPEC.md "Failures"), never the wording of the message: the
+# connection never opened -> not sent; a 4xx -> refused, not sent; anything else (a reset or timeout after
+# sending, a 5xx, an empty or unreadable 200) -> it may have been recorded.
+#
+# A 200 isn't proof either: the caller also checks that the state answered one record per record sent, all with
+# the same, non-blank saleNumber (SM-D2), and treats anything else as "may have been recorded".
+
+vars:
+  # Per-request limit, seconds (SM-D1, specs/shared-modules/decisions.md). No answer in time after the sale may
+  # have gone out is "may have been recorded", never "not sent". See ../SPEC.md "Timeouts".
+  timeout_seconds: 60
+  site: "https://psilocybin.oregon.gov/"
+  site_origin: "https://psilocybin.oregon.gov"
+  api: "{{site}}api/private/ProductTracking/"
+  # The same User-Agent as state_reads.yaml (SM-20; a test keeps the two equal).
+  user_agent: "Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0"
+
+flows:
+  sale:
+    - id: create
+      type: request
+      method: POST
+      url: "{{api}}CreateSalesRecords/false"
+      headers:
+        Authorization: "Bearer {{access_token}}"
+        Accept: "application/json"
+        Referer: "{{site}}"
+        Origin: "{{site_origin}}"
+        User-Agent: "{{user_agent}}"
+      json_var: records
+      require:
+        - check: status_in
+          values: [200]
+          error: "the state system answered the sale with HTTP {status}"
+      extract:
+        - {var: created, source: body, json: ""}
+      then_require:
+        - check: truthy
+          vars: [created]
+          error: "the sale was not confirmed: the state system's answer had nothing in it"

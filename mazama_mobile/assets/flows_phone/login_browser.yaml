@@ -1,0 +1,161 @@
+# The Oregon product-tracking system's sign-in on the state's own page (specs/state-login SL-R16): the same Azure AD
+# B2C authorization-code + PKCE flow as ../login.yaml, but instead of replaying the sign-in form over plain HTTP, the
+# phone shows the real B2C page to the worker in a webview (step `open_browser`) and reads the authorization code from
+# the address the page sends the browser to. For when the plain-HTTP replay can't work (a CAPTCHA, an interstitial
+# page, a provider that needs the page's own scripts). See ../../SPEC.md "Format 3".
+#
+# Bundled with the app (vendored to mazama_mobile/assets/flows_phone/ by vendored.txt's flows-phone set). The server
+# keeps a copy (mazama_sales/src/mazama_sales/state/flows_phone/) only to serve it, never to run it: GET
+# /p/flows/login_browser?format=N (SL-R19) serves the newer usable one of that copy and a signed hosted one
+# (loginBrowserSpecUrl, SL-D14). A phone fetches it only after a browser sign-in failed (closed or refused included:
+# that is how a moved host or a changed policy shows), retries once only with a newer one, and saves it
+# (login_browser_spec.yaml, apart from login_spec.yaml) only after it gave a session.
+# It is never served by GET /p/flows/login (a spec served there has no open_browser), so its format doesn't decide
+# what older phones are sent there.
+#
+# Inputs: none (the worker types the email and password into the state's page; the phone never sees them).
+# Inputs `renew` needs: refresh_token.
+# Outputs on success: access_token, refresh_token, expires_in, and refresh_token_expires_in when the state sends it.
+#
+# Keep in step with ../login.yaml BY HAND: its B2C vars (tenant, policy, client_id, scope, site, redirect_uri, ...),
+# the authorize params and the token/renew steps are copied here. When the state changes its B2C ids, change both
+# files (and bump both spec_versions); phones get the new copy with the server's next deploy, or sooner from a signed
+# hosted copy.
+
+format: 3
+
+vars:
+  # Changed with every edit to this file (specs/state-login SL-R2): YYYY-MM-DD.N, see ../../SPEC.md "Format and version".
+  # Its own sequence, unrelated to login.yaml's.
+  spec_version: "2026-10-24.3"
+  # Per-request limit, seconds (SM-D1, specs/shared-modules/decisions.md). The page itself has no limit: the worker
+  # takes as long as they need, and closing it ends the flow (reason cancelled).
+  timeout_seconds: 60
+  tenant: oregonpsilocybinprodb2c
+  policy: b2c_1_oha_ph_psilocybin_prod_susi
+  b2c: "https://{{tenant}}.b2clogin.com/{{tenant}}.onmicrosoft.com"
+  client_id: "4dd36aed-93b7-41a6-a17a-5c367fe71f31"
+  scope: "openid https://{{tenant}}.onmicrosoft.com/{{client_id}}/User.Access profile offline_access"
+  site: "https://psilocybin.oregon.gov/"
+  site_origin: "https://psilocybin.oregon.gov"
+  redirect_uri: "{{site}}"
+  # Renew the access token once it is this many seconds or less from expiry (SM-20), as login.yaml's.
+  refresh_margin_seconds: 120
+
+flows:
+  login:
+    - id: pkce
+      type: generate
+      make: pkce
+      into: [verifier, challenge]
+
+    - id: ids
+      type: generate
+      make: random_hex
+      into: [state, nonce, client_request]
+
+    # The state's real sign-in page. B2C ends a sign-in by sending the browser to redirect_uri with the code in the
+    # fragment (#code=...&state=...); the phone stops there without loading it. B2C ends a sign-in it gave up on the
+    # same way, with #error=...&error_description=... (the worker chose "forgot your password?", say).
+    - id: browser
+      type: open_browser
+      url: "{{b2c}}/{{policy}}/oauth2/v2.0/authorize"
+      params:
+        client_id: "{{client_id}}"
+        scope: "{{scope}}"
+        redirect_uri: "{{redirect_uri}}"
+        client-request-id: "{{client_request}}"
+        response_mode: fragment
+        response_type: code
+        x-client-SKU: msal.js.browser
+        x-client-VER: "4.27.0"
+        client_info: "1"
+        code_challenge: "{{challenge}}"
+        code_challenge_method: S256
+        nonce: "{{nonce}}"
+        state: "{{state}}"
+      until: "{{redirect_uri}}"
+      extract:
+        - {var: code, source: url_fragment, name: code}
+        - {var: returned_state, source: url_fragment, name: state}
+        - {var: page_error, source: url_fragment, name: error, default: ""}
+        - {var: page_error_description, source: url_fragment, name: error_description, default: "no reason given"}
+      then_require:
+        - check: vars_equal
+          vars: [state, returned_state]
+          reason: structure
+          error: "the state's sign-in page answered another sign-in"
+
+    # The page reported an error instead of a code: the state's page itself said no (or the worker left it another
+    # way), not a changed page, so no new spec would help.
+    - id: page_refused
+      type: assert
+      when: {var: page_error, matches: "."}
+      require:
+        - check: truthy
+          vars: [code]
+          reason: credentials
+          error: "the state's sign-in page ended without signing in: {{page_error_description}}"
+
+    - id: require_code
+      type: assert
+      require:
+        - check: truthy
+          vars: [code]
+          reason: structure
+          error: "the state's sign-in page did not return an authorization code"
+
+    - id: token
+      type: request
+      method: POST
+      url: "{{b2c}}/{{policy}}/oauth2/v2.0/token"
+      headers: {Origin: "{{site_origin}}"}
+      form:
+        client_id: "{{client_id}}"
+        scope: "{{scope}}"
+        code: "{{code}}"
+        redirect_uri: "{{redirect_uri}}"
+        code_verifier: "{{verifier}}"
+        grant_type: authorization_code
+      require:
+        - check: status_in
+          values: [200]
+          reason: refused
+          error: "the token request was refused: HTTP {status}"
+      extract:
+        - {var: access_token, source: body, json: access_token}
+        - {var: refresh_token, source: body, json: refresh_token}
+        - {var: expires_in, source: body, json: expires_in}
+        - {var: refresh_token_expires_in, source: body, json: refresh_token_expires_in}
+      then_require:
+        - check: truthy
+          vars: [access_token]
+          reason: structure
+          error: "the token request returned no access token"
+
+  renew:
+    - id: token
+      type: request
+      method: POST
+      url: "{{b2c}}/{{policy}}/oauth2/v2.0/token"
+      headers: {Origin: "{{site_origin}}"}
+      form:
+        client_id: "{{client_id}}"
+        scope: "{{scope}}"
+        grant_type: refresh_token
+        refresh_token: "{{refresh_token}}"
+      require:
+        - check: status_in
+          values: [200]
+          reason: refused
+          error: "the token refresh was refused: HTTP {status}"
+      extract:
+        - {var: access_token, source: body, json: access_token}
+        - {var: refresh_token, source: body, json: refresh_token}
+        - {var: expires_in, source: body, json: expires_in}
+        - {var: refresh_token_expires_in, source: body, json: refresh_token_expires_in}
+      then_require:
+        - check: truthy
+          vars: [access_token]
+          reason: structure
+          error: "the token refresh returned no access token"

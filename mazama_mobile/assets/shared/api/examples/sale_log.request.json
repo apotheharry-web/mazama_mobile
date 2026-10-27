@@ -1,0 +1,59 @@
+{
+ "workerEmail": "worker@example.com",
+ "deviceId": "7f3c2a9e-4b1d-4e8a-9c55-0d2f6b8e1a34",
+ "request": [
+  {
+   "analyteWeight": 7.25,
+   "changes": null,
+   "costEach": 20.5,
+   "dateCreated": "",
+   "dateDeleted": null,
+   "dateOfSale": "2026-09-28T07:00:00.000Z",
+   "deleted": false,
+   "deletedBy": null,
+   "id": 0,
+   "initialDose": 1,
+   "isRefund": "",
+   "notes": "",
+   "numberSold": 1,
+   "productCost": 20.5,
+   "productGroup": "Edible Psilocybin Product",
+   "productGuid": "PKPR-aaaa0001",
+   "productId": 5,
+   "reasonDeleted": null,
+   "saleNumber": "",
+   "secondaryDose": 0,
+   "serviceCenterId": 225,
+   "wasteOuts": [],
+   "weightPerUnit": 0.5
+  }
+ ],
+ "response": [
+  {
+   "analyteWeight": 7.25,
+   "changes": null,
+   "costEach": 20.5,
+   "dateCreated": "",
+   "dateDeleted": null,
+   "dateOfSale": "2026-09-28T07:00:00.000Z",
+   "deleted": false,
+   "deletedBy": null,
+   "id": 90211,
+   "initialDose": 1,
+   "isRefund": "",
+   "notes": "",
+   "numberSold": 1,
+   "productCost": 20.5,
+   "productGroup": "Edible Psilocybin Product",
+   "productGuid": "PKPR-aaaa0001",
+   "productId": 5,
+   "reasonDeleted": null,
+   "saleNumber": "S-104477",
+   "secondaryDose": 0,
+   "serviceCenterId": 225,
+   "wasteOuts": [],
+   "weightPerUnit": 0.5
+  }
+ ],
+ "clientId": "3b8f6a2e-9c41-4d7a-8e15-2f0c6d9a4b71"
+}

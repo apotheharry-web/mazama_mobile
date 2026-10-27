@@ -1,0 +1,59 @@
+# Selling rules both apps use (specs/shared-modules/README.md G4: SM-13 onwards). Vendored into each app by SM-00
+# (mazama_modules/vendored.txt "selling-rules"); the server reads its copy (pricing.py), the phone holds its
+# constants to its copy in a test (selling_rules_test.dart). Money is whole cents.
+
+pricing:
+  # The most one unit may cost: $10,000 (pricing.py MAX_UNIT_CENTS, pricing.dart maxUnitCents).
+  max_unit_cents: 1000000
+  # The most a $-per-mg rate may be: $1,000 per mg TPE (pricing.py MAX_PER_MG_CENTS, pricing.dart maxPerMgCents).
+  max_per_mg_cents: 100000
+  # A whole-cart total may be at most this many times max_unit_cents: $10,000,000 (total_to_cents, totalToCents).
+  max_total_units: 1000
+
+# A shopping cart's settings (SM-16). The server's defaults: config.py reads these from its vendored copy, and
+# mazama_sales/nix/module.nix writes the same numbers as its option defaults (nix keeps the final say; a test holds
+# the two equal). The server sends the live values with /p/center-status/{state_id} ("cart"); the phone uses them,
+# and these from its own vendored copy when the server can't be asked.
+cart:
+  minutes: 1080              # a cart nobody has changed for this many minutes is emptied (18 hours)
+  tax_percent: 15            # the tax a cart can add on top of its total price or price per mg
+  agreement_edible: 40       # the manufacturer agreement, dollars: edibles + extracts part of a $130 cart...
+  agreement_dried: 90        # ...and whole / dried / homogenized part; any other total is shared 40:90
+  dedupe_seconds: 20         # the server holds back the same package sold again within this many seconds
+  max_units_per_line: 999    # the most units one cart line may hold
+
+# Pricing a whole cart (SM-14). A new cart starts in this mode (SM-D28): "total" (one price for the whole cart,
+# shared out), "per_mg" (one $-per-mg TPE rate) or "each" (a price typed for every line). A product whose type
+# contains one of the group A words (any case) is in group A (edibles and extracts), every other product in group B;
+# a total is first split between the groups by the agreement weights above.
+pricing_modes:
+  default: total
+  group_a_words: [edible, extract]
+
+# Raw psilocybin in one sale (SM-15, SM-D11): both apps refuse a cart over the cap and show the minimum session
+# length. Raw psilocybin is the state's own figures, weightPerUnit (g) x analyteWeight (mg/g), never mg TPE, summed
+# over every unit in the cart. A row applies when the total is below `below_mg`, or at most `up_to_mg`; above the
+# last row the sale is over the cap and has no session length.
+dose:
+  max_psilocybin_mg_per_sale: 50
+  session_minutes:
+    - {below_mg: 2.5, minutes: 30}
+    - {below_mg: 5, minutes: 60}
+    - {below_mg: 10, minutes: 120}
+    - {below_mg: 15, minutes: 180}
+    - {below_mg: 25, minutes: 240}
+    - {below_mg: 35, minutes: 300}
+    - {up_to_mg: 50, minutes: 360}
+
+# Expiry (SM-18, SM-D12): a package is expired from the day after its expiry date (the date itself is its last good
+# day), and "expiring soon" (orange) once this many months or fewer are left. Expired stock stays sellable (SM-D3);
+# this decides what the stock pages count and show as expired, and what rotation suggests.
+expiry:
+  expired_after_days: 1
+  soon_months: 1
+
+# Before the phone sends a sale (SM-25, SM-D20): when its stock was read longer ago than this, it reads the center's
+# stock from the state again and refuses a line that is gone or can't be sold, with the sale worker's own reasons
+# (salejobs.line_refusal; the server's worker re-reads before every sale). A setting, not a fixed rule.
+sale_check:
+  recheck_after_minutes: 5

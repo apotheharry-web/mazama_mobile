@@ -1,0 +1,5 @@
+{
+ "specVersion": "2026-10-24.3",
+ "source": "server",
+ "yaml": "format: 1\nvars:\n  spec_version: \"2026-10-24.3\"\nflows:\n  login:\n    - id: token\n      type: request\n      method: POST\n      url: \"https://oregonpsilocybinprodb2c.b2clogin.com/token\"\n      form: {email: \"{{email}}\", password: \"{{password}}\"}\n      extract:\n        - {var: access_token, source: body, json: access_token}\n  renew:\n    - id: token\n      type: request\n      method: POST\n      url: \"https://oregonpsilocybinprodb2c.b2clogin.com/token\"\n      form: {refresh_token: \"{{refresh_token}}\"}\n      extract:\n        - {var: access_token, source: body, json: access_token}\n"
+}

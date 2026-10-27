@@ -1,0 +1,546 @@
+{
+ "_note": "Demo mode (specs/demo-mode): every name, number and id here is invented. Nothing is real.",
+ "center": {
+  "id": 999999,
+  "licenseId": "SC-DEMO0001",
+  "licenseName": "Demo Service Center",
+  "licenseType": "ServiceCenter"
+ },
+ "mazamaLicenses": [
+  "mf-demo0001"
+ ],
+ "cart": {
+  "minutes": 1080,
+  "tax_percent": 15,
+  "agreement_edible": 40,
+  "agreement_dried": 90,
+  "dedupe_seconds": 20,
+  "max_units_per_line": 999
+ },
+ "par": [
+  {
+   "strain": "Starlit Meadow",
+   "size": 25,
+   "par": 20
+  },
+  {
+   "strain": "Copper Fern",
+   "size": 5,
+   "par": 20
+  },
+  {
+   "strain": "Blue Lantern",
+   "size": 15,
+   "par": 6
+  },
+  {
+   "strain": "Quiet Harbor",
+   "size": 10,
+   "par": 12
+  },
+  {
+   "strain": "Chocolate",
+   "size": -1,
+   "par": 4
+  }
+ ],
+ "packages": [
+  {
+   "id": 990001,
+   "productGuid": "PKPR-DEMO0001",
+   "productType": "Edible Psilocybin Product",
+   "strain": "Starlit Meadow",
+   "description": "Starlit Meadow 25 mg TPE FD (2030-06-30)",
+   "quantity": 12,
+   "weightPerUnit": 1.0,
+   "analyteWeight": 24.0,
+   "manufacturerLicenseId": "MF-DEMO0001",
+   "expires": "2030-06-30",
+   "expired": false,
+   "unitMgTpe": 24.696,
+   "tpeMg": 25,
+   "locked": false,
+   "reasonLocked": "",
+   "coa": {
+    "psilocybin": 24.0,
+    "psilocin": 0.5,
+    "baeocystin": 0.12,
+    "norbaeocystin": 0.03,
+    "norpsilocin": 0.0,
+    "aeruginascin": 0.0,
+    "tpe": 24.696
+   },
+   "type": "FD"
+  },
+  {
+   "id": 990002,
+   "productGuid": "PKPR-DEMO0002",
+   "productType": "Edible Psilocybin Product",
+   "strain": "Starlit Meadow",
+   "description": "Starlit Meadow 10 mg TPE FD (2030-06-30)",
+   "quantity": 20,
+   "weightPerUnit": 1.0,
+   "analyteWeight": 9.6,
+   "manufacturerLicenseId": "MF-DEMO0001",
+   "expires": "2030-06-30",
+   "expired": false,
+   "unitMgTpe": 9.878,
+   "tpeMg": 10,
+   "locked": false,
+   "reasonLocked": "",
+   "coa": {
+    "psilocybin": 9.6,
+    "psilocin": 0.2,
+    "baeocystin": 0.12,
+    "norbaeocystin": 0.03,
+    "norpsilocin": 0.0,
+    "aeruginascin": 0.0,
+    "tpe": 9.878
+   },
+   "type": "FD"
+  },
+  {
+   "id": 990003,
+   "productGuid": "PKPR-DEMO0003",
+   "productType": "Whole Fungi",
+   "strain": "Copper Fern",
+   "description": "Copper Fern 20 mg TPE DH (2030-03-31)",
+   "quantity": 8,
+   "weightPerUnit": 1.0,
+   "analyteWeight": 19.2,
+   "manufacturerLicenseId": "MF-DEMO0001",
+   "expires": "2030-03-31",
+   "expired": false,
+   "unitMgTpe": 19.757,
+   "tpeMg": 20,
+   "locked": false,
+   "reasonLocked": "",
+   "coa": {
+    "psilocybin": 19.2,
+    "psilocin": 0.4,
+    "baeocystin": 0.12,
+    "norbaeocystin": 0.03,
+    "norpsilocin": 0.0,
+    "aeruginascin": 0.0,
+    "tpe": 19.757
+   },
+   "type": "DH"
+  },
+  {
+   "id": 990004,
+   "productGuid": "PKPR-DEMO0004",
+   "productType": "Whole Fungi",
+   "strain": "Copper Fern",
+   "description": "Copper Fern 5 mg TPE DH (2030-03-31)",
+   "quantity": 30,
+   "weightPerUnit": 1.0,
+   "analyteWeight": 4.8,
+   "manufacturerLicenseId": "MF-DEMO0001",
+   "expires": "2030-03-31",
+   "expired": false,
+   "unitMgTpe": 4.939,
+   "tpeMg": 5,
+   "locked": false,
+   "reasonLocked": "",
+   "coa": {
+    "psilocybin": 4.8,
+    "psilocin": 0.1,
+    "baeocystin": 0.12,
+    "norbaeocystin": 0.03,
+    "norpsilocin": 0.0,
+    "aeruginascin": 0.0,
+    "tpe": 4.939
+   },
+   "type": "DH"
+  },
+  {
+   "id": 990005,
+   "productGuid": "PKPR-DEMO0005",
+   "productType": "Whole Fungi",
+   "strain": "Blue Lantern",
+   "description": "Blue Lantern 15 mg TPE FD (2030-09-30)",
+   "quantity": 6,
+   "weightPerUnit": 1.0,
+   "analyteWeight": 14.4,
+   "manufacturerLicenseId": "MF-DEMO0002",
+   "expires": "2030-09-30",
+   "expired": false,
+   "unitMgTpe": 14.817,
+   "tpeMg": 15,
+   "locked": false,
+   "reasonLocked": "",
+   "coa": {
+    "psilocybin": 14.4,
+    "psilocin": 0.3,
+    "baeocystin": 0.12,
+    "norbaeocystin": 0.03,
+    "norpsilocin": 0.0,
+    "aeruginascin": 0.0,
+    "tpe": 14.817
+   },
+   "type": "FD"
+  },
+  {
+   "id": 990006,
+   "productGuid": "PKPR-DEMO0006",
+   "productType": "Whole Fungi",
+   "strain": "Blue Lantern",
+   "description": "Blue Lantern 25 mg TPE FD (2030-09-30)",
+   "quantity": 4,
+   "weightPerUnit": 1.0,
+   "analyteWeight": 24.0,
+   "manufacturerLicenseId": "MF-DEMO0002",
+   "expires": "2030-09-30",
+   "expired": false,
+   "unitMgTpe": 24.696,
+   "tpeMg": 25,
+   "locked": false,
+   "reasonLocked": "",
+   "coa": {
+    "psilocybin": 24.0,
+    "psilocin": 0.5,
+    "baeocystin": 0.12,
+    "norbaeocystin": 0.03,
+    "norpsilocin": 0.0,
+    "aeruginascin": 0.0,
+    "tpe": 24.696
+   },
+   "type": "FD"
+  },
+  {
+   "id": 990007,
+   "productGuid": "PKPR-DEMO0007",
+   "productType": "Edible Psilocybin Product",
+   "strain": "Quiet Harbor",
+   "description": "Quiet Harbor 10 mg TPE HG (2030-01-31)",
+   "quantity": 9,
+   "weightPerUnit": 1.0,
+   "analyteWeight": 9.6,
+   "manufacturerLicenseId": "MF-DEMO0001",
+   "expires": "2030-01-31",
+   "expired": false,
+   "unitMgTpe": 9.878,
+   "tpeMg": 10,
+   "locked": false,
+   "reasonLocked": "",
+   "coa": {
+    "psilocybin": 9.6,
+    "psilocin": 0.2,
+    "baeocystin": 0.12,
+    "norbaeocystin": 0.03,
+    "norpsilocin": 0.0,
+    "aeruginascin": 0.0,
+    "tpe": 9.878
+   },
+   "type": "HG"
+  },
+  {
+   "id": 990008,
+   "productGuid": "PKPR-DEMO0008",
+   "productType": "Edible Psilocybin Product",
+   "strain": "Quiet Harbor",
+   "description": "Quiet Harbor 5 mg TPE HG (2030-01-31)",
+   "quantity": 14,
+   "weightPerUnit": 1.0,
+   "analyteWeight": 4.8,
+   "manufacturerLicenseId": "MF-DEMO0002",
+   "expires": "2030-01-31",
+   "expired": false,
+   "unitMgTpe": 4.939,
+   "tpeMg": 5,
+   "locked": false,
+   "reasonLocked": "",
+   "coa": {
+    "psilocybin": 4.8,
+    "psilocin": 0.1,
+    "baeocystin": 0.12,
+    "norbaeocystin": 0.03,
+    "norpsilocin": 0.0,
+    "aeruginascin": 0.0,
+    "tpe": 4.939
+   },
+   "type": "HG"
+  },
+  {
+   "id": 990009,
+   "productGuid": "PKPR-DEMO0009",
+   "productType": "Edible Psilocybin Product",
+   "strain": "Velvet Moss",
+   "description": "Velvet Moss 50 mg TPE CH (2030-12-31)",
+   "quantity": 3,
+   "weightPerUnit": 1.0,
+   "analyteWeight": 48.0,
+   "manufacturerLicenseId": "MF-DEMO0001",
+   "expires": "2030-12-31",
+   "expired": false,
+   "unitMgTpe": 49.392,
+   "tpeMg": 50,
+   "locked": false,
+   "reasonLocked": "",
+   "coa": {
+    "psilocybin": 48.0,
+    "psilocin": 1.0,
+    "baeocystin": 0.12,
+    "norbaeocystin": 0.03,
+    "norpsilocin": 0.0,
+    "aeruginascin": 0.0,
+    "tpe": 49.392
+   },
+   "type": "CH"
+  },
+  {
+   "id": 990010,
+   "productGuid": "PKPR-DEMO0010",
+   "productType": "Edible Psilocybin Product",
+   "strain": "Velvet Moss",
+   "description": "Velvet Moss 2 mg TPE GM (2030-12-31)",
+   "quantity": 5,
+   "weightPerUnit": 0.1,
+   "analyteWeight": 19.2,
+   "manufacturerLicenseId": "MF-DEMO0001",
+   "expires": "2030-12-31",
+   "expired": false,
+   "unitMgTpe": 1.9757,
+   "tpeMg": 2,
+   "locked": false,
+   "reasonLocked": "",
+   "coa": {
+    "psilocybin": 19.2,
+    "psilocin": 0.4,
+    "baeocystin": 0.12,
+    "norbaeocystin": 0.03,
+    "norpsilocin": 0.0,
+    "aeruginascin": 0.0,
+    "tpe": 19.757
+   },
+   "type": "GM"
+  },
+  {
+   "id": 990011,
+   "productGuid": "PKPR-DEMO0011",
+   "productType": "Edible Psilocybin Product",
+   "strain": "Starlit Meadow",
+   "description": "Starlit Meadow 15 mg TPE FD (2025-01-31)",
+   "quantity": 2,
+   "weightPerUnit": 1.0,
+   "analyteWeight": 14.4,
+   "manufacturerLicenseId": "MF-DEMO0001",
+   "expires": "2025-01-31",
+   "expired": true,
+   "unitMgTpe": 14.817,
+   "tpeMg": 15,
+   "locked": false,
+   "reasonLocked": "",
+   "coa": {
+    "psilocybin": 14.4,
+    "psilocin": 0.3,
+    "baeocystin": 0.12,
+    "norbaeocystin": 0.03,
+    "norpsilocin": 0.0,
+    "aeruginascin": 0.0,
+    "tpe": 14.817
+   },
+   "type": "FD"
+  },
+  {
+   "id": 990012,
+   "productGuid": "PKPR-DEMO0012",
+   "productType": "Whole Fungi",
+   "strain": "Copper Fern",
+   "description": "Copper Fern 10 mg TPE DH (2030-03-31)",
+   "quantity": 7,
+   "weightPerUnit": 1.0,
+   "analyteWeight": 9.6,
+   "manufacturerLicenseId": "MF-DEMO0001",
+   "expires": "2030-03-31",
+   "expired": false,
+   "unitMgTpe": 9.878,
+   "tpeMg": 10,
+   "locked": true,
+   "reasonLocked": "Demo hold",
+   "coa": {
+    "psilocybin": 9.6,
+    "psilocin": 0.2,
+    "baeocystin": 0.12,
+    "norbaeocystin": 0.03,
+    "norpsilocin": 0.0,
+    "aeruginascin": 0.0,
+    "tpe": 9.878
+   },
+   "type": "DH"
+  }
+ ],
+ "mazamaInventory": {
+  "_note": "The Mazama inventory page's mix and lot table (specs/mazama-inventory MI-R3, MI-R7), as GET /p/mazama-inventory answers.",
+  "name": "Demo Mushroom Co.",
+  "cells": [
+   {
+    "strain": "Starlit Meadow",
+    "type": "LOT",
+    "mg": 18250.0
+   },
+   {
+    "strain": "Starlit Meadow",
+    "type": "DH",
+    "mg": 4120.5
+   },
+   {
+    "strain": "Quiet Harbor",
+    "type": "WF",
+    "mg": 9600.0
+   },
+   {
+    "strain": "Chocolate",
+    "type": "CH",
+    "mg": 1850.0
+   },
+   {
+    "strain": "Blue Lantern",
+    "type": "FD",
+    "mg": 6400.0
+   },
+   {
+    "strain": "Copper Fern",
+    "type": "HG",
+    "mg": 3275.25
+   },
+   {
+    "strain": "Gummy",
+    "type": "GM",
+    "mg": 980.0
+   },
+   {
+    "strain": "Velvet Moss",
+    "type": "LOT",
+    "mg": 2400.0
+   }
+  ],
+  "lots": [
+   {
+    "strain": "Blue Lantern",
+    "lot": "HB-de00b1a1",
+    "tpe": 9.12,
+    "psilocybin": 7.4,
+    "psilocin": 1.24,
+    "detected": [
+     "baeocystin",
+     "norbaeocystin"
+    ],
+    "types": [
+     "FD"
+    ]
+   },
+   {
+    "strain": "Chocolate",
+    "lot": "PL-de00c0c0",
+    "tpe": 6.3,
+    "psilocybin": 5.8,
+    "psilocin": 0.36,
+    "detected": [],
+    "types": [
+     "CH"
+    ]
+   },
+   {
+    "strain": "Quiet Harbor",
+    "lot": "HB-de00a7b2",
+    "tpe": 7.05,
+    "psilocybin": 6.1,
+    "psilocin": 0.68,
+    "detected": [
+     "baeocystin",
+     "aeruginascin"
+    ],
+    "types": [
+     "WF"
+    ]
+   },
+   {
+    "strain": "Starlit Meadow",
+    "lot": "HB-de0051a1",
+    "tpe": 11.48,
+    "psilocybin": 9.9,
+    "psilocin": 1.14,
+    "detected": [
+     "baeocystin",
+     "norbaeocystin",
+     "norpsilocin"
+    ],
+    "types": [
+     "DH"
+    ]
+   },
+   {
+    "strain": "Starlit Meadow",
+    "lot": "PL-de005102",
+    "tpe": 10.2,
+    "psilocybin": 8.9,
+    "psilocin": null,
+    "detected": [
+     "baeocystin"
+    ],
+    "types": [
+     "LOT"
+    ]
+   }
+  ]
+ },
+ "sheets": [
+  {
+   "guid": "HB-DEMO0001",
+   "name": "Starlit Meadow 4.10",
+   "product": "Whole Fungi",
+   "tested": "Sep 3, 2026",
+   "path": null,
+   "strains": [
+    "Starlit Meadow"
+   ],
+   "tpe": 11.48,
+   "psilocybin": 9.9,
+   "psilocin": 1.14,
+   "detected": [
+    "baeocystin",
+    "norbaeocystin"
+   ],
+   "types": [
+    "FD"
+   ]
+  },
+  {
+   "guid": "HB-DEMO0002",
+   "name": "Quiet Harbor 2.85",
+   "product": "Whole Fungi",
+   "tested": "Aug 19, 2026",
+   "path": null,
+   "strains": [
+    "Quiet Harbor"
+   ],
+   "tpe": 7.05,
+   "psilocybin": 6.1,
+   "psilocin": 0.68,
+   "detected": [
+    "aeruginascin"
+   ],
+   "types": [
+    "HG"
+   ]
+  },
+  {
+   "guid": "PL-DEMO0003",
+   "name": "Blue Lantern chocolate lot",
+   "product": "Edible Psilocybin Product",
+   "tested": "Sep 12, 2026",
+   "path": null,
+   "strains": [
+    "Blue Lantern"
+   ],
+   "tpe": 6.3,
+   "psilocybin": 5.8,
+   "psilocin": null,
+   "detected": [],
+   "types": [
+    "CH"
+   ]
+  }
+ ]
+}

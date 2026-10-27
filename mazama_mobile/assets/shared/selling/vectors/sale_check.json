@@ -1,0 +1,174 @@
+{
+ "cases": [
+  {
+   "guid": "PKPR-0005",
+   "name": "still there and sellable",
+   "qty": 2,
+   "reason": null,
+   "record": {
+    "flagged": false,
+    "id": 5,
+    "locked": false,
+    "pendingTransfer": false,
+    "productGuid": "PKPR-0005",
+    "productType": "Extract",
+    "quantity": 10,
+    "reasonFlagged": null,
+    "reasonLocked": null,
+    "zeroOut": false
+   }
+  },
+  {
+   "guid": "PKPR-0005",
+   "name": "all of it",
+   "qty": 10,
+   "reason": null,
+   "record": {
+    "flagged": false,
+    "id": 5,
+    "locked": false,
+    "pendingTransfer": false,
+    "productGuid": "PKPR-0005",
+    "productType": "Extract",
+    "quantity": 10,
+    "reasonFlagged": null,
+    "reasonLocked": null,
+    "zeroOut": false
+   }
+  },
+  {
+   "guid": "PKPR-0005",
+   "name": "fewer units than wanted now",
+   "qty": 2,
+   "reason": "PKPR-0005: no units remaining (system reports quantity=1, zeroOut=False).",
+   "record": {
+    "flagged": false,
+    "id": 5,
+    "locked": false,
+    "pendingTransfer": false,
+    "productGuid": "PKPR-0005",
+    "productType": "Extract",
+    "quantity": 1,
+    "reasonFlagged": null,
+    "reasonLocked": null,
+    "zeroOut": false
+   }
+  },
+  {
+   "guid": "PKPR-0005",
+   "name": "gone from the center's stock",
+   "qty": 1,
+   "reason": "PKPR-0005 is no longer in the state system's inventory for this service center.",
+   "record": null
+  },
+  {
+   "guid": "PKPR-0099",
+   "name": "the record now holds another package",
+   "qty": 1,
+   "reason": "PKPR-0099 is no longer in the state system's inventory for this service center.",
+   "record": {
+    "flagged": false,
+    "id": 5,
+    "locked": false,
+    "pendingTransfer": false,
+    "productGuid": "PKPR-0005",
+    "productType": "Extract",
+    "quantity": 10,
+    "reasonFlagged": null,
+    "reasonLocked": null,
+    "zeroOut": false
+   }
+  },
+  {
+   "guid": "PKPR-0005",
+   "name": "locked since, with a reason",
+   "qty": 1,
+   "reason": "PKPR-0005: package is locked (Recall 2026-10).",
+   "record": {
+    "flagged": false,
+    "id": 5,
+    "locked": true,
+    "pendingTransfer": false,
+    "productGuid": "PKPR-0005",
+    "productType": "Extract",
+    "quantity": 10,
+    "reasonFlagged": null,
+    "reasonLocked": "Recall 2026-10",
+    "zeroOut": false
+   }
+  },
+  {
+   "guid": "PKPR-0005",
+   "name": "flagged since",
+   "qty": 1,
+   "reason": "PKPR-0005: package is flagged (no reason).",
+   "record": {
+    "flagged": true,
+    "id": 5,
+    "locked": false,
+    "pendingTransfer": false,
+    "productGuid": "PKPR-0005",
+    "productType": "Extract",
+    "quantity": 10,
+    "reasonFlagged": null,
+    "reasonLocked": null,
+    "zeroOut": false
+   }
+  },
+  {
+   "guid": "PKPR-0005",
+   "name": "on its way to another center",
+   "qty": 1,
+   "reason": "PKPR-0005: package has a pending transfer.",
+   "record": {
+    "flagged": false,
+    "id": 5,
+    "locked": false,
+    "pendingTransfer": true,
+    "productGuid": "PKPR-0005",
+    "productType": "Extract",
+    "quantity": 10,
+    "reasonFlagged": null,
+    "reasonLocked": null,
+    "zeroOut": false
+   }
+  },
+  {
+   "guid": "PKPR-0005",
+   "name": "zeroed out",
+   "qty": 1,
+   "reason": "PKPR-0005: no units remaining (system reports quantity=0, zeroOut=True).",
+   "record": {
+    "flagged": false,
+    "id": 5,
+    "locked": false,
+    "pendingTransfer": false,
+    "productGuid": "PKPR-0005",
+    "productType": "Extract",
+    "quantity": 0,
+    "reasonFlagged": null,
+    "reasonLocked": null,
+    "zeroOut": true
+   }
+  },
+  {
+   "guid": "PKPR-0005",
+   "name": "expired stays sellable (SM-D3)",
+   "qty": 1,
+   "reason": null,
+   "record": {
+    "expirationDate": "2020-01-01T00:00:00",
+    "flagged": false,
+    "id": 5,
+    "locked": false,
+    "pendingTransfer": false,
+    "productGuid": "PKPR-0005",
+    "productType": "Extract",
+    "quantity": 10,
+    "reasonFlagged": null,
+    "reasonLocked": null,
+    "zeroOut": false
+   }
+  }
+ ]
+}

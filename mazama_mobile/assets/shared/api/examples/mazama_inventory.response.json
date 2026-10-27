@@ -1,0 +1,41 @@
+{
+ "name": "Mazama Mushrooms LLC",
+ "cells": [
+  {
+   "strain": "Golden Teacher",
+   "type": "DH",
+   "mg": 3888.0
+  },
+  {
+   "strain": "Maztapec",
+   "type": "WF",
+   "mg": 500.0
+  }
+ ],
+ "lots": [
+  {
+   "strain": "Golden Teacher",
+   "lot": "HB-aaaa0001",
+   "tpe": 8.64,
+   "psilocybin": 7.25,
+   "psilocin": 1.0,
+   "detected": [],
+   "types": [
+    "DH"
+   ],
+   "path": "/p/lots/mazama/HB-aaaa0001"
+  },
+  {
+   "strain": "Maztapec",
+   "lot": "HB-bbbb0002",
+   "tpe": 5.0,
+   "psilocybin": 5.0,
+   "psilocin": null,
+   "detected": [],
+   "types": [
+    "WF"
+   ],
+   "path": null
+  }
+ ]
+}

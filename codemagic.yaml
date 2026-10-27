@@ -1,0 +1,147 @@
+# Release builds of the Mazama service-center app, made by Codemagic from this public repository.
+#
+# A release is a tag v<version> where <version> is mazama_mobile/pubspec.yaml's `version:` exactly (e.g. v0.2.2+31).
+# Pushing it builds that commit twice:
+#   - ios-release: signed for the App Store and uploaded to App Store Connect (TestFlight, then App Review by hand);
+#   - android-release: signed with the owner's upload key and attached, with its SHA-256, to the GitHub release of the tag.
+# Both refuse a tag that isn't the pubspec version and a build without the app key. Build numbers come from the
+# pubspec (the "+31"), so they only go up whichever service builds.
+#
+# Set up once in Codemagic (none of these values is in this repository):
+#   - environment variable group mazama_app_key: APP_API_KEY (secret), the key the app sends to Mazama's server;
+#   - environment variable group github_release: GITHUB_TOKEN (secret), a token that may create releases here;
+#   - code signing identities: the Android keystore "codemagic"; the iOS profiles mazama-mobile and mazama-widget and
+#     the certificate "mazama Apple Distribution"; the App Store Connect integration "admin key".
+
+definitions:
+  triggering: &release_tags
+    events:
+      - tag
+    tag_patterns:
+      - pattern: 'v*'
+        include: true
+  check_release: &check_release
+    name: Check the tag and the app key
+    script: |
+      want="v$(grep '^version:' pubspec.yaml | awk '{print $2}')"
+      if [ "${CM_TAG:-}" != "$want" ]; then
+        echo "error: the tag is '${CM_TAG:-}' but pubspec.yaml makes this $want; tag the release $want"; exit 1
+      fi
+      if [ -z "${APP_API_KEY:-}" ]; then
+        echo "error: APP_API_KEY is empty: add it to the mazama_app_key group (the app's Environment variables tab)"; exit 1
+      fi
+      echo "release $want, app key set (${#APP_API_KEY} characters)"
+  icons: &icons
+    name: Generate app icons
+    script: dart run flutter_launcher_icons
+
+workflows:
+  ios-release:
+    name: iOS release (App Store Connect)
+    working_directory: mazama_mobile
+    triggering: *release_tags
+    integrations:
+      app_store_connect: admin key
+    environment:
+      flutter: stable
+      groups:
+        - mazama_app_key
+      ios_signing:
+        provisioning_profiles:
+          - mazama-mobile
+          - mazama-widget
+        certificates:
+          - mazama Apple Distribution
+    scripts:
+      - *check_release
+      - name: Get Flutter packages
+        script: flutter pub get
+      - *icons
+      - name: Install Rust for the lab-report reader
+        # ios/build_coa_core_ffi.sh (an Xcode build phase) compiles ../mazama_modules/coa/coa_core_ffi into the app
+        script: |
+          if ! command -v rustup >/dev/null 2>&1 && [ ! -x "$HOME/.cargo/bin/rustup" ]; then
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
+          fi
+          export PATH="$HOME/.cargo/bin:$PATH"
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+          rustup target add aarch64-apple-ios
+          rustc --version
+      - name: Set up code signing
+        script: xcode-project use-profiles
+      - name: Build signed IPA
+        script: |
+          unset COA_CORE_OPTIONAL
+          flutter build ipa --release \
+            --dart-define=APP_API_KEY="$APP_API_KEY" \
+            --export-options-plist=/Users/builder/export_options.plist
+      - name: Check the lab-report reader is in the app
+        script: |
+          bin=build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app/Runner
+          syms=$(nm -gU "$bin")
+          if echo "$syms" | grep -q '_coa_core_ffi_not_built$'; then
+            echo "error: the app was linked with the coa_core stand-in"; exit 1
+          fi
+          for f in coa_parse_json coa_label_spec_json coa_find_lot_json coa_name_json coa_version coa_free; do
+            echo "$syms" | grep -q " _${f}\$" || { echo "error: _${f} is missing from $bin"; exit 1; }
+          done
+          echo "coa_core: all functions present in the app"
+    artifacts:
+      - build/ios/ipa/*.ipa
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: false
+
+  android-release:
+    name: Android release (GitHub release)
+    instance_type: linux_x2
+    working_directory: mazama_mobile
+    triggering: *release_tags
+    environment:
+      flutter: stable
+      android_signing:
+        - codemagic      # exports CM_KEYSTORE_PATH, CM_KEYSTORE_PASSWORD, CM_KEY_ALIAS, CM_KEY_PASSWORD (build.gradle.kts)
+      groups:
+        - mazama_app_key
+        - github_release
+    scripts:
+      - *check_release
+      - name: Get Flutter packages
+        script: flutter pub get
+      - *icons
+      - name: Install Rust for the lab-report reader
+        # android/app/build.gradle.kts compiles ../mazama_modules/coa/coa_core_ffi for both ABIs with the NDK
+        script: |
+          if ! command -v rustup >/dev/null 2>&1 && [ ! -x "$HOME/.cargo/bin/rustup" ]; then
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
+          fi
+          export PATH="$HOME/.cargo/bin:$PATH"
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+          rustup target add aarch64-linux-android x86_64-linux-android
+          rustc --version
+      - name: Build signed APK
+        script: |
+          unset COA_CORE_OPTIONAL MAZAMA_DEV_RELEASE
+          export PATH="$HOME/.cargo/bin:$PATH"
+          flutter build apk --release --dart-define=APP_API_KEY="$APP_API_KEY"
+      - name: Check the lab-report reader is in the app
+        script: |
+          apk=build/app/outputs/flutter-apk/app-release.apk
+          for abi in arm64-v8a x86_64; do
+            unzip -l "$apk" | grep -q "lib/$abi/libcoa_core_ffi.so" || { echo "error: lib/$abi/libcoa_core_ffi.so is missing from $apk"; exit 1; }
+          done
+          echo "coa_core: present for arm64-v8a and x86_64"
+      - name: Publish the GitHub release
+        script: |
+          name="mazama_mobile-${CM_TAG}.apk"
+          cp build/app/outputs/flutter-apk/app-release.apk "build/$name"
+          (cd build && sha256sum "$name" > "$name.sha256")
+          gh release create "$CM_TAG" "build/$name" "build/$name.sha256" \
+            --title "Mazama service-center app $CM_TAG" \
+            --notes "Built by Codemagic from commit ${CM_COMMIT} of this repository. SHA-256: $(cut -d' ' -f1 "build/$name.sha256")"
+    artifacts:
+      - build/mazama_mobile-*.apk
+      - build/mazama_mobile-*.apk.sha256

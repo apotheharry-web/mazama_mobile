@@ -1,0 +1,31 @@
+{
+ "workerEmail": "worker@example.com",
+ "deviceId": "7f3c2a9e-4b1d-4e8a-9c55-0d2f6b8e1a34",
+ "levels": [
+  {
+   "strain": "gt",
+   "size": 5,
+   "par": 12
+  },
+  {
+   "strain": "Golden Teacher",
+   "size": 25,
+   "par": 4
+  },
+  {
+   "strain": "Golden Teacher",
+   "size": 10,
+   "par": null
+  },
+  {
+   "strain": "Bluey",
+   "size": 0,
+   "par": 3
+  },
+  {
+   "strain": "chocolate",
+   "size": -1,
+   "par": 20
+  }
+ ]
+}

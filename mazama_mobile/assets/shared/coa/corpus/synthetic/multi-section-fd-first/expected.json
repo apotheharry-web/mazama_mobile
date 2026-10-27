@@ -1,0 +1,88 @@
+{
+  "case": "multi-section-fd-first",
+  "origin": "synthetic",
+  "covers": "COA-R7, COA-R13: three lots over two pages; the FD section is printed before its primary",
+  "lots": {
+    "HB-3449c265": {
+      "sample": "Maztapec 6.26",
+      "page": 1,
+      "psilocybin": {
+        "kind": "number",
+        "value": 7.12
+      },
+      "psilocin": {
+        "kind": "number",
+        "value": 0.45
+      },
+      "baeocystin": {
+        "kind": "number",
+        "value": 0.21
+      },
+      "norbaeocystin": {
+        "kind": "nd"
+      },
+      "norpsilocin": {
+        "kind": "below_loq",
+        "loq": 0.01
+      },
+      "lab_tpe": 7.75
+    },
+    "PL-a1b2c3d4": {
+      "sample": "GoldenTeacher",
+      "page": 1,
+      "psilocybin": {
+        "kind": "number",
+        "value": 5.8
+      },
+      "psilocin": {
+        "kind": "number",
+        "value": 1.02
+      },
+      "baeocystin": {
+        "kind": "number",
+        "value": 0.3
+      },
+      "norbaeocystin": {
+        "kind": "number",
+        "value": 0.05
+      },
+      "norpsilocin": {
+        "kind": "nd"
+      },
+      "field_duplicate": {
+        "sample": "GoldenTeacher FD",
+        "page": 1,
+        "psilocybin": {
+          "kind": "number",
+          "value": 9.99
+        },
+        "psilocin": {
+          "kind": "number",
+          "value": 9.99
+        }
+      }
+    },
+    "PL-0f9e8d7c": {
+      "sample": "PenisEnvy",
+      "page": 2,
+      "psilocybin": {
+        "kind": "number",
+        "value": 6.4
+      },
+      "psilocin": {
+        "kind": "number",
+        "value": 0.88
+      },
+      "baeocystin": {
+        "kind": "number",
+        "value": 0.12
+      },
+      "norbaeocystin": {
+        "kind": "nd"
+      },
+      "norpsilocin": {
+        "kind": "nd"
+      }
+    }
+  }
+}

@@ -1,0 +1,35 @@
+# The stock page's constants (specs/stock-page/README.md SP-R1), shared by the server's center pages and the phone's
+# stock page. The server's mazama_sales/src/mazama_sales/stockview.py holds the same values in code and
+# tests/unit/test_stockview.py holds the two equal; the algorithm is in README.md next to this file.
+
+serving_sizes: [25, 20, 15, 10, 5]   # mg per unit, largest first, from the product description ("Bluey 25 mg TPE")
+other_size: other                    # the key for every other size (no size in the description)
+# Edibles (specs/edibles ED-D1..D3, ED-A1..A4): counted under their product, in two size classes by the package's mg.
+edibles:
+  products: {CH: Chocolate, GM: Gummy, HN: Honey}   # a row's kind code -> the product it is counted under
+  booster_from_mg: 3                                # less than this is a Microdose, this or more a Booster
+  sizes:                                            # size key -> its par/order size code, word and pie slot
+    booster: {code: -1, word: Booster, slot: db}
+    micro: {code: -2, word: Microdose, slot: dm}
+# A row with no type: the code after "TPE" in its name ("GT 5 mg TPE CH"), else the first of these words it contains,
+# any case (mazama_modules/names/names.yaml name_keywords, in that order).
+name_keywords: [[gumm, GM], [chocolate, CH], [choc, CH], [honey, HN], [extract, EX]]
+size_order: ["25", "20", "15", "10", "5", booster, micro, other]
+par_columns: [25, 20, 15, 10, 5, -1, -2, 0]  # the par table's columns; -1 Booster, -2 Microdose, 0 = other sizes
+all_strains: All strains             # the combined par/order row's name (any case): every strain's stock together
+strain_slots: 7                      # strain colours s1..s7 by rank; the rest fold into "Other (n strains)", slot oth
+strain_rows: 12                      # strains listed with their own serving-size pies; the rest are counted in "more"
+filters: [all, mazama]               # SP-D3: all inventory, or made by Mazama only
+default_filter: all                  # SP-D2
+mg_modes: [tpe, psilocybin]          # SP-D6: mg TPE (server figure) or mg psilocybin (state figures), never mixed
+# MI-R1 (specs/mazama-inventory): the stock mix by strain and type. A product kind's code -> the word its pies show;
+# a code not listed shows as itself. Mirrored in stockview.MIX_TYPE_WORDS.
+mix_type_words: {FD: Freeze dried, DH: Dehydrated, HG: Homogenized, CH: Chocolate, EX: Extract, HN: Honey, GM: Gummy,
+                 LOT: Process lot, WF: Whole fungi, "": Other type}
+# MI-D13 / WC-D7: the minor alkaloids a lot's tags name, in this order (stockdata.MINOR_ANALYTES), with the tag colours
+# the phone draws (light and dark: background, text). The server's app.css holds the same colours.
+analyte_tags:
+  - {name: baeocystin,    word: Baeocystin,    light: {bg: "#D7F2EE", fg: "#0B5D52"}, dark: {bg: "#16433D", fg: "#A6E8DD"}}
+  - {name: norbaeocystin, word: Norbaeocystin, light: {bg: "#E0E3FA", fg: "#2E3A8C"}, dark: {bg: "#262C5C", fg: "#C2C9F5"}}
+  - {name: norpsilocin,   word: Norpsilocin,   light: {bg: "#FCEBCF", fg: "#7A4A00"}, dark: {bg: "#4A3510", fg: "#F5D39A"}}
+  - {name: aeruginascin,  word: Aeruginascin,  light: {bg: "#FADDE6", fg: "#8A1F45"}, dark: {bg: "#4F1F2F", fg: "#F4B8CB"}}

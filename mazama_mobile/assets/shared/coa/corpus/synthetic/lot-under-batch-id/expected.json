@@ -1,0 +1,55 @@
+{
+  "case": "lot-under-batch-id",
+  "origin": "synthetic",
+  "covers": "AD-19 (document 3092): the lab printed the batch id as the UID; the chain of custody and the request form pair lots with batches (corpus/lots/cases.json)",
+  "lots": {
+    "HB-597a95ef": {
+      "sample": "Tat3",
+      "page": 1,
+      "psilocybin": {
+        "kind": "number",
+        "value": 5.25
+      },
+      "psilocin": {
+        "kind": "number",
+        "value": 0.4
+      },
+      "field_duplicate": {
+        "sample": "Tat3 FD",
+        "page": 1,
+        "psilocybin": {
+          "kind": "number",
+          "value": 5.55
+        },
+        "psilocin": {
+          "kind": "number",
+          "value": 0.41
+        }
+      }
+    },
+    "HB-11112222": {
+      "sample": "Other",
+      "page": 1,
+      "psilocybin": {
+        "kind": "number",
+        "value": 7.33
+      },
+      "psilocin": {
+        "kind": "number",
+        "value": 0.5
+      }
+    },
+    "HB-33334444": {
+      "sample": "Twin",
+      "page": 1,
+      "psilocybin": {
+        "kind": "number",
+        "value": 7.33
+      },
+      "psilocin": {
+        "kind": "number",
+        "value": 0.2
+      }
+    }
+  }
+}

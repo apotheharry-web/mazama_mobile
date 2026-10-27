@@ -1,0 +1,10 @@
+# Rust build output of the lab-report reader
+mazama_modules/coa/**/target/
+
+# Signing keys and secrets never belong here
+*.jks
+*.keystore
+*.p12
+*.pem
+key.properties
+.env

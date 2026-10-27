@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The cart timers widget (CartTimersWidget.kt). Its clocks tick on their own (Chronometer), so the half-hourly
+     update is only a backstop; the app pushes a fresh snapshot whenever a timer or cart changes, and the provider
+     sets an alarm for the next moment a row must change by itself (a session running out, a timer aging out). -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/cart_timers_widget_description"
+    android:initialLayout="@layout/cart_timers_widget"
+    android:minWidth="180dp"
+    android:minHeight="110dp"
+    android:minResizeWidth="110dp"
+    android:minResizeHeight="60dp"
+    android:resizeMode="horizontal|vertical"
+    android:targetCellWidth="3"
+    android:targetCellHeight="2"
+    android:updatePeriodMillis="1800000"
+    android:widgetCategory="home_screen" />

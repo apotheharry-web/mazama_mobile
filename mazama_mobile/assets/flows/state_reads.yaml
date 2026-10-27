@@ -1,0 +1,148 @@
+# One shared, generic flow for every authenticated READ against the state product-tracking system's private
+# JSON API (GetPackagedProducts, GetPackagedProductInfo, GetTransfers, GetManifests, GetApplicableLicenses, and
+# so on). mazama_sales' state/client.py and mazama_app's state_client.dart both run this one flow, varying only
+# the `path` input, instead of each hand-rolling its own GET + header set - exactly the problem login.yaml
+# (this file's own sibling in this directory) already solved for sign-in, extended to cover the read side too.
+# See ../SPEC.md for the step format itself, shared by every flow in this directory (login.yaml, sale.yaml,
+# this one).
+#
+# What stays OUT of this spec, deliberately:
+#   - Retry-on-401 (sign in again once, then give up) - call-site behavior, not a flow step, same principle
+#     SPEC.md's "what stays out of the spec" already applies to writes.
+#   - DownloadDocument - a binary, size-capped streamed GET, not a JSON request/extract. Mechanically
+#     different enough from every other read here that forcing it through this DSL isn't where "one YAML
+#     edit beats two hand-written code changes" pays for itself: the endpoint's own path is trivial and not
+#     the kind of thing likely to drift the way a sign-in page's field names or redirect params do. Stays
+#     hand-written in each language.
+#   - Writes (CreateSalesRecords, CreatePackagedProduct, ...) - unchanged, still hand-written in each
+#     language; see sale.yaml's own comment on why.
+#
+# Inputs: path (e.g. "GetSalesRecords/225") for get_json; the named flows take their own (see each one), and
+# all take access_token.
+# Outputs: url - the URL requested. status - the plain HTTP status code (see the `status` extract source below), always set when this
+# flow returns at all. result - the parsed JSON body, set only when there is one; may legitimately be an empty
+# list or object (a service center with no current inventory is a valid, successful "[]", not an error).
+#
+# 401 is deliberately let through rather than treated as a flow failure: whether to sign in again and retry
+# once (rather than fail outright) is the caller's own policy - see SPEC.md's "what stays out of the spec" -
+# so this flow reports it as plain data (status: 401) instead of raising, the same way it reports 200. Any
+# OTHER non-200 status still raises from this flow's own `require`, with the exact message callers already
+# depend on ("GET {{path}} failed: HTTP {status}").
+#
+# Because `result` may be absent (401, or a 200 whose body genuinely isn't JSON) or legitimately falsy (a valid
+# empty `[]`/`{}`), the caller must check for its PRESENCE in the returned context, never its truthiness -
+# that's exactly why this flow has no `then_require: truthy` on it. Only the caller, which knows what "GET
+# {{path}} did not return JSON" should say, can tell "absent" apart from "present but empty."
+
+vars:
+  # Per-request limit, seconds (SM-D1, specs/shared-modules/decisions.md). See ../SPEC.md "Timeouts".
+  timeout_seconds: 60
+  site: "https://psilocybin.oregon.gov/"
+  site_origin: "https://psilocybin.oregon.gov"
+  api: "{{site}}api/private/ProductTracking/"
+  # Sent on every state-system request both apps make (SM-20): these reads, sale.yaml, and the hand-written
+  # writes and DownloadDocument, which read this var instead of keeping their own copy.
+  user_agent: "Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0"
+
+# One named flow per endpoint both apps read (SM-20), plus get_json for any other path. Each is the same single
+# step with its own url and error text; test_state_reads_flowspec.py fails if their headers or checks drift
+# apart. Each also captures `url`, so a caller can name the path in its own messages.
+flows:
+  get_json:
+    - id: fetch
+      type: request
+      method: GET
+      url: "{{api}}{{path}}"
+      headers:
+        Authorization: "Bearer {{access_token}}"
+        Accept: "application/json"
+        Referer: "{{site}}"
+        Origin: "{{site_origin}}"
+        User-Agent: "{{user_agent}}"
+      require:
+        - check: status_in
+          values: [200, 401]
+          error: "GET {{path}} failed: HTTP {status}"
+      extract:
+        - var: status
+          source: status
+        - var: url
+          source: url
+        - var: result
+          source: body
+          json: ""
+
+  # Inputs: state_id (the license's state id), holder ("ServiceCenter" or "Manufacturer"), access_token.
+  packaged_products:
+    - id: fetch
+      type: request
+      method: GET
+      url: "{{api}}GetPackagedProducts/{{state_id}}/{{holder}}"
+      headers:
+        Authorization: "Bearer {{access_token}}"
+        Accept: "application/json"
+        Referer: "{{site}}"
+        Origin: "{{site_origin}}"
+        User-Agent: "{{user_agent}}"
+      require:
+        - check: status_in
+          values: [200, 401]
+          error: "GET GetPackagedProducts/{{state_id}}/{{holder}} failed: HTTP {status}"
+      extract:
+        - var: status
+          source: status
+        - var: url
+          source: url
+        - var: result
+          source: body
+          json: ""
+
+  # Inputs: package_id (a package's own state id, never a license's), access_token.
+  packaged_product_info:
+    - id: fetch
+      type: request
+      method: GET
+      url: "{{api}}GetPackagedProductInfo/{{package_id}}"
+      headers:
+        Authorization: "Bearer {{access_token}}"
+        Accept: "application/json"
+        Referer: "{{site}}"
+        Origin: "{{site_origin}}"
+        User-Agent: "{{user_agent}}"
+      require:
+        - check: status_in
+          values: [200, 401]
+          error: "GET GetPackagedProductInfo/{{package_id}} failed: HTTP {status}"
+      extract:
+        - var: status
+          source: status
+        - var: url
+          source: url
+        - var: result
+          source: body
+          json: ""
+
+  # Inputs: access_token. Every license (ServiceCenter or Manufacturer) the signed-in account can act for.
+  applicable_licenses:
+    - id: fetch
+      type: request
+      method: GET
+      url: "{{api}}GetApplicableLicenses"
+      headers:
+        Authorization: "Bearer {{access_token}}"
+        Accept: "application/json"
+        Referer: "{{site}}"
+        Origin: "{{site_origin}}"
+        User-Agent: "{{user_agent}}"
+      require:
+        - check: status_in
+          values: [200, 401]
+          error: "GET GetApplicableLicenses failed: HTTP {status}"
+      extract:
+        - var: status
+          source: status
+        - var: url
+          source: url
+        - var: result
+          source: body
+          json: ""

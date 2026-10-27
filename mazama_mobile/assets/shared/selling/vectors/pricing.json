@@ -1,0 +1,506 @@
+{
+ "money": [
+  {
+   "cents": 0,
+   "text": "$0.00"
+  },
+  {
+   "cents": 5,
+   "text": "$0.05"
+  },
+  {
+   "cents": 99,
+   "text": "$0.99"
+  },
+  {
+   "cents": 100,
+   "text": "$1.00"
+  },
+  {
+   "cents": 1250,
+   "text": "$12.50"
+  },
+  {
+   "cents": 100000,
+   "text": "$1,000.00"
+  },
+  {
+   "cents": 123456789,
+   "text": "$1,234,567.89"
+  },
+  {
+   "cents": -1250,
+   "text": "$-12.50"
+  }
+ ],
+ "per_mg_price": [
+  {
+   "cents": 130,
+   "mg": "10",
+   "rate_cents": 13
+  },
+  {
+   "cents": 15,
+   "mg": "1.15",
+   "rate_cents": 13
+  },
+  {
+   "cents": 4,
+   "mg": "0.35",
+   "rate_cents": 10
+  },
+  {
+   "cents": 18,
+   "mg": "2.5",
+   "rate_cents": 7
+  },
+  {
+   "cents": 1,
+   "mg": "0.5",
+   "rate_cents": 1
+  },
+  {
+   "cents": 0,
+   "mg": "0.49",
+   "rate_cents": 1
+  },
+  {
+   "cents": 0,
+   "mg": "25",
+   "rate_cents": 0
+  },
+  {
+   "cents": 10000000,
+   "mg": "100",
+   "rate_cents": 100000
+  },
+  {
+   "cents": 3,
+   "mg": "0.01",
+   "rate_cents": 333
+  },
+  {
+   "cents": 50,
+   "mg": "16.67",
+   "rate_cents": 3
+  },
+  {
+   "cents": 1550,
+   "mg": "12.4",
+   "rate_cents": 125
+  }
+ ],
+ "per_mg_rate_to_cents": [
+  {
+   "cents": 13,
+   "text": "0.125"
+  },
+  {
+   "cents": 12,
+   "text": "0.124"
+  },
+  {
+   "cents": 13,
+   "text": "0.13"
+  },
+  {
+   "cents": 100,
+   "text": "1"
+  },
+  {
+   "cents": 100000,
+   "text": "1000"
+  },
+  {
+   "cents": null,
+   "text": "1000.004"
+  },
+  {
+   "cents": null,
+   "text": "1000.005"
+  },
+  {
+   "cents": null,
+   "text": "1000.01"
+  },
+  {
+   "cents": null,
+   "text": ""
+  },
+  {
+   "cents": null,
+   "text": "1e1"
+  },
+  {
+   "cents": null,
+   "text": "+1"
+  }
+ ],
+ "rules": {
+  "max_per_mg_cents": 100000,
+  "max_total_cents": 1000000000,
+  "max_unit_cents": 1000000
+ },
+ "share_total": [
+  {
+   "parts": [
+    34,
+    33,
+    33
+   ],
+   "total_cents": 100,
+   "weights": [
+    1,
+    1,
+    1
+   ]
+  },
+  {
+   "parts": [
+    308,
+    692
+   ],
+   "total_cents": 1000,
+   "weights": [
+    40,
+    90
+   ]
+  },
+  {
+   "parts": [
+    0,
+    1
+   ],
+   "total_cents": 1,
+   "weights": [
+    40,
+    90
+   ]
+  },
+  {
+   "parts": [
+    0,
+    0
+   ],
+   "total_cents": 0,
+   "weights": [
+    40,
+    90
+   ]
+  },
+  {
+   "parts": [
+    51,
+    50
+   ],
+   "total_cents": 101,
+   "weights": [
+    1,
+    1
+   ]
+  },
+  {
+   "parts": [
+    4,
+    3,
+    3
+   ],
+   "total_cents": 10,
+   "weights": [
+    3,
+    3,
+    3
+   ]
+  },
+  {
+   "parts": [
+    50,
+    50
+   ],
+   "total_cents": 100,
+   "weights": [
+    0,
+    5
+   ]
+  },
+  {
+   "parts": [
+    50,
+    50
+   ],
+   "total_cents": 100,
+   "weights": [
+    -1,
+    5
+   ]
+  },
+  {
+   "parts": [],
+   "total_cents": 7,
+   "weights": []
+  },
+  {
+   "parts": [
+    10000,
+    20000,
+    30000,
+    39999
+   ],
+   "total_cents": 99999,
+   "weights": [
+    1,
+    2,
+    3,
+    4
+   ]
+  },
+  {
+   "parts": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    0,
+    0
+   ],
+   "total_cents": 5,
+   "weights": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+   ]
+  }
+ ],
+ "to_cents": [
+  {
+   "cents": 1200,
+   "text": "12"
+  },
+  {
+   "cents": 1250,
+   "text": "12.5"
+  },
+  {
+   "cents": 1250,
+   "text": "12.50"
+  },
+  {
+   "cents": 1250,
+   "text": "12,50"
+  },
+  {
+   "cents": 50,
+   "text": ".5"
+  },
+  {
+   "cents": 500,
+   "text": "5."
+  },
+  {
+   "cents": 0,
+   "text": "0"
+  },
+  {
+   "cents": 0,
+   "text": "0.00"
+  },
+  {
+   "cents": 0,
+   "text": "0.004"
+  },
+  {
+   "cents": 1,
+   "text": "0.005"
+  },
+  {
+   "cents": 2,
+   "text": "0.015"
+  },
+  {
+   "cents": 2000,
+   "text": "19.999"
+  },
+  {
+   "cents": 700,
+   "text": " 7 "
+  },
+  {
+   "cents": 1000000,
+   "text": "10000"
+  },
+  {
+   "cents": 1000000,
+   "text": "10000.00"
+  },
+  {
+   "cents": null,
+   "text": "10000.004"
+  },
+  {
+   "cents": null,
+   "text": "10000.005"
+  },
+  {
+   "cents": null,
+   "text": "10000.01"
+  },
+  {
+   "cents": null,
+   "text": ""
+  },
+  {
+   "cents": null,
+   "text": " "
+  },
+  {
+   "cents": null,
+   "text": "."
+  },
+  {
+   "cents": null,
+   "text": ","
+  },
+  {
+   "cents": null,
+   "text": "-1"
+  },
+  {
+   "cents": null,
+   "text": "-0"
+  },
+  {
+   "cents": null,
+   "text": "+5"
+  },
+  {
+   "cents": null,
+   "text": "1e3"
+  },
+  {
+   "cents": null,
+   "text": "1E2"
+  },
+  {
+   "cents": null,
+   "text": "1_000"
+  },
+  {
+   "cents": null,
+   "text": "Infinity"
+  },
+  {
+   "cents": null,
+   "text": "NaN"
+  },
+  {
+   "cents": null,
+   "text": "1.2.3"
+  },
+  {
+   "cents": null,
+   "text": "1,000.00"
+  },
+  {
+   "cents": null,
+   "text": "$5"
+  },
+  {
+   "cents": null,
+   "text": "5 USD"
+  },
+  {
+   "cents": null,
+   "text": "0x10"
+  },
+  {
+   "cents": null,
+   "text": "١٢"
+  }
+ ],
+ "total_to_cents": [
+  {
+   "cents": 0,
+   "text": "0"
+  },
+  {
+   "cents": 25000,
+   "text": "250"
+  },
+  {
+   "cents": 25001,
+   "text": "250.005"
+  },
+  {
+   "cents": 1000000000,
+   "text": "10000000"
+  },
+  {
+   "cents": null,
+   "text": "10000000.01"
+  },
+  {
+   "cents": null,
+   "text": "1e3"
+  },
+  {
+   "cents": null,
+   "text": ""
+  },
+  {
+   "cents": null,
+   "text": "abc"
+  }
+ ],
+ "with_tax": [
+  {
+   "cents": 1000,
+   "percent": 0,
+   "result": 1000
+  },
+  {
+   "cents": 1000,
+   "percent": 15,
+   "result": 1150
+  },
+  {
+   "cents": 10,
+   "percent": 5,
+   "result": 11
+  },
+  {
+   "cents": 1,
+   "percent": 50,
+   "result": 2
+  },
+  {
+   "cents": 333,
+   "percent": 15,
+   "result": 383
+  },
+  {
+   "cents": 99999,
+   "percent": 7,
+   "result": 106999
+  },
+  {
+   "cents": 1,
+   "percent": 100,
+   "result": 2
+  },
+  {
+   "cents": 0,
+   "percent": 15,
+   "result": 0
+  },
+  {
+   "cents": 10000000,
+   "percent": 15,
+   "result": 11500000
+  }
+ ]
+}

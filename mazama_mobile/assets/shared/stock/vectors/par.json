@@ -1,0 +1,6242 @@
+[
+ {
+  "levels": [
+   {
+    "par": 20,
+    "size": 25,
+    "strain": "Golden Teacher"
+   },
+   {
+    "par": 2,
+    "size": 10,
+    "strain": "golden teacher"
+   },
+   {
+    "par": 6,
+    "size": 5,
+    "strain": "Penis Envy"
+   },
+   {
+    "par": 3,
+    "size": 0,
+    "strain": "Penis Envy"
+   },
+   {
+    "par": 10,
+    "size": 5,
+    "strain": "Zeta"
+   },
+   {
+    "par": 4,
+    "size": 20,
+    "strain": "albino a+"
+   },
+   {
+    "par": 0,
+    "size": 15,
+    "strain": "Omega"
+   }
+  ],
+  "name": "par-only strains",
+  "par": {
+   "all": {
+    "cells": [
+     {
+      "extra": 0,
+      "have": 10,
+      "par": null,
+      "short": 0,
+      "size": 25
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 20
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 15
+     },
+     {
+      "extra": 0,
+      "have": 5,
+      "par": null,
+      "short": 0,
+      "size": 10
+     },
+     {
+      "extra": 0,
+      "have": 6,
+      "par": null,
+      "short": 0,
+      "size": 5
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 0
+     }
+    ],
+    "extra": 0,
+    "name": "All strains",
+    "short": 0
+   },
+   "heads": [
+    25,
+    20,
+    15,
+    10,
+    5,
+    -1,
+    -2,
+    0
+   ],
+   "rows": [
+    {
+     "cells": [
+      {
+       "have": 10,
+       "par": 20,
+       "short": 10,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 4,
+       "par": 2,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Golden Teacher",
+     "short": 10
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 6,
+       "par": 6,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": 3,
+       "short": 3,
+       "size": 0
+      }
+     ],
+     "name": "Penis Envy",
+     "short": 3
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 2.5,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Chocolate",
+     "short": 0
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 1,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Unknown",
+     "short": 0
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": 4,
+       "short": 4,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "albino a+",
+     "short": 4
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": 0,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Omega",
+     "short": 0
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": 10,
+       "short": 10,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Zeta",
+     "short": 10
+    }
+   ],
+   "short_total": 27,
+   "summary": "27 units below par"
+  },
+  "summary": {
+   "mg_mode": "tpe",
+   "mg_total": 579.65,
+   "strains": [
+    {
+     "mg": 285.6,
+     "mg_sizes": {
+      "10": 39.6,
+      "25": 246.0
+     },
+     "name": "Golden Teacher",
+     "sizes": {
+      "10": 4,
+      "25": 10
+     },
+     "units": 14
+    },
+    {
+     "mg": 30.6,
+     "mg_sizes": {
+      "5": 30.6
+     },
+     "name": "Penis Envy",
+     "sizes": {
+      "5": 6
+     },
+     "units": 6
+    },
+    {
+     "mg": 253.25,
+     "mg_sizes": {
+      "booster": 253.25
+     },
+     "name": "Chocolate",
+     "sizes": {
+      "booster": 2.5
+     },
+     "units": 2.5
+    },
+    {
+     "mg": 10.2,
+     "mg_sizes": {
+      "10": 10.2
+     },
+     "name": "Unknown",
+     "sizes": {
+      "10": 1
+     },
+     "units": 1
+    }
+   ],
+   "total": 23.5
+  }
+ },
+ {
+  "levels": [],
+  "name": "no par levels",
+  "par": {
+   "all": {
+    "cells": [
+     {
+      "extra": 0,
+      "have": 10,
+      "par": null,
+      "short": 0,
+      "size": 25
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 20
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 15
+     },
+     {
+      "extra": 0,
+      "have": 5,
+      "par": null,
+      "short": 0,
+      "size": 10
+     },
+     {
+      "extra": 0,
+      "have": 6,
+      "par": null,
+      "short": 0,
+      "size": 5
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 0
+     }
+    ],
+    "extra": 0,
+    "name": "All strains",
+    "short": 0
+   },
+   "heads": [
+    25,
+    20,
+    15,
+    10,
+    5,
+    -1,
+    -2,
+    0
+   ],
+   "rows": [
+    {
+     "cells": [
+      {
+       "have": 10,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 4,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Golden Teacher",
+     "short": 0
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 6,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Penis Envy",
+     "short": 0
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 2.5,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Chocolate",
+     "short": 0
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 1,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Unknown",
+     "short": 0
+    }
+   ],
+   "short_total": 0,
+   "summary": "No par levels entered yet."
+  },
+  "summary": {
+   "mg_mode": "tpe",
+   "mg_total": 579.65,
+   "strains": [
+    {
+     "mg": 285.6,
+     "mg_sizes": {
+      "10": 39.6,
+      "25": 246.0
+     },
+     "name": "Golden Teacher",
+     "sizes": {
+      "10": 4,
+      "25": 10
+     },
+     "units": 14
+    },
+    {
+     "mg": 30.6,
+     "mg_sizes": {
+      "5": 30.6
+     },
+     "name": "Penis Envy",
+     "sizes": {
+      "5": 6
+     },
+     "units": 6
+    },
+    {
+     "mg": 253.25,
+     "mg_sizes": {
+      "booster": 253.25
+     },
+     "name": "Chocolate",
+     "sizes": {
+      "booster": 2.5
+     },
+     "units": 2.5
+    },
+    {
+     "mg": 10.2,
+     "mg_sizes": {
+      "10": 10.2
+     },
+     "name": "Unknown",
+     "sizes": {
+      "10": 1
+     },
+     "units": 1
+    }
+   ],
+   "total": 23.5
+  }
+ },
+ {
+  "levels": [
+   {
+    "par": 10,
+    "size": 25,
+    "strain": "Golden Teacher"
+   },
+   {
+    "par": 6,
+    "size": 5,
+    "strain": "penis envy"
+   }
+  ],
+  "name": "all at or above par",
+  "par": {
+   "all": {
+    "cells": [
+     {
+      "extra": 0,
+      "have": 10,
+      "par": null,
+      "short": 0,
+      "size": 25
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 20
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 15
+     },
+     {
+      "extra": 0,
+      "have": 5,
+      "par": null,
+      "short": 0,
+      "size": 10
+     },
+     {
+      "extra": 0,
+      "have": 6,
+      "par": null,
+      "short": 0,
+      "size": 5
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 0
+     }
+    ],
+    "extra": 0,
+    "name": "All strains",
+    "short": 0
+   },
+   "heads": [
+    25,
+    20,
+    15,
+    10,
+    5,
+    -1,
+    -2,
+    0
+   ],
+   "rows": [
+    {
+     "cells": [
+      {
+       "have": 10,
+       "par": 10,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 4,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Golden Teacher",
+     "short": 0
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 6,
+       "par": 6,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Penis Envy",
+     "short": 0
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 2.5,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Chocolate",
+     "short": 0
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 1,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Unknown",
+     "short": 0
+    }
+   ],
+   "short_total": 0,
+   "summary": "All strains with a par level are at or above it."
+  },
+  "summary": {
+   "mg_mode": "tpe",
+   "mg_total": 579.65,
+   "strains": [
+    {
+     "mg": 285.6,
+     "mg_sizes": {
+      "10": 39.6,
+      "25": 246.0
+     },
+     "name": "Golden Teacher",
+     "sizes": {
+      "10": 4,
+      "25": 10
+     },
+     "units": 14
+    },
+    {
+     "mg": 30.6,
+     "mg_sizes": {
+      "5": 30.6
+     },
+     "name": "Penis Envy",
+     "sizes": {
+      "5": 6
+     },
+     "units": 6
+    },
+    {
+     "mg": 253.25,
+     "mg_sizes": {
+      "booster": 253.25
+     },
+     "name": "Chocolate",
+     "sizes": {
+      "booster": 2.5
+     },
+     "units": 2.5
+    },
+    {
+     "mg": 10.2,
+     "mg_sizes": {
+      "10": 10.2
+     },
+     "name": "Unknown",
+     "sizes": {
+      "10": 1
+     },
+     "units": 1
+    }
+   ],
+   "total": 23.5
+  }
+ },
+ {
+  "levels": [
+   {
+    "par": 4,
+    "size": 0,
+    "strain": "Huautla"
+   }
+  ],
+  "name": "fractional shortfall",
+  "par": {
+   "all": {
+    "cells": [
+     {
+      "extra": 0,
+      "have": 10,
+      "par": null,
+      "short": 0,
+      "size": 25
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 20
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 15
+     },
+     {
+      "extra": 0,
+      "have": 5,
+      "par": null,
+      "short": 0,
+      "size": 10
+     },
+     {
+      "extra": 0,
+      "have": 6,
+      "par": null,
+      "short": 0,
+      "size": 5
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 0
+     }
+    ],
+    "extra": 0,
+    "name": "All strains",
+    "short": 0
+   },
+   "heads": [
+    25,
+    20,
+    15,
+    10,
+    5,
+    -1,
+    -2,
+    0
+   ],
+   "rows": [
+    {
+     "cells": [
+      {
+       "have": 10,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 4,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Golden Teacher",
+     "short": 0
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 6,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Penis Envy",
+     "short": 0
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 2.5,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Chocolate",
+     "short": 0
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 1,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Unknown",
+     "short": 0
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": 4,
+       "short": 4,
+       "size": 0
+      }
+     ],
+     "name": "Huautla",
+     "short": 4
+    }
+   ],
+   "short_total": 4,
+   "summary": "4 units below par"
+  },
+  "summary": {
+   "mg_mode": "tpe",
+   "mg_total": 579.65,
+   "strains": [
+    {
+     "mg": 285.6,
+     "mg_sizes": {
+      "10": 39.6,
+      "25": 246.0
+     },
+     "name": "Golden Teacher",
+     "sizes": {
+      "10": 4,
+      "25": 10
+     },
+     "units": 14
+    },
+    {
+     "mg": 30.6,
+     "mg_sizes": {
+      "5": 30.6
+     },
+     "name": "Penis Envy",
+     "sizes": {
+      "5": 6
+     },
+     "units": 6
+    },
+    {
+     "mg": 253.25,
+     "mg_sizes": {
+      "booster": 253.25
+     },
+     "name": "Chocolate",
+     "sizes": {
+      "booster": 2.5
+     },
+     "units": 2.5
+    },
+    {
+     "mg": 10.2,
+     "mg_sizes": {
+      "10": 10.2
+     },
+     "name": "Unknown",
+     "sizes": {
+      "10": 1
+     },
+     "units": 1
+    }
+   ],
+   "total": 23.5
+  }
+ },
+ {
+  "levels": [
+   {
+    "par": 30,
+    "size": 25,
+    "strain": "Golden Teacher"
+   },
+   {
+    "par": 12,
+    "size": 25,
+    "strain": "GOLDEN TEACHER"
+   }
+  ],
+  "name": "a later level replaces an earlier one",
+  "par": {
+   "all": {
+    "cells": [
+     {
+      "extra": 0,
+      "have": 10,
+      "par": null,
+      "short": 0,
+      "size": 25
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 20
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 15
+     },
+     {
+      "extra": 0,
+      "have": 5,
+      "par": null,
+      "short": 0,
+      "size": 10
+     },
+     {
+      "extra": 0,
+      "have": 6,
+      "par": null,
+      "short": 0,
+      "size": 5
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 0
+     }
+    ],
+    "extra": 0,
+    "name": "All strains",
+    "short": 0
+   },
+   "heads": [
+    25,
+    20,
+    15,
+    10,
+    5,
+    -1,
+    -2,
+    0
+   ],
+   "rows": [
+    {
+     "cells": [
+      {
+       "have": 10,
+       "par": 12,
+       "short": 2,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 4,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Golden Teacher",
+     "short": 2
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 6,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Penis Envy",
+     "short": 0
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 2.5,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Chocolate",
+     "short": 0
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 1,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Unknown",
+     "short": 0
+    }
+   ],
+   "short_total": 2,
+   "summary": "2 units below par"
+  },
+  "summary": {
+   "mg_mode": "tpe",
+   "mg_total": 579.65,
+   "strains": [
+    {
+     "mg": 285.6,
+     "mg_sizes": {
+      "10": 39.6,
+      "25": 246.0
+     },
+     "name": "Golden Teacher",
+     "sizes": {
+      "10": 4,
+      "25": 10
+     },
+     "units": 14
+    },
+    {
+     "mg": 30.6,
+     "mg_sizes": {
+      "5": 30.6
+     },
+     "name": "Penis Envy",
+     "sizes": {
+      "5": 6
+     },
+     "units": 6
+    },
+    {
+     "mg": 253.25,
+     "mg_sizes": {
+      "booster": 253.25
+     },
+     "name": "Chocolate",
+     "sizes": {
+      "booster": 2.5
+     },
+     "units": 2.5
+    },
+    {
+     "mg": 10.2,
+     "mg_sizes": {
+      "10": 10.2
+     },
+     "name": "Unknown",
+     "sizes": {
+      "10": 1
+     },
+     "units": 1
+    }
+   ],
+   "total": 23.5
+  }
+ },
+ {
+  "levels": [
+   {
+    "par": null,
+    "size": 25,
+    "strain": "Golden Teacher"
+   },
+   {
+    "par": 99,
+    "size": 30,
+    "strain": "Golden Teacher"
+   }
+  ],
+  "name": "null par and unknown sizes are ignored",
+  "par": {
+   "all": {
+    "cells": [
+     {
+      "extra": 0,
+      "have": 10,
+      "par": null,
+      "short": 0,
+      "size": 25
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 20
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 15
+     },
+     {
+      "extra": 0,
+      "have": 5,
+      "par": null,
+      "short": 0,
+      "size": 10
+     },
+     {
+      "extra": 0,
+      "have": 6,
+      "par": null,
+      "short": 0,
+      "size": 5
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 0
+     }
+    ],
+    "extra": 0,
+    "name": "All strains",
+    "short": 0
+   },
+   "heads": [
+    25,
+    20,
+    15,
+    10,
+    5,
+    -1,
+    -2,
+    0
+   ],
+   "rows": [
+    {
+     "cells": [
+      {
+       "have": 10,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 4,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Golden Teacher",
+     "short": 0
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 6,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Penis Envy",
+     "short": 0
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 2.5,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Chocolate",
+     "short": 0
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 1,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Unknown",
+     "short": 0
+    }
+   ],
+   "short_total": 0,
+   "summary": "No par levels entered yet."
+  },
+  "summary": {
+   "mg_mode": "tpe",
+   "mg_total": 579.65,
+   "strains": [
+    {
+     "mg": 285.6,
+     "mg_sizes": {
+      "10": 39.6,
+      "25": 246.0
+     },
+     "name": "Golden Teacher",
+     "sizes": {
+      "10": 4,
+      "25": 10
+     },
+     "units": 14
+    },
+    {
+     "mg": 30.6,
+     "mg_sizes": {
+      "5": 30.6
+     },
+     "name": "Penis Envy",
+     "sizes": {
+      "5": 6
+     },
+     "units": 6
+    },
+    {
+     "mg": 253.25,
+     "mg_sizes": {
+      "booster": 253.25
+     },
+     "name": "Chocolate",
+     "sizes": {
+      "booster": 2.5
+     },
+     "units": 2.5
+    },
+    {
+     "mg": 10.2,
+     "mg_sizes": {
+      "10": 10.2
+     },
+     "name": "Unknown",
+     "sizes": {
+      "10": 1
+     },
+     "units": 1
+    }
+   ],
+   "total": 23.5
+  }
+ },
+ {
+  "levels": [
+   {
+    "par": 20,
+    "size": 25,
+    "strain": "Golden Teacher"
+   },
+   {
+    "par": 2,
+    "size": 10,
+    "strain": "golden teacher"
+   },
+   {
+    "par": 6,
+    "size": 5,
+    "strain": "Penis Envy"
+   },
+   {
+    "par": 3,
+    "size": 0,
+    "strain": "Penis Envy"
+   },
+   {
+    "par": 10,
+    "size": 5,
+    "strain": "Zeta"
+   },
+   {
+    "par": 4,
+    "size": 20,
+    "strain": "albino a+"
+   },
+   {
+    "par": 0,
+    "size": 15,
+    "strain": "Omega"
+   },
+   {
+    "par": 50,
+    "size": 25,
+    "strain": "Thrasher"
+   }
+  ],
+  "name": "more than 12 strains",
+  "par": {
+   "all": {
+    "cells": [
+     {
+      "extra": 0,
+      "have": 118,
+      "par": null,
+      "short": 0,
+      "size": 25
+     },
+     {
+      "extra": 0,
+      "have": 68,
+      "par": null,
+      "short": 0,
+      "size": 20
+     },
+     {
+      "extra": 0,
+      "have": 36,
+      "par": null,
+      "short": 0,
+      "size": 15
+     },
+     {
+      "extra": 0,
+      "have": 105,
+      "par": null,
+      "short": 0,
+      "size": 10
+     },
+     {
+      "extra": 0,
+      "have": 66,
+      "par": null,
+      "short": 0,
+      "size": 5
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 0
+     }
+    ],
+    "extra": 0,
+    "name": "All strains",
+    "short": 0
+   },
+   "heads": [
+    25,
+    20,
+    15,
+    10,
+    5,
+    -1,
+    -2,
+    0
+   ],
+   "rows": [
+    {
+     "cells": [
+      {
+       "have": 26,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 24,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 25,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Bluey",
+     "short": 0
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 26,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 27,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": 6,
+       "short": 6,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": 3,
+       "short": 3,
+       "size": 0
+      }
+     ],
+     "name": "Penis Envy",
+     "short": 9
+    },
+    {
+     "cells": [
+      {
+       "have": 21,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 20,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Avery",
+     "short": 0
+    },
+    {
+     "cells": [
+      {
+       "have": 14,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 12,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 13,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Ecuador",
+     "short": 0
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 19,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 20,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Mazatec",
+     "short": 0
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 14,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 15,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Tidal Wave",
+     "short": 0
+    },
+    {
+     "cells": [
+      {
+       "have": 28,
+       "par": 20,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": 2,
+       "short": 2,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Golden Teacher",
+     "short": 2
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 24,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Chocolate",
+     "short": 0
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 22,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Huautla",
+     "short": 0
+    },
+    {
+     "cells": [
+      {
+       "have": 9,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": 4,
+       "short": 4,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 8,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Albino A+",
+     "short": 4
+    },
+    {
+     "cells": [
+      {
+       "have": 16,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Jedi Mind Fuck",
+     "short": 0
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 7,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 8,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Blue Meanie",
+     "short": 0
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 10,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Cambodian",
+     "short": 0
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": 50,
+       "short": 50,
+       "size": 25
+      },
+      {
+       "have": 2,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 3,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Thrasher",
+     "short": 50
+    },
+    {
+     "cells": [
+      {
+       "have": 4,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Z Strain",
+     "short": 0
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": 0,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Omega",
+     "short": 0
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": 10,
+       "short": 10,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Zeta",
+     "short": 10
+    }
+   ],
+   "short_total": 75,
+   "summary": "75 units below par"
+  },
+  "summary": {
+   "mg_mode": "tpe",
+   "mg_total": 7616.85,
+   "strains": [
+    {
+     "mg": 491.05,
+     "mg_sizes": {
+      "15": 364.8,
+      "25": 0.0,
+      "5": 126.25
+     },
+     "name": "Bluey",
+     "sizes": {
+      "15": 24,
+      "25": 26,
+      "5": 25
+     },
+     "units": 75
+    },
+    {
+     "mg": 784.67,
+     "mg_sizes": {
+      "10": 266.49,
+      "20": 518.18
+     },
+     "name": "Penis Envy",
+     "sizes": {
+      "10": 27,
+      "20": 26
+     },
+     "units": 53
+    },
+    {
+     "mg": 518.91,
+     "mg_sizes": {
+      "25": 518.91,
+      "5": 0.0
+     },
+     "name": "Avery",
+     "sizes": {
+      "25": 21,
+      "5": 20
+     },
+     "units": 41
+    },
+    {
+     "mg": 528.34,
+     "mg_sizes": {
+      "15": 182.4,
+      "25": 345.94,
+      "5": 0.0
+     },
+     "name": "Ecuador",
+     "sizes": {
+      "15": 12,
+      "25": 14,
+      "5": 13
+     },
+     "units": 39
+    },
+    {
+     "mg": 576.07,
+     "mg_sizes": {
+      "10": 197.4,
+      "20": 378.67
+     },
+     "name": "Mazatec",
+     "sizes": {
+      "10": 20,
+      "20": 19
+     },
+     "units": 39
+    },
+    {
+     "mg": 427.07,
+     "mg_sizes": {
+      "10": 148.05,
+      "20": 279.02
+     },
+     "name": "Tidal Wave",
+     "sizes": {
+      "10": 15,
+      "20": 14
+     },
+     "units": 29
+    },
+    {
+     "mg": 691.88,
+     "mg_sizes": {
+      "25": 691.88
+     },
+     "name": "Golden Teacher",
+     "sizes": {
+      "25": 28
+     },
+     "units": 28
+    },
+    {
+     "mg": 2366.4,
+     "mg_sizes": {
+      "booster": 2366.4
+     },
+     "name": "Chocolate",
+     "sizes": {
+      "booster": 24
+     },
+     "units": 24
+    },
+    {
+     "mg": 217.14,
+     "mg_sizes": {
+      "10": 217.14
+     },
+     "name": "Huautla",
+     "sizes": {
+      "10": 22
+     },
+     "units": 22
+    },
+    {
+     "mg": 262.79,
+     "mg_sizes": {
+      "25": 222.39,
+      "5": 40.4
+     },
+     "name": "Albino A+",
+     "sizes": {
+      "25": 9,
+      "5": 8
+     },
+     "units": 17
+    },
+    {
+     "mg": 395.36,
+     "mg_sizes": {
+      "25": 395.36
+     },
+     "name": "Jedi Mind Fuck",
+     "sizes": {
+      "25": 16
+     },
+     "units": 16
+    },
+    {
+     "mg": 218.47,
+     "mg_sizes": {
+      "10": 78.96,
+      "20": 139.51
+     },
+     "name": "Blue Meanie",
+     "sizes": {
+      "10": 8,
+      "20": 7
+     },
+     "units": 15
+    },
+    {
+     "mg": 0.0,
+     "mg_sizes": {
+      "10": 0.0
+     },
+     "name": "Cambodian",
+     "sizes": {
+      "10": 10
+     },
+     "units": 10
+    },
+    {
+     "mg": 39.86,
+     "mg_sizes": {
+      "10": 0.0,
+      "20": 39.86
+     },
+     "name": "Thrasher",
+     "sizes": {
+      "10": 3,
+      "20": 2
+     },
+     "units": 5
+    },
+    {
+     "mg": 98.84,
+     "mg_sizes": {
+      "25": 98.84
+     },
+     "name": "Z Strain",
+     "sizes": {
+      "25": 4
+     },
+     "units": 4
+    }
+   ],
+   "total": 417
+  }
+ },
+ {
+  "levels": [
+   {
+    "par": 20,
+    "size": 25,
+    "strain": "Golden Teacher"
+   },
+   {
+    "par": 2,
+    "size": 10,
+    "strain": "golden teacher"
+   },
+   {
+    "par": 6,
+    "size": 5,
+    "strain": "Penis Envy"
+   },
+   {
+    "par": 3,
+    "size": 0,
+    "strain": "Penis Envy"
+   },
+   {
+    "par": 10,
+    "size": 5,
+    "strain": "Zeta"
+   },
+   {
+    "par": 4,
+    "size": 20,
+    "strain": "albino a+"
+   },
+   {
+    "par": 0,
+    "size": 15,
+    "strain": "Omega"
+   }
+  ],
+  "name": "nothing counted, par from levels only",
+  "par": {
+   "all": {
+    "cells": [
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 25
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 20
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 15
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 10
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 5
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 0
+     }
+    ],
+    "extra": 0,
+    "name": "All strains",
+    "short": 0
+   },
+   "heads": [
+    25,
+    20,
+    15,
+    10,
+    5,
+    -1,
+    -2,
+    0
+   ],
+   "rows": [
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": 4,
+       "short": 4,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "albino a+",
+     "short": 4
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": 20,
+       "short": 20,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": 2,
+       "short": 2,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "golden teacher",
+     "short": 22
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": 0,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Omega",
+     "short": 0
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": 6,
+       "short": 6,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": 3,
+       "short": 3,
+       "size": 0
+      }
+     ],
+     "name": "Penis Envy",
+     "short": 9
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": 10,
+       "short": 10,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Zeta",
+     "short": 10
+    }
+   ],
+   "short_total": 45,
+   "summary": "45 units below par"
+  },
+  "summary": {
+   "mg_mode": "tpe",
+   "mg_total": 0,
+   "strains": [],
+   "total": 0
+  }
+ },
+ {
+  "levels": [],
+  "name": "nothing counted, no levels",
+  "par": {
+   "all": {
+    "cells": [
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 25
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 20
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 15
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 10
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 5
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 0
+     }
+    ],
+    "extra": 0,
+    "name": "All strains",
+    "short": 0
+   },
+   "heads": [
+    25,
+    20,
+    15,
+    10,
+    5,
+    -1,
+    -2,
+    0
+   ],
+   "rows": [],
+   "short_total": 0,
+   "summary": "No par levels entered yet."
+  },
+  "summary": {
+   "mg_mode": "tpe",
+   "mg_total": 0,
+   "strains": [],
+   "total": 0
+  }
+ },
+ {
+  "levels": [
+   {
+    "par": 9,
+    "size": 10,
+    "strain": "Bluey"
+   }
+  ],
+  "name": "psilocybin mode summary",
+  "par": {
+   "all": {
+    "cells": [
+     {
+      "extra": 0,
+      "have": 3,
+      "par": null,
+      "short": 0,
+      "size": 25
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 20
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 15
+     },
+     {
+      "extra": 0,
+      "have": 6,
+      "par": null,
+      "short": 0,
+      "size": 10
+     },
+     {
+      "extra": 0,
+      "have": 1,
+      "par": null,
+      "short": 0,
+      "size": 5
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 0
+     }
+    ],
+    "extra": 0,
+    "name": "All strains",
+    "short": 0
+   },
+   "heads": [
+    25,
+    20,
+    15,
+    10,
+    5,
+    -1,
+    -2,
+    0
+   ],
+   "rows": [
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 6,
+       "par": 9,
+       "short": 3,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Bluey",
+     "short": 3
+    },
+    {
+     "cells": [
+      {
+       "have": 3,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 1,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Penis Envy",
+     "short": 0
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 1,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Chocolate",
+     "short": 0
+    }
+   ],
+   "short_total": 3,
+   "summary": "3 units below par"
+  },
+  "summary": {
+   "mg_mode": "psilocybin",
+   "mg_total": 87.67,
+   "strains": [
+    {
+     "mg": 10.0,
+     "mg_sizes": {
+      "10": 10.0
+     },
+     "name": "Bluey",
+     "sizes": {
+      "10": 6
+     },
+     "units": 6
+    },
+    {
+     "mg": 77.67,
+     "mg_sizes": {
+      "25": 72.64,
+      "5": 5.03
+     },
+     "name": "Penis Envy",
+     "sizes": {
+      "25": 3,
+      "5": 1
+     },
+     "units": 4
+    },
+    {
+     "mg": 0.0,
+     "mg_sizes": {
+      "other": 0.0
+     },
+     "name": "Chocolate",
+     "sizes": {
+      "other": 1
+     },
+     "units": 1
+    }
+   ],
+   "total": 11
+  }
+ },
+ {
+  "levels": [
+   {
+    "par": 10,
+    "size": -1,
+    "strain": "Chocolate"
+   },
+   {
+    "par": 2,
+    "size": -2,
+    "strain": "chocolate"
+   },
+   {
+    "par": 8,
+    "size": -2,
+    "strain": "Gummy"
+   },
+   {
+    "par": 3,
+    "size": 0,
+    "strain": "Honey"
+   },
+   {
+    "par": 6,
+    "size": 25,
+    "strain": "Golden Teacher"
+   },
+   {
+    "par": 9,
+    "size": -3,
+    "strain": "Golden Teacher"
+   }
+  ],
+  "name": "edibles: booster and microdose columns",
+  "par": {
+   "all": {
+    "cells": [
+     {
+      "extra": 0,
+      "have": 5,
+      "par": null,
+      "short": 0,
+      "size": 25
+     },
+     {
+      "extra": 0,
+      "have": 2,
+      "par": null,
+      "short": 0,
+      "size": 20
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 15
+     },
+     {
+      "extra": 0,
+      "have": 2,
+      "par": null,
+      "short": 0,
+      "size": 10
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 5
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 0
+     }
+    ],
+    "extra": 0,
+    "name": "All strains",
+    "short": 0
+   },
+   "heads": [
+    25,
+    20,
+    15,
+    10,
+    5,
+    -1,
+    -2,
+    0
+   ],
+   "rows": [
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 5,
+       "par": 10,
+       "short": 5,
+       "size": -1
+      },
+      {
+       "have": 5,
+       "par": 2,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Chocolate",
+     "short": 5
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 1,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 6,
+       "par": 8,
+       "short": 2,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Gummy",
+     "short": 2
+    },
+    {
+     "cells": [
+      {
+       "have": 5,
+       "par": 6,
+       "short": 1,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Golden Teacher",
+     "short": 1
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 2,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Avery",
+     "short": 0
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 2,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Chocolate Thunder",
+     "short": 0
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 1,
+       "par": 3,
+       "short": 2,
+       "size": 0
+      }
+     ],
+     "name": "Honey",
+     "short": 2
+    }
+   ],
+   "short_total": 10,
+   "summary": "10 units below par"
+  },
+  "summary": {
+   "mg_mode": "tpe",
+   "mg_total": 379.77,
+   "strains": [
+    {
+     "mg": 183.26,
+     "mg_sizes": {
+      "booster": 21.3,
+      "micro": 161.96
+     },
+     "name": "Chocolate",
+     "sizes": {
+      "booster": 5,
+      "micro": 5
+     },
+     "units": 10
+    },
+    {
+     "mg": 12.01,
+     "mg_sizes": {
+      "booster": 3.01,
+      "micro": 9.0
+     },
+     "name": "Gummy",
+     "sizes": {
+      "booster": 1,
+      "micro": 6
+     },
+     "units": 7
+    },
+    {
+     "mg": 124.5,
+     "mg_sizes": {
+      "25": 124.5
+     },
+     "name": "Golden Teacher",
+     "sizes": {
+      "25": 5
+     },
+     "units": 5
+    },
+    {
+     "mg": 20.0,
+     "mg_sizes": {
+      "10": 20.0
+     },
+     "name": "Avery",
+     "sizes": {
+      "10": 2
+     },
+     "units": 2
+    },
+    {
+     "mg": 40.0,
+     "mg_sizes": {
+      "20": 40.0
+     },
+     "name": "Chocolate Thunder",
+     "sizes": {
+      "20": 2
+     },
+     "units": 2
+    },
+    {
+     "mg": 0.0,
+     "mg_sizes": {
+      "other": 0.0
+     },
+     "name": "Honey",
+     "sizes": {
+      "other": 1
+     },
+     "units": 1
+    }
+   ],
+   "total": 27
+  }
+ },
+ {
+  "levels": [
+   {
+    "par": 12,
+    "size": -1,
+    "strain": "Gummy"
+   }
+  ],
+  "name": "edibles: a product with only a par level",
+  "par": {
+   "all": {
+    "cells": [
+     {
+      "extra": 0,
+      "have": 3,
+      "par": null,
+      "short": 0,
+      "size": 25
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 20
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 15
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 10
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 5
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 0
+     }
+    ],
+    "extra": 0,
+    "name": "All strains",
+    "short": 0
+   },
+   "heads": [
+    25,
+    20,
+    15,
+    10,
+    5,
+    -1,
+    -2,
+    0
+   ],
+   "rows": [
+    {
+     "cells": [
+      {
+       "have": 3,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Bluey",
+     "short": 0
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": 12,
+       "short": 12,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Gummy",
+     "short": 12
+    }
+   ],
+   "short_total": 12,
+   "summary": "12 units below par"
+  },
+  "summary": {
+   "mg_mode": "tpe",
+   "mg_total": 75.0,
+   "strains": [
+    {
+     "mg": 75.0,
+     "mg_sizes": {
+      "25": 75.0
+     },
+     "name": "Bluey",
+     "sizes": {
+      "25": 3
+     },
+     "units": 3
+    }
+   ],
+   "total": 3
+  }
+ },
+ {
+  "levels": [
+   {
+    "par": 30,
+    "size": 25,
+    "strain": "All strains"
+   },
+   {
+    "par": 2,
+    "size": 5,
+    "strain": "all strains"
+   },
+   {
+    "par": 1,
+    "size": 0,
+    "strain": "ALL  STRAINS"
+   }
+  ],
+  "name": "combined par only",
+  "par": {
+   "all": {
+    "cells": [
+     {
+      "extra": 20,
+      "have": 10,
+      "par": 30,
+      "short": 20,
+      "size": 25
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 20
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 15
+     },
+     {
+      "extra": 0,
+      "have": 5,
+      "par": null,
+      "short": 0,
+      "size": 10
+     },
+     {
+      "extra": 0,
+      "have": 6,
+      "par": 2,
+      "short": 0,
+      "size": 5
+     },
+     {
+      "extra": 1,
+      "have": 0,
+      "par": 1,
+      "short": 1,
+      "size": 0
+     }
+    ],
+    "extra": 21,
+    "name": "All strains",
+    "short": 21
+   },
+   "heads": [
+    25,
+    20,
+    15,
+    10,
+    5,
+    -1,
+    -2,
+    0
+   ],
+   "rows": [
+    {
+     "cells": [
+      {
+       "have": 10,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 4,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Golden Teacher",
+     "short": 0
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 6,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Penis Envy",
+     "short": 0
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 2.5,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Chocolate",
+     "short": 0
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 1,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Unknown",
+     "short": 0
+    }
+   ],
+   "short_total": 21,
+   "summary": "21 units below par"
+  },
+  "summary": {
+   "mg_mode": "tpe",
+   "mg_total": 579.65,
+   "strains": [
+    {
+     "mg": 285.6,
+     "mg_sizes": {
+      "10": 39.6,
+      "25": 246.0
+     },
+     "name": "Golden Teacher",
+     "sizes": {
+      "10": 4,
+      "25": 10
+     },
+     "units": 14
+    },
+    {
+     "mg": 30.6,
+     "mg_sizes": {
+      "5": 30.6
+     },
+     "name": "Penis Envy",
+     "sizes": {
+      "5": 6
+     },
+     "units": 6
+    },
+    {
+     "mg": 253.25,
+     "mg_sizes": {
+      "booster": 253.25
+     },
+     "name": "Chocolate",
+     "sizes": {
+      "booster": 2.5
+     },
+     "units": 2.5
+    },
+    {
+     "mg": 10.2,
+     "mg_sizes": {
+      "10": 10.2
+     },
+     "name": "Unknown",
+     "sizes": {
+      "10": 1
+     },
+     "units": 1
+    }
+   ],
+   "total": 23.5
+  }
+ },
+ {
+  "levels": [
+   {
+    "par": 40,
+    "size": 25,
+    "strain": "All strains"
+   },
+   {
+    "par": 20,
+    "size": 25,
+    "strain": "Golden Teacher"
+   },
+   {
+    "par": 8,
+    "size": 25,
+    "strain": "Bluey"
+   },
+   {
+    "par": 3,
+    "size": 10,
+    "strain": "All strains"
+   },
+   {
+    "par": 9,
+    "size": 5,
+    "strain": "Penis Envy"
+   },
+   {
+    "par": 4,
+    "size": 5,
+    "strain": "All strains"
+   }
+  ],
+  "name": "combined par beside strain pars",
+  "par": {
+   "all": {
+    "cells": [
+     {
+      "extra": 12,
+      "have": 10,
+      "par": 40,
+      "short": 30,
+      "size": 25
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 20
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 15
+     },
+     {
+      "extra": 0,
+      "have": 5,
+      "par": 3,
+      "short": 0,
+      "size": 10
+     },
+     {
+      "extra": 0,
+      "have": 6,
+      "par": 4,
+      "short": 0,
+      "size": 5
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 0
+     }
+    ],
+    "extra": 12,
+    "name": "All strains",
+    "short": 30
+   },
+   "heads": [
+    25,
+    20,
+    15,
+    10,
+    5,
+    -1,
+    -2,
+    0
+   ],
+   "rows": [
+    {
+     "cells": [
+      {
+       "have": 10,
+       "par": 20,
+       "short": 10,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 4,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Golden Teacher",
+     "short": 10
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 6,
+       "par": 9,
+       "short": 3,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Penis Envy",
+     "short": 3
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 2.5,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Chocolate",
+     "short": 0
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 1,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Unknown",
+     "short": 0
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": 8,
+       "short": 8,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Bluey",
+     "short": 8
+    }
+   ],
+   "short_total": 33,
+   "summary": "33 units below par"
+  },
+  "summary": {
+   "mg_mode": "tpe",
+   "mg_total": 579.65,
+   "strains": [
+    {
+     "mg": 285.6,
+     "mg_sizes": {
+      "10": 39.6,
+      "25": 246.0
+     },
+     "name": "Golden Teacher",
+     "sizes": {
+      "10": 4,
+      "25": 10
+     },
+     "units": 14
+    },
+    {
+     "mg": 30.6,
+     "mg_sizes": {
+      "5": 30.6
+     },
+     "name": "Penis Envy",
+     "sizes": {
+      "5": 6
+     },
+     "units": 6
+    },
+    {
+     "mg": 253.25,
+     "mg_sizes": {
+      "booster": 253.25
+     },
+     "name": "Chocolate",
+     "sizes": {
+      "booster": 2.5
+     },
+     "units": 2.5
+    },
+    {
+     "mg": 10.2,
+     "mg_sizes": {
+      "10": 10.2
+     },
+     "name": "Unknown",
+     "sizes": {
+      "10": 1
+     },
+     "units": 1
+    }
+   ],
+   "total": 23.5
+  }
+ },
+ {
+  "levels": [
+   {
+    "par": 10,
+    "size": -1,
+    "strain": "All strains"
+   },
+   {
+    "par": 50,
+    "size": 0,
+    "strain": "All strains"
+   },
+   {
+    "par": 4,
+    "size": -1,
+    "strain": "Chocolate"
+   }
+  ],
+  "name": "combined par ignores edibles and their sizes",
+  "par": {
+   "all": {
+    "cells": [
+     {
+      "extra": 0,
+      "have": 5,
+      "par": null,
+      "short": 0,
+      "size": 25
+     },
+     {
+      "extra": 0,
+      "have": 2,
+      "par": null,
+      "short": 0,
+      "size": 20
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 15
+     },
+     {
+      "extra": 0,
+      "have": 2,
+      "par": null,
+      "short": 0,
+      "size": 10
+     },
+     {
+      "extra": 0,
+      "have": 0,
+      "par": null,
+      "short": 0,
+      "size": 5
+     },
+     {
+      "extra": 50,
+      "have": 0,
+      "par": 50,
+      "short": 50,
+      "size": 0
+     }
+    ],
+    "extra": 50,
+    "name": "All strains",
+    "short": 50
+   },
+   "heads": [
+    25,
+    20,
+    15,
+    10,
+    5,
+    -1,
+    -2,
+    0
+   ],
+   "rows": [
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 5,
+       "par": 4,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 5,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Chocolate",
+     "short": 0
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 1,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 6,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Gummy",
+     "short": 0
+    },
+    {
+     "cells": [
+      {
+       "have": 5,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Golden Teacher",
+     "short": 0
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 2,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Avery",
+     "short": 0
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 2,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Chocolate Thunder",
+     "short": 0
+    },
+    {
+     "cells": [
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 25
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 20
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 15
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 10
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": 5
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -1
+      },
+      {
+       "have": 0,
+       "par": null,
+       "short": 0,
+       "size": -2
+      },
+      {
+       "have": 1,
+       "par": null,
+       "short": 0,
+       "size": 0
+      }
+     ],
+     "name": "Honey",
+     "short": 0
+    }
+   ],
+   "short_total": 50,
+   "summary": "50 units below par"
+  },
+  "summary": {
+   "mg_mode": "tpe",
+   "mg_total": 379.77,
+   "strains": [
+    {
+     "mg": 183.26,
+     "mg_sizes": {
+      "booster": 21.3,
+      "micro": 161.96
+     },
+     "name": "Chocolate",
+     "sizes": {
+      "booster": 5,
+      "micro": 5
+     },
+     "units": 10
+    },
+    {
+     "mg": 12.01,
+     "mg_sizes": {
+      "booster": 3.01,
+      "micro": 9.0
+     },
+     "name": "Gummy",
+     "sizes": {
+      "booster": 1,
+      "micro": 6
+     },
+     "units": 7
+    },
+    {
+     "mg": 124.5,
+     "mg_sizes": {
+      "25": 124.5
+     },
+     "name": "Golden Teacher",
+     "sizes": {
+      "25": 5
+     },
+     "units": 5
+    },
+    {
+     "mg": 20.0,
+     "mg_sizes": {
+      "10": 20.0
+     },
+     "name": "Avery",
+     "sizes": {
+      "10": 2
+     },
+     "units": 2
+    },
+    {
+     "mg": 40.0,
+     "mg_sizes": {
+      "20": 40.0
+     },
+     "name": "Chocolate Thunder",
+     "sizes": {
+      "20": 2
+     },
+     "units": 2
+    },
+    {
+     "mg": 0.0,
+     "mg_sizes": {
+      "other": 0.0
+     },
+     "name": "Honey",
+     "sizes": {
+      "other": 1
+     },
+     "units": 1
+    }
+   ],
+   "total": 27
+  }
+ }
+]

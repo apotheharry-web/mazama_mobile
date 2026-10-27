@@ -1,0 +1,122 @@
+[
+ {
+  "name": "TPE from the certificate",
+  "state_psilocybin": 7.25,
+  "tpe": 8.64,
+  "tpe_mg": 5,
+  "tpe_per_g": 8.64,
+  "weight_per_unit": 0.5
+ },
+ {
+  "name": "no certificate: the state's figure",
+  "state_psilocybin": 5.0,
+  "tpe": null,
+  "tpe_mg": 5,
+  "tpe_per_g": 5.0,
+  "weight_per_unit": 1.0
+ },
+ {
+  "name": "the TPE wins even when lower than the state's figure",
+  "state_psilocybin": 9.0,
+  "tpe": 8.5,
+  "tpe_mg": 9,
+  "tpe_per_g": 8.5,
+  "weight_per_unit": 1.0
+ },
+ {
+  "name": "a '2.5 mg' chocolate holding 2.59 mg is 3 mg (SM-D16)",
+  "state_psilocybin": 7.25,
+  "tpe": 8.64,
+  "tpe_mg": 3,
+  "tpe_per_g": 8.64,
+  "weight_per_unit": 0.3
+ },
+ {
+  "name": "float noise: 0.56 g x 12.5 is 7, not 8",
+  "state_psilocybin": 0.0,
+  "tpe": 12.5,
+  "tpe_mg": 7,
+  "tpe_per_g": 12.5,
+  "weight_per_unit": 0.56
+ },
+ {
+  "name": "float noise: 2.0 g x 6.0 is 12",
+  "state_psilocybin": 0.0,
+  "tpe": 6.0,
+  "tpe_mg": 12,
+  "tpe_per_g": 6.0,
+  "weight_per_unit": 2.0
+ },
+ {
+  "name": "float noise: 0.3 g x 10 is 3",
+  "state_psilocybin": 0.0,
+  "tpe": 10.0,
+  "tpe_mg": 3,
+  "tpe_per_g": 10.0,
+  "weight_per_unit": 0.3
+ },
+ {
+  "name": "just over a whole mg rounds up",
+  "state_psilocybin": 0.0,
+  "tpe": 7.0001,
+  "tpe_mg": 8,
+  "tpe_per_g": 7.0001,
+  "weight_per_unit": 1.0
+ },
+ {
+  "name": "a whole mg stays",
+  "state_psilocybin": 0.0,
+  "tpe": 7.0,
+  "tpe_mg": 7,
+  "tpe_per_g": 7.0,
+  "weight_per_unit": 1.0
+ },
+ {
+  "name": "the state-only path (the phone's): 5.0 g x 1.01",
+  "state_psilocybin": 1.01,
+  "tpe": null,
+  "tpe_mg": 6,
+  "tpe_per_g": 1.01,
+  "weight_per_unit": 5.0
+ },
+ {
+  "name": "nothing known",
+  "state_psilocybin": 0.0,
+  "tpe": null,
+  "tpe_mg": null,
+  "tpe_per_g": null,
+  "weight_per_unit": 1.0
+ },
+ {
+  "name": "a state figure of 0 is none",
+  "state_psilocybin": 0.0,
+  "tpe": null,
+  "tpe_mg": null,
+  "tpe_per_g": null,
+  "weight_per_unit": 1.0
+ },
+ {
+  "name": "no unit weight",
+  "state_psilocybin": 7.25,
+  "tpe": 8.64,
+  "tpe_mg": 0,
+  "tpe_per_g": 8.64,
+  "weight_per_unit": 0.0
+ },
+ {
+  "name": "a TPE of 0",
+  "state_psilocybin": 7.25,
+  "tpe": 0.0,
+  "tpe_mg": 0,
+  "tpe_per_g": 0.0,
+  "weight_per_unit": 1.0
+ },
+ {
+  "name": "many grams",
+  "state_psilocybin": 7.25,
+  "tpe": 8.6416,
+  "tpe_mg": 242,
+  "tpe_per_g": 8.6416,
+  "weight_per_unit": 28.0
+ }
+]

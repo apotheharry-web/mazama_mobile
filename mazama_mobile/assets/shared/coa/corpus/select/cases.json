@@ -1,0 +1,638 @@
+{
+ "about": "Which lab-report documents to read for a lot (SM-06; COA-R1, COA-D9, COA-D12): from a GetPackagedProductInfo reply, every non-deprecated .pdf document of an accepted Potency test, not already fetched, newest test first (an undated test last; equal dates keep the reply's order), each document once at its newest test's date. Dates: MM/DD/YYYY (one-digit month and day allowed, anything after a space ignored) or ISO YYYY-MM-DD (a time after it ignored); an impossible date is no date. Run by coa_core's tests/select_cases.rs, the server's tests/unit/test_select_documents.py and the phone's test/select_documents_test.dart (vendored copies).",
+ "cases": [
+  {
+   "name": "one accepted potency PDF",
+   "info": {
+    "testResults": [
+     {
+      "test": "Potency",
+      "status": "Accepted",
+      "dateCompleted": "01/02/2026",
+      "testingManifest": {
+       "documents": [
+        {
+         "id": 11,
+         "extension": ".pdf",
+         "deprecated": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "already_have": [],
+   "documents": [
+    {
+     "doc_id": 11,
+     "date": "2026-01-02"
+    }
+   ]
+  },
+  {
+   "name": "newest test first",
+   "info": {
+    "testResults": [
+     {
+      "test": "Potency",
+      "status": "Accepted",
+      "dateCompleted": "01/02/2026",
+      "testingManifest": {
+       "documents": [
+        {
+         "id": 11,
+         "extension": ".pdf",
+         "deprecated": false
+        }
+       ]
+      }
+     },
+     {
+      "test": "Potency",
+      "status": "Accepted",
+      "dateCompleted": "03/04/2026",
+      "testingManifest": {
+       "documents": [
+        {
+         "id": 12,
+         "extension": ".pdf",
+         "deprecated": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "already_have": [],
+   "documents": [
+    {
+     "doc_id": 12,
+     "date": "2026-03-04"
+    },
+    {
+     "doc_id": 11,
+     "date": "2026-01-02"
+    }
+   ]
+  },
+  {
+   "name": "every PDF of a test, in the reply's order",
+   "info": {
+    "testResults": [
+     {
+      "test": "Potency",
+      "status": "Accepted",
+      "dateCompleted": "03/04/2026",
+      "testingManifest": {
+       "documents": [
+        {
+         "id": 12,
+         "extension": ".pdf",
+         "deprecated": false
+        },
+        {
+         "id": 13,
+         "extension": ".pdf",
+         "deprecated": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "already_have": [],
+   "documents": [
+    {
+     "doc_id": 12,
+     "date": "2026-03-04"
+    },
+    {
+     "doc_id": 13,
+     "date": "2026-03-04"
+    }
+   ]
+  },
+  {
+   "name": "tests on the same date keep the reply's order (stable)",
+   "info": {
+    "testResults": [
+     {
+      "test": "Potency",
+      "status": "Accepted",
+      "dateCompleted": "03/04/2026",
+      "testingManifest": {
+       "documents": [
+        {
+         "id": 21,
+         "extension": ".pdf",
+         "deprecated": false
+        }
+       ]
+      }
+     },
+     {
+      "test": "Potency",
+      "status": "Accepted",
+      "dateCompleted": "03/04/2026",
+      "testingManifest": {
+       "documents": [
+        {
+         "id": 22,
+         "extension": ".pdf",
+         "deprecated": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "already_have": [],
+   "documents": [
+    {
+     "doc_id": 21,
+     "date": "2026-03-04"
+    },
+    {
+     "doc_id": 22,
+     "date": "2026-03-04"
+    }
+   ]
+  },
+  {
+   "name": "a deprecated document is left out (COA-D9)",
+   "info": {
+    "testResults": [
+     {
+      "test": "Potency",
+      "status": "Accepted",
+      "dateCompleted": "03/04/2026",
+      "testingManifest": {
+       "documents": [
+        {
+         "id": 12,
+         "extension": ".pdf",
+         "deprecated": true
+        },
+        {
+         "id": 13,
+         "extension": ".pdf",
+         "deprecated": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "already_have": [],
+   "documents": [
+    {
+     "doc_id": 13,
+     "date": "2026-03-04"
+    }
+   ]
+  },
+  {
+   "name": "a document that isn't a PDF is left out",
+   "info": {
+    "testResults": [
+     {
+      "test": "Potency",
+      "status": "Accepted",
+      "dateCompleted": "03/04/2026",
+      "testingManifest": {
+       "documents": [
+        {
+         "id": 12,
+         "extension": ".jpg",
+         "deprecated": false
+        },
+        {
+         "id": 13,
+         "extension": ".PDF",
+         "deprecated": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "already_have": [],
+   "documents": [
+    {
+     "doc_id": 13,
+     "date": "2026-03-04"
+    }
+   ]
+  },
+  {
+   "name": "only accepted potency tests count",
+   "info": {
+    "testResults": [
+     {
+      "test": "Potency",
+      "status": "Rejected",
+      "dateCompleted": "03/04/2026",
+      "testingManifest": {
+       "documents": [
+        {
+         "id": 12,
+         "extension": ".pdf",
+         "deprecated": false
+        }
+       ]
+      }
+     },
+     {
+      "test": "Microbial",
+      "status": "Accepted",
+      "dateCompleted": "03/04/2026",
+      "testingManifest": {
+       "documents": [
+        {
+         "id": 13,
+         "extension": ".pdf",
+         "deprecated": false
+        }
+       ]
+      }
+     },
+     {
+      "test": "Potency",
+      "status": "Accepted",
+      "dateCompleted": "01/02/2026",
+      "testingManifest": {
+       "documents": [
+        {
+         "id": 14,
+         "extension": ".pdf",
+         "deprecated": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "already_have": [],
+   "documents": [
+    {
+     "doc_id": 14,
+     "date": "2026-01-02"
+    }
+   ]
+  },
+  {
+   "name": "an undated test goes last",
+   "info": {
+    "testResults": [
+     {
+      "test": "Potency",
+      "status": "Accepted",
+      "dateCompleted": null,
+      "testingManifest": {
+       "documents": [
+        {
+         "id": 31,
+         "extension": ".pdf",
+         "deprecated": false
+        }
+       ]
+      }
+     },
+     {
+      "test": "Potency",
+      "status": "Accepted",
+      "dateCompleted": "01/02/2026",
+      "testingManifest": {
+       "documents": [
+        {
+         "id": 32,
+         "extension": ".pdf",
+         "deprecated": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "already_have": [],
+   "documents": [
+    {
+     "doc_id": 32,
+     "date": "2026-01-02"
+    },
+    {
+     "doc_id": 31,
+     "date": null
+    }
+   ]
+  },
+  {
+   "name": "one-digit month and day",
+   "info": {
+    "testResults": [
+     {
+      "test": "Potency",
+      "status": "Accepted",
+      "dateCompleted": "6/5/2026",
+      "testingManifest": {
+       "documents": [
+        {
+         "id": 41,
+         "extension": ".pdf",
+         "deprecated": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "already_have": [],
+   "documents": [
+    {
+     "doc_id": 41,
+     "date": "2026-06-05"
+    }
+   ]
+  },
+  {
+   "name": "a date with a time after it",
+   "info": {
+    "testResults": [
+     {
+      "test": "Potency",
+      "status": "Accepted",
+      "dateCompleted": "6/5/2026 10:00:00 AM",
+      "testingManifest": {
+       "documents": [
+        {
+         "id": 42,
+         "extension": ".pdf",
+         "deprecated": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "already_have": [],
+   "documents": [
+    {
+     "doc_id": 42,
+     "date": "2026-06-05"
+    }
+   ]
+  },
+  {
+   "name": "an ISO date, with and without a time",
+   "info": {
+    "testResults": [
+     {
+      "test": "Potency",
+      "status": "Accepted",
+      "dateCompleted": "2026-06-05T10:00:00",
+      "testingManifest": {
+       "documents": [
+        {
+         "id": 43,
+         "extension": ".pdf",
+         "deprecated": false
+        }
+       ]
+      }
+     },
+     {
+      "test": "Potency",
+      "status": "Accepted",
+      "dateCompleted": "2026-06-04",
+      "testingManifest": {
+       "documents": [
+        {
+         "id": 44,
+         "extension": ".pdf",
+         "deprecated": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "already_have": [],
+   "documents": [
+    {
+     "doc_id": 43,
+     "date": "2026-06-05"
+    },
+    {
+     "doc_id": 44,
+     "date": "2026-06-04"
+    }
+   ]
+  },
+  {
+   "name": "an impossible date is no date, not rolled over",
+   "info": {
+    "testResults": [
+     {
+      "test": "Potency",
+      "status": "Accepted",
+      "dateCompleted": "13/45/2026",
+      "testingManifest": {
+       "documents": [
+        {
+         "id": 45,
+         "extension": ".pdf",
+         "deprecated": false
+        }
+       ]
+      }
+     },
+     {
+      "test": "Potency",
+      "status": "Accepted",
+      "dateCompleted": "02/30/2026",
+      "testingManifest": {
+       "documents": [
+        {
+         "id": 46,
+         "extension": ".pdf",
+         "deprecated": false
+        }
+       ]
+      }
+     },
+     {
+      "test": "Potency",
+      "status": "Accepted",
+      "dateCompleted": "01/02/2026",
+      "testingManifest": {
+       "documents": [
+        {
+         "id": 47,
+         "extension": ".pdf",
+         "deprecated": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "already_have": [],
+   "documents": [
+    {
+     "doc_id": 47,
+     "date": "2026-01-02"
+    },
+    {
+     "doc_id": 45,
+     "date": null
+    },
+    {
+     "doc_id": 46,
+     "date": null
+    }
+   ]
+  },
+  {
+   "name": "already fetched documents are left out",
+   "info": {
+    "testResults": [
+     {
+      "test": "Potency",
+      "status": "Accepted",
+      "dateCompleted": "03/04/2026",
+      "testingManifest": {
+       "documents": [
+        {
+         "id": 12,
+         "extension": ".pdf",
+         "deprecated": false
+        },
+        {
+         "id": 13,
+         "extension": ".pdf",
+         "deprecated": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "already_have": [
+    12
+   ],
+   "documents": [
+    {
+     "doc_id": 13,
+     "date": "2026-03-04"
+    }
+   ]
+  },
+  {
+   "name": "the same document in two tests is listed once, at its newest",
+   "info": {
+    "testResults": [
+     {
+      "test": "Potency",
+      "status": "Accepted",
+      "dateCompleted": "01/02/2026",
+      "testingManifest": {
+       "documents": [
+        {
+         "id": 51,
+         "extension": ".pdf",
+         "deprecated": false
+        }
+       ]
+      }
+     },
+     {
+      "test": "Potency",
+      "status": "Accepted",
+      "dateCompleted": "03/04/2026",
+      "testingManifest": {
+       "documents": [
+        {
+         "id": 51,
+         "extension": ".pdf",
+         "deprecated": false
+        },
+        {
+         "id": 52,
+         "extension": ".pdf",
+         "deprecated": false
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "already_have": [],
+   "documents": [
+    {
+     "doc_id": 51,
+     "date": "2026-03-04"
+    },
+    {
+     "doc_id": 52,
+     "date": "2026-03-04"
+    }
+   ]
+  },
+  {
+   "name": "malformed entries are skipped",
+   "info": {
+    "testResults": [
+     {
+      "test": "Potency",
+      "status": "Accepted",
+      "dateCompleted": "03/04/2026",
+      "testingManifest": {
+       "documents": [
+        {
+         "id": "12",
+         "extension": ".pdf"
+        },
+        null,
+        {
+         "extension": ".pdf"
+        },
+        {
+         "id": 13,
+         "extension": ".pdf",
+         "deprecated": false
+        }
+       ]
+      }
+     },
+     "x",
+     {
+      "test": "Potency",
+      "status": "Accepted",
+      "dateCompleted": "03/04/2026"
+     }
+    ]
+   },
+   "already_have": [],
+   "documents": [
+    {
+     "doc_id": 13,
+     "date": "2026-03-04"
+    }
+   ]
+  },
+  {
+   "name": "no test results at all",
+   "info": {
+    "testResults": []
+   },
+   "already_have": [],
+   "documents": []
+  },
+  {
+   "name": "a reply that isn't an object",
+   "info": null,
+   "already_have": [],
+   "documents": []
+  }
+ ]
+}

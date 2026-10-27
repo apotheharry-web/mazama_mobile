@@ -1,0 +1,3696 @@
+[
+ {
+  "mix": {
+   "by_strain": {
+    "slices": [
+     {
+      "name": "Alpha",
+      "pct": 86,
+      "slot": "s1",
+      "value": 1500.0
+     },
+     {
+      "name": "Bluey",
+      "pct": 14,
+      "slot": "s2",
+      "value": 250.4
+     }
+    ],
+    "total": 1750.4
+   },
+   "by_type": {
+    "slices": [
+     {
+      "name": "Freeze dried",
+      "pct": 71,
+      "slot": "s1",
+      "value": 1250.4
+     },
+     {
+      "name": "Chocolate",
+      "pct": 29,
+      "slot": "s2",
+      "value": 500.0
+     }
+    ],
+    "total": 1750.4
+   },
+   "strain_cards": [
+    {
+     "name": "Alpha",
+     "pie": {
+      "slices": [
+       {
+        "name": "Freeze dried",
+        "pct": 67,
+        "slot": "s1",
+        "value": 1000.0
+       },
+       {
+        "name": "Chocolate",
+        "pct": 33,
+        "slot": "s2",
+        "value": 500.0
+       }
+      ],
+      "total": 1500.0
+     },
+     "slot": "s1",
+     "total": 1500.0
+    },
+    {
+     "name": "Bluey",
+     "pie": {
+      "slices": [
+       {
+        "name": "Freeze dried",
+        "pct": 100,
+        "slot": "c",
+        "value": 250.4
+       }
+      ],
+      "total": 250.4
+     },
+     "slot": "s2",
+     "total": 250.4
+    }
+   ],
+   "table": [
+    {
+     "cells": [
+      1000.0,
+      500.0
+     ],
+     "strain": "Alpha",
+     "total": 1500.0
+    },
+    {
+     "cells": [
+      250.4,
+      null
+     ],
+     "strain": "Bluey",
+     "total": 250.4
+    }
+   ],
+   "total": 1750.4,
+   "type_cards": [
+    {
+     "name": "Freeze dried",
+     "pie": {
+      "slices": [
+       {
+        "name": "Alpha",
+        "pct": 80,
+        "slot": "s1",
+        "value": 1000.0
+       },
+       {
+        "name": "Bluey",
+        "pct": 20,
+        "slot": "s2",
+        "value": 250.4
+       }
+      ],
+      "total": 1250.4
+     },
+     "slot": "s1",
+     "total": 1250.4
+    },
+    {
+     "name": "Chocolate",
+     "pie": {
+      "slices": [
+       {
+        "name": "Alpha",
+        "pct": 100,
+        "slot": "c",
+        "value": 500.0
+       }
+      ],
+      "total": 500.0
+     },
+     "slot": "s2",
+     "total": 500.0
+    }
+   ],
+   "type_totals": [
+    1250.4,
+    500.0
+   ],
+   "types": [
+    "Freeze dried",
+    "Chocolate"
+   ]
+  },
+  "name": "the server's chart example",
+  "rows": [
+   {
+    "mg": 1000,
+    "strain": "Alpha",
+    "type": "FD"
+   },
+   {
+    "mg": 500,
+    "strain": "Alpha",
+    "type": "CH"
+   },
+   {
+    "mg": 250.4,
+    "strain": "Bluey",
+    "type": "FD"
+   },
+   {
+    "mg": 0,
+    "strain": "Bluey",
+    "type": ""
+   },
+   {
+    "mg": null,
+    "strain": "Ghost",
+    "type": "XX"
+   }
+  ],
+  "texts": {
+   "by_strain": [
+    "1,500 mg · 86%",
+    "250 mg · 14%"
+   ],
+   "by_type": [
+    "1,250 mg · 71%",
+    "500 mg · 29%"
+   ],
+   "strain_cards": [
+    {
+     "keys": [
+      "1,000 mg · 67%",
+      "500 mg · 33%"
+     ],
+     "total": "1,500"
+    },
+    {
+     "keys": [
+      "250 mg · 100%"
+     ],
+     "total": "250"
+    }
+   ],
+   "total": "1,750",
+   "type_cards": [
+    {
+     "keys": [
+      "1,000 mg · 80%",
+      "250 mg · 20%"
+     ],
+     "total": "1,250"
+    },
+    {
+     "keys": [
+      "500 mg · 100%"
+     ],
+     "total": "500"
+    }
+   ]
+  }
+ },
+ {
+  "mix": {
+   "total": 0
+  },
+  "name": "nothing with mg",
+  "rows": [
+   {
+    "mg": 0,
+    "strain": "Alpha",
+    "type": "FD"
+   },
+   {
+    "mg": null,
+    "strain": "Bluey",
+    "type": "CH"
+   },
+   {
+    "mg": -3,
+    "strain": "Avery",
+    "type": "HN"
+   }
+  ],
+  "texts": {}
+ },
+ {
+  "mix": {
+   "total": 0
+  },
+  "name": "no rows",
+  "rows": [],
+  "texts": {}
+ },
+ {
+  "mix": {
+   "by_strain": {
+    "slices": [
+     {
+      "name": "Strain 0",
+      "pct": 10,
+      "slot": "s1",
+      "value": 100.0
+     },
+     {
+      "name": "Strain 1",
+      "pct": 10,
+      "slot": "s2",
+      "value": 99.0
+     },
+     {
+      "name": "Strain 2",
+      "pct": 10,
+      "slot": "s3",
+      "value": 98.0
+     },
+     {
+      "name": "Strain 3",
+      "pct": 10,
+      "slot": "s4",
+      "value": 97.0
+     },
+     {
+      "name": "Strain 4",
+      "pct": 10,
+      "slot": "s5",
+      "value": 96.0
+     },
+     {
+      "name": "Strain 5",
+      "pct": 10,
+      "slot": "s6",
+      "value": 95.0
+     },
+     {
+      "name": "Strain 6",
+      "pct": 10,
+      "slot": "s7",
+      "value": 94.0
+     },
+     {
+      "name": "Other (3)",
+      "pct": 29,
+      "slot": "oth",
+      "value": 276.0
+     }
+    ],
+    "total": 955.0
+   },
+   "by_type": {
+    "slices": [
+     {
+      "name": "Freeze dried",
+      "pct": 100,
+      "slot": "s1",
+      "value": 955.0
+     }
+    ],
+    "total": 955.0
+   },
+   "strain_cards": [
+    {
+     "name": "Strain 0",
+     "pie": {
+      "slices": [
+       {
+        "name": "Freeze dried",
+        "pct": 100,
+        "slot": "c",
+        "value": 100.0
+       }
+      ],
+      "total": 100.0
+     },
+     "slot": "s1",
+     "total": 100.0
+    },
+    {
+     "name": "Strain 1",
+     "pie": {
+      "slices": [
+       {
+        "name": "Freeze dried",
+        "pct": 100,
+        "slot": "c",
+        "value": 99.0
+       }
+      ],
+      "total": 99.0
+     },
+     "slot": "s2",
+     "total": 99.0
+    },
+    {
+     "name": "Strain 2",
+     "pie": {
+      "slices": [
+       {
+        "name": "Freeze dried",
+        "pct": 100,
+        "slot": "c",
+        "value": 98.0
+       }
+      ],
+      "total": 98.0
+     },
+     "slot": "s3",
+     "total": 98.0
+    },
+    {
+     "name": "Strain 3",
+     "pie": {
+      "slices": [
+       {
+        "name": "Freeze dried",
+        "pct": 100,
+        "slot": "c",
+        "value": 97.0
+       }
+      ],
+      "total": 97.0
+     },
+     "slot": "s4",
+     "total": 97.0
+    },
+    {
+     "name": "Strain 4",
+     "pie": {
+      "slices": [
+       {
+        "name": "Freeze dried",
+        "pct": 100,
+        "slot": "c",
+        "value": 96.0
+       }
+      ],
+      "total": 96.0
+     },
+     "slot": "s5",
+     "total": 96.0
+    },
+    {
+     "name": "Strain 5",
+     "pie": {
+      "slices": [
+       {
+        "name": "Freeze dried",
+        "pct": 100,
+        "slot": "c",
+        "value": 95.0
+       }
+      ],
+      "total": 95.0
+     },
+     "slot": "s6",
+     "total": 95.0
+    },
+    {
+     "name": "Strain 6",
+     "pie": {
+      "slices": [
+       {
+        "name": "Freeze dried",
+        "pct": 100,
+        "slot": "c",
+        "value": 94.0
+       }
+      ],
+      "total": 94.0
+     },
+     "slot": "s7",
+     "total": 94.0
+    },
+    {
+     "name": "Strain 7",
+     "pie": {
+      "slices": [
+       {
+        "name": "Freeze dried",
+        "pct": 100,
+        "slot": "c",
+        "value": 93.0
+       }
+      ],
+      "total": 93.0
+     },
+     "slot": "oth",
+     "total": 93.0
+    },
+    {
+     "name": "Strain 8",
+     "pie": {
+      "slices": [
+       {
+        "name": "Freeze dried",
+        "pct": 100,
+        "slot": "c",
+        "value": 92.0
+       }
+      ],
+      "total": 92.0
+     },
+     "slot": "oth",
+     "total": 92.0
+    },
+    {
+     "name": "Strain 9",
+     "pie": {
+      "slices": [
+       {
+        "name": "Freeze dried",
+        "pct": 100,
+        "slot": "c",
+        "value": 91.0
+       }
+      ],
+      "total": 91.0
+     },
+     "slot": "oth",
+     "total": 91.0
+    }
+   ],
+   "table": [
+    {
+     "cells": [
+      100.0
+     ],
+     "strain": "Strain 0",
+     "total": 100.0
+    },
+    {
+     "cells": [
+      99.0
+     ],
+     "strain": "Strain 1",
+     "total": 99.0
+    },
+    {
+     "cells": [
+      98.0
+     ],
+     "strain": "Strain 2",
+     "total": 98.0
+    },
+    {
+     "cells": [
+      97.0
+     ],
+     "strain": "Strain 3",
+     "total": 97.0
+    },
+    {
+     "cells": [
+      96.0
+     ],
+     "strain": "Strain 4",
+     "total": 96.0
+    },
+    {
+     "cells": [
+      95.0
+     ],
+     "strain": "Strain 5",
+     "total": 95.0
+    },
+    {
+     "cells": [
+      94.0
+     ],
+     "strain": "Strain 6",
+     "total": 94.0
+    },
+    {
+     "cells": [
+      93.0
+     ],
+     "strain": "Strain 7",
+     "total": 93.0
+    },
+    {
+     "cells": [
+      92.0
+     ],
+     "strain": "Strain 8",
+     "total": 92.0
+    },
+    {
+     "cells": [
+      91.0
+     ],
+     "strain": "Strain 9",
+     "total": 91.0
+    }
+   ],
+   "total": 955.0,
+   "type_cards": [
+    {
+     "name": "Freeze dried",
+     "pie": {
+      "slices": [
+       {
+        "name": "Strain 0",
+        "pct": 10,
+        "slot": "s1",
+        "value": 100.0
+       },
+       {
+        "name": "Strain 1",
+        "pct": 10,
+        "slot": "s2",
+        "value": 99.0
+       },
+       {
+        "name": "Strain 2",
+        "pct": 10,
+        "slot": "s3",
+        "value": 98.0
+       },
+       {
+        "name": "Strain 3",
+        "pct": 10,
+        "slot": "s4",
+        "value": 97.0
+       },
+       {
+        "name": "Strain 4",
+        "pct": 10,
+        "slot": "s5",
+        "value": 96.0
+       },
+       {
+        "name": "Strain 5",
+        "pct": 10,
+        "slot": "s6",
+        "value": 95.0
+       },
+       {
+        "name": "Strain 6",
+        "pct": 10,
+        "slot": "s7",
+        "value": 94.0
+       },
+       {
+        "name": "Strain 7",
+        "pct": 10,
+        "slot": "s8",
+        "value": 93.0
+       },
+       {
+        "name": "Strain 8",
+        "pct": 10,
+        "slot": "s9",
+        "value": 92.0
+       },
+       {
+        "name": "Strain 9",
+        "pct": 10,
+        "slot": "s10",
+        "value": 91.0
+       }
+      ],
+      "total": 955.0
+     },
+     "slot": "s1",
+     "total": 955.0
+    }
+   ],
+   "type_totals": [
+    955.0
+   ],
+   "types": [
+    "Freeze dried"
+   ]
+  },
+  "name": "more than 7 strains, folded into Other",
+  "rows": [
+   {
+    "mg": 100,
+    "strain": "Strain 0",
+    "type": "FD"
+   },
+   {
+    "mg": 99,
+    "strain": "Strain 1",
+    "type": "FD"
+   },
+   {
+    "mg": 98,
+    "strain": "Strain 2",
+    "type": "FD"
+   },
+   {
+    "mg": 97,
+    "strain": "Strain 3",
+    "type": "FD"
+   },
+   {
+    "mg": 96,
+    "strain": "Strain 4",
+    "type": "FD"
+   },
+   {
+    "mg": 95,
+    "strain": "Strain 5",
+    "type": "FD"
+   },
+   {
+    "mg": 94,
+    "strain": "Strain 6",
+    "type": "FD"
+   },
+   {
+    "mg": 93,
+    "strain": "Strain 7",
+    "type": "FD"
+   },
+   {
+    "mg": 92,
+    "strain": "Strain 8",
+    "type": "FD"
+   },
+   {
+    "mg": 91,
+    "strain": "Strain 9",
+    "type": "FD"
+   }
+  ],
+  "texts": {
+   "by_strain": [
+    "100 mg · 10%",
+    "99 mg · 10%",
+    "98 mg · 10%",
+    "97 mg · 10%",
+    "96 mg · 10%",
+    "95 mg · 10%",
+    "94 mg · 10%",
+    "276 mg · 29%"
+   ],
+   "by_type": [
+    "955 mg · 100%"
+   ],
+   "strain_cards": [
+    {
+     "keys": [
+      "100 mg · 100%"
+     ],
+     "total": "100"
+    },
+    {
+     "keys": [
+      "99 mg · 100%"
+     ],
+     "total": "99"
+    },
+    {
+     "keys": [
+      "98 mg · 100%"
+     ],
+     "total": "98"
+    },
+    {
+     "keys": [
+      "97 mg · 100%"
+     ],
+     "total": "97"
+    },
+    {
+     "keys": [
+      "96 mg · 100%"
+     ],
+     "total": "96"
+    },
+    {
+     "keys": [
+      "95 mg · 100%"
+     ],
+     "total": "95"
+    },
+    {
+     "keys": [
+      "94 mg · 100%"
+     ],
+     "total": "94"
+    },
+    {
+     "keys": [
+      "93 mg · 100%"
+     ],
+     "total": "93"
+    },
+    {
+     "keys": [
+      "92 mg · 100%"
+     ],
+     "total": "92"
+    },
+    {
+     "keys": [
+      "91 mg · 100%"
+     ],
+     "total": "91"
+    }
+   ],
+   "total": "955",
+   "type_cards": [
+    {
+     "keys": [
+      "100 mg · 10%",
+      "99 mg · 10%",
+      "98 mg · 10%",
+      "97 mg · 10%",
+      "96 mg · 10%",
+      "95 mg · 10%",
+      "94 mg · 10%",
+      "93 mg · 10%",
+      "92 mg · 10%",
+      "91 mg · 10%"
+     ],
+     "total": "955"
+    }
+   ]
+  }
+ },
+ {
+  "mix": {
+   "by_strain": {
+    "slices": [
+     {
+      "name": "Bluey",
+      "pct": 100,
+      "slot": "s1",
+      "value": 165.0
+     }
+    ],
+    "total": 165.0
+   },
+   "by_type": {
+    "slices": [
+     {
+      "name": "XX",
+      "pct": 12,
+      "slot": "s1",
+      "value": 20.0
+     },
+     {
+      "name": "Other type",
+      "pct": 12,
+      "slot": "s2",
+      "value": 19.0
+     },
+     {
+      "name": "Whole fungi",
+      "pct": 11,
+      "slot": "s3",
+      "value": 18.0
+     },
+     {
+      "name": "Process lot",
+      "pct": 10,
+      "slot": "s4",
+      "value": 17.0
+     },
+     {
+      "name": "Gummy",
+      "pct": 10,
+      "slot": "s5",
+      "value": 16.0
+     },
+     {
+      "name": "Honey",
+      "pct": 9,
+      "slot": "s6",
+      "value": 15.0
+     },
+     {
+      "name": "Extract",
+      "pct": 8,
+      "slot": "s7",
+      "value": 14.0
+     },
+     {
+      "name": "Other (4)",
+      "pct": 28,
+      "slot": "oth",
+      "value": 46.0
+     }
+    ],
+    "total": 165.0
+   },
+   "strain_cards": [
+    {
+     "name": "Bluey",
+     "pie": {
+      "slices": [
+       {
+        "name": "XX",
+        "pct": 12,
+        "slot": "s1",
+        "value": 20.0
+       },
+       {
+        "name": "Other type",
+        "pct": 12,
+        "slot": "s2",
+        "value": 19.0
+       },
+       {
+        "name": "Whole fungi",
+        "pct": 11,
+        "slot": "s3",
+        "value": 18.0
+       },
+       {
+        "name": "Process lot",
+        "pct": 10,
+        "slot": "s4",
+        "value": 17.0
+       },
+       {
+        "name": "Gummy",
+        "pct": 10,
+        "slot": "s5",
+        "value": 16.0
+       },
+       {
+        "name": "Honey",
+        "pct": 9,
+        "slot": "s6",
+        "value": 15.0
+       },
+       {
+        "name": "Extract",
+        "pct": 8,
+        "slot": "s7",
+        "value": 14.0
+       },
+       {
+        "name": "Chocolate",
+        "pct": 8,
+        "slot": "s8",
+        "value": 13.0
+       },
+       {
+        "name": "Homogenized",
+        "pct": 7,
+        "slot": "s9",
+        "value": 12.0
+       },
+       {
+        "name": "Dehydrated",
+        "pct": 7,
+        "slot": "s10",
+        "value": 11.0
+       },
+       {
+        "name": "Freeze dried",
+        "pct": 6,
+        "slot": "s11",
+        "value": 10.0
+       }
+      ],
+      "total": 165.0
+     },
+     "slot": "s1",
+     "total": 165.0
+    }
+   ],
+   "table": [
+    {
+     "cells": [
+      20.0,
+      19.0,
+      18.0,
+      17.0,
+      16.0,
+      15.0,
+      14.0,
+      13.0,
+      12.0,
+      11.0,
+      10.0
+     ],
+     "strain": "Bluey",
+     "total": 165.0
+    }
+   ],
+   "total": 165.0,
+   "type_cards": [
+    {
+     "name": "XX",
+     "pie": {
+      "slices": [
+       {
+        "name": "Bluey",
+        "pct": 100,
+        "slot": "c",
+        "value": 20.0
+       }
+      ],
+      "total": 20.0
+     },
+     "slot": "s1",
+     "total": 20.0
+    },
+    {
+     "name": "Other type",
+     "pie": {
+      "slices": [
+       {
+        "name": "Bluey",
+        "pct": 100,
+        "slot": "c",
+        "value": 19.0
+       }
+      ],
+      "total": 19.0
+     },
+     "slot": "s2",
+     "total": 19.0
+    },
+    {
+     "name": "Whole fungi",
+     "pie": {
+      "slices": [
+       {
+        "name": "Bluey",
+        "pct": 100,
+        "slot": "c",
+        "value": 18.0
+       }
+      ],
+      "total": 18.0
+     },
+     "slot": "s3",
+     "total": 18.0
+    },
+    {
+     "name": "Process lot",
+     "pie": {
+      "slices": [
+       {
+        "name": "Bluey",
+        "pct": 100,
+        "slot": "c",
+        "value": 17.0
+       }
+      ],
+      "total": 17.0
+     },
+     "slot": "s4",
+     "total": 17.0
+    },
+    {
+     "name": "Gummy",
+     "pie": {
+      "slices": [
+       {
+        "name": "Bluey",
+        "pct": 100,
+        "slot": "c",
+        "value": 16.0
+       }
+      ],
+      "total": 16.0
+     },
+     "slot": "s5",
+     "total": 16.0
+    },
+    {
+     "name": "Honey",
+     "pie": {
+      "slices": [
+       {
+        "name": "Bluey",
+        "pct": 100,
+        "slot": "c",
+        "value": 15.0
+       }
+      ],
+      "total": 15.0
+     },
+     "slot": "s6",
+     "total": 15.0
+    },
+    {
+     "name": "Extract",
+     "pie": {
+      "slices": [
+       {
+        "name": "Bluey",
+        "pct": 100,
+        "slot": "c",
+        "value": 14.0
+       }
+      ],
+      "total": 14.0
+     },
+     "slot": "s7",
+     "total": 14.0
+    },
+    {
+     "name": "Chocolate",
+     "pie": {
+      "slices": [
+       {
+        "name": "Bluey",
+        "pct": 100,
+        "slot": "c",
+        "value": 13.0
+       }
+      ],
+      "total": 13.0
+     },
+     "slot": "oth",
+     "total": 13.0
+    },
+    {
+     "name": "Homogenized",
+     "pie": {
+      "slices": [
+       {
+        "name": "Bluey",
+        "pct": 100,
+        "slot": "c",
+        "value": 12.0
+       }
+      ],
+      "total": 12.0
+     },
+     "slot": "oth",
+     "total": 12.0
+    },
+    {
+     "name": "Dehydrated",
+     "pie": {
+      "slices": [
+       {
+        "name": "Bluey",
+        "pct": 100,
+        "slot": "c",
+        "value": 11.0
+       }
+      ],
+      "total": 11.0
+     },
+     "slot": "oth",
+     "total": 11.0
+    },
+    {
+     "name": "Freeze dried",
+     "pie": {
+      "slices": [
+       {
+        "name": "Bluey",
+        "pct": 100,
+        "slot": "c",
+        "value": 10.0
+       }
+      ],
+      "total": 10.0
+     },
+     "slot": "oth",
+     "total": 10.0
+    }
+   ],
+   "type_totals": [
+    20.0,
+    19.0,
+    18.0,
+    17.0,
+    16.0,
+    15.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0
+   ],
+   "types": [
+    "XX",
+    "Other type",
+    "Whole fungi",
+    "Process lot",
+    "Gummy",
+    "Honey",
+    "Extract",
+    "Chocolate",
+    "Homogenized",
+    "Dehydrated",
+    "Freeze dried"
+   ]
+  },
+  "name": "more than 7 types",
+  "rows": [
+   {
+    "mg": 10,
+    "strain": "Bluey",
+    "type": "FD"
+   },
+   {
+    "mg": 11,
+    "strain": "Bluey",
+    "type": "DH"
+   },
+   {
+    "mg": 12,
+    "strain": "Bluey",
+    "type": "HG"
+   },
+   {
+    "mg": 13,
+    "strain": "Bluey",
+    "type": "CH"
+   },
+   {
+    "mg": 14,
+    "strain": "Bluey",
+    "type": "EX"
+   },
+   {
+    "mg": 15,
+    "strain": "Bluey",
+    "type": "HN"
+   },
+   {
+    "mg": 16,
+    "strain": "Bluey",
+    "type": "GM"
+   },
+   {
+    "mg": 17,
+    "strain": "Bluey",
+    "type": "LOT"
+   },
+   {
+    "mg": 18,
+    "strain": "Bluey",
+    "type": "WF"
+   },
+   {
+    "mg": 19,
+    "strain": "Bluey",
+    "type": ""
+   },
+   {
+    "mg": 20,
+    "strain": "Bluey",
+    "type": "XX"
+   }
+  ],
+  "texts": {
+   "by_strain": [
+    "165 mg · 100%"
+   ],
+   "by_type": [
+    "20 mg · 12%",
+    "19 mg · 12%",
+    "18 mg · 11%",
+    "17 mg · 10%",
+    "16 mg · 10%",
+    "15 mg · 9%",
+    "14 mg · 8%",
+    "46 mg · 28%"
+   ],
+   "strain_cards": [
+    {
+     "keys": [
+      "20 mg · 12%",
+      "19 mg · 12%",
+      "18 mg · 11%",
+      "17 mg · 10%",
+      "16 mg · 10%",
+      "15 mg · 9%",
+      "14 mg · 8%",
+      "13 mg · 8%",
+      "12 mg · 7%",
+      "11 mg · 7%",
+      "10 mg · 6%"
+     ],
+     "total": "165"
+    }
+   ],
+   "total": "165",
+   "type_cards": [
+    {
+     "keys": [
+      "20 mg · 100%"
+     ],
+     "total": "20"
+    },
+    {
+     "keys": [
+      "19 mg · 100%"
+     ],
+     "total": "19"
+    },
+    {
+     "keys": [
+      "18 mg · 100%"
+     ],
+     "total": "18"
+    },
+    {
+     "keys": [
+      "17 mg · 100%"
+     ],
+     "total": "17"
+    },
+    {
+     "keys": [
+      "16 mg · 100%"
+     ],
+     "total": "16"
+    },
+    {
+     "keys": [
+      "15 mg · 100%"
+     ],
+     "total": "15"
+    },
+    {
+     "keys": [
+      "14 mg · 100%"
+     ],
+     "total": "14"
+    },
+    {
+     "keys": [
+      "13 mg · 100%"
+     ],
+     "total": "13"
+    },
+    {
+     "keys": [
+      "12 mg · 100%"
+     ],
+     "total": "12"
+    },
+    {
+     "keys": [
+      "11 mg · 100%"
+     ],
+     "total": "11"
+    },
+    {
+     "keys": [
+      "10 mg · 100%"
+     ],
+     "total": "10"
+    }
+   ]
+  }
+ },
+ {
+  "mix": {
+   "by_strain": {
+    "slices": [
+     {
+      "name": "B",
+      "pct": 33,
+      "slot": "s1",
+      "value": 50.0
+     },
+     {
+      "name": "b",
+      "pct": 33,
+      "slot": "s2",
+      "value": 50.0
+     },
+     {
+      "name": "A",
+      "pct": 17,
+      "slot": "s3",
+      "value": 25.0
+     },
+     {
+      "name": "a",
+      "pct": 17,
+      "slot": "s4",
+      "value": 25.0
+     }
+    ],
+    "total": 150.0
+   },
+   "by_type": {
+    "slices": [
+     {
+      "name": "Chocolate",
+      "pct": 33,
+      "slot": "s1",
+      "value": 50.0
+     },
+     {
+      "name": "Honey",
+      "pct": 33,
+      "slot": "s2",
+      "value": 50.0
+     },
+     {
+      "name": "Dehydrated",
+      "pct": 17,
+      "slot": "s3",
+      "value": 25.0
+     },
+     {
+      "name": "Extract",
+      "pct": 17,
+      "slot": "s4",
+      "value": 25.0
+     }
+    ],
+    "total": 150.0
+   },
+   "strain_cards": [
+    {
+     "name": "B",
+     "pie": {
+      "slices": [
+       {
+        "name": "Chocolate",
+        "pct": 100,
+        "slot": "c",
+        "value": 50.0
+       }
+      ],
+      "total": 50.0
+     },
+     "slot": "s1",
+     "total": 50.0
+    },
+    {
+     "name": "b",
+     "pie": {
+      "slices": [
+       {
+        "name": "Honey",
+        "pct": 100,
+        "slot": "c",
+        "value": 50.0
+       }
+      ],
+      "total": 50.0
+     },
+     "slot": "s2",
+     "total": 50.0
+    },
+    {
+     "name": "A",
+     "pie": {
+      "slices": [
+       {
+        "name": "Dehydrated",
+        "pct": 100,
+        "slot": "c",
+        "value": 25.0
+       }
+      ],
+      "total": 25.0
+     },
+     "slot": "s3",
+     "total": 25.0
+    },
+    {
+     "name": "a",
+     "pie": {
+      "slices": [
+       {
+        "name": "Extract",
+        "pct": 100,
+        "slot": "c",
+        "value": 25.0
+       }
+      ],
+      "total": 25.0
+     },
+     "slot": "s4",
+     "total": 25.0
+    }
+   ],
+   "table": [
+    {
+     "cells": [
+      50.0,
+      null,
+      null,
+      null
+     ],
+     "strain": "B",
+     "total": 50.0
+    },
+    {
+     "cells": [
+      null,
+      50.0,
+      null,
+      null
+     ],
+     "strain": "b",
+     "total": 50.0
+    },
+    {
+     "cells": [
+      null,
+      null,
+      25.0,
+      null
+     ],
+     "strain": "A",
+     "total": 25.0
+    },
+    {
+     "cells": [
+      null,
+      null,
+      null,
+      25.0
+     ],
+     "strain": "a",
+     "total": 25.0
+    }
+   ],
+   "total": 150.0,
+   "type_cards": [
+    {
+     "name": "Chocolate",
+     "pie": {
+      "slices": [
+       {
+        "name": "B",
+        "pct": 100,
+        "slot": "c",
+        "value": 50.0
+       }
+      ],
+      "total": 50.0
+     },
+     "slot": "s1",
+     "total": 50.0
+    },
+    {
+     "name": "Honey",
+     "pie": {
+      "slices": [
+       {
+        "name": "b",
+        "pct": 100,
+        "slot": "c",
+        "value": 50.0
+       }
+      ],
+      "total": 50.0
+     },
+     "slot": "s2",
+     "total": 50.0
+    },
+    {
+     "name": "Dehydrated",
+     "pie": {
+      "slices": [
+       {
+        "name": "A",
+        "pct": 100,
+        "slot": "c",
+        "value": 25.0
+       }
+      ],
+      "total": 25.0
+     },
+     "slot": "s3",
+     "total": 25.0
+    },
+    {
+     "name": "Extract",
+     "pie": {
+      "slices": [
+       {
+        "name": "a",
+        "pct": 100,
+        "slot": "c",
+        "value": 25.0
+       }
+      ],
+      "total": 25.0
+     },
+     "slot": "s4",
+     "total": 25.0
+    }
+   ],
+   "type_totals": [
+    50.0,
+    50.0,
+    25.0,
+    25.0
+   ],
+   "types": [
+    "Chocolate",
+    "Honey",
+    "Dehydrated",
+    "Extract"
+   ]
+  },
+  "name": "rank ties: strains by name, types by code",
+  "rows": [
+   {
+    "mg": 50,
+    "strain": "b",
+    "type": "HN"
+   },
+   {
+    "mg": 50,
+    "strain": "B",
+    "type": "CH"
+   },
+   {
+    "mg": 25,
+    "strain": "a",
+    "type": "EX"
+   },
+   {
+    "mg": 25,
+    "strain": "A",
+    "type": "DH"
+   }
+  ],
+  "texts": {
+   "by_strain": [
+    "50 mg · 33%",
+    "50 mg · 33%",
+    "25 mg · 17%",
+    "25 mg · 17%"
+   ],
+   "by_type": [
+    "50 mg · 33%",
+    "50 mg · 33%",
+    "25 mg · 17%",
+    "25 mg · 17%"
+   ],
+   "strain_cards": [
+    {
+     "keys": [
+      "50 mg · 100%"
+     ],
+     "total": "50"
+    },
+    {
+     "keys": [
+      "50 mg · 100%"
+     ],
+     "total": "50"
+    },
+    {
+     "keys": [
+      "25 mg · 100%"
+     ],
+     "total": "25"
+    },
+    {
+     "keys": [
+      "25 mg · 100%"
+     ],
+     "total": "25"
+    }
+   ],
+   "total": "150",
+   "type_cards": [
+    {
+     "keys": [
+      "50 mg · 100%"
+     ],
+     "total": "50"
+    },
+    {
+     "keys": [
+      "50 mg · 100%"
+     ],
+     "total": "50"
+    },
+    {
+     "keys": [
+      "25 mg · 100%"
+     ],
+     "total": "25"
+    },
+    {
+     "keys": [
+      "25 mg · 100%"
+     ],
+     "total": "25"
+    }
+   ]
+  }
+ },
+ {
+  "mix": {
+   "by_strain": {
+    "slices": [
+     {
+      "name": "Large",
+      "pct": 88,
+      "slot": "s1",
+      "value": 87.5
+     },
+     {
+      "name": "Small",
+      "pct": 12,
+      "slot": "s2",
+      "value": 12.5
+     }
+    ],
+    "total": 100.0
+   },
+   "by_type": {
+    "slices": [
+     {
+      "name": "Chocolate",
+      "pct": 88,
+      "slot": "s1",
+      "value": 87.5
+     },
+     {
+      "name": "Freeze dried",
+      "pct": 12,
+      "slot": "s2",
+      "value": 12.5
+     }
+    ],
+    "total": 100.0
+   },
+   "strain_cards": [
+    {
+     "name": "Large",
+     "pie": {
+      "slices": [
+       {
+        "name": "Chocolate",
+        "pct": 100,
+        "slot": "c",
+        "value": 87.5
+       }
+      ],
+      "total": 87.5
+     },
+     "slot": "s1",
+     "total": 87.5
+    },
+    {
+     "name": "Small",
+     "pie": {
+      "slices": [
+       {
+        "name": "Freeze dried",
+        "pct": 100,
+        "slot": "c",
+        "value": 12.5
+       }
+      ],
+      "total": 12.5
+     },
+     "slot": "s2",
+     "total": 12.5
+    }
+   ],
+   "table": [
+    {
+     "cells": [
+      87.5,
+      null
+     ],
+     "strain": "Large",
+     "total": 87.5
+    },
+    {
+     "cells": [
+      null,
+      12.5
+     ],
+     "strain": "Small",
+     "total": 12.5
+    }
+   ],
+   "total": 100.0,
+   "type_cards": [
+    {
+     "name": "Chocolate",
+     "pie": {
+      "slices": [
+       {
+        "name": "Large",
+        "pct": 100,
+        "slot": "c",
+        "value": 87.5
+       }
+      ],
+      "total": 87.5
+     },
+     "slot": "s1",
+     "total": 87.5
+    },
+    {
+     "name": "Freeze dried",
+     "pie": {
+      "slices": [
+       {
+        "name": "Small",
+        "pct": 100,
+        "slot": "c",
+        "value": 12.5
+       }
+      ],
+      "total": 12.5
+     },
+     "slot": "s2",
+     "total": 12.5
+    }
+   ],
+   "type_totals": [
+    87.5,
+    12.5
+   ],
+   "types": [
+    "Chocolate",
+    "Freeze dried"
+   ]
+  },
+  "name": "percent half to even, 12.5 and 87.5",
+  "rows": [
+   {
+    "mg": 12.5,
+    "strain": "Small",
+    "type": "FD"
+   },
+   {
+    "mg": 87.5,
+    "strain": "Large",
+    "type": "CH"
+   }
+  ],
+  "texts": {
+   "by_strain": [
+    "88 mg · 88%",
+    "12 mg · 12%"
+   ],
+   "by_type": [
+    "88 mg · 88%",
+    "12 mg · 12%"
+   ],
+   "strain_cards": [
+    {
+     "keys": [
+      "88 mg · 100%"
+     ],
+     "total": "88"
+    },
+    {
+     "keys": [
+      "12 mg · 100%"
+     ],
+     "total": "12"
+    }
+   ],
+   "total": "100",
+   "type_cards": [
+    {
+     "keys": [
+      "88 mg · 100%"
+     ],
+     "total": "88"
+    },
+    {
+     "keys": [
+      "12 mg · 100%"
+     ],
+     "total": "12"
+    }
+   ]
+  }
+ },
+ {
+  "mix": {
+   "by_strain": {
+    "slices": [
+     {
+      "name": "Large",
+      "pct": 86,
+      "slot": "s1",
+      "value": 86.5
+     },
+     {
+      "name": "Small",
+      "pct": 14,
+      "slot": "s2",
+      "value": 13.5
+     }
+    ],
+    "total": 100.0
+   },
+   "by_type": {
+    "slices": [
+     {
+      "name": "Chocolate",
+      "pct": 86,
+      "slot": "s1",
+      "value": 86.5
+     },
+     {
+      "name": "Freeze dried",
+      "pct": 14,
+      "slot": "s2",
+      "value": 13.5
+     }
+    ],
+    "total": 100.0
+   },
+   "strain_cards": [
+    {
+     "name": "Large",
+     "pie": {
+      "slices": [
+       {
+        "name": "Chocolate",
+        "pct": 100,
+        "slot": "c",
+        "value": 86.5
+       }
+      ],
+      "total": 86.5
+     },
+     "slot": "s1",
+     "total": 86.5
+    },
+    {
+     "name": "Small",
+     "pie": {
+      "slices": [
+       {
+        "name": "Freeze dried",
+        "pct": 100,
+        "slot": "c",
+        "value": 13.5
+       }
+      ],
+      "total": 13.5
+     },
+     "slot": "s2",
+     "total": 13.5
+    }
+   ],
+   "table": [
+    {
+     "cells": [
+      86.5,
+      null
+     ],
+     "strain": "Large",
+     "total": 86.5
+    },
+    {
+     "cells": [
+      null,
+      13.5
+     ],
+     "strain": "Small",
+     "total": 13.5
+    }
+   ],
+   "total": 100.0,
+   "type_cards": [
+    {
+     "name": "Chocolate",
+     "pie": {
+      "slices": [
+       {
+        "name": "Large",
+        "pct": 100,
+        "slot": "c",
+        "value": 86.5
+       }
+      ],
+      "total": 86.5
+     },
+     "slot": "s1",
+     "total": 86.5
+    },
+    {
+     "name": "Freeze dried",
+     "pie": {
+      "slices": [
+       {
+        "name": "Small",
+        "pct": 100,
+        "slot": "c",
+        "value": 13.5
+       }
+      ],
+      "total": 13.5
+     },
+     "slot": "s2",
+     "total": 13.5
+    }
+   ],
+   "type_totals": [
+    86.5,
+    13.5
+   ],
+   "types": [
+    "Chocolate",
+    "Freeze dried"
+   ]
+  },
+  "name": "percent half to even, 13.5 and 86.5",
+  "rows": [
+   {
+    "mg": 13.5,
+    "strain": "Small",
+    "type": "FD"
+   },
+   {
+    "mg": 86.5,
+    "strain": "Large",
+    "type": "CH"
+   }
+  ],
+  "texts": {
+   "by_strain": [
+    "86 mg · 86%",
+    "14 mg · 14%"
+   ],
+   "by_type": [
+    "86 mg · 86%",
+    "14 mg · 14%"
+   ],
+   "strain_cards": [
+    {
+     "keys": [
+      "86 mg · 100%"
+     ],
+     "total": "86"
+    },
+    {
+     "keys": [
+      "14 mg · 100%"
+     ],
+     "total": "14"
+    }
+   ],
+   "total": "100",
+   "type_cards": [
+    {
+     "keys": [
+      "86 mg · 100%"
+     ],
+     "total": "86"
+    },
+    {
+     "keys": [
+      "14 mg · 100%"
+     ],
+     "total": "14"
+    }
+   ]
+  }
+ },
+ {
+  "mix": {
+   "by_strain": {
+    "slices": [
+     {
+      "name": "Unknown",
+      "pct": 83,
+      "slot": "s1",
+      "value": 50.0
+     },
+     {
+      "name": "Bluey",
+      "pct": 17,
+      "slot": "s2",
+      "value": 10.0
+     }
+    ],
+    "total": 60.0
+   },
+   "by_type": {
+    "slices": [
+     {
+      "name": "Other type",
+      "pct": 83,
+      "slot": "s1",
+      "value": 50.0
+     },
+     {
+      "name": "ZZ",
+      "pct": 17,
+      "slot": "s2",
+      "value": 10.0
+     }
+    ],
+    "total": 60.0
+   },
+   "strain_cards": [
+    {
+     "name": "Unknown",
+     "pie": {
+      "slices": [
+       {
+        "name": "Other type",
+        "pct": 100,
+        "slot": "c",
+        "value": 50.0
+       }
+      ],
+      "total": 50.0
+     },
+     "slot": "s1",
+     "total": 50.0
+    },
+    {
+     "name": "Bluey",
+     "pie": {
+      "slices": [
+       {
+        "name": "ZZ",
+        "pct": 100,
+        "slot": "c",
+        "value": 10.0
+       }
+      ],
+      "total": 10.0
+     },
+     "slot": "s2",
+     "total": 10.0
+    }
+   ],
+   "table": [
+    {
+     "cells": [
+      50.0,
+      null
+     ],
+     "strain": "Unknown",
+     "total": 50.0
+    },
+    {
+     "cells": [
+      null,
+      10.0
+     ],
+     "strain": "Bluey",
+     "total": 10.0
+    }
+   ],
+   "total": 60.0,
+   "type_cards": [
+    {
+     "name": "Other type",
+     "pie": {
+      "slices": [
+       {
+        "name": "Unknown",
+        "pct": 100,
+        "slot": "c",
+        "value": 50.0
+       }
+      ],
+      "total": 50.0
+     },
+     "slot": "s1",
+     "total": 50.0
+    },
+    {
+     "name": "ZZ",
+     "pie": {
+      "slices": [
+       {
+        "name": "Bluey",
+        "pct": 100,
+        "slot": "c",
+        "value": 10.0
+       }
+      ],
+      "total": 10.0
+     },
+     "slot": "s2",
+     "total": 10.0
+    }
+   ],
+   "type_totals": [
+    50.0,
+    10.0
+   ],
+   "types": [
+    "Other type",
+    "ZZ"
+   ]
+  },
+  "name": "unknown strain and code, and a code with no word",
+  "rows": [
+   {
+    "mg": 30,
+    "strain": "",
+    "type": ""
+   },
+   {
+    "mg": 20,
+    "strain": null,
+    "type": null
+   },
+   {
+    "mg": 10,
+    "strain": "Bluey",
+    "type": "ZZ"
+   }
+  ],
+  "texts": {
+   "by_strain": [
+    "50 mg · 83%",
+    "10 mg · 17%"
+   ],
+   "by_type": [
+    "50 mg · 83%",
+    "10 mg · 17%"
+   ],
+   "strain_cards": [
+    {
+     "keys": [
+      "50 mg · 100%"
+     ],
+     "total": "50"
+    },
+    {
+     "keys": [
+      "10 mg · 100%"
+     ],
+     "total": "10"
+    }
+   ],
+   "total": "60",
+   "type_cards": [
+    {
+     "keys": [
+      "50 mg · 100%"
+     ],
+     "total": "50"
+    },
+    {
+     "keys": [
+      "10 mg · 100%"
+     ],
+     "total": "10"
+    }
+   ]
+  }
+ },
+ {
+  "mix": {
+   "by_strain": {
+    "slices": [
+     {
+      "name": "Bluey",
+      "pct": 100,
+      "slot": "s1",
+      "value": 1235.5
+     }
+    ],
+    "total": 1235.5
+   },
+   "by_type": {
+    "slices": [
+     {
+      "name": "Whole fungi",
+      "pct": 100,
+      "slot": "s1",
+      "value": 1235.5
+     }
+    ],
+    "total": 1235.5
+   },
+   "strain_cards": [
+    {
+     "name": "Bluey",
+     "pie": {
+      "slices": [
+       {
+        "name": "Whole fungi",
+        "pct": 100,
+        "slot": "c",
+        "value": 1235.5
+       }
+      ],
+      "total": 1235.5
+     },
+     "slot": "s1",
+     "total": 1235.5
+    }
+   ],
+   "table": [
+    {
+     "cells": [
+      1235.5
+     ],
+     "strain": "Bluey",
+     "total": 1235.5
+    }
+   ],
+   "total": 1235.5,
+   "type_cards": [
+    {
+     "name": "Whole fungi",
+     "pie": {
+      "slices": [
+       {
+        "name": "Bluey",
+        "pct": 100,
+        "slot": "c",
+        "value": 1235.5
+       }
+      ],
+      "total": 1235.5
+     },
+     "slot": "s1",
+     "total": 1235.5
+    }
+   ],
+   "type_totals": [
+    1235.5
+   ],
+   "types": [
+    "Whole fungi"
+   ]
+  },
+  "name": "one strain of one type: single-slice cards",
+  "rows": [
+   {
+    "mg": 1234.5,
+    "strain": "Bluey",
+    "type": "WF"
+   },
+   {
+    "mg": 1.0,
+    "strain": "Bluey",
+    "type": "WF"
+   }
+  ],
+  "texts": {
+   "by_strain": [
+    "1,236 mg · 100%"
+   ],
+   "by_type": [
+    "1,236 mg · 100%"
+   ],
+   "strain_cards": [
+    {
+     "keys": [
+      "1,236 mg · 100%"
+     ],
+     "total": "1,236"
+    }
+   ],
+   "total": "1,236",
+   "type_cards": [
+    {
+     "keys": [
+      "1,236 mg · 100%"
+     ],
+     "total": "1,236"
+    }
+   ]
+  }
+ },
+ {
+  "mix": {
+   "by_strain": {
+    "slices": [
+     {
+      "name": "Avery",
+      "pct": 50,
+      "slot": "s1",
+      "value": 80.0
+     },
+     {
+      "name": "Bluey",
+      "pct": 50,
+      "slot": "s2",
+      "value": 80.0
+     }
+    ],
+    "total": 160.0
+   },
+   "by_type": {
+    "slices": [
+     {
+      "name": "Chocolate",
+      "pct": 50,
+      "slot": "s1",
+      "value": 80.0
+     },
+     {
+      "name": "Freeze dried",
+      "pct": 50,
+      "slot": "s2",
+      "value": 80.0
+     }
+    ],
+    "total": 160.0
+   },
+   "strain_cards": [
+    {
+     "name": "Avery",
+     "pie": {
+      "slices": [
+       {
+        "name": "Chocolate",
+        "pct": 50,
+        "slot": "s1",
+        "value": 40.0
+       },
+       {
+        "name": "Freeze dried",
+        "pct": 50,
+        "slot": "s2",
+        "value": 40.0
+       }
+      ],
+      "total": 80.0
+     },
+     "slot": "s1",
+     "total": 80.0
+    },
+    {
+     "name": "Bluey",
+     "pie": {
+      "slices": [
+       {
+        "name": "Chocolate",
+        "pct": 50,
+        "slot": "s1",
+        "value": 40.0
+       },
+       {
+        "name": "Freeze dried",
+        "pct": 50,
+        "slot": "s2",
+        "value": 40.0
+       }
+      ],
+      "total": 80.0
+     },
+     "slot": "s2",
+     "total": 80.0
+    }
+   ],
+   "table": [
+    {
+     "cells": [
+      40.0,
+      40.0
+     ],
+     "strain": "Avery",
+     "total": 80.0
+    },
+    {
+     "cells": [
+      40.0,
+      40.0
+     ],
+     "strain": "Bluey",
+     "total": 80.0
+    }
+   ],
+   "total": 160.0,
+   "type_cards": [
+    {
+     "name": "Chocolate",
+     "pie": {
+      "slices": [
+       {
+        "name": "Avery",
+        "pct": 50,
+        "slot": "s1",
+        "value": 40.0
+       },
+       {
+        "name": "Bluey",
+        "pct": 50,
+        "slot": "s2",
+        "value": 40.0
+       }
+      ],
+      "total": 80.0
+     },
+     "slot": "s1",
+     "total": 80.0
+    },
+    {
+     "name": "Freeze dried",
+     "pie": {
+      "slices": [
+       {
+        "name": "Avery",
+        "pct": 50,
+        "slot": "s1",
+        "value": 40.0
+       },
+       {
+        "name": "Bluey",
+        "pct": 50,
+        "slot": "s2",
+        "value": 40.0
+       }
+      ],
+      "total": 80.0
+     },
+     "slot": "s2",
+     "total": 80.0
+    }
+   ],
+   "type_totals": [
+    80.0,
+    80.0
+   ],
+   "types": [
+    "Chocolate",
+    "Freeze dried"
+   ]
+  },
+  "name": "breakdown ties keep first-seen order",
+  "rows": [
+   {
+    "mg": 40,
+    "strain": "Avery",
+    "type": "CH"
+   },
+   {
+    "mg": 40,
+    "strain": "Avery",
+    "type": "FD"
+   },
+   {
+    "mg": 40,
+    "strain": "Bluey",
+    "type": "FD"
+   },
+   {
+    "mg": 40,
+    "strain": "Bluey",
+    "type": "CH"
+   }
+  ],
+  "texts": {
+   "by_strain": [
+    "80 mg · 50%",
+    "80 mg · 50%"
+   ],
+   "by_type": [
+    "80 mg · 50%",
+    "80 mg · 50%"
+   ],
+   "strain_cards": [
+    {
+     "keys": [
+      "40 mg · 50%",
+      "40 mg · 50%"
+     ],
+     "total": "80"
+    },
+    {
+     "keys": [
+      "40 mg · 50%",
+      "40 mg · 50%"
+     ],
+     "total": "80"
+    }
+   ],
+   "total": "160",
+   "type_cards": [
+    {
+     "keys": [
+      "40 mg · 50%",
+      "40 mg · 50%"
+     ],
+     "total": "80"
+    },
+    {
+     "keys": [
+      "40 mg · 50%",
+      "40 mg · 50%"
+     ],
+     "total": "80"
+    }
+   ]
+  }
+ },
+ {
+  "mix": {
+   "by_strain": {
+    "slices": [
+     {
+      "name": "Golden Teacher",
+      "pct": 88,
+      "slot": "s1",
+      "value": 18753.0
+     },
+     {
+      "name": "Penis Envy",
+      "pct": 7,
+      "slot": "s2",
+      "value": 1501.0
+     },
+     {
+      "name": "Enigma",
+      "pct": 5,
+      "slot": "s3",
+      "value": 999.5
+     }
+    ],
+    "total": 21253.5
+   },
+   "by_type": {
+    "slices": [
+     {
+      "name": "Process lot",
+      "pct": 95,
+      "slot": "s1",
+      "value": 20251.0
+     },
+     {
+      "name": "Chocolate",
+      "pct": 5,
+      "slot": "s2",
+      "value": 999.5
+     },
+     {
+      "name": "Whole fungi",
+      "pct": 0,
+      "slot": "s3",
+      "value": 2.5
+     },
+     {
+      "name": "Homogenized",
+      "pct": 0,
+      "slot": "s4",
+      "value": 0.5
+     }
+    ],
+    "total": 21253.5
+   },
+   "strain_cards": [
+    {
+     "name": "Golden Teacher",
+     "pie": {
+      "slices": [
+       {
+        "name": "Process lot",
+        "pct": 100,
+        "slot": "s1",
+        "value": 18750.5
+       },
+       {
+        "name": "Whole fungi",
+        "pct": 0,
+        "slot": "s2",
+        "value": 2.5
+       }
+      ],
+      "total": 18753.0
+     },
+     "slot": "s1",
+     "total": 18753.0
+    },
+    {
+     "name": "Penis Envy",
+     "pie": {
+      "slices": [
+       {
+        "name": "Process lot",
+        "pct": 100,
+        "slot": "s1",
+        "value": 1500.5
+       },
+       {
+        "name": "Homogenized",
+        "pct": 0,
+        "slot": "s2",
+        "value": 0.5
+       }
+      ],
+      "total": 1501.0
+     },
+     "slot": "s2",
+     "total": 1501.0
+    },
+    {
+     "name": "Enigma",
+     "pie": {
+      "slices": [
+       {
+        "name": "Chocolate",
+        "pct": 100,
+        "slot": "c",
+        "value": 999.5
+       }
+      ],
+      "total": 999.5
+     },
+     "slot": "s3",
+     "total": 999.5
+    }
+   ],
+   "table": [
+    {
+     "cells": [
+      18750.5,
+      null,
+      2.5,
+      null
+     ],
+     "strain": "Golden Teacher",
+     "total": 18753.0
+    },
+    {
+     "cells": [
+      1500.5,
+      null,
+      null,
+      0.5
+     ],
+     "strain": "Penis Envy",
+     "total": 1501.0
+    },
+    {
+     "cells": [
+      null,
+      999.5,
+      null,
+      null
+     ],
+     "strain": "Enigma",
+     "total": 999.5
+    }
+   ],
+   "total": 21253.5,
+   "type_cards": [
+    {
+     "name": "Process lot",
+     "pie": {
+      "slices": [
+       {
+        "name": "Golden Teacher",
+        "pct": 93,
+        "slot": "s1",
+        "value": 18750.5
+       },
+       {
+        "name": "Penis Envy",
+        "pct": 7,
+        "slot": "s2",
+        "value": 1500.5
+       }
+      ],
+      "total": 20251.0
+     },
+     "slot": "s1",
+     "total": 20251.0
+    },
+    {
+     "name": "Chocolate",
+     "pie": {
+      "slices": [
+       {
+        "name": "Enigma",
+        "pct": 100,
+        "slot": "c",
+        "value": 999.5
+       }
+      ],
+      "total": 999.5
+     },
+     "slot": "s2",
+     "total": 999.5
+    },
+    {
+     "name": "Whole fungi",
+     "pie": {
+      "slices": [
+       {
+        "name": "Golden Teacher",
+        "pct": 100,
+        "slot": "c",
+        "value": 2.5
+       }
+      ],
+      "total": 2.5
+     },
+     "slot": "s3",
+     "total": 2.5
+    },
+    {
+     "name": "Homogenized",
+     "pie": {
+      "slices": [
+       {
+        "name": "Penis Envy",
+        "pct": 100,
+        "slot": "c",
+        "value": 0.5
+       }
+      ],
+      "total": 0.5
+     },
+     "slot": "s4",
+     "total": 0.5
+    }
+   ],
+   "type_totals": [
+    20251.0,
+    999.5,
+    2.5,
+    0.5
+   ],
+   "types": [
+    "Process lot",
+    "Chocolate",
+    "Whole fungi",
+    "Homogenized"
+   ]
+  },
+  "name": "thousands and half-to-even totals",
+  "rows": [
+   {
+    "mg": 18750.5,
+    "strain": "Golden Teacher",
+    "type": "LOT"
+   },
+   {
+    "mg": 2.5,
+    "strain": "Golden Teacher",
+    "type": "WF"
+   },
+   {
+    "mg": 1500.5,
+    "strain": "Penis Envy",
+    "type": "LOT"
+   },
+   {
+    "mg": 0.5,
+    "strain": "Penis Envy",
+    "type": "HG"
+   },
+   {
+    "mg": 999.5,
+    "strain": "Enigma",
+    "type": "CH"
+   }
+  ],
+  "texts": {
+   "by_strain": [
+    "18,753 mg · 88%",
+    "1,501 mg · 7%",
+    "1,000 mg · 5%"
+   ],
+   "by_type": [
+    "20,251 mg · 95%",
+    "1,000 mg · 5%",
+    "2 mg · 0%",
+    "0 mg · 0%"
+   ],
+   "strain_cards": [
+    {
+     "keys": [
+      "18,750 mg · 100%",
+      "2 mg · 0%"
+     ],
+     "total": "18,753"
+    },
+    {
+     "keys": [
+      "1,500 mg · 100%",
+      "0 mg · 0%"
+     ],
+     "total": "1,501"
+    },
+    {
+     "keys": [
+      "1,000 mg · 100%"
+     ],
+     "total": "1,000"
+    }
+   ],
+   "total": "21,254",
+   "type_cards": [
+    {
+     "keys": [
+      "18,750 mg · 93%",
+      "1,500 mg · 7%"
+     ],
+     "total": "20,251"
+    },
+    {
+     "keys": [
+      "1,000 mg · 100%"
+     ],
+     "total": "1,000"
+    },
+    {
+     "keys": [
+      "2 mg · 100%"
+     ],
+     "total": "2"
+    },
+    {
+     "keys": [
+      "0 mg · 100%"
+     ],
+     "total": "0"
+    }
+   ]
+  }
+ },
+ {
+  "mix": {
+   "by_strain": {
+    "slices": [
+     {
+      "name": "Golden Teacher",
+      "pct": 50,
+      "slot": "s1",
+      "value": 10.0
+     },
+     {
+      "name": "golden teacher",
+      "pct": 50,
+      "slot": "s2",
+      "value": 10.0
+     }
+    ],
+    "total": 20.0
+   },
+   "by_type": {
+    "slices": [
+     {
+      "name": "Freeze dried",
+      "pct": 100,
+      "slot": "s1",
+      "value": 20.0
+     }
+    ],
+    "total": 20.0
+   },
+   "strain_cards": [
+    {
+     "name": "Golden Teacher",
+     "pie": {
+      "slices": [
+       {
+        "name": "Freeze dried",
+        "pct": 100,
+        "slot": "c",
+        "value": 10.0
+       }
+      ],
+      "total": 10.0
+     },
+     "slot": "s1",
+     "total": 10.0
+    },
+    {
+     "name": "golden teacher",
+     "pie": {
+      "slices": [
+       {
+        "name": "Freeze dried",
+        "pct": 100,
+        "slot": "c",
+        "value": 10.0
+       }
+      ],
+      "total": 10.0
+     },
+     "slot": "s2",
+     "total": 10.0
+    }
+   ],
+   "table": [
+    {
+     "cells": [
+      10.0
+     ],
+     "strain": "Golden Teacher",
+     "total": 10.0
+    },
+    {
+     "cells": [
+      10.0
+     ],
+     "strain": "golden teacher",
+     "total": 10.0
+    }
+   ],
+   "total": 20.0,
+   "type_cards": [
+    {
+     "name": "Freeze dried",
+     "pie": {
+      "slices": [
+       {
+        "name": "golden teacher",
+        "pct": 50,
+        "slot": "s1",
+        "value": 10.0
+       },
+       {
+        "name": "Golden Teacher",
+        "pct": 50,
+        "slot": "s2",
+        "value": 10.0
+       }
+      ],
+      "total": 20.0
+     },
+     "slot": "s1",
+     "total": 20.0
+    }
+   ],
+   "type_totals": [
+    20.0
+   ],
+   "types": [
+    "Freeze dried"
+   ]
+  },
+  "name": "case-different names stay apart (the server canonicalizes before)",
+  "rows": [
+   {
+    "mg": 10,
+    "strain": "golden teacher",
+    "type": "FD"
+   },
+   {
+    "mg": 10,
+    "strain": "Golden Teacher",
+    "type": "FD"
+   }
+  ],
+  "texts": {
+   "by_strain": [
+    "10 mg · 50%",
+    "10 mg · 50%"
+   ],
+   "by_type": [
+    "20 mg · 100%"
+   ],
+   "strain_cards": [
+    {
+     "keys": [
+      "10 mg · 100%"
+     ],
+     "total": "10"
+    },
+    {
+     "keys": [
+      "10 mg · 100%"
+     ],
+     "total": "10"
+    }
+   ],
+   "total": "20",
+   "type_cards": [
+    {
+     "keys": [
+      "10 mg · 50%",
+      "10 mg · 50%"
+     ],
+     "total": "20"
+    }
+   ]
+  }
+ },
+ {
+  "mix": {
+   "by_strain": {
+    "slices": [
+     {
+      "name": "S11",
+      "pct": 9,
+      "slot": "s1",
+      "value": 61.0
+     },
+     {
+      "name": "S10",
+      "pct": 9,
+      "slot": "s2",
+      "value": 60.0
+     },
+     {
+      "name": "S09",
+      "pct": 9,
+      "slot": "s3",
+      "value": 59.0
+     },
+     {
+      "name": "S08",
+      "pct": 9,
+      "slot": "s4",
+      "value": 58.0
+     },
+     {
+      "name": "S07",
+      "pct": 8,
+      "slot": "s5",
+      "value": 57.0
+     },
+     {
+      "name": "S06",
+      "pct": 8,
+      "slot": "s6",
+      "value": 56.0
+     },
+     {
+      "name": "S00",
+      "pct": 8,
+      "slot": "s7",
+      "value": 55.0
+     },
+     {
+      "name": "Other (5)",
+      "pct": 39,
+      "slot": "oth",
+      "value": 265.0
+     }
+    ],
+    "total": 671.0
+   },
+   "by_type": {
+    "slices": [
+     {
+      "name": "Process lot",
+      "pct": 99,
+      "slot": "s1",
+      "value": 666.0
+     },
+     {
+      "name": "Chocolate",
+      "pct": 1,
+      "slot": "s2",
+      "value": 5.0
+     }
+    ],
+    "total": 671.0
+   },
+   "strain_cards": [
+    {
+     "name": "S11",
+     "pie": {
+      "slices": [
+       {
+        "name": "Process lot",
+        "pct": 100,
+        "slot": "c",
+        "value": 61.0
+       }
+      ],
+      "total": 61.0
+     },
+     "slot": "s1",
+     "total": 61.0
+    },
+    {
+     "name": "S10",
+     "pie": {
+      "slices": [
+       {
+        "name": "Process lot",
+        "pct": 100,
+        "slot": "c",
+        "value": 60.0
+       }
+      ],
+      "total": 60.0
+     },
+     "slot": "s2",
+     "total": 60.0
+    },
+    {
+     "name": "S09",
+     "pie": {
+      "slices": [
+       {
+        "name": "Process lot",
+        "pct": 100,
+        "slot": "c",
+        "value": 59.0
+       }
+      ],
+      "total": 59.0
+     },
+     "slot": "s3",
+     "total": 59.0
+    },
+    {
+     "name": "S08",
+     "pie": {
+      "slices": [
+       {
+        "name": "Process lot",
+        "pct": 100,
+        "slot": "c",
+        "value": 58.0
+       }
+      ],
+      "total": 58.0
+     },
+     "slot": "s4",
+     "total": 58.0
+    },
+    {
+     "name": "S07",
+     "pie": {
+      "slices": [
+       {
+        "name": "Process lot",
+        "pct": 100,
+        "slot": "c",
+        "value": 57.0
+       }
+      ],
+      "total": 57.0
+     },
+     "slot": "s5",
+     "total": 57.0
+    },
+    {
+     "name": "S06",
+     "pie": {
+      "slices": [
+       {
+        "name": "Process lot",
+        "pct": 100,
+        "slot": "c",
+        "value": 56.0
+       }
+      ],
+      "total": 56.0
+     },
+     "slot": "s6",
+     "total": 56.0
+    },
+    {
+     "name": "S00",
+     "pie": {
+      "slices": [
+       {
+        "name": "Process lot",
+        "pct": 91,
+        "slot": "s1",
+        "value": 50.0
+       },
+       {
+        "name": "Chocolate",
+        "pct": 9,
+        "slot": "s2",
+        "value": 5.0
+       }
+      ],
+      "total": 55.0
+     },
+     "slot": "s7",
+     "total": 55.0
+    },
+    {
+     "name": "S05",
+     "pie": {
+      "slices": [
+       {
+        "name": "Process lot",
+        "pct": 100,
+        "slot": "c",
+        "value": 55.0
+       }
+      ],
+      "total": 55.0
+     },
+     "slot": "oth",
+     "total": 55.0
+    },
+    {
+     "name": "S04",
+     "pie": {
+      "slices": [
+       {
+        "name": "Process lot",
+        "pct": 100,
+        "slot": "c",
+        "value": 54.0
+       }
+      ],
+      "total": 54.0
+     },
+     "slot": "oth",
+     "total": 54.0
+    },
+    {
+     "name": "S03",
+     "pie": {
+      "slices": [
+       {
+        "name": "Process lot",
+        "pct": 100,
+        "slot": "c",
+        "value": 53.0
+       }
+      ],
+      "total": 53.0
+     },
+     "slot": "oth",
+     "total": 53.0
+    },
+    {
+     "name": "S02",
+     "pie": {
+      "slices": [
+       {
+        "name": "Process lot",
+        "pct": 100,
+        "slot": "c",
+        "value": 52.0
+       }
+      ],
+      "total": 52.0
+     },
+     "slot": "oth",
+     "total": 52.0
+    },
+    {
+     "name": "S01",
+     "pie": {
+      "slices": [
+       {
+        "name": "Process lot",
+        "pct": 100,
+        "slot": "c",
+        "value": 51.0
+       }
+      ],
+      "total": 51.0
+     },
+     "slot": "oth",
+     "total": 51.0
+    }
+   ],
+   "table": [
+    {
+     "cells": [
+      61.0,
+      null
+     ],
+     "strain": "S11",
+     "total": 61.0
+    },
+    {
+     "cells": [
+      60.0,
+      null
+     ],
+     "strain": "S10",
+     "total": 60.0
+    },
+    {
+     "cells": [
+      59.0,
+      null
+     ],
+     "strain": "S09",
+     "total": 59.0
+    },
+    {
+     "cells": [
+      58.0,
+      null
+     ],
+     "strain": "S08",
+     "total": 58.0
+    },
+    {
+     "cells": [
+      57.0,
+      null
+     ],
+     "strain": "S07",
+     "total": 57.0
+    },
+    {
+     "cells": [
+      56.0,
+      null
+     ],
+     "strain": "S06",
+     "total": 56.0
+    },
+    {
+     "cells": [
+      50.0,
+      5.0
+     ],
+     "strain": "S00",
+     "total": 55.0
+    },
+    {
+     "cells": [
+      55.0,
+      null
+     ],
+     "strain": "S05",
+     "total": 55.0
+    },
+    {
+     "cells": [
+      54.0,
+      null
+     ],
+     "strain": "S04",
+     "total": 54.0
+    },
+    {
+     "cells": [
+      53.0,
+      null
+     ],
+     "strain": "S03",
+     "total": 53.0
+    },
+    {
+     "cells": [
+      52.0,
+      null
+     ],
+     "strain": "S02",
+     "total": 52.0
+    },
+    {
+     "cells": [
+      51.0,
+      null
+     ],
+     "strain": "S01",
+     "total": 51.0
+    }
+   ],
+   "total": 671.0,
+   "type_cards": [
+    {
+     "name": "Process lot",
+     "pie": {
+      "slices": [
+       {
+        "name": "S11",
+        "pct": 9,
+        "slot": "s1",
+        "value": 61.0
+       },
+       {
+        "name": "S10",
+        "pct": 9,
+        "slot": "s2",
+        "value": 60.0
+       },
+       {
+        "name": "S09",
+        "pct": 9,
+        "slot": "s3",
+        "value": 59.0
+       },
+       {
+        "name": "S08",
+        "pct": 9,
+        "slot": "s4",
+        "value": 58.0
+       },
+       {
+        "name": "S07",
+        "pct": 9,
+        "slot": "s5",
+        "value": 57.0
+       },
+       {
+        "name": "S06",
+        "pct": 8,
+        "slot": "s6",
+        "value": 56.0
+       },
+       {
+        "name": "S05",
+        "pct": 8,
+        "slot": "s7",
+        "value": 55.0
+       },
+       {
+        "name": "S04",
+        "pct": 8,
+        "slot": "s8",
+        "value": 54.0
+       },
+       {
+        "name": "S03",
+        "pct": 8,
+        "slot": "s9",
+        "value": 53.0
+       },
+       {
+        "name": "S02",
+        "pct": 8,
+        "slot": "s10",
+        "value": 52.0
+       },
+       {
+        "name": "S01",
+        "pct": 8,
+        "slot": "s11",
+        "value": 51.0
+       },
+       {
+        "name": "S00",
+        "pct": 8,
+        "slot": "s12",
+        "value": 50.0
+       }
+      ],
+      "total": 666.0
+     },
+     "slot": "s1",
+     "total": 666.0
+    },
+    {
+     "name": "Chocolate",
+     "pie": {
+      "slices": [
+       {
+        "name": "S00",
+        "pct": 100,
+        "slot": "c",
+        "value": 5.0
+       }
+      ],
+      "total": 5.0
+     },
+     "slot": "s2",
+     "total": 5.0
+    }
+   ],
+   "type_totals": [
+    666.0,
+    5.0
+   ],
+   "types": [
+    "Process lot",
+    "Chocolate"
+   ]
+  },
+  "name": "many strains in one type's breakdown",
+  "rows": [
+   {
+    "mg": 50,
+    "strain": "S00",
+    "type": "LOT"
+   },
+   {
+    "mg": 51,
+    "strain": "S01",
+    "type": "LOT"
+   },
+   {
+    "mg": 52,
+    "strain": "S02",
+    "type": "LOT"
+   },
+   {
+    "mg": 53,
+    "strain": "S03",
+    "type": "LOT"
+   },
+   {
+    "mg": 54,
+    "strain": "S04",
+    "type": "LOT"
+   },
+   {
+    "mg": 55,
+    "strain": "S05",
+    "type": "LOT"
+   },
+   {
+    "mg": 56,
+    "strain": "S06",
+    "type": "LOT"
+   },
+   {
+    "mg": 57,
+    "strain": "S07",
+    "type": "LOT"
+   },
+   {
+    "mg": 58,
+    "strain": "S08",
+    "type": "LOT"
+   },
+   {
+    "mg": 59,
+    "strain": "S09",
+    "type": "LOT"
+   },
+   {
+    "mg": 60,
+    "strain": "S10",
+    "type": "LOT"
+   },
+   {
+    "mg": 61,
+    "strain": "S11",
+    "type": "LOT"
+   },
+   {
+    "mg": 5,
+    "strain": "S00",
+    "type": "CH"
+   }
+  ],
+  "texts": {
+   "by_strain": [
+    "61 mg · 9%",
+    "60 mg · 9%",
+    "59 mg · 9%",
+    "58 mg · 9%",
+    "57 mg · 8%",
+    "56 mg · 8%",
+    "55 mg · 8%",
+    "265 mg · 39%"
+   ],
+   "by_type": [
+    "666 mg · 99%",
+    "5 mg · 1%"
+   ],
+   "strain_cards": [
+    {
+     "keys": [
+      "61 mg · 100%"
+     ],
+     "total": "61"
+    },
+    {
+     "keys": [
+      "60 mg · 100%"
+     ],
+     "total": "60"
+    },
+    {
+     "keys": [
+      "59 mg · 100%"
+     ],
+     "total": "59"
+    },
+    {
+     "keys": [
+      "58 mg · 100%"
+     ],
+     "total": "58"
+    },
+    {
+     "keys": [
+      "57 mg · 100%"
+     ],
+     "total": "57"
+    },
+    {
+     "keys": [
+      "56 mg · 100%"
+     ],
+     "total": "56"
+    },
+    {
+     "keys": [
+      "50 mg · 91%",
+      "5 mg · 9%"
+     ],
+     "total": "55"
+    },
+    {
+     "keys": [
+      "55 mg · 100%"
+     ],
+     "total": "55"
+    },
+    {
+     "keys": [
+      "54 mg · 100%"
+     ],
+     "total": "54"
+    },
+    {
+     "keys": [
+      "53 mg · 100%"
+     ],
+     "total": "53"
+    },
+    {
+     "keys": [
+      "52 mg · 100%"
+     ],
+     "total": "52"
+    },
+    {
+     "keys": [
+      "51 mg · 100%"
+     ],
+     "total": "51"
+    }
+   ],
+   "total": "671",
+   "type_cards": [
+    {
+     "keys": [
+      "61 mg · 9%",
+      "60 mg · 9%",
+      "59 mg · 9%",
+      "58 mg · 9%",
+      "57 mg · 9%",
+      "56 mg · 8%",
+      "55 mg · 8%",
+      "54 mg · 8%",
+      "53 mg · 8%",
+      "52 mg · 8%",
+      "51 mg · 8%",
+      "50 mg · 8%"
+     ],
+     "total": "666"
+    },
+    {
+     "keys": [
+      "5 mg · 100%"
+     ],
+     "total": "5"
+    }
+   ]
+  }
+ }
+]

@@ -1,0 +1,369 @@
+[
+ {
+  "centers": [
+   {
+    "license": "SC-ac9ac56b",
+    "name": "Unstuck Psilocybin Treatment Center",
+    "state_id": 225
+   },
+   {
+    "license": "SC-2a49b223",
+    "name": "EPIC Healing Eugene",
+    "state_id": 183
+   },
+   {
+    "license": "SC-b1c7379a",
+    "name": "Bendable Service Center",
+    "state_id": 231
+   }
+  ],
+  "licenses": [
+   {
+    "id": 294,
+    "licenseId": "MF-1e72fc8f",
+    "licenseName": "Mazama Mushrooms LLC",
+    "licenseType": "Manufacturer"
+   },
+   {
+    "id": 225,
+    "licenseId": "SC-ac9ac56b",
+    "licenseName": "Unstuck Psilocybin Treatment Center",
+    "licenseType": "ServiceCenter"
+   },
+   {
+    "id": 183,
+    "licenseId": "SC-2a49b223",
+    "licenseName": "EPIC Healing Eugene",
+    "licenseType": "ServiceCenter"
+   },
+   {
+    "id": 231,
+    "licenseId": "SC-b1c7379a",
+    "licenseName": "Bendable Service Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "a real-shaped answer: one manufacturer, three centers"
+ },
+ {
+  "centers": [],
+  "licenses": [],
+  "name": "nothing"
+ },
+ {
+  "centers": [],
+  "licenses": [
+   {
+    "id": 294,
+    "licenseId": "MF-1e72fc8f",
+    "licenseName": "Mazama Mushrooms LLC",
+    "licenseType": "Manufacturer"
+   }
+  ],
+  "name": "only a manufacturer"
+ },
+ {
+  "centers": [],
+  "licenses": [
+   {
+    "id": 0,
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "id 0 is not a center"
+ },
+ {
+  "centers": [],
+  "licenses": [
+   {
+    "id": -5,
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "negative id"
+ },
+ {
+  "centers": [],
+  "licenses": [
+   {
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "no id"
+ },
+ {
+  "centers": [],
+  "licenses": [
+   {
+    "id": null,
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "id null"
+ },
+ {
+  "centers": [
+   {
+    "license": "SC-1",
+    "name": "Center",
+    "state_id": 183
+   }
+  ],
+  "licenses": [
+   {
+    "id": "183",
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "id as a string"
+ },
+ {
+  "centers": [
+   {
+    "license": "SC-1",
+    "name": "Center",
+    "state_id": 183
+   }
+  ],
+  "licenses": [
+   {
+    "id": 183.0,
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "id as a whole float"
+ },
+ {
+  "centers": [],
+  "licenses": [
+   {
+    "id": 183.5,
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "id with a fraction"
+ },
+ {
+  "centers": [],
+  "licenses": [
+   {
+    "id": true,
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "id true"
+ },
+ {
+  "centers": [],
+  "licenses": [
+   {
+    "id": "abc",
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "id not a number"
+ },
+ {
+  "centers": [
+   {
+    "license": "SC-1",
+    "name": "Service center 225",
+    "state_id": 225
+   }
+  ],
+  "licenses": [
+   {
+    "id": 225,
+    "licenseId": "SC-1",
+    "licenseName": "   ",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "blank name"
+ },
+ {
+  "centers": [
+   {
+    "license": "SC-1",
+    "name": "Service center 225",
+    "state_id": 225
+   }
+  ],
+  "licenses": [
+   {
+    "id": 225,
+    "licenseId": "SC-1",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "no name"
+ },
+ {
+  "centers": [
+   {
+    "license": "SC-1",
+    "name": "Unstuck",
+    "state_id": 225
+   }
+  ],
+  "licenses": [
+   {
+    "id": 225,
+    "licenseId": "SC-1",
+    "licenseName": "  Unstuck  ",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "name with spaces around it"
+ },
+ {
+  "centers": [
+   {
+    "license": null,
+    "name": "Center",
+    "state_id": 225
+   }
+  ],
+  "licenses": [
+   {
+    "id": 225,
+    "licenseId": " ",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "blank license id"
+ },
+ {
+  "centers": [
+   {
+    "license": null,
+    "name": "Unstuck",
+    "state_id": 225
+   }
+  ],
+  "licenses": [
+   {
+    "id": 225,
+    "licenseName": "Unstuck",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "no license id"
+ },
+ {
+  "centers": [
+   {
+    "license": "SC-a",
+    "name": "First",
+    "state_id": 225
+   }
+  ],
+  "licenses": [
+   {
+    "id": 225,
+    "licenseId": "SC-a",
+    "licenseName": "First",
+    "licenseType": "ServiceCenter"
+   },
+   {
+    "id": 225,
+    "licenseId": "SC-b",
+    "licenseName": "Second",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "the same id twice: the first one counts"
+ },
+ {
+  "centers": [
+   {
+    "license": "SC-a",
+    "name": "Unstuck",
+    "state_id": 500
+   },
+   {
+    "license": "SC-b",
+    "name": "Unstuck",
+    "state_id": 501
+   }
+  ],
+  "licenses": [
+   {
+    "id": 500,
+    "licenseId": "SC-a",
+    "licenseName": "Unstuck",
+    "licenseType": "ServiceCenter"
+   },
+   {
+    "id": 501,
+    "licenseId": "SC-b",
+    "licenseName": "Unstuck",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "two centers, same name"
+ },
+ {
+  "centers": [],
+  "licenses": [
+   {
+    "id": 225,
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "serviceCenter"
+   }
+  ],
+  "name": "license type in another case"
+ },
+ {
+  "centers": [],
+  "licenses": [
+   {
+    "id": 225,
+    "licenseId": "SC-1",
+    "licenseName": "Center"
+   }
+  ],
+  "name": "no license type"
+ },
+ {
+  "centers": [
+   {
+    "license": "SC-1",
+    "name": "Center",
+    "state_id": 225
+   }
+  ],
+  "licenses": [
+   "SC-1",
+   null,
+   225,
+   {
+    "id": 225,
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "an entry that is not an object"
+ }
+]

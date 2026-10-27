@@ -1,0 +1,63 @@
+name: mazama_mobile
+description: The Mazama service-center phone app (Android + iPhone, one Dart codebase). Holds the worker's own
+  state-system session on-device; the Mazama server is never in the sale path and never sees a state-system secret.
+publish_to: "none"
+# The build number after + is the date and a count, YYMMDDNN (26102700: 2026-10-27, first build): it only goes up,
+# stays above every build TestFlight had from Codemagic's own counter, and is under Android's 2100000000 limit.
+# Each release raises it (mazama_mobile/tool/publish_public.sh refuses one that doesn't; specs/public-app PA-D3).
+version: 0.2.2+26102701
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+  flutter: ">=3.22.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  http: ^1.2.2
+  crypto: ^3.0.5
+  # lib/signing.dart: pure-Dart Ed25519, to verify the owner's signature on sign-in host lists (SL-D13). 2.7.0 is
+  # the oldest allowed; pub resolves the newest 2.x (2.9.0 when this was added, published about seven weeks before)
+  cryptography: ^2.7.0
+  # Held within 3.1.x: flow_spec.dart imports package:yaml/src/scanner.dart and src/token.dart (not public API) to
+  # refuse anchors/aliases before loading; a 3.2 could move or change them (final review M1).
+  yaml: ">=3.1.4 <3.2.0"
+  path_provider: ^2.1.4
+  url_launcher: ^6.3.1
+  webview_flutter: ^4.9.0
+  share_plus: ^10.1.3
+  ffi: ^2.1.3                     # lib/coa_core_ffi.dart: the shared lab-report reader through dart:ffi
+  # lib/pdf_text.dart: a lab report's text with pdfium (plan 08). 2.4 or newer: 2.2's pdfrx_engine 0.3 doesn't
+  # compile with CI's Dart. pdfium arrives through a native-asset build hook (downloaded once, on build and test)
+  pdfrx: ^2.4.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  test: ^1.25.8
+  flutter_lints: ^5.0.0           # analysis_options.yaml includes package:flutter_lints/flutter.yaml
+  flutter_launcher_icons: ^0.14.3
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/flows/          # a copy of ../mazama_modules/flows/, committed; refresh it by hand with tool/sync_flows.sh (no build runs it; CI checks it)
+    - assets/flows_phone/    # a copy of ../mazama_modules/flows/phone/ (the phone-only login_browser.yaml, SL-R16), refreshed the same way
+    - assets/signing/        # the owner's public signing key, ../mazama_modules/flows/signing.pub (SL-D13), refreshed the same way
+    - assets/demo/           # demo mode's invented center (specs/demo-mode): not vendored, the app's own
+
+# The Mazama Mushrooms "M" logo, as the app icon. Run `flutter pub get && dart run flutter_launcher_icons` to
+# (re)generate the actual Android mipmap-*/ and iOS AppIcon.appiconset files from these two source images -
+# this config doesn't do anything on its own until that command is run (Codemagic runs it before every iOS
+# build: codemagic.yaml "Generate app icons"). Both are 1024x1024. image_path is icon.png (the logo
+# flattened onto white - iOS icons may not carry an alpha channel, so this is also what's used, as-is, for
+# every iOS size). Android gets a proper adaptive icon instead: icon_foreground.png (the same logo, kept
+# transparent) layered over a plain white background, so the logo can be recolored/cropped by the launcher's
+# own mask (circle, squircle, ...) without a visible square behind it.
+flutter_launcher_icons:
+  image_path: "assets/icon/icon.png"
+  android: "launcher_icon"
+  ios: true
+  remove_alpha_ios: true
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/icon/icon_foreground.png"

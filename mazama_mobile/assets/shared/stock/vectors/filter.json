@@ -1,0 +1,1652 @@
+[
+ {
+  "makers": "all",
+  "name": "mixed makers, expired and zero rows, all",
+  "result": {
+   "counted": [
+    {
+     "analyteWeight": 48.2,
+     "description": "Golden Teacher 25 mg TPE",
+     "expired": false,
+     "id": 1,
+     "mazama": true,
+     "productGuid": "PKPR-0001",
+     "quantity": 10,
+     "strain": "Golden Teacher",
+     "unitMgTpe": 24.6,
+     "weightPerUnit": 0.5,
+     "zeroOut": false
+    },
+    {
+     "analyteWeight": null,
+     "description": "Golden Teacher 10 mg",
+     "expired": false,
+     "id": 2,
+     "mazama": false,
+     "productGuid": "PKPR-0002",
+     "quantity": 4,
+     "strain": "Golden Teacher",
+     "unitMgTpe": 9.9,
+     "weightPerUnit": null,
+     "zeroOut": false
+    },
+    {
+     "analyteWeight": 19.8,
+     "description": "Penis Envy 5mg capsules",
+     "expired": false,
+     "id": 3,
+     "mazama": false,
+     "productGuid": "PKPR-0003",
+     "quantity": 6,
+     "strain": "Penis Envy",
+     "unitMgTpe": 5.1,
+     "weightPerUnit": 0.25,
+     "zeroOut": false
+    },
+    {
+     "analyteWeight": null,
+     "description": "Huautla chocolate bar 100 mg",
+     "expired": false,
+     "id": 10,
+     "mazama": false,
+     "productGuid": "PKPR-0010",
+     "quantity": 2.5,
+     "strain": "Huautla",
+     "unitMgTpe": 101.3,
+     "weightPerUnit": null,
+     "zeroOut": false
+    },
+    {
+     "analyteWeight": null,
+     "description": "Mystery 10 mg",
+     "expired": false,
+     "id": 11,
+     "mazama": true,
+     "productGuid": "PKPR-0011",
+     "quantity": 1,
+     "strain": "",
+     "unitMgTpe": 10.2,
+     "weightPerUnit": null,
+     "zeroOut": false
+    }
+   ],
+   "other": [
+    {
+     "reason": "expired",
+     "row": {
+      "analyteWeight": null,
+      "description": "Penis Envy 20 MG",
+      "expired": true,
+      "id": 4,
+      "mazama": true,
+      "productGuid": "PKPR-0004",
+      "quantity": 3,
+      "strain": "Penis Envy",
+      "unitMgTpe": 20.0,
+      "weightPerUnit": null,
+      "zeroOut": false
+     }
+    },
+    {
+     "reason": "expired",
+     "row": {
+      "analyteWeight": null,
+      "description": "Penis Envy 15 mg",
+      "expired": true,
+      "id": 5,
+      "mazama": false,
+      "productGuid": "PKPR-0005",
+      "quantity": 2,
+      "strain": "Penis Envy",
+      "unitMgTpe": 15.0,
+      "weightPerUnit": null,
+      "zeroOut": false
+     }
+    }
+   ]
+  },
+  "rows": [
+   {
+    "analyteWeight": 48.2,
+    "description": "Golden Teacher 25 mg TPE",
+    "expired": false,
+    "id": 1,
+    "mazama": true,
+    "productGuid": "PKPR-0001",
+    "quantity": 10,
+    "strain": "Golden Teacher",
+    "unitMgTpe": 24.6,
+    "weightPerUnit": 0.5,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Golden Teacher 10 mg",
+    "expired": false,
+    "id": 2,
+    "mazama": false,
+    "productGuid": "PKPR-0002",
+    "quantity": 4,
+    "strain": "Golden Teacher",
+    "unitMgTpe": 9.9,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": 19.8,
+    "description": "Penis Envy 5mg capsules",
+    "expired": false,
+    "id": 3,
+    "mazama": false,
+    "productGuid": "PKPR-0003",
+    "quantity": 6,
+    "strain": "Penis Envy",
+    "unitMgTpe": 5.1,
+    "weightPerUnit": 0.25,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Penis Envy 20 MG",
+    "expired": true,
+    "id": 4,
+    "mazama": true,
+    "productGuid": "PKPR-0004",
+    "quantity": 3,
+    "strain": "Penis Envy",
+    "unitMgTpe": 20.0,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Penis Envy 15 mg",
+    "expired": true,
+    "id": 5,
+    "mazama": false,
+    "productGuid": "PKPR-0005",
+    "quantity": 2,
+    "strain": "Penis Envy",
+    "unitMgTpe": 15.0,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Bluey 25 mg",
+    "expired": false,
+    "id": 6,
+    "mazama": true,
+    "productGuid": "PKPR-0006",
+    "quantity": 0,
+    "strain": "Bluey",
+    "unitMgTpe": 25.0,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Bluey 25 mg",
+    "expired": false,
+    "id": 7,
+    "mazama": true,
+    "productGuid": "PKPR-0007",
+    "quantity": 5,
+    "strain": "Bluey",
+    "unitMgTpe": 25.0,
+    "weightPerUnit": null,
+    "zeroOut": true
+   },
+   {
+    "analyteWeight": null,
+    "description": "Bluey 25 mg",
+    "expired": false,
+    "id": 8,
+    "mazama": true,
+    "productGuid": "PKPR-0008",
+    "quantity": null,
+    "strain": "Bluey",
+    "unitMgTpe": 25.0,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Bluey 25 mg",
+    "expired": false,
+    "id": 9,
+    "mazama": false,
+    "productGuid": "PKPR-0009",
+    "quantity": -2,
+    "strain": "Bluey",
+    "unitMgTpe": 25.0,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Huautla chocolate bar 100 mg",
+    "expired": false,
+    "id": 10,
+    "mazama": false,
+    "productGuid": "PKPR-0010",
+    "quantity": 2.5,
+    "strain": "Huautla",
+    "unitMgTpe": 101.3,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Mystery 10 mg",
+    "expired": false,
+    "id": 11,
+    "mazama": true,
+    "productGuid": "PKPR-0011",
+    "quantity": 1,
+    "strain": "",
+    "unitMgTpe": 10.2,
+    "weightPerUnit": null,
+    "zeroOut": false
+   }
+  ]
+ },
+ {
+  "makers": "mazama",
+  "name": "mixed makers, expired and zero rows, mazama",
+  "result": {
+   "counted": [
+    {
+     "analyteWeight": 48.2,
+     "description": "Golden Teacher 25 mg TPE",
+     "expired": false,
+     "id": 1,
+     "mazama": true,
+     "productGuid": "PKPR-0001",
+     "quantity": 10,
+     "strain": "Golden Teacher",
+     "unitMgTpe": 24.6,
+     "weightPerUnit": 0.5,
+     "zeroOut": false
+    },
+    {
+     "analyteWeight": null,
+     "description": "Mystery 10 mg",
+     "expired": false,
+     "id": 11,
+     "mazama": true,
+     "productGuid": "PKPR-0011",
+     "quantity": 1,
+     "strain": "",
+     "unitMgTpe": 10.2,
+     "weightPerUnit": null,
+     "zeroOut": false
+    }
+   ],
+   "other": [
+    {
+     "reason": "other_maker",
+     "row": {
+      "analyteWeight": null,
+      "description": "Golden Teacher 10 mg",
+      "expired": false,
+      "id": 2,
+      "mazama": false,
+      "productGuid": "PKPR-0002",
+      "quantity": 4,
+      "strain": "Golden Teacher",
+      "unitMgTpe": 9.9,
+      "weightPerUnit": null,
+      "zeroOut": false
+     }
+    },
+    {
+     "reason": "other_maker",
+     "row": {
+      "analyteWeight": 19.8,
+      "description": "Penis Envy 5mg capsules",
+      "expired": false,
+      "id": 3,
+      "mazama": false,
+      "productGuid": "PKPR-0003",
+      "quantity": 6,
+      "strain": "Penis Envy",
+      "unitMgTpe": 5.1,
+      "weightPerUnit": 0.25,
+      "zeroOut": false
+     }
+    },
+    {
+     "reason": "expired",
+     "row": {
+      "analyteWeight": null,
+      "description": "Penis Envy 20 MG",
+      "expired": true,
+      "id": 4,
+      "mazama": true,
+      "productGuid": "PKPR-0004",
+      "quantity": 3,
+      "strain": "Penis Envy",
+      "unitMgTpe": 20.0,
+      "weightPerUnit": null,
+      "zeroOut": false
+     }
+    },
+    {
+     "reason": "expired",
+     "row": {
+      "analyteWeight": null,
+      "description": "Penis Envy 15 mg",
+      "expired": true,
+      "id": 5,
+      "mazama": false,
+      "productGuid": "PKPR-0005",
+      "quantity": 2,
+      "strain": "Penis Envy",
+      "unitMgTpe": 15.0,
+      "weightPerUnit": null,
+      "zeroOut": false
+     }
+    },
+    {
+     "reason": "other_maker",
+     "row": {
+      "analyteWeight": null,
+      "description": "Huautla chocolate bar 100 mg",
+      "expired": false,
+      "id": 10,
+      "mazama": false,
+      "productGuid": "PKPR-0010",
+      "quantity": 2.5,
+      "strain": "Huautla",
+      "unitMgTpe": 101.3,
+      "weightPerUnit": null,
+      "zeroOut": false
+     }
+    }
+   ]
+  },
+  "rows": [
+   {
+    "analyteWeight": 48.2,
+    "description": "Golden Teacher 25 mg TPE",
+    "expired": false,
+    "id": 1,
+    "mazama": true,
+    "productGuid": "PKPR-0001",
+    "quantity": 10,
+    "strain": "Golden Teacher",
+    "unitMgTpe": 24.6,
+    "weightPerUnit": 0.5,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Golden Teacher 10 mg",
+    "expired": false,
+    "id": 2,
+    "mazama": false,
+    "productGuid": "PKPR-0002",
+    "quantity": 4,
+    "strain": "Golden Teacher",
+    "unitMgTpe": 9.9,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": 19.8,
+    "description": "Penis Envy 5mg capsules",
+    "expired": false,
+    "id": 3,
+    "mazama": false,
+    "productGuid": "PKPR-0003",
+    "quantity": 6,
+    "strain": "Penis Envy",
+    "unitMgTpe": 5.1,
+    "weightPerUnit": 0.25,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Penis Envy 20 MG",
+    "expired": true,
+    "id": 4,
+    "mazama": true,
+    "productGuid": "PKPR-0004",
+    "quantity": 3,
+    "strain": "Penis Envy",
+    "unitMgTpe": 20.0,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Penis Envy 15 mg",
+    "expired": true,
+    "id": 5,
+    "mazama": false,
+    "productGuid": "PKPR-0005",
+    "quantity": 2,
+    "strain": "Penis Envy",
+    "unitMgTpe": 15.0,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Bluey 25 mg",
+    "expired": false,
+    "id": 6,
+    "mazama": true,
+    "productGuid": "PKPR-0006",
+    "quantity": 0,
+    "strain": "Bluey",
+    "unitMgTpe": 25.0,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Bluey 25 mg",
+    "expired": false,
+    "id": 7,
+    "mazama": true,
+    "productGuid": "PKPR-0007",
+    "quantity": 5,
+    "strain": "Bluey",
+    "unitMgTpe": 25.0,
+    "weightPerUnit": null,
+    "zeroOut": true
+   },
+   {
+    "analyteWeight": null,
+    "description": "Bluey 25 mg",
+    "expired": false,
+    "id": 8,
+    "mazama": true,
+    "productGuid": "PKPR-0008",
+    "quantity": null,
+    "strain": "Bluey",
+    "unitMgTpe": 25.0,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Bluey 25 mg",
+    "expired": false,
+    "id": 9,
+    "mazama": false,
+    "productGuid": "PKPR-0009",
+    "quantity": -2,
+    "strain": "Bluey",
+    "unitMgTpe": 25.0,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Huautla chocolate bar 100 mg",
+    "expired": false,
+    "id": 10,
+    "mazama": false,
+    "productGuid": "PKPR-0010",
+    "quantity": 2.5,
+    "strain": "Huautla",
+    "unitMgTpe": 101.3,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Mystery 10 mg",
+    "expired": false,
+    "id": 11,
+    "mazama": true,
+    "productGuid": "PKPR-0011",
+    "quantity": 1,
+    "strain": "",
+    "unitMgTpe": 10.2,
+    "weightPerUnit": null,
+    "zeroOut": false
+   }
+  ]
+ },
+ {
+  "makers": "all",
+  "name": "nothing counted, all",
+  "result": {
+   "counted": [
+    {
+     "analyteWeight": null,
+     "description": "Avery 25 mg",
+     "expired": false,
+     "id": 2,
+     "mazama": false,
+     "productGuid": "PKPR-0002",
+     "quantity": 3,
+     "strain": "Avery",
+     "unitMgTpe": 25,
+     "weightPerUnit": null,
+     "zeroOut": false
+    }
+   ],
+   "other": [
+    {
+     "reason": "expired",
+     "row": {
+      "analyteWeight": null,
+      "description": "Bluey 25 mg",
+      "expired": true,
+      "id": 1,
+      "mazama": true,
+      "productGuid": "PKPR-0001",
+      "quantity": 2,
+      "strain": "Bluey",
+      "unitMgTpe": 25,
+      "weightPerUnit": null,
+      "zeroOut": false
+     }
+    }
+   ]
+  },
+  "rows": [
+   {
+    "analyteWeight": null,
+    "description": "Bluey 25 mg",
+    "expired": true,
+    "id": 1,
+    "mazama": true,
+    "productGuid": "PKPR-0001",
+    "quantity": 2,
+    "strain": "Bluey",
+    "unitMgTpe": 25,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Avery 25 mg",
+    "expired": false,
+    "id": 2,
+    "mazama": false,
+    "productGuid": "PKPR-0002",
+    "quantity": 3,
+    "strain": "Avery",
+    "unitMgTpe": 25,
+    "weightPerUnit": null,
+    "zeroOut": false
+   }
+  ]
+ },
+ {
+  "makers": "mazama",
+  "name": "nothing counted, mazama",
+  "result": {
+   "counted": [],
+   "other": [
+    {
+     "reason": "expired",
+     "row": {
+      "analyteWeight": null,
+      "description": "Bluey 25 mg",
+      "expired": true,
+      "id": 1,
+      "mazama": true,
+      "productGuid": "PKPR-0001",
+      "quantity": 2,
+      "strain": "Bluey",
+      "unitMgTpe": 25,
+      "weightPerUnit": null,
+      "zeroOut": false
+     }
+    },
+    {
+     "reason": "other_maker",
+     "row": {
+      "analyteWeight": null,
+      "description": "Avery 25 mg",
+      "expired": false,
+      "id": 2,
+      "mazama": false,
+      "productGuid": "PKPR-0002",
+      "quantity": 3,
+      "strain": "Avery",
+      "unitMgTpe": 25,
+      "weightPerUnit": null,
+      "zeroOut": false
+     }
+    }
+   ]
+  },
+  "rows": [
+   {
+    "analyteWeight": null,
+    "description": "Bluey 25 mg",
+    "expired": true,
+    "id": 1,
+    "mazama": true,
+    "productGuid": "PKPR-0001",
+    "quantity": 2,
+    "strain": "Bluey",
+    "unitMgTpe": 25,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Avery 25 mg",
+    "expired": false,
+    "id": 2,
+    "mazama": false,
+    "productGuid": "PKPR-0002",
+    "quantity": 3,
+    "strain": "Avery",
+    "unitMgTpe": 25,
+    "weightPerUnit": null,
+    "zeroOut": false
+   }
+  ]
+ },
+ {
+  "makers": "all",
+  "name": "more than 7 strains, all",
+  "result": {
+   "counted": [
+    {
+     "analyteWeight": null,
+     "description": "Golden Teacher 25 mg",
+     "expired": false,
+     "id": 1,
+     "mazama": true,
+     "productGuid": "PKPR-0001",
+     "quantity": 18,
+     "strain": "Golden Teacher",
+     "unitMgTpe": 24.71,
+     "weightPerUnit": null,
+     "zeroOut": false
+    },
+    {
+     "analyteWeight": null,
+     "description": "Penis Envy 20 mg",
+     "expired": false,
+     "id": 2,
+     "mazama": false,
+     "productGuid": "PKPR-0002",
+     "quantity": 16,
+     "strain": "Penis Envy",
+     "unitMgTpe": 19.93,
+     "weightPerUnit": null,
+     "zeroOut": false
+    },
+    {
+     "analyteWeight": null,
+     "description": "Penis Envy 10 mg",
+     "expired": false,
+     "id": 3,
+     "mazama": false,
+     "productGuid": "PKPR-0003",
+     "quantity": 17,
+     "strain": "Penis Envy",
+     "unitMgTpe": 9.87,
+     "weightPerUnit": null,
+     "zeroOut": false
+    },
+    {
+     "analyteWeight": null,
+     "description": "Bluey 15 mg",
+     "expired": false,
+     "id": 4,
+     "mazama": true,
+     "productGuid": "PKPR-0004",
+     "quantity": 14,
+     "strain": "Bluey",
+     "unitMgTpe": 15.2,
+     "weightPerUnit": null,
+     "zeroOut": false
+    },
+    {
+     "analyteWeight": null,
+     "description": "Bluey 5 mg",
+     "expired": false,
+     "id": 5,
+     "mazama": true,
+     "productGuid": "PKPR-0005",
+     "quantity": 15,
+     "strain": "Bluey",
+     "unitMgTpe": 5.05,
+     "weightPerUnit": null,
+     "zeroOut": false
+    },
+    {
+     "analyteWeight": null,
+     "description": "Bluey 25 mg",
+     "expired": false,
+     "id": 6,
+     "mazama": true,
+     "productGuid": "PKPR-0006",
+     "quantity": 16,
+     "strain": "Bluey",
+     "unitMgTpe": null,
+     "weightPerUnit": null,
+     "zeroOut": false
+    },
+    {
+     "analyteWeight": null,
+     "description": "Huautla 10 mg",
+     "expired": false,
+     "id": 7,
+     "mazama": false,
+     "productGuid": "PKPR-0007",
+     "quantity": 12,
+     "strain": "Huautla",
+     "unitMgTpe": 9.87,
+     "weightPerUnit": null,
+     "zeroOut": false
+    },
+    {
+     "analyteWeight": null,
+     "description": "Avery 5 mg",
+     "expired": false,
+     "id": 8,
+     "mazama": true,
+     "productGuid": "PKPR-0008",
+     "quantity": 10,
+     "strain": "Avery",
+     "unitMgTpe": null,
+     "weightPerUnit": null,
+     "zeroOut": false
+    },
+    {
+     "analyteWeight": null,
+     "description": "Avery 25 mg",
+     "expired": false,
+     "id": 9,
+     "mazama": true,
+     "productGuid": "PKPR-0009",
+     "quantity": 11,
+     "strain": "Avery",
+     "unitMgTpe": 24.71,
+     "weightPerUnit": null,
+     "zeroOut": false
+    },
+    {
+     "analyteWeight": null,
+     "description": "Mazatec chocolate",
+     "expired": false,
+     "id": 10,
+     "mazama": false,
+     "productGuid": "PKPR-0010",
+     "quantity": 8,
+     "strain": "Mazatec",
+     "unitMgTpe": 98.6,
+     "weightPerUnit": null,
+     "zeroOut": false
+    },
+    {
+     "analyteWeight": null,
+     "description": "Mazatec 20 mg",
+     "expired": false,
+     "id": 11,
+     "mazama": false,
+     "productGuid": "PKPR-0011",
+     "quantity": 9,
+     "strain": "Mazatec",
+     "unitMgTpe": 19.93,
+     "weightPerUnit": null,
+     "zeroOut": false
+    },
+    {
+     "analyteWeight": null,
+     "description": "Mazatec 10 mg",
+     "expired": false,
+     "id": 12,
+     "mazama": false,
+     "productGuid": "PKPR-0012",
+     "quantity": 10,
+     "strain": "Mazatec",
+     "unitMgTpe": 9.87,
+     "weightPerUnit": null,
+     "zeroOut": false
+    },
+    {
+     "analyteWeight": null,
+     "description": "Jedi Mind Fuck 25 mg",
+     "expired": false,
+     "id": 13,
+     "mazama": true,
+     "productGuid": "PKPR-0013",
+     "quantity": 6,
+     "strain": "Jedi Mind Fuck",
+     "unitMgTpe": 24.71,
+     "weightPerUnit": null,
+     "zeroOut": false
+    },
+    {
+     "analyteWeight": null,
+     "description": "Tidal Wave 20 mg",
+     "expired": false,
+     "id": 14,
+     "mazama": false,
+     "productGuid": "PKPR-0014",
+     "quantity": 4,
+     "strain": "Tidal Wave",
+     "unitMgTpe": 19.93,
+     "weightPerUnit": null,
+     "zeroOut": false
+    },
+    {
+     "analyteWeight": null,
+     "description": "Tidal Wave 10 mg",
+     "expired": false,
+     "id": 15,
+     "mazama": false,
+     "productGuid": "PKPR-0015",
+     "quantity": 5,
+     "strain": "Tidal Wave",
+     "unitMgTpe": 9.87,
+     "weightPerUnit": null,
+     "zeroOut": false
+    },
+    {
+     "analyteWeight": null,
+     "description": "Ecuador 15 mg",
+     "expired": false,
+     "id": 16,
+     "mazama": true,
+     "productGuid": "PKPR-0016",
+     "quantity": 2,
+     "strain": "Ecuador",
+     "unitMgTpe": 15.2,
+     "weightPerUnit": null,
+     "zeroOut": false
+    },
+    {
+     "analyteWeight": null,
+     "description": "Ecuador 5 mg",
+     "expired": false,
+     "id": 17,
+     "mazama": true,
+     "productGuid": "PKPR-0017",
+     "quantity": 3,
+     "strain": "Ecuador",
+     "unitMgTpe": null,
+     "weightPerUnit": null,
+     "zeroOut": false
+    },
+    {
+     "analyteWeight": null,
+     "description": "Ecuador 25 mg",
+     "expired": false,
+     "id": 18,
+     "mazama": true,
+     "productGuid": "PKPR-0018",
+     "quantity": 4,
+     "strain": "Ecuador",
+     "unitMgTpe": 24.71,
+     "weightPerUnit": null,
+     "zeroOut": false
+    }
+   ],
+   "other": []
+  },
+  "rows": [
+   {
+    "analyteWeight": null,
+    "description": "Golden Teacher 25 mg",
+    "expired": false,
+    "id": 1,
+    "mazama": true,
+    "productGuid": "PKPR-0001",
+    "quantity": 18,
+    "strain": "Golden Teacher",
+    "unitMgTpe": 24.71,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Penis Envy 20 mg",
+    "expired": false,
+    "id": 2,
+    "mazama": false,
+    "productGuid": "PKPR-0002",
+    "quantity": 16,
+    "strain": "Penis Envy",
+    "unitMgTpe": 19.93,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Penis Envy 10 mg",
+    "expired": false,
+    "id": 3,
+    "mazama": false,
+    "productGuid": "PKPR-0003",
+    "quantity": 17,
+    "strain": "Penis Envy",
+    "unitMgTpe": 9.87,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Bluey 15 mg",
+    "expired": false,
+    "id": 4,
+    "mazama": true,
+    "productGuid": "PKPR-0004",
+    "quantity": 14,
+    "strain": "Bluey",
+    "unitMgTpe": 15.2,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Bluey 5 mg",
+    "expired": false,
+    "id": 5,
+    "mazama": true,
+    "productGuid": "PKPR-0005",
+    "quantity": 15,
+    "strain": "Bluey",
+    "unitMgTpe": 5.05,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Bluey 25 mg",
+    "expired": false,
+    "id": 6,
+    "mazama": true,
+    "productGuid": "PKPR-0006",
+    "quantity": 16,
+    "strain": "Bluey",
+    "unitMgTpe": null,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Huautla 10 mg",
+    "expired": false,
+    "id": 7,
+    "mazama": false,
+    "productGuid": "PKPR-0007",
+    "quantity": 12,
+    "strain": "Huautla",
+    "unitMgTpe": 9.87,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Avery 5 mg",
+    "expired": false,
+    "id": 8,
+    "mazama": true,
+    "productGuid": "PKPR-0008",
+    "quantity": 10,
+    "strain": "Avery",
+    "unitMgTpe": null,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Avery 25 mg",
+    "expired": false,
+    "id": 9,
+    "mazama": true,
+    "productGuid": "PKPR-0009",
+    "quantity": 11,
+    "strain": "Avery",
+    "unitMgTpe": 24.71,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Mazatec chocolate",
+    "expired": false,
+    "id": 10,
+    "mazama": false,
+    "productGuid": "PKPR-0010",
+    "quantity": 8,
+    "strain": "Mazatec",
+    "unitMgTpe": 98.6,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Mazatec 20 mg",
+    "expired": false,
+    "id": 11,
+    "mazama": false,
+    "productGuid": "PKPR-0011",
+    "quantity": 9,
+    "strain": "Mazatec",
+    "unitMgTpe": 19.93,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Mazatec 10 mg",
+    "expired": false,
+    "id": 12,
+    "mazama": false,
+    "productGuid": "PKPR-0012",
+    "quantity": 10,
+    "strain": "Mazatec",
+    "unitMgTpe": 9.87,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Jedi Mind Fuck 25 mg",
+    "expired": false,
+    "id": 13,
+    "mazama": true,
+    "productGuid": "PKPR-0013",
+    "quantity": 6,
+    "strain": "Jedi Mind Fuck",
+    "unitMgTpe": 24.71,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Tidal Wave 20 mg",
+    "expired": false,
+    "id": 14,
+    "mazama": false,
+    "productGuid": "PKPR-0014",
+    "quantity": 4,
+    "strain": "Tidal Wave",
+    "unitMgTpe": 19.93,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Tidal Wave 10 mg",
+    "expired": false,
+    "id": 15,
+    "mazama": false,
+    "productGuid": "PKPR-0015",
+    "quantity": 5,
+    "strain": "Tidal Wave",
+    "unitMgTpe": 9.87,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Ecuador 15 mg",
+    "expired": false,
+    "id": 16,
+    "mazama": true,
+    "productGuid": "PKPR-0016",
+    "quantity": 2,
+    "strain": "Ecuador",
+    "unitMgTpe": 15.2,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Ecuador 5 mg",
+    "expired": false,
+    "id": 17,
+    "mazama": true,
+    "productGuid": "PKPR-0017",
+    "quantity": 3,
+    "strain": "Ecuador",
+    "unitMgTpe": null,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Ecuador 25 mg",
+    "expired": false,
+    "id": 18,
+    "mazama": true,
+    "productGuid": "PKPR-0018",
+    "quantity": 4,
+    "strain": "Ecuador",
+    "unitMgTpe": 24.71,
+    "weightPerUnit": null,
+    "zeroOut": false
+   }
+  ]
+ },
+ {
+  "makers": "mazama",
+  "name": "more than 7 strains, mazama",
+  "result": {
+   "counted": [
+    {
+     "analyteWeight": null,
+     "description": "Golden Teacher 25 mg",
+     "expired": false,
+     "id": 1,
+     "mazama": true,
+     "productGuid": "PKPR-0001",
+     "quantity": 18,
+     "strain": "Golden Teacher",
+     "unitMgTpe": 24.71,
+     "weightPerUnit": null,
+     "zeroOut": false
+    },
+    {
+     "analyteWeight": null,
+     "description": "Bluey 15 mg",
+     "expired": false,
+     "id": 4,
+     "mazama": true,
+     "productGuid": "PKPR-0004",
+     "quantity": 14,
+     "strain": "Bluey",
+     "unitMgTpe": 15.2,
+     "weightPerUnit": null,
+     "zeroOut": false
+    },
+    {
+     "analyteWeight": null,
+     "description": "Bluey 5 mg",
+     "expired": false,
+     "id": 5,
+     "mazama": true,
+     "productGuid": "PKPR-0005",
+     "quantity": 15,
+     "strain": "Bluey",
+     "unitMgTpe": 5.05,
+     "weightPerUnit": null,
+     "zeroOut": false
+    },
+    {
+     "analyteWeight": null,
+     "description": "Bluey 25 mg",
+     "expired": false,
+     "id": 6,
+     "mazama": true,
+     "productGuid": "PKPR-0006",
+     "quantity": 16,
+     "strain": "Bluey",
+     "unitMgTpe": null,
+     "weightPerUnit": null,
+     "zeroOut": false
+    },
+    {
+     "analyteWeight": null,
+     "description": "Avery 5 mg",
+     "expired": false,
+     "id": 8,
+     "mazama": true,
+     "productGuid": "PKPR-0008",
+     "quantity": 10,
+     "strain": "Avery",
+     "unitMgTpe": null,
+     "weightPerUnit": null,
+     "zeroOut": false
+    },
+    {
+     "analyteWeight": null,
+     "description": "Avery 25 mg",
+     "expired": false,
+     "id": 9,
+     "mazama": true,
+     "productGuid": "PKPR-0009",
+     "quantity": 11,
+     "strain": "Avery",
+     "unitMgTpe": 24.71,
+     "weightPerUnit": null,
+     "zeroOut": false
+    },
+    {
+     "analyteWeight": null,
+     "description": "Jedi Mind Fuck 25 mg",
+     "expired": false,
+     "id": 13,
+     "mazama": true,
+     "productGuid": "PKPR-0013",
+     "quantity": 6,
+     "strain": "Jedi Mind Fuck",
+     "unitMgTpe": 24.71,
+     "weightPerUnit": null,
+     "zeroOut": false
+    },
+    {
+     "analyteWeight": null,
+     "description": "Ecuador 15 mg",
+     "expired": false,
+     "id": 16,
+     "mazama": true,
+     "productGuid": "PKPR-0016",
+     "quantity": 2,
+     "strain": "Ecuador",
+     "unitMgTpe": 15.2,
+     "weightPerUnit": null,
+     "zeroOut": false
+    },
+    {
+     "analyteWeight": null,
+     "description": "Ecuador 5 mg",
+     "expired": false,
+     "id": 17,
+     "mazama": true,
+     "productGuid": "PKPR-0017",
+     "quantity": 3,
+     "strain": "Ecuador",
+     "unitMgTpe": null,
+     "weightPerUnit": null,
+     "zeroOut": false
+    },
+    {
+     "analyteWeight": null,
+     "description": "Ecuador 25 mg",
+     "expired": false,
+     "id": 18,
+     "mazama": true,
+     "productGuid": "PKPR-0018",
+     "quantity": 4,
+     "strain": "Ecuador",
+     "unitMgTpe": 24.71,
+     "weightPerUnit": null,
+     "zeroOut": false
+    }
+   ],
+   "other": [
+    {
+     "reason": "other_maker",
+     "row": {
+      "analyteWeight": null,
+      "description": "Penis Envy 20 mg",
+      "expired": false,
+      "id": 2,
+      "mazama": false,
+      "productGuid": "PKPR-0002",
+      "quantity": 16,
+      "strain": "Penis Envy",
+      "unitMgTpe": 19.93,
+      "weightPerUnit": null,
+      "zeroOut": false
+     }
+    },
+    {
+     "reason": "other_maker",
+     "row": {
+      "analyteWeight": null,
+      "description": "Penis Envy 10 mg",
+      "expired": false,
+      "id": 3,
+      "mazama": false,
+      "productGuid": "PKPR-0003",
+      "quantity": 17,
+      "strain": "Penis Envy",
+      "unitMgTpe": 9.87,
+      "weightPerUnit": null,
+      "zeroOut": false
+     }
+    },
+    {
+     "reason": "other_maker",
+     "row": {
+      "analyteWeight": null,
+      "description": "Huautla 10 mg",
+      "expired": false,
+      "id": 7,
+      "mazama": false,
+      "productGuid": "PKPR-0007",
+      "quantity": 12,
+      "strain": "Huautla",
+      "unitMgTpe": 9.87,
+      "weightPerUnit": null,
+      "zeroOut": false
+     }
+    },
+    {
+     "reason": "other_maker",
+     "row": {
+      "analyteWeight": null,
+      "description": "Mazatec chocolate",
+      "expired": false,
+      "id": 10,
+      "mazama": false,
+      "productGuid": "PKPR-0010",
+      "quantity": 8,
+      "strain": "Mazatec",
+      "unitMgTpe": 98.6,
+      "weightPerUnit": null,
+      "zeroOut": false
+     }
+    },
+    {
+     "reason": "other_maker",
+     "row": {
+      "analyteWeight": null,
+      "description": "Mazatec 20 mg",
+      "expired": false,
+      "id": 11,
+      "mazama": false,
+      "productGuid": "PKPR-0011",
+      "quantity": 9,
+      "strain": "Mazatec",
+      "unitMgTpe": 19.93,
+      "weightPerUnit": null,
+      "zeroOut": false
+     }
+    },
+    {
+     "reason": "other_maker",
+     "row": {
+      "analyteWeight": null,
+      "description": "Mazatec 10 mg",
+      "expired": false,
+      "id": 12,
+      "mazama": false,
+      "productGuid": "PKPR-0012",
+      "quantity": 10,
+      "strain": "Mazatec",
+      "unitMgTpe": 9.87,
+      "weightPerUnit": null,
+      "zeroOut": false
+     }
+    },
+    {
+     "reason": "other_maker",
+     "row": {
+      "analyteWeight": null,
+      "description": "Tidal Wave 20 mg",
+      "expired": false,
+      "id": 14,
+      "mazama": false,
+      "productGuid": "PKPR-0014",
+      "quantity": 4,
+      "strain": "Tidal Wave",
+      "unitMgTpe": 19.93,
+      "weightPerUnit": null,
+      "zeroOut": false
+     }
+    },
+    {
+     "reason": "other_maker",
+     "row": {
+      "analyteWeight": null,
+      "description": "Tidal Wave 10 mg",
+      "expired": false,
+      "id": 15,
+      "mazama": false,
+      "productGuid": "PKPR-0015",
+      "quantity": 5,
+      "strain": "Tidal Wave",
+      "unitMgTpe": 9.87,
+      "weightPerUnit": null,
+      "zeroOut": false
+     }
+    }
+   ]
+  },
+  "rows": [
+   {
+    "analyteWeight": null,
+    "description": "Golden Teacher 25 mg",
+    "expired": false,
+    "id": 1,
+    "mazama": true,
+    "productGuid": "PKPR-0001",
+    "quantity": 18,
+    "strain": "Golden Teacher",
+    "unitMgTpe": 24.71,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Penis Envy 20 mg",
+    "expired": false,
+    "id": 2,
+    "mazama": false,
+    "productGuid": "PKPR-0002",
+    "quantity": 16,
+    "strain": "Penis Envy",
+    "unitMgTpe": 19.93,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Penis Envy 10 mg",
+    "expired": false,
+    "id": 3,
+    "mazama": false,
+    "productGuid": "PKPR-0003",
+    "quantity": 17,
+    "strain": "Penis Envy",
+    "unitMgTpe": 9.87,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Bluey 15 mg",
+    "expired": false,
+    "id": 4,
+    "mazama": true,
+    "productGuid": "PKPR-0004",
+    "quantity": 14,
+    "strain": "Bluey",
+    "unitMgTpe": 15.2,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Bluey 5 mg",
+    "expired": false,
+    "id": 5,
+    "mazama": true,
+    "productGuid": "PKPR-0005",
+    "quantity": 15,
+    "strain": "Bluey",
+    "unitMgTpe": 5.05,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Bluey 25 mg",
+    "expired": false,
+    "id": 6,
+    "mazama": true,
+    "productGuid": "PKPR-0006",
+    "quantity": 16,
+    "strain": "Bluey",
+    "unitMgTpe": null,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Huautla 10 mg",
+    "expired": false,
+    "id": 7,
+    "mazama": false,
+    "productGuid": "PKPR-0007",
+    "quantity": 12,
+    "strain": "Huautla",
+    "unitMgTpe": 9.87,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Avery 5 mg",
+    "expired": false,
+    "id": 8,
+    "mazama": true,
+    "productGuid": "PKPR-0008",
+    "quantity": 10,
+    "strain": "Avery",
+    "unitMgTpe": null,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Avery 25 mg",
+    "expired": false,
+    "id": 9,
+    "mazama": true,
+    "productGuid": "PKPR-0009",
+    "quantity": 11,
+    "strain": "Avery",
+    "unitMgTpe": 24.71,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Mazatec chocolate",
+    "expired": false,
+    "id": 10,
+    "mazama": false,
+    "productGuid": "PKPR-0010",
+    "quantity": 8,
+    "strain": "Mazatec",
+    "unitMgTpe": 98.6,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Mazatec 20 mg",
+    "expired": false,
+    "id": 11,
+    "mazama": false,
+    "productGuid": "PKPR-0011",
+    "quantity": 9,
+    "strain": "Mazatec",
+    "unitMgTpe": 19.93,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Mazatec 10 mg",
+    "expired": false,
+    "id": 12,
+    "mazama": false,
+    "productGuid": "PKPR-0012",
+    "quantity": 10,
+    "strain": "Mazatec",
+    "unitMgTpe": 9.87,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Jedi Mind Fuck 25 mg",
+    "expired": false,
+    "id": 13,
+    "mazama": true,
+    "productGuid": "PKPR-0013",
+    "quantity": 6,
+    "strain": "Jedi Mind Fuck",
+    "unitMgTpe": 24.71,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Tidal Wave 20 mg",
+    "expired": false,
+    "id": 14,
+    "mazama": false,
+    "productGuid": "PKPR-0014",
+    "quantity": 4,
+    "strain": "Tidal Wave",
+    "unitMgTpe": 19.93,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Tidal Wave 10 mg",
+    "expired": false,
+    "id": 15,
+    "mazama": false,
+    "productGuid": "PKPR-0015",
+    "quantity": 5,
+    "strain": "Tidal Wave",
+    "unitMgTpe": 9.87,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Ecuador 15 mg",
+    "expired": false,
+    "id": 16,
+    "mazama": true,
+    "productGuid": "PKPR-0016",
+    "quantity": 2,
+    "strain": "Ecuador",
+    "unitMgTpe": 15.2,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Ecuador 5 mg",
+    "expired": false,
+    "id": 17,
+    "mazama": true,
+    "productGuid": "PKPR-0017",
+    "quantity": 3,
+    "strain": "Ecuador",
+    "unitMgTpe": null,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Ecuador 25 mg",
+    "expired": false,
+    "id": 18,
+    "mazama": true,
+    "productGuid": "PKPR-0018",
+    "quantity": 4,
+    "strain": "Ecuador",
+    "unitMgTpe": 24.71,
+    "weightPerUnit": null,
+    "zeroOut": false
+   }
+  ]
+ },
+ {
+  "makers": "all",
+  "name": "no rows, all",
+  "result": {
+   "counted": [],
+   "other": []
+  },
+  "rows": []
+ },
+ {
+  "makers": "mazama",
+  "name": "no rows, mazama",
+  "result": {
+   "counted": [],
+   "other": []
+  },
+  "rows": []
+ }
+]

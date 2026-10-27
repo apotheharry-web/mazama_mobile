@@ -1,0 +1,35 @@
+{
+  "case": "uid-lists-several-batches",
+  "origin": "synthetic",
+  "covers": "AD-19 (real report PL-ffba25d9): a lot made from three batches, printed as one comma-separated UID list; the section is the first batch's, which the request pairs with the lot (corpus/lots/cases.json)",
+  "lots": {
+    "HB-82fc6356": {
+      "sample": "PNW TAT",
+      "page": 1,
+      "psilocybin": {
+        "kind": "number",
+        "value": 5.83
+      },
+      "psilocin": {
+        "kind": "number",
+        "value": 1.13
+      },
+      "baeocystin": {
+        "kind": "number",
+        "value": 0.154
+      },
+      "field_duplicate": {
+        "sample": "PNW TAT FD",
+        "page": 1,
+        "psilocybin": {
+          "kind": "number",
+          "value": 5.9
+        },
+        "psilocin": {
+          "kind": "number",
+          "value": 1.1
+        }
+      }
+    }
+  }
+}

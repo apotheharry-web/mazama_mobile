@@ -1,0 +1,78 @@
+# The reads behind the state's SB 303 quarterly service-center data report (the site's "303 reporting" page).
+# They live under their own API base, /api/private/SB303/, not the ProductTracking base every other read uses, so
+# they are their own spec instead of more flows in state_reads.yaml. Same step shape as state_reads.yaml's get_json
+# (see that file's comment, and ../SPEC.md): a 401 comes back as plain data (status: 401) for the caller to sign in
+# again once; any other non-200 raises with "GET <path> failed: HTTP <status>"; `result` may be absent, so callers
+# check its presence, not its truthiness.
+#
+# The two saves (UpdateServiceCenterData, UpdateClientData) are writes and stay hand-written, like every write but
+# CreateSalesRecords (SPEC.md "What stays out of the spec"). Endpoints and bodies were read off a HAR of the state
+# site's own page on 2026-10-22; see ../../specs/sb303/README.md.
+#
+# CreateSB303Report/<license> is deliberately NOT here: despite being a GET it makes a NEW report every time it is
+# called (seen 2026-10-22: three open reports for the same window after three calls). Reports are started on the
+# state's page; we only find an existing open one in `licenses` and read it with `record`.
+#
+# Inputs: access_token, plus report_id for record. Outputs: status, url, result (as state_reads.yaml).
+
+vars:
+  # Per-request limit, seconds (SM-D1, specs/shared-modules/decisions.md). See ../SPEC.md "Timeouts".
+  timeout_seconds: 60
+  site: "https://psilocybin.oregon.gov/"
+  site_origin: "https://psilocybin.oregon.gov"
+  sb303_api: "{{site}}api/private/SB303/"
+  # Kept equal to state_reads.yaml's (a test checks), so every state request sends the same User-Agent (SM-20).
+  user_agent: "Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0"
+
+flows:
+  # Every license the account can report for, each with its `sB303Records` (past and open quarterly reports, a
+  # summary only: their counts come back null here even once submitted).
+  licenses:
+    - id: fetch
+      type: request
+      method: GET
+      url: "{{sb303_api}}GetLicenses"
+      headers:
+        Authorization: "Bearer {{access_token}}"
+        Accept: "application/json"
+        Referer: "{{site}}"
+        Origin: "{{site_origin}}"
+        User-Agent: "{{user_agent}}"
+      require:
+        - check: status_in
+          values: [200, 401]
+          error: "GET GetLicenses failed: HTTP {status}"
+      extract:
+        - var: status
+          source: status
+        - var: url
+          source: url
+        - var: result
+          source: body
+          json: ""
+
+  # One report as the state holds it: clientData and serviceCenterData with every sub-record's id. Read before
+  # filling and again after saving.
+  record:
+    - id: fetch
+      type: request
+      method: GET
+      url: "{{sb303_api}}GetSB303Record/{{report_id}}"
+      headers:
+        Authorization: "Bearer {{access_token}}"
+        Accept: "application/json"
+        Referer: "{{site}}"
+        Origin: "{{site_origin}}"
+        User-Agent: "{{user_agent}}"
+      require:
+        - check: status_in
+          values: [200, 401]
+          error: "GET GetSB303Record/{{report_id}} failed: HTTP {status}"
+      extract:
+        - var: status
+          source: status
+        - var: url
+          source: url
+        - var: result
+          source: body
+          json: ""

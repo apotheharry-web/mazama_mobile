@@ -1,0 +1,86 @@
+[
+ {
+  "expired": true,
+  "expires": "2025-09-16",
+  "today": "2026-10-21",
+  "words": "expired"
+ },
+ {
+  "expired": true,
+  "expires": "2026-09-20",
+  "today": "2026-10-21",
+  "words": "expired"
+ },
+ {
+  "expired": true,
+  "expires": "2026-10-19",
+  "today": "2026-10-21",
+  "words": "expired"
+ },
+ {
+  "expired": true,
+  "expires": "2026-10-20",
+  "today": "2026-10-21",
+  "words": "expired"
+ },
+ {
+  "expired": false,
+  "expires": "2026-10-21",
+  "today": "2026-10-21",
+  "words": "<1 mo"
+ },
+ {
+  "expired": false,
+  "expires": "2026-10-22",
+  "today": "2026-10-21",
+  "words": "<1 mo"
+ },
+ {
+  "expired": false,
+  "expires": "2026-10-23",
+  "today": "2026-10-21",
+  "words": "<1 mo"
+ },
+ {
+  "expired": false,
+  "expires": "2026-11-05",
+  "today": "2026-10-21",
+  "words": "<1 mo"
+ },
+ {
+  "expired": false,
+  "expires": "2026-11-20",
+  "today": "2026-10-21",
+  "words": "<1 mo"
+ },
+ {
+  "expired": false,
+  "expires": "2026-11-21",
+  "today": "2026-10-21",
+  "words": "1 mo"
+ },
+ {
+  "expired": false,
+  "expires": "2026-12-05",
+  "today": "2026-10-21",
+  "words": "1 mo"
+ },
+ {
+  "expired": false,
+  "expires": "2026-12-21",
+  "today": "2026-10-21",
+  "words": "2 mo"
+ },
+ {
+  "expired": false,
+  "expires": "2027-05-21",
+  "today": "2026-10-21",
+  "words": "6 mo"
+ },
+ {
+  "expired": false,
+  "expires": "2027-11-25",
+  "today": "2026-10-21",
+  "words": "13 mo"
+ }
+]

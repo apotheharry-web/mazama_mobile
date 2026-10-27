@@ -1,0 +1,1172 @@
+{
+ "canonical_dated": {
+  "package": {
+   "analyte_weight": 0.0,
+   "description": "Huautla 25 mg TPE DH (2027-08-31)",
+   "lot": "PL-de20657a",
+   "pkpr": "PKPR-71c5e6ad",
+   "product_type": "Whole Fungi",
+   "weight_per_unit": 2.62
+  },
+  "section": {
+   "analytes": {
+    "aeruginascin": {
+     "kind": "nd"
+    },
+    "baeocystin": {
+     "kind": "number",
+     "value": 1.07
+    },
+    "norbaeocystin": {
+     "kind": "nd"
+    },
+    "norpsilocin": {
+     "kind": "nd"
+    },
+    "psilocin": {
+     "kind": "nd"
+    },
+    "psilocybin": {
+     "kind": "number",
+     "value": 9.54
+    }
+   },
+   "analyzed_date": "05/23/2025",
+   "is_fd": false,
+   "lab_totals": {},
+   "page": 1,
+   "reasons": [],
+   "sample": "Huautla",
+   "status": "ok",
+   "tpe": null,
+   "uid": "PL-de20657a",
+   "uid_folded": false,
+   "unit_found": "mg/g"
+  },
+  "settings": {
+   "fd_days": null,
+   "fd_months": 24,
+   "shelf_days": null,
+   "shelf_months": 12
+  },
+  "test_date": "2025-05-23",
+  "today": "2026-10-20"
+ },
+ "canonical_undated_coa_date": {
+  "package": {
+   "analyte_weight": 0.0,
+   "description": "Maztapec 10 mg TPE DH",
+   "lot": "HB-3449c265",
+   "pkpr": "PKPR-8a05632f",
+   "product_type": "Whole Fungi",
+   "weight_per_unit": 1.37
+  },
+  "section": {
+   "analytes": {
+    "aeruginascin": {
+     "kind": "nd"
+    },
+    "baeocystin": {
+     "kind": "nd"
+    },
+    "norbaeocystin": {
+     "kind": "nd"
+    },
+    "norpsilocin": {
+     "kind": "nd"
+    },
+    "psilocin": {
+     "kind": "nd"
+    },
+    "psilocybin": {
+     "kind": "number",
+     "value": 7.33
+    }
+   },
+   "analyzed_date": "08/04/2026",
+   "is_fd": false,
+   "lab_totals": {},
+   "page": 1,
+   "reasons": [],
+   "sample": "Maztapec",
+   "status": "ok",
+   "tpe": null,
+   "uid": "HB-3449c265",
+   "uid_folded": false,
+   "unit_found": "mg/g"
+  },
+  "settings": {
+   "fd_days": null,
+   "fd_months": 24,
+   "shelf_days": null,
+   "shelf_months": 12
+  },
+  "test_date": "2026-08-04",
+  "today": "2026-10-20"
+ },
+ "coa_psilocybin": {
+  "package": {
+   "analyte_weight": 0.0,
+   "description": "Starry Night 25 mg TPE DH",
+   "lot": "HB-6ebc09dc",
+   "pkpr": "PKPR-00000006",
+   "product_type": "Whole Fungi",
+   "weight_per_unit": 1.78
+  },
+  "section": {
+   "analytes": {
+    "aeruginascin": {
+     "kind": "nd"
+    },
+    "baeocystin": {
+     "kind": "number",
+     "value": 0.607
+    },
+    "norbaeocystin": {
+     "kind": "nd"
+    },
+    "norpsilocin": {
+     "kind": "nd"
+    },
+    "psilocin": {
+     "kind": "nd"
+    },
+    "psilocybin": {
+     "kind": "number",
+     "value": 14.0
+    }
+   },
+   "analyzed_date": "06/05/2026",
+   "is_fd": false,
+   "lab_totals": {},
+   "page": 1,
+   "reasons": [],
+   "sample": "Starry Night",
+   "status": "ok",
+   "tpe": null,
+   "uid": "HB-6ebc09dc",
+   "uid_folded": false,
+   "unit_found": "mg/g"
+  },
+  "settings": {
+   "fd_days": null,
+   "fd_months": 24,
+   "shelf_days": null,
+   "shelf_months": 12
+  },
+  "test_date": "2026-06-05",
+  "today": "2026-10-20"
+ },
+ "dose_rounds_up_without_float_noise": {
+  "package": {
+   "analyte_weight": 0.0,
+   "description": "GT DH",
+   "lot": "HB-aaaa0001",
+   "pkpr": "PKPR-0000000f",
+   "product_type": "Whole Fungi",
+   "weight_per_unit": 2.0
+  },
+  "section": {
+   "analytes": {
+    "aeruginascin": {
+     "kind": "nd"
+    },
+    "baeocystin": {
+     "kind": "nd"
+    },
+    "norbaeocystin": {
+     "kind": "nd"
+    },
+    "norpsilocin": {
+     "kind": "nd"
+    },
+    "psilocin": {
+     "kind": "number",
+     "value": 0.0
+    },
+    "psilocybin": {
+     "kind": "number",
+     "value": 6.0
+    }
+   },
+   "analyzed_date": "08/04/2026",
+   "is_fd": false,
+   "lab_totals": {},
+   "page": 1,
+   "reasons": [],
+   "sample": "GT",
+   "status": "ok",
+   "tpe": null,
+   "uid": "HB-aaaa0001",
+   "uid_folded": false,
+   "unit_found": "mg/g"
+  },
+  "settings": {
+   "fd_days": null,
+   "fd_months": 24,
+   "shelf_days": null,
+   "shelf_months": 12
+  },
+  "test_date": "2026-08-04",
+  "today": "2026-10-20"
+ },
+ "every_reason": {
+  "package": {
+   "analyte_weight": 0.0,
+   "description": "TPE",
+   "lot": "HB-11112222",
+   "pkpr": "PKPR-00000020",
+   "product_type": "Whole Fungi",
+   "weight_per_unit": 0.0
+  },
+  "section": null,
+  "settings": {
+   "fd_days": null,
+   "fd_months": 24,
+   "shelf_days": null,
+   "shelf_months": 12
+  },
+  "today": "2026-10-20"
+ },
+ "fd_24_months": {
+  "package": {
+   "analyte_weight": 0.0,
+   "description": "Shakti 25 mg TPE FD",
+   "lot": "PL-7c737a92",
+   "pkpr": "PKPR-00000002",
+   "product_type": "Whole Fungi",
+   "weight_per_unit": 1.9
+  },
+  "section": {
+   "analytes": {
+    "aeruginascin": {
+     "kind": "nd"
+    },
+    "baeocystin": {
+     "kind": "nd"
+    },
+    "norbaeocystin": {
+     "kind": "nd"
+    },
+    "norpsilocin": {
+     "kind": "nd"
+    },
+    "psilocin": {
+     "kind": "number",
+     "value": 0.497
+    },
+    "psilocybin": {
+     "kind": "number",
+     "value": 13.1
+    }
+   },
+   "analyzed_date": "05/23/2025",
+   "is_fd": false,
+   "lab_totals": {},
+   "page": 1,
+   "reasons": [],
+   "sample": "Shakti",
+   "status": "ok",
+   "tpe": null,
+   "uid": "PL-7c737a92",
+   "uid_folded": false,
+   "unit_found": "mg/g"
+  },
+  "settings": {
+   "fd_days": null,
+   "fd_months": 24,
+   "shelf_days": null,
+   "shelf_months": 12
+  },
+  "test_date": "2025-05-23",
+  "today": "2026-10-20"
+ },
+ "fd_days": {
+  "package": {
+   "analyte_weight": 0.0,
+   "description": "Shakti 50 mg TPE FD",
+   "lot": "PL-7c737a92",
+   "pkpr": "PKPR-00000004",
+   "product_type": "Whole Fungi",
+   "weight_per_unit": 3.8
+  },
+  "section": {
+   "analytes": {
+    "aeruginascin": {
+     "kind": "nd"
+    },
+    "baeocystin": {
+     "kind": "nd"
+    },
+    "norbaeocystin": {
+     "kind": "nd"
+    },
+    "norpsilocin": {
+     "kind": "nd"
+    },
+    "psilocin": {
+     "kind": "number",
+     "value": 0.497
+    },
+    "psilocybin": {
+     "kind": "number",
+     "value": 13.1
+    }
+   },
+   "analyzed_date": "05/23/2025",
+   "is_fd": false,
+   "lab_totals": {},
+   "page": 1,
+   "reasons": [],
+   "sample": "Shakti",
+   "status": "ok",
+   "tpe": null,
+   "uid": "PL-7c737a92",
+   "uid_folded": false,
+   "unit_found": "mg/g"
+  },
+  "settings": {
+   "fd_days": 365,
+   "fd_months": 24,
+   "shelf_days": 183,
+   "shelf_months": 12
+  },
+  "test_date": "2025-05-23",
+  "today": "2026-10-20"
+ },
+ "fractional_dose": {
+  "package": {
+   "analyte_weight": 0.0,
+   "description": "Shakti 2.5 mg TPE DH",
+   "lot": "PL-7c737a92",
+   "pkpr": "PKPR-00000009",
+   "product_type": "Whole Fungi",
+   "weight_per_unit": 0.2
+  },
+  "section": {
+   "analytes": {
+    "aeruginascin": {
+     "kind": "nd"
+    },
+    "baeocystin": {
+     "kind": "nd"
+    },
+    "norbaeocystin": {
+     "kind": "nd"
+    },
+    "norpsilocin": {
+     "kind": "nd"
+    },
+    "psilocin": {
+     "kind": "number",
+     "value": 0.497
+    },
+    "psilocybin": {
+     "kind": "number",
+     "value": 13.1
+    }
+   },
+   "analyzed_date": "05/23/2025",
+   "is_fd": false,
+   "lab_totals": {},
+   "page": 1,
+   "reasons": [],
+   "sample": "Shakti",
+   "status": "ok",
+   "tpe": null,
+   "uid": "PL-7c737a92",
+   "uid_folded": false,
+   "unit_found": "mg/g"
+  },
+  "settings": {
+   "fd_days": null,
+   "fd_months": 24,
+   "shelf_days": null,
+   "shelf_months": 12
+  },
+  "test_date": "2025-05-23",
+  "today": "2026-10-20"
+ },
+ "lab_printed_total_wins": {
+  "package": {
+   "analyte_weight": 0.0,
+   "description": "Tat TPE HG",
+   "lot": "PL-de20657a",
+   "pkpr": "PKPR-71c5e6ae",
+   "product_type": "Whole Fungi",
+   "weight_per_unit": 1.3
+  },
+  "section": {
+   "analytes": {
+    "aeruginascin": {
+     "kind": "nd"
+    },
+    "baeocystin": {
+     "kind": "nd"
+    },
+    "norbaeocystin": {
+     "kind": "nd"
+    },
+    "norpsilocin": {
+     "kind": "nd"
+    },
+    "psilocin": {
+     "kind": "number",
+     "value": 0.658
+    },
+    "psilocybin": {
+     "kind": "number",
+     "value": 5.25
+    }
+   },
+   "analyzed_date": "07/23/2026",
+   "is_fd": false,
+   "lab_totals": {
+    "tpe": 6.16
+   },
+   "page": 1,
+   "reasons": [],
+   "sample": "Tat #3",
+   "status": "ok",
+   "tpe": null,
+   "uid": "PL-de20657a",
+   "uid_folded": false,
+   "unit_found": "mg/g"
+  },
+  "settings": {
+   "fd_days": null,
+   "fd_months": 24,
+   "shelf_days": null,
+   "shelf_months": 12
+  },
+  "test_date": "2026-07-23",
+  "today": "2026-10-20"
+ },
+ "mazatapec_spelling_and_symbols": {
+  "package": {
+   "analyte_weight": 0.0,
+   "description": "Mazatapec #2 25 mg TPE DH (2027-01-31)",
+   "lot": "HB-9c564cf",
+   "pkpr": "PKPR-0000000e",
+   "product_type": "Whole Fungi",
+   "weight_per_unit": 2.2
+  },
+  "section": {
+   "analytes": {
+    "aeruginascin": {
+     "kind": "number",
+     "value": 0.02
+    },
+    "baeocystin": {
+     "kind": "nd"
+    },
+    "norbaeocystin": {
+     "kind": "nd"
+    },
+    "norpsilocin": {
+     "kind": "nd"
+    },
+    "psilocin": {
+     "kind": "number",
+     "value": 0.25
+    },
+    "psilocybin": {
+     "kind": "number",
+     "value": 9.54
+    }
+   },
+   "analyzed_date": "01/16/2026",
+   "is_fd": false,
+   "lab_totals": {},
+   "page": 1,
+   "reasons": [],
+   "sample": "Mazatapec",
+   "status": "ok",
+   "tpe": null,
+   "uid": "HB-9c564cf",
+   "uid_folded": false,
+   "unit_found": "mg/g"
+  },
+  "settings": {
+   "fd_days": null,
+   "fd_months": 24,
+   "shelf_days": null,
+   "shelf_months": 12
+  },
+  "test_date": "2026-01-16",
+  "today": "2026-10-20"
+ },
+ "no_dose_in_name": {
+  "package": {
+   "analyte_weight": 5.25,
+   "description": "Tat TPE HG",
+   "lot": "PL-81c53f84",
+   "pkpr": "PKPR-6e1f4d1c",
+   "product_type": "Whole Fungi",
+   "weight_per_unit": 1.3
+  },
+  "section": {
+   "analytes": {
+    "aeruginascin": {
+     "kind": "nd"
+    },
+    "baeocystin": {
+     "kind": "nd"
+    },
+    "norbaeocystin": {
+     "kind": "nd"
+    },
+    "norpsilocin": {
+     "kind": "nd"
+    },
+    "psilocin": {
+     "kind": "number",
+     "value": 0.658
+    },
+    "psilocybin": {
+     "kind": "number",
+     "value": 5.25
+    }
+   },
+   "analyzed_date": "07/23/2026",
+   "is_fd": false,
+   "lab_totals": {},
+   "page": 1,
+   "reasons": [],
+   "sample": "Tat #3",
+   "status": "ok",
+   "tpe": null,
+   "uid": "PL-81c53f84",
+   "uid_folded": false,
+   "unit_found": "mg/g"
+  },
+  "settings": {
+   "fd_days": null,
+   "fd_months": 24,
+   "shelf_days": null,
+   "shelf_months": 12
+  },
+  "test_date": "2026-07-23",
+  "today": "2026-10-20"
+ },
+ "no_section": {
+  "package": {
+   "analyte_weight": 0.0,
+   "description": "Penis Envy 25 mg TPE DH",
+   "lot": "PL-de20657a",
+   "pkpr": "PKPR-bcd5880b",
+   "product_type": "Whole Fungi",
+   "weight_per_unit": 1.5
+  },
+  "section": null,
+  "settings": {
+   "fd_days": null,
+   "fd_months": 24,
+   "shelf_days": null,
+   "shelf_months": 12
+  },
+  "today": "2026-10-20"
+ },
+ "no_section_dated": {
+  "package": {
+   "analyte_weight": 0.0,
+   "description": "Penis Envy 25 mg TPE DH (2027-06-01)",
+   "lot": "PL-de20657a",
+   "pkpr": "PKPR-0000000b",
+   "product_type": "Whole Fungi",
+   "weight_per_unit": 1.5
+  },
+  "section": null,
+  "settings": {
+   "fd_days": null,
+   "fd_months": 24,
+   "shelf_days": null,
+   "shelf_months": 12
+  },
+  "today": "2026-10-20"
+ },
+ "no_strain": {
+  "package": {
+   "analyte_weight": 0.0,
+   "description": "25 mg TPE DH",
+   "lot": "HB-9c564cf",
+   "pkpr": "PKPR-0000000d",
+   "product_type": "Whole Fungi",
+   "weight_per_unit": 1.5
+  },
+  "section": {
+   "analytes": {
+    "aeruginascin": {
+     "kind": "nd"
+    },
+    "baeocystin": {
+     "kind": "nd"
+    },
+    "norbaeocystin": {
+     "kind": "nd"
+    },
+    "norpsilocin": {
+     "kind": "nd"
+    },
+    "psilocin": {
+     "kind": "nd"
+    },
+    "psilocybin": {
+     "kind": "number",
+     "value": 9.54
+    }
+   },
+   "analyzed_date": "01/16/2026",
+   "is_fd": false,
+   "lab_totals": {},
+   "page": 1,
+   "reasons": [],
+   "sample": "",
+   "status": "ok",
+   "tpe": null,
+   "uid": "HB-9c564cf",
+   "uid_folded": false,
+   "unit_found": "mg/g"
+  },
+  "settings": {
+   "fd_days": null,
+   "fd_months": 24,
+   "shelf_days": null,
+   "shelf_months": 12
+  },
+  "test_date": "2026-01-16",
+  "today": "2026-10-20"
+ },
+ "no_unit_weight": {
+  "package": {
+   "analyte_weight": 0.0,
+   "description": "Shakti 25 mg TPE DH",
+   "lot": "PL-7c737a92",
+   "pkpr": "PKPR-0000000a",
+   "product_type": "Whole Fungi",
+   "weight_per_unit": 0.0
+  },
+  "section": {
+   "analytes": {
+    "aeruginascin": {
+     "kind": "nd"
+    },
+    "baeocystin": {
+     "kind": "nd"
+    },
+    "norbaeocystin": {
+     "kind": "nd"
+    },
+    "norpsilocin": {
+     "kind": "nd"
+    },
+    "psilocin": {
+     "kind": "number",
+     "value": 0.497
+    },
+    "psilocybin": {
+     "kind": "number",
+     "value": 13.1
+    }
+   },
+   "analyzed_date": "05/23/2025",
+   "is_fd": false,
+   "lab_totals": {},
+   "page": 1,
+   "reasons": [],
+   "sample": "Shakti",
+   "status": "ok",
+   "tpe": null,
+   "uid": "PL-7c737a92",
+   "uid_folded": false,
+   "unit_found": "mg/g"
+  },
+  "settings": {
+   "fd_days": null,
+   "fd_months": 24,
+   "shelf_days": null,
+   "shelf_months": 12
+  },
+  "test_date": "2025-05-23",
+  "today": "2026-10-20"
+ },
+ "planned_package": {
+  "package": {
+   "analyte_weight": 0.0,
+   "best_by": "2027-06-30",
+   "description": "Tat 5 mg TPE HG (2027-06-30)",
+   "dose_mg": 5,
+   "lot": "PL-de20657a",
+   "pkpr": "",
+   "product_type": "Homogenized Psilocybin Product",
+   "strain": "Tat",
+   "subtype": "",
+   "weight_per_unit": 0.5
+  },
+  "section": {
+   "analytes": {
+    "aeruginascin": {
+     "kind": "nd"
+    },
+    "baeocystin": {
+     "kind": "nd"
+    },
+    "norbaeocystin": {
+     "kind": "nd"
+    },
+    "norpsilocin": {
+     "kind": "nd"
+    },
+    "psilocin": {
+     "kind": "number",
+     "value": 0.658
+    },
+    "psilocybin": {
+     "kind": "number",
+     "value": 5.25
+    }
+   },
+   "analyzed_date": "07/23/2026",
+   "is_fd": false,
+   "lab_totals": {},
+   "page": 1,
+   "reasons": [],
+   "sample": "Tat #3",
+   "status": "ok",
+   "tpe": null,
+   "uid": "PL-de20657a",
+   "uid_folded": false,
+   "unit_found": "mg/g"
+  },
+  "settings": {
+   "fd_days": null,
+   "fd_months": 24,
+   "shelf_days": null,
+   "shelf_months": 12
+  },
+  "today": "2026-10-20"
+ },
+ "psilocin_missing": {
+  "package": {
+   "analyte_weight": 0.0,
+   "description": "GT 25 mg TPE DH",
+   "lot": "HB-f2fb0898",
+   "pkpr": "PKPR-00000008",
+   "product_type": "Whole Fungi",
+   "weight_per_unit": 2.4
+  },
+  "section": {
+   "analytes": {
+    "aeruginascin": {
+     "kind": "nd"
+    },
+    "baeocystin": {
+     "kind": "nd"
+    },
+    "norbaeocystin": {
+     "kind": "nd"
+    },
+    "norpsilocin": {
+     "kind": "nd"
+    },
+    "psilocin": {
+     "kind": "missing"
+    },
+    "psilocybin": {
+     "kind": "number",
+     "value": 10.4
+    }
+   },
+   "analyzed_date": "06/05/2026",
+   "is_fd": false,
+   "lab_totals": {},
+   "page": 1,
+   "reasons": [],
+   "sample": "GT",
+   "status": "ok",
+   "tpe": null,
+   "uid": "HB-f2fb0898",
+   "uid_folded": false,
+   "unit_found": "mg/g"
+  },
+  "settings": {
+   "fd_days": null,
+   "fd_months": 24,
+   "shelf_days": null,
+   "shelf_months": 12
+  },
+  "test_date": "2026-06-05",
+  "today": "2026-10-20"
+ },
+ "psilocin_nd": {
+  "package": {
+   "analyte_weight": 0.0,
+   "description": "GT 25 mg TPE DH",
+   "lot": "HB-f2fb0898",
+   "pkpr": "PKPR-00000007",
+   "product_type": "Whole Fungi",
+   "weight_per_unit": 2.4
+  },
+  "section": {
+   "analytes": {
+    "aeruginascin": {
+     "kind": "nd"
+    },
+    "baeocystin": {
+     "kind": "nd"
+    },
+    "norbaeocystin": {
+     "kind": "nd"
+    },
+    "norpsilocin": {
+     "kind": "below_loq"
+    },
+    "psilocin": {
+     "kind": "nd"
+    },
+    "psilocybin": {
+     "kind": "number",
+     "value": 10.4
+    }
+   },
+   "analyzed_date": "06/05/2026",
+   "is_fd": false,
+   "lab_totals": {},
+   "page": 1,
+   "reasons": [],
+   "sample": "GT",
+   "status": "ok",
+   "tpe": null,
+   "uid": "HB-f2fb0898",
+   "uid_folded": false,
+   "unit_found": "mg/g"
+  },
+  "settings": {
+   "fd_days": null,
+   "fd_months": 24,
+   "shelf_days": null,
+   "shelf_months": 12
+  },
+  "test_date": "2026-06-05",
+  "today": "2026-10-20"
+ },
+ "server_strain_and_subtype": {
+  "package": {
+   "analyte_weight": 0.0,
+   "description": "Tat 10 mg TPE",
+   "lot": "PL-de20657a",
+   "pkpr": "PKPR-00000021",
+   "product_type": "Whole Fungi",
+   "strain": "Penis Envy",
+   "subtype": "Freeze dried",
+   "weight_per_unit": 1.3
+  },
+  "section": {
+   "analytes": {
+    "aeruginascin": {
+     "kind": "nd"
+    },
+    "baeocystin": {
+     "kind": "nd"
+    },
+    "norbaeocystin": {
+     "kind": "nd"
+    },
+    "norpsilocin": {
+     "kind": "nd"
+    },
+    "psilocin": {
+     "kind": "number",
+     "value": 0.658
+    },
+    "psilocybin": {
+     "kind": "number",
+     "value": 5.25
+    }
+   },
+   "analyzed_date": "07/23/2026",
+   "is_fd": false,
+   "lab_totals": {},
+   "page": 1,
+   "reasons": [],
+   "sample": "Tat #3",
+   "status": "ok",
+   "tpe": null,
+   "uid": "PL-de20657a",
+   "uid_folded": false,
+   "unit_found": "mg/g"
+  },
+  "settings": {
+   "fd_days": null,
+   "fd_months": 24,
+   "shelf_days": null,
+   "shelf_months": 12
+  },
+  "test_date": "2026-07-23",
+  "today": "2026-10-20"
+ },
+ "shelf_days_183": {
+  "package": {
+   "analyte_weight": 0.0,
+   "description": "BV 25 mg TPE DH",
+   "lot": "HB-668a899e",
+   "pkpr": "PKPR-00000003",
+   "product_type": "Whole Fungi",
+   "weight_per_unit": 2.31
+  },
+  "section": {
+   "analytes": {
+    "aeruginascin": {
+     "kind": "nd"
+    },
+    "baeocystin": {
+     "kind": "number",
+     "value": 0.146
+    },
+    "norbaeocystin": {
+     "kind": "nd"
+    },
+    "norpsilocin": {
+     "kind": "nd"
+    },
+    "psilocin": {
+     "kind": "nd"
+    },
+    "psilocybin": {
+     "kind": "number",
+     "value": 10.8
+    }
+   },
+   "analyzed_date": "06/01/2026",
+   "is_fd": false,
+   "lab_totals": {},
+   "page": 1,
+   "reasons": [],
+   "sample": "BV",
+   "status": "ok",
+   "tpe": null,
+   "uid": "HB-668a899e",
+   "uid_folded": false,
+   "unit_found": "mg/g"
+  },
+  "settings": {
+   "fd_days": null,
+   "fd_months": 24,
+   "shelf_days": 183,
+   "shelf_months": 12
+  },
+  "test_date": "2026-06-01",
+  "today": "2026-10-20"
+ },
+ "state_beats_printed_total": {
+  "package": {
+   "analyte_weight": 5.25,
+   "description": "Tat TPE HG",
+   "lot": "PL-de20657a",
+   "pkpr": "PKPR-71c5e6ad",
+   "product_type": "Whole Fungi",
+   "weight_per_unit": 1.3
+  },
+  "section": {
+   "analytes": {
+    "aeruginascin": {
+     "kind": "nd"
+    },
+    "baeocystin": {
+     "kind": "nd"
+    },
+    "norbaeocystin": {
+     "kind": "nd"
+    },
+    "norpsilocin": {
+     "kind": "nd"
+    },
+    "psilocin": {
+     "kind": "number",
+     "value": 0.658
+    },
+    "psilocybin": {
+     "kind": "number",
+     "value": 5.25
+    }
+   },
+   "analyzed_date": "07/23/2026",
+   "is_fd": false,
+   "lab_totals": {
+    "tpe": 6.16
+   },
+   "page": 1,
+   "reasons": [],
+   "sample": "Tat #3",
+   "status": "ok",
+   "tpe": null,
+   "uid": "PL-de20657a",
+   "uid_folded": false,
+   "unit_found": "mg/g"
+  },
+  "settings": {
+   "fd_days": null,
+   "fd_months": 24,
+   "shelf_days": null,
+   "shelf_months": 12
+  },
+  "test_date": "2026-07-23",
+  "today": "2026-10-20"
+ },
+ "state_psilocybin": {
+  "package": {
+   "analyte_weight": 14.2,
+   "description": "Starry Night 25 mg TPE DH",
+   "lot": "HB-6ebc09dc",
+   "pkpr": "PKPR-00000005",
+   "product_type": "Whole Fungi",
+   "weight_per_unit": 1.78
+  },
+  "section": {
+   "analytes": {
+    "aeruginascin": {
+     "kind": "nd"
+    },
+    "baeocystin": {
+     "kind": "number",
+     "value": 0.607
+    },
+    "norbaeocystin": {
+     "kind": "nd"
+    },
+    "norpsilocin": {
+     "kind": "nd"
+    },
+    "psilocin": {
+     "kind": "nd"
+    },
+    "psilocybin": {
+     "kind": "number",
+     "value": 14.0
+    }
+   },
+   "analyzed_date": "06/05/2026",
+   "is_fd": false,
+   "lab_totals": {},
+   "page": 1,
+   "reasons": [],
+   "sample": "Starry Night",
+   "status": "ok",
+   "tpe": null,
+   "uid": "HB-6ebc09dc",
+   "uid_folded": false,
+   "unit_found": "mg/g"
+  },
+  "settings": {
+   "fd_days": null,
+   "fd_months": 24,
+   "shelf_days": null,
+   "shelf_months": 12
+  },
+  "test_date": "2026-06-05",
+  "today": "2026-10-20"
+ },
+ "strain_from_sample": {
+  "package": {
+   "analyte_weight": 0.0,
+   "description": "25mg",
+   "lot": "HB-9c564cf",
+   "pkpr": "PKPR-0000000c",
+   "product_type": "Whole Fungi",
+   "weight_per_unit": 1.5
+  },
+  "section": {
+   "analytes": {
+    "aeruginascin": {
+     "kind": "nd"
+    },
+    "baeocystin": {
+     "kind": "nd"
+    },
+    "norbaeocystin": {
+     "kind": "nd"
+    },
+    "norpsilocin": {
+     "kind": "nd"
+    },
+    "psilocin": {
+     "kind": "nd"
+    },
+    "psilocybin": {
+     "kind": "number",
+     "value": 9.54
+    }
+   },
+   "analyzed_date": "01/16/2026",
+   "is_fd": false,
+   "lab_totals": {},
+   "page": 1,
+   "reasons": [],
+   "sample": "Huaulta FD",
+   "status": "ok",
+   "tpe": null,
+   "uid": "HB-9c564cf",
+   "uid_folded": false,
+   "unit_found": "mg/g"
+  },
+  "settings": {
+   "fd_days": null,
+   "fd_months": 24,
+   "shelf_days": null,
+   "shelf_months": 12
+  },
+  "test_date": "2026-01-16",
+  "today": "2026-10-20"
+ },
+ "undated_no_coa_date": {
+  "package": {
+   "analyte_weight": 0.0,
+   "description": "Golden Teacher 5 mg TPE DH",
+   "lot": "HB-11112222",
+   "pkpr": "PKPR-00000001",
+   "product_type": "Whole Fungi",
+   "weight_per_unit": 0.5
+  },
+  "section": {
+   "analytes": {
+    "aeruginascin": {
+     "kind": "nd"
+    },
+    "baeocystin": {
+     "kind": "nd"
+    },
+    "norbaeocystin": {
+     "kind": "nd"
+    },
+    "norpsilocin": {
+     "kind": "nd"
+    },
+    "psilocin": {
+     "kind": "nd"
+    },
+    "psilocybin": {
+     "kind": "number",
+     "value": 10.4
+    }
+   },
+   "analyzed_date": null,
+   "is_fd": false,
+   "lab_totals": {},
+   "page": 1,
+   "reasons": [],
+   "sample": "Golden Teacher",
+   "status": "ok",
+   "tpe": null,
+   "uid": "HB-11112222",
+   "uid_folded": false,
+   "unit_found": "mg/g"
+  },
+  "settings": {
+   "fd_days": null,
+   "fd_months": 24,
+   "shelf_days": null,
+   "shelf_months": 12
+  },
+  "today": "2026-10-20"
+ }
+}

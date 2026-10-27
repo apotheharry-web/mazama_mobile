@@ -1,0 +1,301 @@
+{
+ "ids": [
+  {
+   "id": "HB-1a2b3c4d",
+   "lot_id": true,
+   "package_id": false
+  },
+  {
+   "id": "PL-de20657a",
+   "lot_id": true,
+   "package_id": false
+  },
+  {
+   "id": "HB-597a95e",
+   "lot_id": true,
+   "package_id": false
+  },
+  {
+   "id": "PL-ABCDEF12",
+   "lot_id": true,
+   "package_id": false
+  },
+  {
+   "id": "HB-12345",
+   "lot_id": true,
+   "package_id": false
+  },
+  {
+   "id": "HB-123456",
+   "lot_id": true,
+   "package_id": false
+  },
+  {
+   "id": "PL-00000000",
+   "lot_id": true,
+   "package_id": false
+  },
+  {
+   "id": "HB-1234",
+   "lot_id": false,
+   "package_id": false
+  },
+  {
+   "id": "HB-123456789",
+   "lot_id": false,
+   "package_id": false
+  },
+  {
+   "id": "HB-12g45",
+   "lot_id": false,
+   "package_id": false
+  },
+  {
+   "id": "HB-zzzz0009",
+   "lot_id": false,
+   "package_id": false
+  },
+  {
+   "id": "hb-1a2b3c4d",
+   "lot_id": false,
+   "package_id": false
+  },
+  {
+   "id": "Hb-1a2b3c4d",
+   "lot_id": false,
+   "package_id": false
+  },
+  {
+   "id": "XX-1a2b3c4d",
+   "lot_id": false,
+   "package_id": false
+  },
+  {
+   "id": "HB1a2b3c4d",
+   "lot_id": false,
+   "package_id": false
+  },
+  {
+   "id": "HB_1a2b3c4d",
+   "lot_id": false,
+   "package_id": false
+  },
+  {
+   "id": " HB-1a2b3c4d",
+   "lot_id": false,
+   "package_id": false
+  },
+  {
+   "id": "HB-1a2b3c4d ",
+   "lot_id": false,
+   "package_id": false
+  },
+  {
+   "id": "HB-",
+   "lot_id": false,
+   "package_id": false
+  },
+  {
+   "id": "PKPR-ab12c",
+   "lot_id": false,
+   "package_id": true
+  },
+  {
+   "id": "PKPR-1234",
+   "lot_id": false,
+   "package_id": true
+  },
+  {
+   "id": "PKPR-ABCDEF0123456789",
+   "lot_id": false,
+   "package_id": true
+  },
+  {
+   "id": "PKPR-ABCDEF01234567890",
+   "lot_id": false,
+   "package_id": false
+  },
+  {
+   "id": "PKPR-abc",
+   "lot_id": false,
+   "package_id": false
+  },
+  {
+   "id": "PKPR-a-b-c",
+   "lot_id": false,
+   "package_id": false
+  },
+  {
+   "id": "pkpr-ab12c",
+   "lot_id": false,
+   "package_id": false
+  },
+  {
+   "id": "PKPR-",
+   "lot_id": false,
+   "package_id": false
+  },
+  {
+   "id": "PKPR-ab12c ",
+   "lot_id": false,
+   "package_id": false
+  },
+  {
+   "id": "PKPR-zzzzzz",
+   "lot_id": false,
+   "package_id": true
+  },
+  {
+   "id": "",
+   "lot_id": false,
+   "package_id": false
+  },
+  {
+   "id": "-",
+   "lot_id": false,
+   "package_id": false
+  },
+  {
+   "id": "123",
+   "lot_id": false,
+   "package_id": false
+  }
+ ],
+ "package_source": [
+  {
+   "name": "batch only",
+   "record": {
+    "harvestBatchGuid": "HB-1a2b3c4d",
+    "id": 1,
+    "productGuid": "PKPR-0001",
+    "quantity": 1
+   },
+   "source": "HB-1a2b3c4d"
+  },
+  {
+   "name": "lot only",
+   "record": {
+    "id": 1,
+    "processLotGuid": "PL-de20657a",
+    "productGuid": "PKPR-0001",
+    "quantity": 1
+   },
+   "source": "PL-de20657a"
+  },
+  {
+   "name": "both: the batch wins",
+   "record": {
+    "harvestBatchGuid": "HB-1a2b3c4d",
+    "id": 1,
+    "processLotGuid": "PL-de20657a",
+    "productGuid": "PKPR-0001",
+    "quantity": 1
+   },
+   "source": "HB-1a2b3c4d"
+  },
+  {
+   "name": "neither",
+   "record": {
+    "id": 1,
+    "productGuid": "PKPR-0001",
+    "quantity": 1
+   },
+   "source": null
+  },
+  {
+   "name": "both blank",
+   "record": {
+    "harvestBatchGuid": "",
+    "id": 1,
+    "processLotGuid": "",
+    "productGuid": "PKPR-0001",
+    "quantity": 1
+   },
+   "source": null
+  },
+  {
+   "name": "blank batch, lot",
+   "record": {
+    "harvestBatchGuid": "",
+    "id": 1,
+    "processLotGuid": "PL-de20657a",
+    "productGuid": "PKPR-0001",
+    "quantity": 1
+   },
+   "source": "PL-de20657a"
+  },
+  {
+   "name": "malformed batch, good lot: the lot",
+   "record": {
+    "harvestBatchGuid": "HB-xyz",
+    "id": 1,
+    "processLotGuid": "PL-de20657a",
+    "productGuid": "PKPR-0001",
+    "quantity": 1
+   },
+   "source": "PL-de20657a"
+  },
+  {
+   "name": "good batch, malformed lot",
+   "record": {
+    "harvestBatchGuid": "HB-1a2b3c4d",
+    "id": 1,
+    "processLotGuid": "PL-??",
+    "productGuid": "PKPR-0001",
+    "quantity": 1
+   },
+   "source": "HB-1a2b3c4d"
+  },
+  {
+   "name": "both malformed",
+   "record": {
+    "harvestBatchGuid": "HB-xyz",
+    "id": 1,
+    "processLotGuid": "lot 7",
+    "productGuid": "PKPR-0001",
+    "quantity": 1
+   },
+   "source": null
+  },
+  {
+   "name": "lower-case prefix is not an id",
+   "record": {
+    "harvestBatchGuid": "hb-1a2b3c4d",
+    "id": 1,
+    "productGuid": "PKPR-0001",
+    "quantity": 1
+   },
+   "source": null
+  },
+  {
+   "name": "upper-case digits",
+   "record": {
+    "harvestBatchGuid": "HB-1A2B3C4D",
+    "id": 1,
+    "productGuid": "PKPR-0001",
+    "quantity": 1
+   },
+   "source": "HB-1A2B3C4D"
+  },
+  {
+   "name": "five digits",
+   "record": {
+    "id": 1,
+    "processLotGuid": "PL-12345",
+    "productGuid": "PKPR-0001",
+    "quantity": 1
+   },
+   "source": "PL-12345"
+  },
+  {
+   "name": "nine digits",
+   "record": {
+    "harvestBatchGuid": "HB-123456789",
+    "id": 1,
+    "productGuid": "PKPR-0001",
+    "quantity": 1
+   },
+   "source": null
+  }
+ ]
+}

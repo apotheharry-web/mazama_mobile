@@ -1,0 +1,89 @@
+# Rules for reading lab reports (coa_core). Data, not code: a new lab's spelling or column name is a change here.
+# Changing anything bumps `version`, which becomes part of every stored result's parser_version.
+# Algorithm: specs/coa/04-parsing.md. Facts marked [RCL] were seen in the real Rose City Labs reports in
+# mazama_modules/coa/corpus/real/.
+version: 2026-10-24.1
+
+anchor:
+  labels: ["UID:"]                        # a section starts on the line holding this label...
+  id: '(HB|PL)-[0-9a-zA-Z]{5,8}'          # ...followed by a batch/lot id; 7 and 8 hex digits both occur [RCL]
+
+confusables: {o: "0", q: "0", i: "1", l: "1", s: "5", z: "2", g: "9", t: "7"}   # folded only when no exact match
+
+sample:
+  labels: ["Sample:"]                     # may share the anchor line: "Sample: Shakti FD   UID: PL-7c737a92" [RCL]
+  fd_markers: ["FD", "Field Duplicate"]   # a trailing token of the sample name (before "UID:") [RCL]
+
+analytes:                                 # canonical key -> names that START an analyte row
+  psilocybin:    ["Psilocybin"]
+  psilocin:      ["Psilocin"]
+  baeocystin:    ["Baeocystin", "Baeocystine"]
+  norbaeocystin: ["Norbaeocystin", "Norbaeocystine", "Nor-baeocystin"]
+  norpsilocin:   ["Norpsilocin", "Nor-psilocin"]
+  aeruginascin:  ["Aeruginascin", "Aeruginosin"]
+
+lab_totals:                               # rows read as cross-checks, never as values [RCL]
+  tpe:                      ["Total Equivalent Psilocybin", "Total Psilocybin Equivalent"]
+  total_potential_psilocin: ["Total Potential Psilocin"]
+row_exclude_words: ["Total", "Equivalent"]
+
+table:
+  result_headers: ["Result", "Results", "Amount", "Concentration"]
+  loq_headers: ["LOQ"]
+  unit_headers: ["Units", "Unit"]
+  date_headers: ["Analyzed"]              # "Date / Analyzed" printed on two lines above the column [RCL]
+
+values:
+  nd: ["ND", "-", "--"]                   # "--" is also used in the Limit column [RCL]; only the result column is read
+  below_loq: ["<LOQ", "BQL"]
+
+units:                                    # factor to mg/g
+  "mg/g": 1
+  "%": 10
+  "µg/g": 0.001
+  "ug/g": 0.001
+  "mg/kg": 0.001
+
+section_stop:                             # a line containing any of these ends the current section [RCL QC pages]
+  - "Quality Control"
+  - "Batch:"
+
+report:
+  reported_labels: ["Reported:"]          # the date may be on the next line: "Reported:" / "01/21/2026 17:09" [RCL]
+  date_formats: ["%m/%d/%Y", "%m/%d/%y"]
+
+tpe:
+  psilocin_factor: 1.3915406080187986     # 284.25 / 204.27 (molar masses), as the lab computes its Total Equivalent Psilocybin;
+                                          # tests/tpe_factor.rs holds it to the ratio (it was mistyped as 1.391585 until 2026-10-21)
+                                          # [RCL: 13.1 + 1.3916 x 0.497 = 13.79, printed 13.8]; owner, 2026-10-20
+  round: 4                               # decimals kept; 2 turned a chocolate's 0.591 into 0.59, a 0.2% dosing error
+  lab_total_tolerance: 0.05               # fraction
+
+field_duplicate:                          # owner decision AD-9
+  tpe_tolerance: 0.10                     # review when primary and FD TPE differ by more than 10%
+  detection_loq_multiple: 2               # ...or one detects an analyte at > 2 x LOQ and the other doesn't
+
+review_ranges_mg_g:                       # set from real data; RCL reports seen: psilocybin 0.591 (chocolate) to 14.0
+  psilocybin: [0.05, 40]
+  psilocin:   [0, 20]
+
+lab_profiles:                             # the first profile any of whose `detect` strings occurs in the report applies
+  - name: Rose City Laboratories
+    detect: ["ORELAP ID: 4096", "Rose City"]
+    licensee_left_of: "Project:"          # "Uptown Fungus      Project: OHA Fungi Product Testing" [RCL]
+  - name: ChemHistory                     # Confident LIMS certificates (README "ChemHistory"); facts marked [CH] were seen in
+    detect: ["ChemHistory"]               # 134 of the server's unread reports, 2026-10-24
+    licensee_left_of: "Sample:"           # "Uptown Fungus      Sample: 2404CH0203.0837" (the lab's own sample id) [CH]
+    anchor_alone: true                    # the batch id alone on a line under the client's address, no "UID:" [CH]
+    sample_labels: ["Strain:"]            # "Strain: Shakti", printed above the id; "Sample:" is the lab's id [CH]
+    sample_lines_above: 8
+    result_headers: ["Mass"]              # "Analyte  LOQ  Mass  Mass" over "mg/g  %  mg/g" [CH]
+    result_unit: "mg/g"                   # ...so the result is the "Mass" column with mg/g under it, not the % one
+    reported_labels: ["Created:"]         # "Sample Received: 04/10/2024; Report Created: 04/15/2024" [CH]
+    section_stop: ["Method:"]             # the table ends at "Method: CH SOP 4407. ..."; "METRC Batch:" sits under the id [CH]
+    # Its "Total" row and "Total Possible Psilocin" are psilocin equivalents (psilocin + 0.719 x psilocybin), not
+    # TPE: neither is read. TPE comes from psilocybin and psilocin as for every lab (tpe above).
+
+lot_links:                                # AD-19: a report's request / chain of custody pairs a lot with a batch
+  batch_labels: ["Batch ID"]              # "Client Batch ID: HB-...", "Batch ID/METRC ID" (id on the next line) [RCL]
+  lot_labels: ["Lot/Process Lot"]         # "Harvest Lot/Process Lot: PL-..." or "...Lot Number" (id on the next line) [RCL]

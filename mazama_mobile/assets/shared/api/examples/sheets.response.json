@@ -1,0 +1,21 @@
+{
+ "sheets": [
+  {
+   "guid": "HB-aaaa0001",
+   "name": "GT 6.26",
+   "product": "Whole Fungi",
+   "tested": "Aug 27, 2026",
+   "path": "/p/lots/mazama/HB-aaaa0001",
+   "strains": [
+    "Golden Teacher"
+   ],
+   "tpe": 8.64,
+   "psilocybin": 7.25,
+   "psilocin": 1.0,
+   "detected": [],
+   "types": [
+    "DH"
+   ]
+  }
+ ]
+}

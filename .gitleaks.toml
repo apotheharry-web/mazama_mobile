@@ -1,0 +1,8 @@
+# gitleaks (https://github.com/gitleaks/gitleaks): its default rules, minus one known test value.
+# mazama_mobile/tool/publish_public.sh runs it over every copy before publishing.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "The labelled TEST signing key of the shared signature test vectors (signing_vectors.json, 'TEST KEYS ONLY'): derived from a fixed label, never Mazama's key, signs nothing real"
+regexes = ['''13oDZzUeof7UMoS1ydHzD14j8h9YVd0NUqXmmhDeumE=''']

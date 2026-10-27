@@ -1,0 +1,37 @@
+{
+ "workerEmail": "worker@example.com",
+ "deviceId": "D-0a1b2c3d",
+ "lines": [
+  {
+   "strain": "Golden Teacher",
+   "size": 25,
+   "type": "FD",
+   "quantity": 12
+  },
+  {
+   "strain": "Golden Teacher",
+   "size": 5,
+   "type": "HG",
+   "quantity": 4
+  },
+  {
+   "strain": "Enigma",
+   "size": 0,
+   "type": "DH",
+   "quantity": 3
+  },
+  {
+   "strain": "Chocolate",
+   "size": -1,
+   "type": "CH",
+   "quantity": 20
+  },
+  {
+   "strain": "Gummy",
+   "size": -2,
+   "type": "GM",
+   "quantity": 10
+  }
+ ],
+ "note": "Please bring the freeze dried first - we are out of 25 mg."
+}

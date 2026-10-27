@@ -1,0 +1,3843 @@
+[
+ {
+  "name": "mixed makers, all",
+  "pies": {
+   "mg": {
+    "slices": [
+     {
+      "name": "Golden Teacher",
+      "pct": 49,
+      "slot": "s1",
+      "value": 285.6
+     },
+     {
+      "name": "Penis Envy",
+      "pct": 5,
+      "slot": "s2",
+      "value": 30.6
+     },
+     {
+      "name": "Chocolate",
+      "pct": 44,
+      "slot": "s3",
+      "value": 253.25
+     },
+     {
+      "name": "Unknown",
+      "pct": 2,
+      "slot": "s4",
+      "value": 10.2
+     }
+    ],
+    "total": 579.65
+   },
+   "more": 0,
+   "rows": [
+    {
+     "mg": 285.6,
+     "name": "Golden Teacher",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 71,
+         "slot": "d25",
+         "value": 10
+        },
+        {
+         "name": "10 mg",
+         "pct": 29,
+         "slot": "d10",
+         "value": 4
+        }
+       ],
+       "title": "Quantity",
+       "total": 14
+      },
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 86,
+         "slot": "d25",
+         "value": 246.0
+        },
+        {
+         "name": "10 mg",
+         "pct": 14,
+         "slot": "d10",
+         "value": 39.6
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 285.6
+      }
+     ],
+     "slot": "s1",
+     "units": 14
+    },
+    {
+     "mg": 30.6,
+     "name": "Penis Envy",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "5 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 6
+        }
+       ],
+       "title": "Quantity",
+       "total": 6
+      },
+      {
+       "slices": [
+        {
+         "name": "5 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 30.6
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 30.6
+      }
+     ],
+     "slot": "s2",
+     "units": 6
+    },
+    {
+     "mg": 253.25,
+     "name": "Chocolate",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "Booster",
+         "pct": 100,
+         "slot": "c",
+         "value": 2.5
+        }
+       ],
+       "title": "Quantity",
+       "total": 2.5
+      },
+      {
+       "slices": [
+        {
+         "name": "Booster",
+         "pct": 100,
+         "slot": "c",
+         "value": 253.25
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 253.25
+      }
+     ],
+     "slot": "s3",
+     "units": 2.5
+    },
+    {
+     "mg": 10.2,
+     "name": "Unknown",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "10 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 1
+        }
+       ],
+       "title": "Quantity",
+       "total": 1
+      },
+      {
+       "slices": [
+        {
+         "name": "10 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 10.2
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 10.2
+      }
+     ],
+     "slot": "s4",
+     "units": 1
+    }
+   ],
+   "units": {
+    "slices": [
+     {
+      "name": "Golden Teacher",
+      "pct": 60,
+      "slot": "s1",
+      "value": 14
+     },
+     {
+      "name": "Penis Envy",
+      "pct": 26,
+      "slot": "s2",
+      "value": 6
+     },
+     {
+      "name": "Chocolate",
+      "pct": 11,
+      "slot": "s3",
+      "value": 2.5
+     },
+     {
+      "name": "Unknown",
+      "pct": 4,
+      "slot": "s4",
+      "value": 1
+     }
+    ],
+    "total": 23.5
+   }
+  },
+  "summary": {
+   "mg_mode": "tpe",
+   "mg_total": 579.65,
+   "strains": [
+    {
+     "mg": 285.6,
+     "mg_sizes": {
+      "10": 39.6,
+      "25": 246.0
+     },
+     "name": "Golden Teacher",
+     "sizes": {
+      "10": 4,
+      "25": 10
+     },
+     "units": 14
+    },
+    {
+     "mg": 30.6,
+     "mg_sizes": {
+      "5": 30.6
+     },
+     "name": "Penis Envy",
+     "sizes": {
+      "5": 6
+     },
+     "units": 6
+    },
+    {
+     "mg": 253.25,
+     "mg_sizes": {
+      "booster": 253.25
+     },
+     "name": "Chocolate",
+     "sizes": {
+      "booster": 2.5
+     },
+     "units": 2.5
+    },
+    {
+     "mg": 10.2,
+     "mg_sizes": {
+      "10": 10.2
+     },
+     "name": "Unknown",
+     "sizes": {
+      "10": 1
+     },
+     "units": 1
+    }
+   ],
+   "total": 23.5
+  }
+ },
+ {
+  "name": "mixed makers, mazama",
+  "pies": {
+   "mg": {
+    "slices": [
+     {
+      "name": "Golden Teacher",
+      "pct": 96,
+      "slot": "s1",
+      "value": 246.0
+     },
+     {
+      "name": "Unknown",
+      "pct": 4,
+      "slot": "s2",
+      "value": 10.2
+     }
+    ],
+    "total": 256.2
+   },
+   "more": 0,
+   "rows": [
+    {
+     "mg": 246.0,
+     "name": "Golden Teacher",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 10
+        }
+       ],
+       "title": "Quantity",
+       "total": 10
+      },
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 246.0
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 246.0
+      }
+     ],
+     "slot": "s1",
+     "units": 10
+    },
+    {
+     "mg": 10.2,
+     "name": "Unknown",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "10 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 1
+        }
+       ],
+       "title": "Quantity",
+       "total": 1
+      },
+      {
+       "slices": [
+        {
+         "name": "10 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 10.2
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 10.2
+      }
+     ],
+     "slot": "s2",
+     "units": 1
+    }
+   ],
+   "units": {
+    "slices": [
+     {
+      "name": "Golden Teacher",
+      "pct": 91,
+      "slot": "s1",
+      "value": 10
+     },
+     {
+      "name": "Unknown",
+      "pct": 9,
+      "slot": "s2",
+      "value": 1
+     }
+    ],
+    "total": 11
+   }
+  },
+  "summary": {
+   "mg_mode": "tpe",
+   "mg_total": 256.2,
+   "strains": [
+    {
+     "mg": 246.0,
+     "mg_sizes": {
+      "25": 246.0
+     },
+     "name": "Golden Teacher",
+     "sizes": {
+      "25": 10
+     },
+     "units": 10
+    },
+    {
+     "mg": 10.2,
+     "mg_sizes": {
+      "10": 10.2
+     },
+     "name": "Unknown",
+     "sizes": {
+      "10": 1
+     },
+     "units": 1
+    }
+   ],
+   "total": 11
+  }
+ },
+ {
+  "name": "psilocybin mode",
+  "pies": {
+   "mg": {
+    "slices": [
+     {
+      "name": "Bluey",
+      "pct": 11,
+      "slot": "s1",
+      "value": 10.0
+     },
+     {
+      "name": "Penis Envy",
+      "pct": 89,
+      "slot": "s2",
+      "value": 77.67
+     }
+    ],
+    "total": 87.67
+   },
+   "more": 0,
+   "rows": [
+    {
+     "mg": 10.0,
+     "name": "Bluey",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "10 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 6
+        }
+       ],
+       "title": "Quantity",
+       "total": 6
+      },
+      {
+       "slices": [
+        {
+         "name": "10 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 10.0
+        }
+       ],
+       "title": "Total mg psilocybin",
+       "total": 10.0
+      }
+     ],
+     "slot": "s1",
+     "units": 6
+    },
+    {
+     "mg": 77.67,
+     "name": "Penis Envy",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 75,
+         "slot": "d25",
+         "value": 3
+        },
+        {
+         "name": "5 mg",
+         "pct": 25,
+         "slot": "d5",
+         "value": 1
+        }
+       ],
+       "title": "Quantity",
+       "total": 4
+      },
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 94,
+         "slot": "d25",
+         "value": 72.64
+        },
+        {
+         "name": "5 mg",
+         "pct": 6,
+         "slot": "d5",
+         "value": 5.03
+        }
+       ],
+       "title": "Total mg psilocybin",
+       "total": 77.67
+      }
+     ],
+     "slot": "s2",
+     "units": 4
+    },
+    {
+     "mg": 0.0,
+     "name": "Chocolate",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "Other size",
+         "pct": 100,
+         "slot": "c",
+         "value": 1
+        }
+       ],
+       "title": "Quantity",
+       "total": 1
+      }
+     ],
+     "slot": "s3",
+     "units": 1
+    }
+   ],
+   "units": {
+    "slices": [
+     {
+      "name": "Bluey",
+      "pct": 55,
+      "slot": "s1",
+      "value": 6
+     },
+     {
+      "name": "Penis Envy",
+      "pct": 36,
+      "slot": "s2",
+      "value": 4
+     },
+     {
+      "name": "Chocolate",
+      "pct": 9,
+      "slot": "s3",
+      "value": 1
+     }
+    ],
+    "total": 11
+   }
+  },
+  "summary": {
+   "mg_mode": "psilocybin",
+   "mg_total": 87.67,
+   "strains": [
+    {
+     "mg": 10.0,
+     "mg_sizes": {
+      "10": 10.0
+     },
+     "name": "Bluey",
+     "sizes": {
+      "10": 6
+     },
+     "units": 6
+    },
+    {
+     "mg": 77.67,
+     "mg_sizes": {
+      "25": 72.64,
+      "5": 5.03
+     },
+     "name": "Penis Envy",
+     "sizes": {
+      "25": 3,
+      "5": 1
+     },
+     "units": 4
+    },
+    {
+     "mg": 0.0,
+     "mg_sizes": {
+      "other": 0.0
+     },
+     "name": "Chocolate",
+     "sizes": {
+      "other": 1
+     },
+     "units": 1
+    }
+   ],
+   "total": 11
+  }
+ },
+ {
+  "name": "case-variant and empty strain names",
+  "pies": {
+   "mg": {
+    "slices": [
+     {
+      "name": "avery",
+      "pct": 46,
+      "slot": "s1",
+      "value": 120.0
+     },
+     {
+      "name": "Bluey",
+      "pct": 51,
+      "slot": "s2",
+      "value": 132.9
+     },
+     {
+      "name": "Unknown",
+      "pct": 4,
+      "slot": "s3",
+      "value": 10.0
+     }
+    ],
+    "total": 262.9
+   },
+   "more": 0,
+   "rows": [
+    {
+     "mg": 120.0,
+     "name": "avery",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "20 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 6
+        }
+       ],
+       "title": "Quantity",
+       "total": 6
+      },
+      {
+       "slices": [
+        {
+         "name": "20 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 120.0
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 120.0
+      }
+     ],
+     "slot": "s1",
+     "units": 6
+    },
+    {
+     "mg": 132.9,
+     "name": "Bluey",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 83,
+         "slot": "d25",
+         "value": 5
+        },
+        {
+         "name": "10 mg",
+         "pct": 17,
+         "slot": "d10",
+         "value": 1
+        }
+       ],
+       "title": "Quantity",
+       "total": 6
+      },
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 92,
+         "slot": "d25",
+         "value": 122.9
+        },
+        {
+         "name": "10 mg",
+         "pct": 8,
+         "slot": "d10",
+         "value": 10.0
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 132.9
+      }
+     ],
+     "slot": "s2",
+     "units": 6
+    },
+    {
+     "mg": 10.0,
+     "name": "Unknown",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "5 mg",
+         "pct": 67,
+         "slot": "d5",
+         "value": 2
+        },
+        {
+         "name": "Other size",
+         "pct": 33,
+         "slot": "dx",
+         "value": 1
+        }
+       ],
+       "title": "Quantity",
+       "total": 3
+      },
+      {
+       "slices": [
+        {
+         "name": "5 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 10.0
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 10.0
+      }
+     ],
+     "slot": "s3",
+     "units": 3
+    }
+   ],
+   "units": {
+    "slices": [
+     {
+      "name": "avery",
+      "pct": 40,
+      "slot": "s1",
+      "value": 6
+     },
+     {
+      "name": "Bluey",
+      "pct": 40,
+      "slot": "s2",
+      "value": 6
+     },
+     {
+      "name": "Unknown",
+      "pct": 20,
+      "slot": "s3",
+      "value": 3
+     }
+    ],
+    "total": 15
+   }
+  },
+  "summary": {
+   "mg_mode": "tpe",
+   "mg_total": 262.9,
+   "strains": [
+    {
+     "mg": 120.0,
+     "mg_sizes": {
+      "20": 120.0
+     },
+     "name": "avery",
+     "sizes": {
+      "20": 6
+     },
+     "units": 6
+    },
+    {
+     "mg": 132.9,
+     "mg_sizes": {
+      "10": 10.0,
+      "25": 122.9
+     },
+     "name": "Bluey",
+     "sizes": {
+      "10": 1,
+      "25": 5
+     },
+     "units": 6
+    },
+    {
+     "mg": 10.0,
+     "mg_sizes": {
+      "5": 10.0,
+      "other": 0.0
+     },
+     "name": "Unknown",
+     "sizes": {
+      "5": 2,
+      "other": 1
+     },
+     "units": 3
+    }
+   ],
+   "total": 15
+  }
+ },
+ {
+  "name": "more than 7 strains",
+  "pies": {
+   "mg": {
+    "slices": [
+     {
+      "name": "Bluey",
+      "pct": 9,
+      "slot": "s1",
+      "value": 288.55
+     },
+     {
+      "name": "Penis Envy",
+      "pct": 16,
+      "slot": "s2",
+      "value": 486.67
+     },
+     {
+      "name": "Avery",
+      "pct": 9,
+      "slot": "s3",
+      "value": 271.81
+     },
+     {
+      "name": "Mazatec",
+      "pct": 9,
+      "slot": "s4",
+      "value": 278.07
+     },
+     {
+      "name": "Golden Teacher",
+      "pct": 14,
+      "slot": "s5",
+      "value": 444.78
+     },
+     {
+      "name": "Huautla",
+      "pct": 4,
+      "slot": "s6",
+      "value": 118.44
+     },
+     {
+      "name": "Ecuador",
+      "pct": 4,
+      "slot": "s7",
+      "value": 129.24
+     },
+     {
+      "name": "Other (3 strains)",
+      "pct": 35,
+      "slot": "oth",
+      "value": 1066.1299999999999
+     }
+    ],
+    "total": 3083.69
+   },
+   "more": 0,
+   "rows": [
+    {
+     "mg": 288.55,
+     "name": "Bluey",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 36,
+         "slot": "d25",
+         "value": 16
+        },
+        {
+         "name": "15 mg",
+         "pct": 31,
+         "slot": "d15",
+         "value": 14
+        },
+        {
+         "name": "5 mg",
+         "pct": 33,
+         "slot": "d5",
+         "value": 15
+        }
+       ],
+       "title": "Quantity",
+       "total": 45
+      },
+      {
+       "slices": [
+        {
+         "name": "15 mg",
+         "pct": 74,
+         "slot": "d15",
+         "value": 212.8
+        },
+        {
+         "name": "5 mg",
+         "pct": 26,
+         "slot": "d5",
+         "value": 75.75
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 288.55
+      }
+     ],
+     "slot": "s1",
+     "units": 45
+    },
+    {
+     "mg": 486.67,
+     "name": "Penis Envy",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "20 mg",
+         "pct": 48,
+         "slot": "d20",
+         "value": 16
+        },
+        {
+         "name": "10 mg",
+         "pct": 52,
+         "slot": "d10",
+         "value": 17
+        }
+       ],
+       "title": "Quantity",
+       "total": 33
+      },
+      {
+       "slices": [
+        {
+         "name": "20 mg",
+         "pct": 66,
+         "slot": "d20",
+         "value": 318.88
+        },
+        {
+         "name": "10 mg",
+         "pct": 34,
+         "slot": "d10",
+         "value": 167.79
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 486.66999999999996
+      }
+     ],
+     "slot": "s2",
+     "units": 33
+    },
+    {
+     "mg": 271.81,
+     "name": "Avery",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 52,
+         "slot": "d25",
+         "value": 11
+        },
+        {
+         "name": "5 mg",
+         "pct": 48,
+         "slot": "d5",
+         "value": 10
+        }
+       ],
+       "title": "Quantity",
+       "total": 21
+      },
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 271.81
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 271.81
+      }
+     ],
+     "slot": "s3",
+     "units": 21
+    },
+    {
+     "mg": 278.07,
+     "name": "Mazatec",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "20 mg",
+         "pct": 47,
+         "slot": "d20",
+         "value": 9
+        },
+        {
+         "name": "10 mg",
+         "pct": 53,
+         "slot": "d10",
+         "value": 10
+        }
+       ],
+       "title": "Quantity",
+       "total": 19
+      },
+      {
+       "slices": [
+        {
+         "name": "20 mg",
+         "pct": 65,
+         "slot": "d20",
+         "value": 179.37
+        },
+        {
+         "name": "10 mg",
+         "pct": 35,
+         "slot": "d10",
+         "value": 98.7
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 278.07
+      }
+     ],
+     "slot": "s4",
+     "units": 19
+    },
+    {
+     "mg": 444.78,
+     "name": "Golden Teacher",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 18
+        }
+       ],
+       "title": "Quantity",
+       "total": 18
+      },
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 444.78
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 444.78
+      }
+     ],
+     "slot": "s5",
+     "units": 18
+    },
+    {
+     "mg": 118.44,
+     "name": "Huautla",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "10 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 12
+        }
+       ],
+       "title": "Quantity",
+       "total": 12
+      },
+      {
+       "slices": [
+        {
+         "name": "10 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 118.44
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 118.44
+      }
+     ],
+     "slot": "s6",
+     "units": 12
+    },
+    {
+     "mg": 129.24,
+     "name": "Ecuador",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 44,
+         "slot": "d25",
+         "value": 4
+        },
+        {
+         "name": "15 mg",
+         "pct": 22,
+         "slot": "d15",
+         "value": 2
+        },
+        {
+         "name": "5 mg",
+         "pct": 33,
+         "slot": "d5",
+         "value": 3
+        }
+       ],
+       "title": "Quantity",
+       "total": 9
+      },
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 76,
+         "slot": "d25",
+         "value": 98.84
+        },
+        {
+         "name": "15 mg",
+         "pct": 24,
+         "slot": "d15",
+         "value": 30.4
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 129.24
+      }
+     ],
+     "slot": "s7",
+     "units": 9
+    },
+    {
+     "mg": 129.07,
+     "name": "Tidal Wave",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "20 mg",
+         "pct": 44,
+         "slot": "d20",
+         "value": 4
+        },
+        {
+         "name": "10 mg",
+         "pct": 56,
+         "slot": "d10",
+         "value": 5
+        }
+       ],
+       "title": "Quantity",
+       "total": 9
+      },
+      {
+       "slices": [
+        {
+         "name": "20 mg",
+         "pct": 62,
+         "slot": "d20",
+         "value": 79.72
+        },
+        {
+         "name": "10 mg",
+         "pct": 38,
+         "slot": "d10",
+         "value": 49.35
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 129.07
+      }
+     ],
+     "slot": "oth",
+     "units": 9
+    },
+    {
+     "mg": 788.8,
+     "name": "Chocolate",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "Booster",
+         "pct": 100,
+         "slot": "c",
+         "value": 8
+        }
+       ],
+       "title": "Quantity",
+       "total": 8
+      },
+      {
+       "slices": [
+        {
+         "name": "Booster",
+         "pct": 100,
+         "slot": "c",
+         "value": 788.8
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 788.8
+      }
+     ],
+     "slot": "oth",
+     "units": 8
+    },
+    {
+     "mg": 148.26,
+     "name": "Jedi Mind Fuck",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 6
+        }
+       ],
+       "title": "Quantity",
+       "total": 6
+      },
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 148.26
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 148.26
+      }
+     ],
+     "slot": "oth",
+     "units": 6
+    }
+   ],
+   "units": {
+    "slices": [
+     {
+      "name": "Bluey",
+      "pct": 25,
+      "slot": "s1",
+      "value": 45
+     },
+     {
+      "name": "Penis Envy",
+      "pct": 18,
+      "slot": "s2",
+      "value": 33
+     },
+     {
+      "name": "Avery",
+      "pct": 12,
+      "slot": "s3",
+      "value": 21
+     },
+     {
+      "name": "Mazatec",
+      "pct": 11,
+      "slot": "s4",
+      "value": 19
+     },
+     {
+      "name": "Golden Teacher",
+      "pct": 10,
+      "slot": "s5",
+      "value": 18
+     },
+     {
+      "name": "Huautla",
+      "pct": 7,
+      "slot": "s6",
+      "value": 12
+     },
+     {
+      "name": "Ecuador",
+      "pct": 5,
+      "slot": "s7",
+      "value": 9
+     },
+     {
+      "name": "Other (3 strains)",
+      "pct": 13,
+      "slot": "oth",
+      "value": 23
+     }
+    ],
+    "total": 180
+   }
+  },
+  "summary": {
+   "mg_mode": "tpe",
+   "mg_total": 3083.69,
+   "strains": [
+    {
+     "mg": 288.55,
+     "mg_sizes": {
+      "15": 212.8,
+      "25": 0.0,
+      "5": 75.75
+     },
+     "name": "Bluey",
+     "sizes": {
+      "15": 14,
+      "25": 16,
+      "5": 15
+     },
+     "units": 45
+    },
+    {
+     "mg": 486.67,
+     "mg_sizes": {
+      "10": 167.79,
+      "20": 318.88
+     },
+     "name": "Penis Envy",
+     "sizes": {
+      "10": 17,
+      "20": 16
+     },
+     "units": 33
+    },
+    {
+     "mg": 271.81,
+     "mg_sizes": {
+      "25": 271.81,
+      "5": 0.0
+     },
+     "name": "Avery",
+     "sizes": {
+      "25": 11,
+      "5": 10
+     },
+     "units": 21
+    },
+    {
+     "mg": 278.07,
+     "mg_sizes": {
+      "10": 98.7,
+      "20": 179.37
+     },
+     "name": "Mazatec",
+     "sizes": {
+      "10": 10,
+      "20": 9
+     },
+     "units": 19
+    },
+    {
+     "mg": 444.78,
+     "mg_sizes": {
+      "25": 444.78
+     },
+     "name": "Golden Teacher",
+     "sizes": {
+      "25": 18
+     },
+     "units": 18
+    },
+    {
+     "mg": 118.44,
+     "mg_sizes": {
+      "10": 118.44
+     },
+     "name": "Huautla",
+     "sizes": {
+      "10": 12
+     },
+     "units": 12
+    },
+    {
+     "mg": 129.24,
+     "mg_sizes": {
+      "15": 30.4,
+      "25": 98.84,
+      "5": 0.0
+     },
+     "name": "Ecuador",
+     "sizes": {
+      "15": 2,
+      "25": 4,
+      "5": 3
+     },
+     "units": 9
+    },
+    {
+     "mg": 129.07,
+     "mg_sizes": {
+      "10": 49.35,
+      "20": 79.72
+     },
+     "name": "Tidal Wave",
+     "sizes": {
+      "10": 5,
+      "20": 4
+     },
+     "units": 9
+    },
+    {
+     "mg": 788.8,
+     "mg_sizes": {
+      "booster": 788.8
+     },
+     "name": "Chocolate",
+     "sizes": {
+      "booster": 8
+     },
+     "units": 8
+    },
+    {
+     "mg": 148.26,
+     "mg_sizes": {
+      "25": 148.26
+     },
+     "name": "Jedi Mind Fuck",
+     "sizes": {
+      "25": 6
+     },
+     "units": 6
+    }
+   ],
+   "total": 180
+  }
+ },
+ {
+  "name": "more than 7 strains, mazama",
+  "pies": {
+   "mg": {
+    "slices": [
+     {
+      "name": "Bluey",
+      "pct": 22,
+      "slot": "s1",
+      "value": 288.55
+     },
+     {
+      "name": "Avery",
+      "pct": 21,
+      "slot": "s2",
+      "value": 271.81
+     },
+     {
+      "name": "Golden Teacher",
+      "pct": 35,
+      "slot": "s3",
+      "value": 444.78
+     },
+     {
+      "name": "Ecuador",
+      "pct": 10,
+      "slot": "s4",
+      "value": 129.24
+     },
+     {
+      "name": "Jedi Mind Fuck",
+      "pct": 12,
+      "slot": "s5",
+      "value": 148.26
+     }
+    ],
+    "total": 1282.64
+   },
+   "more": 0,
+   "rows": [
+    {
+     "mg": 288.55,
+     "name": "Bluey",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 36,
+         "slot": "d25",
+         "value": 16
+        },
+        {
+         "name": "15 mg",
+         "pct": 31,
+         "slot": "d15",
+         "value": 14
+        },
+        {
+         "name": "5 mg",
+         "pct": 33,
+         "slot": "d5",
+         "value": 15
+        }
+       ],
+       "title": "Quantity",
+       "total": 45
+      },
+      {
+       "slices": [
+        {
+         "name": "15 mg",
+         "pct": 74,
+         "slot": "d15",
+         "value": 212.8
+        },
+        {
+         "name": "5 mg",
+         "pct": 26,
+         "slot": "d5",
+         "value": 75.75
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 288.55
+      }
+     ],
+     "slot": "s1",
+     "units": 45
+    },
+    {
+     "mg": 271.81,
+     "name": "Avery",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 52,
+         "slot": "d25",
+         "value": 11
+        },
+        {
+         "name": "5 mg",
+         "pct": 48,
+         "slot": "d5",
+         "value": 10
+        }
+       ],
+       "title": "Quantity",
+       "total": 21
+      },
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 271.81
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 271.81
+      }
+     ],
+     "slot": "s2",
+     "units": 21
+    },
+    {
+     "mg": 444.78,
+     "name": "Golden Teacher",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 18
+        }
+       ],
+       "title": "Quantity",
+       "total": 18
+      },
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 444.78
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 444.78
+      }
+     ],
+     "slot": "s3",
+     "units": 18
+    },
+    {
+     "mg": 129.24,
+     "name": "Ecuador",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 44,
+         "slot": "d25",
+         "value": 4
+        },
+        {
+         "name": "15 mg",
+         "pct": 22,
+         "slot": "d15",
+         "value": 2
+        },
+        {
+         "name": "5 mg",
+         "pct": 33,
+         "slot": "d5",
+         "value": 3
+        }
+       ],
+       "title": "Quantity",
+       "total": 9
+      },
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 76,
+         "slot": "d25",
+         "value": 98.84
+        },
+        {
+         "name": "15 mg",
+         "pct": 24,
+         "slot": "d15",
+         "value": 30.4
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 129.24
+      }
+     ],
+     "slot": "s4",
+     "units": 9
+    },
+    {
+     "mg": 148.26,
+     "name": "Jedi Mind Fuck",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 6
+        }
+       ],
+       "title": "Quantity",
+       "total": 6
+      },
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 148.26
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 148.26
+      }
+     ],
+     "slot": "s5",
+     "units": 6
+    }
+   ],
+   "units": {
+    "slices": [
+     {
+      "name": "Bluey",
+      "pct": 45,
+      "slot": "s1",
+      "value": 45
+     },
+     {
+      "name": "Avery",
+      "pct": 21,
+      "slot": "s2",
+      "value": 21
+     },
+     {
+      "name": "Golden Teacher",
+      "pct": 18,
+      "slot": "s3",
+      "value": 18
+     },
+     {
+      "name": "Ecuador",
+      "pct": 9,
+      "slot": "s4",
+      "value": 9
+     },
+     {
+      "name": "Jedi Mind Fuck",
+      "pct": 6,
+      "slot": "s5",
+      "value": 6
+     }
+    ],
+    "total": 99
+   }
+  },
+  "summary": {
+   "mg_mode": "tpe",
+   "mg_total": 1282.64,
+   "strains": [
+    {
+     "mg": 288.55,
+     "mg_sizes": {
+      "15": 212.8,
+      "25": 0.0,
+      "5": 75.75
+     },
+     "name": "Bluey",
+     "sizes": {
+      "15": 14,
+      "25": 16,
+      "5": 15
+     },
+     "units": 45
+    },
+    {
+     "mg": 271.81,
+     "mg_sizes": {
+      "25": 271.81,
+      "5": 0.0
+     },
+     "name": "Avery",
+     "sizes": {
+      "25": 11,
+      "5": 10
+     },
+     "units": 21
+    },
+    {
+     "mg": 444.78,
+     "mg_sizes": {
+      "25": 444.78
+     },
+     "name": "Golden Teacher",
+     "sizes": {
+      "25": 18
+     },
+     "units": 18
+    },
+    {
+     "mg": 129.24,
+     "mg_sizes": {
+      "15": 30.4,
+      "25": 98.84,
+      "5": 0.0
+     },
+     "name": "Ecuador",
+     "sizes": {
+      "15": 2,
+      "25": 4,
+      "5": 3
+     },
+     "units": 9
+    },
+    {
+     "mg": 148.26,
+     "mg_sizes": {
+      "25": 148.26
+     },
+     "name": "Jedi Mind Fuck",
+     "sizes": {
+      "25": 6
+     },
+     "units": 6
+    }
+   ],
+   "total": 99
+  }
+ },
+ {
+  "name": "more than 12 strains",
+  "pies": {
+   "mg": {
+    "slices": [
+     {
+      "name": "Bluey",
+      "pct": 6,
+      "slot": "s1",
+      "value": 491.05
+     },
+     {
+      "name": "Penis Envy",
+      "pct": 10,
+      "slot": "s2",
+      "value": 784.67
+     },
+     {
+      "name": "Avery",
+      "pct": 7,
+      "slot": "s3",
+      "value": 518.91
+     },
+     {
+      "name": "Ecuador",
+      "pct": 7,
+      "slot": "s4",
+      "value": 528.34
+     },
+     {
+      "name": "Mazatec",
+      "pct": 8,
+      "slot": "s5",
+      "value": 576.07
+     },
+     {
+      "name": "Tidal Wave",
+      "pct": 6,
+      "slot": "s6",
+      "value": 427.07
+     },
+     {
+      "name": "Golden Teacher",
+      "pct": 9,
+      "slot": "s7",
+      "value": 691.88
+     },
+     {
+      "name": "Other (8 strains)",
+      "pct": 47,
+      "slot": "oth",
+      "value": 3598.86
+     }
+    ],
+    "total": 7616.85
+   },
+   "more": 3,
+   "rows": [
+    {
+     "mg": 491.05,
+     "name": "Bluey",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 35,
+         "slot": "d25",
+         "value": 26
+        },
+        {
+         "name": "15 mg",
+         "pct": 32,
+         "slot": "d15",
+         "value": 24
+        },
+        {
+         "name": "5 mg",
+         "pct": 33,
+         "slot": "d5",
+         "value": 25
+        }
+       ],
+       "title": "Quantity",
+       "total": 75
+      },
+      {
+       "slices": [
+        {
+         "name": "15 mg",
+         "pct": 74,
+         "slot": "d15",
+         "value": 364.8
+        },
+        {
+         "name": "5 mg",
+         "pct": 26,
+         "slot": "d5",
+         "value": 126.25
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 491.05
+      }
+     ],
+     "slot": "s1",
+     "units": 75
+    },
+    {
+     "mg": 784.67,
+     "name": "Penis Envy",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "20 mg",
+         "pct": 49,
+         "slot": "d20",
+         "value": 26
+        },
+        {
+         "name": "10 mg",
+         "pct": 51,
+         "slot": "d10",
+         "value": 27
+        }
+       ],
+       "title": "Quantity",
+       "total": 53
+      },
+      {
+       "slices": [
+        {
+         "name": "20 mg",
+         "pct": 66,
+         "slot": "d20",
+         "value": 518.18
+        },
+        {
+         "name": "10 mg",
+         "pct": 34,
+         "slot": "d10",
+         "value": 266.49
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 784.67
+      }
+     ],
+     "slot": "s2",
+     "units": 53
+    },
+    {
+     "mg": 518.91,
+     "name": "Avery",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 51,
+         "slot": "d25",
+         "value": 21
+        },
+        {
+         "name": "5 mg",
+         "pct": 49,
+         "slot": "d5",
+         "value": 20
+        }
+       ],
+       "title": "Quantity",
+       "total": 41
+      },
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 518.91
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 518.91
+      }
+     ],
+     "slot": "s3",
+     "units": 41
+    },
+    {
+     "mg": 528.34,
+     "name": "Ecuador",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 36,
+         "slot": "d25",
+         "value": 14
+        },
+        {
+         "name": "15 mg",
+         "pct": 31,
+         "slot": "d15",
+         "value": 12
+        },
+        {
+         "name": "5 mg",
+         "pct": 33,
+         "slot": "d5",
+         "value": 13
+        }
+       ],
+       "title": "Quantity",
+       "total": 39
+      },
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 65,
+         "slot": "d25",
+         "value": 345.94
+        },
+        {
+         "name": "15 mg",
+         "pct": 35,
+         "slot": "d15",
+         "value": 182.4
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 528.34
+      }
+     ],
+     "slot": "s4",
+     "units": 39
+    },
+    {
+     "mg": 576.07,
+     "name": "Mazatec",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "20 mg",
+         "pct": 49,
+         "slot": "d20",
+         "value": 19
+        },
+        {
+         "name": "10 mg",
+         "pct": 51,
+         "slot": "d10",
+         "value": 20
+        }
+       ],
+       "title": "Quantity",
+       "total": 39
+      },
+      {
+       "slices": [
+        {
+         "name": "20 mg",
+         "pct": 66,
+         "slot": "d20",
+         "value": 378.67
+        },
+        {
+         "name": "10 mg",
+         "pct": 34,
+         "slot": "d10",
+         "value": 197.4
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 576.07
+      }
+     ],
+     "slot": "s5",
+     "units": 39
+    },
+    {
+     "mg": 427.07,
+     "name": "Tidal Wave",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "20 mg",
+         "pct": 48,
+         "slot": "d20",
+         "value": 14
+        },
+        {
+         "name": "10 mg",
+         "pct": 52,
+         "slot": "d10",
+         "value": 15
+        }
+       ],
+       "title": "Quantity",
+       "total": 29
+      },
+      {
+       "slices": [
+        {
+         "name": "20 mg",
+         "pct": 65,
+         "slot": "d20",
+         "value": 279.02
+        },
+        {
+         "name": "10 mg",
+         "pct": 35,
+         "slot": "d10",
+         "value": 148.05
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 427.07
+      }
+     ],
+     "slot": "s6",
+     "units": 29
+    },
+    {
+     "mg": 691.88,
+     "name": "Golden Teacher",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 28
+        }
+       ],
+       "title": "Quantity",
+       "total": 28
+      },
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 691.88
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 691.88
+      }
+     ],
+     "slot": "s7",
+     "units": 28
+    },
+    {
+     "mg": 2366.4,
+     "name": "Chocolate",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "Booster",
+         "pct": 100,
+         "slot": "c",
+         "value": 24
+        }
+       ],
+       "title": "Quantity",
+       "total": 24
+      },
+      {
+       "slices": [
+        {
+         "name": "Booster",
+         "pct": 100,
+         "slot": "c",
+         "value": 2366.4
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 2366.4
+      }
+     ],
+     "slot": "oth",
+     "units": 24
+    },
+    {
+     "mg": 217.14,
+     "name": "Huautla",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "10 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 22
+        }
+       ],
+       "title": "Quantity",
+       "total": 22
+      },
+      {
+       "slices": [
+        {
+         "name": "10 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 217.14
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 217.14
+      }
+     ],
+     "slot": "oth",
+     "units": 22
+    },
+    {
+     "mg": 262.79,
+     "name": "Albino A+",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 53,
+         "slot": "d25",
+         "value": 9
+        },
+        {
+         "name": "5 mg",
+         "pct": 47,
+         "slot": "d5",
+         "value": 8
+        }
+       ],
+       "title": "Quantity",
+       "total": 17
+      },
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 85,
+         "slot": "d25",
+         "value": 222.39
+        },
+        {
+         "name": "5 mg",
+         "pct": 15,
+         "slot": "d5",
+         "value": 40.4
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 262.78999999999996
+      }
+     ],
+     "slot": "oth",
+     "units": 17
+    },
+    {
+     "mg": 395.36,
+     "name": "Jedi Mind Fuck",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 16
+        }
+       ],
+       "title": "Quantity",
+       "total": 16
+      },
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 395.36
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 395.36
+      }
+     ],
+     "slot": "oth",
+     "units": 16
+    },
+    {
+     "mg": 218.47,
+     "name": "Blue Meanie",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "20 mg",
+         "pct": 47,
+         "slot": "d20",
+         "value": 7
+        },
+        {
+         "name": "10 mg",
+         "pct": 53,
+         "slot": "d10",
+         "value": 8
+        }
+       ],
+       "title": "Quantity",
+       "total": 15
+      },
+      {
+       "slices": [
+        {
+         "name": "20 mg",
+         "pct": 64,
+         "slot": "d20",
+         "value": 139.51
+        },
+        {
+         "name": "10 mg",
+         "pct": 36,
+         "slot": "d10",
+         "value": 78.96
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 218.46999999999997
+      }
+     ],
+     "slot": "oth",
+     "units": 15
+    }
+   ],
+   "units": {
+    "slices": [
+     {
+      "name": "Bluey",
+      "pct": 18,
+      "slot": "s1",
+      "value": 75
+     },
+     {
+      "name": "Penis Envy",
+      "pct": 13,
+      "slot": "s2",
+      "value": 53
+     },
+     {
+      "name": "Avery",
+      "pct": 10,
+      "slot": "s3",
+      "value": 41
+     },
+     {
+      "name": "Ecuador",
+      "pct": 9,
+      "slot": "s4",
+      "value": 39
+     },
+     {
+      "name": "Mazatec",
+      "pct": 9,
+      "slot": "s5",
+      "value": 39
+     },
+     {
+      "name": "Tidal Wave",
+      "pct": 7,
+      "slot": "s6",
+      "value": 29
+     },
+     {
+      "name": "Golden Teacher",
+      "pct": 7,
+      "slot": "s7",
+      "value": 28
+     },
+     {
+      "name": "Other (8 strains)",
+      "pct": 27,
+      "slot": "oth",
+      "value": 113
+     }
+    ],
+    "total": 417
+   }
+  },
+  "summary": {
+   "mg_mode": "tpe",
+   "mg_total": 7616.85,
+   "strains": [
+    {
+     "mg": 491.05,
+     "mg_sizes": {
+      "15": 364.8,
+      "25": 0.0,
+      "5": 126.25
+     },
+     "name": "Bluey",
+     "sizes": {
+      "15": 24,
+      "25": 26,
+      "5": 25
+     },
+     "units": 75
+    },
+    {
+     "mg": 784.67,
+     "mg_sizes": {
+      "10": 266.49,
+      "20": 518.18
+     },
+     "name": "Penis Envy",
+     "sizes": {
+      "10": 27,
+      "20": 26
+     },
+     "units": 53
+    },
+    {
+     "mg": 518.91,
+     "mg_sizes": {
+      "25": 518.91,
+      "5": 0.0
+     },
+     "name": "Avery",
+     "sizes": {
+      "25": 21,
+      "5": 20
+     },
+     "units": 41
+    },
+    {
+     "mg": 528.34,
+     "mg_sizes": {
+      "15": 182.4,
+      "25": 345.94,
+      "5": 0.0
+     },
+     "name": "Ecuador",
+     "sizes": {
+      "15": 12,
+      "25": 14,
+      "5": 13
+     },
+     "units": 39
+    },
+    {
+     "mg": 576.07,
+     "mg_sizes": {
+      "10": 197.4,
+      "20": 378.67
+     },
+     "name": "Mazatec",
+     "sizes": {
+      "10": 20,
+      "20": 19
+     },
+     "units": 39
+    },
+    {
+     "mg": 427.07,
+     "mg_sizes": {
+      "10": 148.05,
+      "20": 279.02
+     },
+     "name": "Tidal Wave",
+     "sizes": {
+      "10": 15,
+      "20": 14
+     },
+     "units": 29
+    },
+    {
+     "mg": 691.88,
+     "mg_sizes": {
+      "25": 691.88
+     },
+     "name": "Golden Teacher",
+     "sizes": {
+      "25": 28
+     },
+     "units": 28
+    },
+    {
+     "mg": 2366.4,
+     "mg_sizes": {
+      "booster": 2366.4
+     },
+     "name": "Chocolate",
+     "sizes": {
+      "booster": 24
+     },
+     "units": 24
+    },
+    {
+     "mg": 217.14,
+     "mg_sizes": {
+      "10": 217.14
+     },
+     "name": "Huautla",
+     "sizes": {
+      "10": 22
+     },
+     "units": 22
+    },
+    {
+     "mg": 262.79,
+     "mg_sizes": {
+      "25": 222.39,
+      "5": 40.4
+     },
+     "name": "Albino A+",
+     "sizes": {
+      "25": 9,
+      "5": 8
+     },
+     "units": 17
+    },
+    {
+     "mg": 395.36,
+     "mg_sizes": {
+      "25": 395.36
+     },
+     "name": "Jedi Mind Fuck",
+     "sizes": {
+      "25": 16
+     },
+     "units": 16
+    },
+    {
+     "mg": 218.47,
+     "mg_sizes": {
+      "10": 78.96,
+      "20": 139.51
+     },
+     "name": "Blue Meanie",
+     "sizes": {
+      "10": 8,
+      "20": 7
+     },
+     "units": 15
+    },
+    {
+     "mg": 0.0,
+     "mg_sizes": {
+      "10": 0.0
+     },
+     "name": "Cambodian",
+     "sizes": {
+      "10": 10
+     },
+     "units": 10
+    },
+    {
+     "mg": 39.86,
+     "mg_sizes": {
+      "10": 0.0,
+      "20": 39.86
+     },
+     "name": "Thrasher",
+     "sizes": {
+      "10": 3,
+      "20": 2
+     },
+     "units": 5
+    },
+    {
+     "mg": 98.84,
+     "mg_sizes": {
+      "25": 98.84
+     },
+     "name": "Z Strain",
+     "sizes": {
+      "25": 4
+     },
+     "units": 4
+    }
+   ],
+   "total": 417
+  }
+ },
+ {
+  "name": "percent half to even, 12.5 and 87.5",
+  "pies": {
+   "mg": {
+    "slices": [
+     {
+      "name": "Big",
+      "pct": 88,
+      "slot": "s1",
+      "value": 175.0
+     },
+     {
+      "name": "Small",
+      "pct": 12,
+      "slot": "s2",
+      "value": 25.0
+     }
+    ],
+    "total": 200.0
+   },
+   "more": 0,
+   "rows": [
+    {
+     "mg": 175.0,
+     "name": "Big",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 7
+        }
+       ],
+       "title": "Quantity",
+       "total": 7
+      },
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 175.0
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 175.0
+      }
+     ],
+     "slot": "s1",
+     "units": 7
+    },
+    {
+     "mg": 25.0,
+     "name": "Small",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 1
+        }
+       ],
+       "title": "Quantity",
+       "total": 1
+      },
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 25.0
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 25.0
+      }
+     ],
+     "slot": "s2",
+     "units": 1
+    }
+   ],
+   "units": {
+    "slices": [
+     {
+      "name": "Big",
+      "pct": 88,
+      "slot": "s1",
+      "value": 7
+     },
+     {
+      "name": "Small",
+      "pct": 12,
+      "slot": "s2",
+      "value": 1
+     }
+    ],
+    "total": 8
+   }
+  },
+  "summary": {
+   "mg_mode": "tpe",
+   "mg_total": 200.0,
+   "strains": [
+    {
+     "mg": 175.0,
+     "mg_sizes": {
+      "25": 175.0
+     },
+     "name": "Big",
+     "sizes": {
+      "25": 7
+     },
+     "units": 7
+    },
+    {
+     "mg": 25.0,
+     "mg_sizes": {
+      "25": 25.0
+     },
+     "name": "Small",
+     "sizes": {
+      "25": 1
+     },
+     "units": 1
+    }
+   ],
+   "total": 8
+  }
+ },
+ {
+  "name": "percent half to even, 13.5 and 86.5",
+  "pies": {
+   "mg": {
+    "slices": [
+     {
+      "name": "Big",
+      "pct": 86,
+      "slot": "s1",
+      "value": 1730.0
+     },
+     {
+      "name": "Small",
+      "pct": 14,
+      "slot": "s2",
+      "value": 270.0
+     }
+    ],
+    "total": 2000.0
+   },
+   "more": 0,
+   "rows": [
+    {
+     "mg": 1730.0,
+     "name": "Big",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "10 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 173
+        }
+       ],
+       "title": "Quantity",
+       "total": 173
+      },
+      {
+       "slices": [
+        {
+         "name": "10 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 1730.0
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 1730.0
+      }
+     ],
+     "slot": "s1",
+     "units": 173
+    },
+    {
+     "mg": 270.0,
+     "name": "Small",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "10 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 27
+        }
+       ],
+       "title": "Quantity",
+       "total": 27
+      },
+      {
+       "slices": [
+        {
+         "name": "10 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 270.0
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 270.0
+      }
+     ],
+     "slot": "s2",
+     "units": 27
+    }
+   ],
+   "units": {
+    "slices": [
+     {
+      "name": "Big",
+      "pct": 86,
+      "slot": "s1",
+      "value": 173
+     },
+     {
+      "name": "Small",
+      "pct": 14,
+      "slot": "s2",
+      "value": 27
+     }
+    ],
+    "total": 200
+   }
+  },
+  "summary": {
+   "mg_mode": "tpe",
+   "mg_total": 2000.0,
+   "strains": [
+    {
+     "mg": 1730.0,
+     "mg_sizes": {
+      "10": 1730.0
+     },
+     "name": "Big",
+     "sizes": {
+      "10": 173
+     },
+     "units": 173
+    },
+    {
+     "mg": 270.0,
+     "mg_sizes": {
+      "10": 270.0
+     },
+     "name": "Small",
+     "sizes": {
+      "10": 27
+     },
+     "units": 27
+    }
+   ],
+   "total": 200
+  }
+ },
+ {
+  "name": "one size only",
+  "pies": {
+   "mg": {
+    "slices": [
+     {
+      "name": "Bluey",
+      "pct": 100,
+      "slot": "s1",
+      "value": 75.0
+     }
+    ],
+    "total": 75.0
+   },
+   "more": 0,
+   "rows": [
+    {
+     "mg": 75.0,
+     "name": "Bluey",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 3
+        }
+       ],
+       "title": "Quantity",
+       "total": 3
+      },
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 75.0
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 75.0
+      }
+     ],
+     "slot": "s1",
+     "units": 3
+    }
+   ],
+   "units": {
+    "slices": [
+     {
+      "name": "Bluey",
+      "pct": 100,
+      "slot": "s1",
+      "value": 3
+     }
+    ],
+    "total": 3
+   }
+  },
+  "summary": {
+   "mg_mode": "tpe",
+   "mg_total": 75.0,
+   "strains": [
+    {
+     "mg": 75.0,
+     "mg_sizes": {
+      "25": 75.0
+     },
+     "name": "Bluey",
+     "sizes": {
+      "25": 3
+     },
+     "units": 3
+    }
+   ],
+   "total": 3
+  }
+ },
+ {
+  "name": "chocolates (by product, booster)",
+  "pies": {
+   "mg": {
+    "slices": [
+     {
+      "name": "Bluey",
+      "pct": 23,
+      "slot": "s1",
+      "value": 99.2
+     },
+     {
+      "name": "Chocolate",
+      "pct": 77,
+      "slot": "s2",
+      "value": 328.5
+     }
+    ],
+    "total": 427.7
+   },
+   "more": 0,
+   "rows": [
+    {
+     "mg": 99.2,
+     "name": "Bluey",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 4
+        }
+       ],
+       "title": "Quantity",
+       "total": 4
+      },
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 99.2
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 99.2
+      }
+     ],
+     "slot": "s1",
+     "units": 4
+    },
+    {
+     "mg": 328.5,
+     "name": "Chocolate",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "Booster",
+         "pct": 100,
+         "slot": "c",
+         "value": 3
+        }
+       ],
+       "title": "Quantity",
+       "total": 3
+      },
+      {
+       "slices": [
+        {
+         "name": "Booster",
+         "pct": 100,
+         "slot": "c",
+         "value": 328.5
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 328.5
+      }
+     ],
+     "slot": "s2",
+     "units": 3
+    }
+   ],
+   "units": {
+    "slices": [
+     {
+      "name": "Bluey",
+      "pct": 57,
+      "slot": "s1",
+      "value": 4
+     },
+     {
+      "name": "Chocolate",
+      "pct": 43,
+      "slot": "s2",
+      "value": 3
+     }
+    ],
+    "total": 7
+   }
+  },
+  "summary": {
+   "mg_mode": "tpe",
+   "mg_total": 427.7,
+   "strains": [
+    {
+     "mg": 99.2,
+     "mg_sizes": {
+      "25": 99.2
+     },
+     "name": "Bluey",
+     "sizes": {
+      "25": 4
+     },
+     "units": 4
+    },
+    {
+     "mg": 328.5,
+     "mg_sizes": {
+      "booster": 328.5
+     },
+     "name": "Chocolate",
+     "sizes": {
+      "booster": 3
+     },
+     "units": 3
+    }
+   ],
+   "total": 7
+  }
+ },
+ {
+  "name": "another size",
+  "pies": {
+   "mg": {
+    "slices": [
+     {
+      "name": "Bluey",
+      "pct": 71,
+      "slot": "s1",
+      "value": 301.7
+     },
+     {
+      "name": "Penis Envy",
+      "pct": 29,
+      "slot": "s2",
+      "value": 126.0
+     }
+    ],
+    "total": 427.7
+   },
+   "more": 0,
+   "rows": [
+    {
+     "mg": 301.7,
+     "name": "Bluey",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 67,
+         "slot": "d25",
+         "value": 4
+        },
+        {
+         "name": "Other size",
+         "pct": 33,
+         "slot": "dx",
+         "value": 2
+        }
+       ],
+       "title": "Quantity",
+       "total": 6
+      },
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 33,
+         "slot": "d25",
+         "value": 99.2
+        },
+        {
+         "name": "Other size",
+         "pct": 67,
+         "slot": "dx",
+         "value": 202.5
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 301.7
+      }
+     ],
+     "slot": "s1",
+     "units": 6
+    },
+    {
+     "mg": 126.0,
+     "name": "Penis Envy",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "Other size",
+         "pct": 100,
+         "slot": "c",
+         "value": 1
+        }
+       ],
+       "title": "Quantity",
+       "total": 1
+      },
+      {
+       "slices": [
+        {
+         "name": "Other size",
+         "pct": 100,
+         "slot": "c",
+         "value": 126.0
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 126.0
+      }
+     ],
+     "slot": "s2",
+     "units": 1
+    }
+   ],
+   "units": {
+    "slices": [
+     {
+      "name": "Bluey",
+      "pct": 86,
+      "slot": "s1",
+      "value": 6
+     },
+     {
+      "name": "Penis Envy",
+      "pct": 14,
+      "slot": "s2",
+      "value": 1
+     }
+    ],
+    "total": 7
+   }
+  },
+  "summary": {
+   "mg_mode": "tpe",
+   "mg_total": 427.7,
+   "strains": [
+    {
+     "mg": 301.7,
+     "mg_sizes": {
+      "25": 99.2,
+      "other": 202.5
+     },
+     "name": "Bluey",
+     "sizes": {
+      "25": 4,
+      "other": 2
+     },
+     "units": 6
+    },
+    {
+     "mg": 126.0,
+     "mg_sizes": {
+      "other": 126.0
+     },
+     "name": "Penis Envy",
+     "sizes": {
+      "other": 1
+     },
+     "units": 1
+    }
+   ],
+   "total": 7
+  }
+ },
+ {
+  "name": "edibles beside strains",
+  "pies": {
+   "mg": {
+    "slices": [
+     {
+      "name": "Chocolate",
+      "pct": 48,
+      "slot": "s1",
+      "value": 183.26
+     },
+     {
+      "name": "Gummy",
+      "pct": 3,
+      "slot": "s2",
+      "value": 12.01
+     },
+     {
+      "name": "Golden Teacher",
+      "pct": 33,
+      "slot": "s3",
+      "value": 124.5
+     },
+     {
+      "name": "Avery",
+      "pct": 5,
+      "slot": "s4",
+      "value": 20.0
+     },
+     {
+      "name": "Chocolate Thunder",
+      "pct": 11,
+      "slot": "s5",
+      "value": 40.0
+     }
+    ],
+    "total": 379.77
+   },
+   "more": 0,
+   "rows": [
+    {
+     "mg": 183.26,
+     "name": "Chocolate",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "Booster",
+         "pct": 50,
+         "slot": "db",
+         "value": 5
+        },
+        {
+         "name": "Microdose",
+         "pct": 50,
+         "slot": "dm",
+         "value": 5
+        }
+       ],
+       "title": "Quantity",
+       "total": 10
+      },
+      {
+       "slices": [
+        {
+         "name": "Booster",
+         "pct": 12,
+         "slot": "db",
+         "value": 21.3
+        },
+        {
+         "name": "Microdose",
+         "pct": 88,
+         "slot": "dm",
+         "value": 161.96
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 183.26000000000002
+      }
+     ],
+     "slot": "s1",
+     "units": 10
+    },
+    {
+     "mg": 12.01,
+     "name": "Gummy",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "Booster",
+         "pct": 14,
+         "slot": "db",
+         "value": 1
+        },
+        {
+         "name": "Microdose",
+         "pct": 86,
+         "slot": "dm",
+         "value": 6
+        }
+       ],
+       "title": "Quantity",
+       "total": 7
+      },
+      {
+       "slices": [
+        {
+         "name": "Booster",
+         "pct": 25,
+         "slot": "db",
+         "value": 3.01
+        },
+        {
+         "name": "Microdose",
+         "pct": 75,
+         "slot": "dm",
+         "value": 9.0
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 12.01
+      }
+     ],
+     "slot": "s2",
+     "units": 7
+    },
+    {
+     "mg": 124.5,
+     "name": "Golden Teacher",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 5
+        }
+       ],
+       "title": "Quantity",
+       "total": 5
+      },
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 124.5
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 124.5
+      }
+     ],
+     "slot": "s3",
+     "units": 5
+    },
+    {
+     "mg": 20.0,
+     "name": "Avery",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "10 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 2
+        }
+       ],
+       "title": "Quantity",
+       "total": 2
+      },
+      {
+       "slices": [
+        {
+         "name": "10 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 20.0
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 20.0
+      }
+     ],
+     "slot": "s4",
+     "units": 2
+    },
+    {
+     "mg": 40.0,
+     "name": "Chocolate Thunder",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "20 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 2
+        }
+       ],
+       "title": "Quantity",
+       "total": 2
+      },
+      {
+       "slices": [
+        {
+         "name": "20 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 40.0
+        }
+       ],
+       "title": "Total mg TPE",
+       "total": 40.0
+      }
+     ],
+     "slot": "s5",
+     "units": 2
+    },
+    {
+     "mg": 0.0,
+     "name": "Honey",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "Other size",
+         "pct": 100,
+         "slot": "c",
+         "value": 1
+        }
+       ],
+       "title": "Quantity",
+       "total": 1
+      }
+     ],
+     "slot": "s6",
+     "units": 1
+    }
+   ],
+   "units": {
+    "slices": [
+     {
+      "name": "Chocolate",
+      "pct": 37,
+      "slot": "s1",
+      "value": 10
+     },
+     {
+      "name": "Gummy",
+      "pct": 26,
+      "slot": "s2",
+      "value": 7
+     },
+     {
+      "name": "Golden Teacher",
+      "pct": 19,
+      "slot": "s3",
+      "value": 5
+     },
+     {
+      "name": "Avery",
+      "pct": 7,
+      "slot": "s4",
+      "value": 2
+     },
+     {
+      "name": "Chocolate Thunder",
+      "pct": 7,
+      "slot": "s5",
+      "value": 2
+     },
+     {
+      "name": "Honey",
+      "pct": 4,
+      "slot": "s6",
+      "value": 1
+     }
+    ],
+    "total": 27
+   }
+  },
+  "summary": {
+   "mg_mode": "tpe",
+   "mg_total": 379.77,
+   "strains": [
+    {
+     "mg": 183.26,
+     "mg_sizes": {
+      "booster": 21.3,
+      "micro": 161.96
+     },
+     "name": "Chocolate",
+     "sizes": {
+      "booster": 5,
+      "micro": 5
+     },
+     "units": 10
+    },
+    {
+     "mg": 12.01,
+     "mg_sizes": {
+      "booster": 3.01,
+      "micro": 9.0
+     },
+     "name": "Gummy",
+     "sizes": {
+      "booster": 1,
+      "micro": 6
+     },
+     "units": 7
+    },
+    {
+     "mg": 124.5,
+     "mg_sizes": {
+      "25": 124.5
+     },
+     "name": "Golden Teacher",
+     "sizes": {
+      "25": 5
+     },
+     "units": 5
+    },
+    {
+     "mg": 20.0,
+     "mg_sizes": {
+      "10": 20.0
+     },
+     "name": "Avery",
+     "sizes": {
+      "10": 2
+     },
+     "units": 2
+    },
+    {
+     "mg": 40.0,
+     "mg_sizes": {
+      "20": 40.0
+     },
+     "name": "Chocolate Thunder",
+     "sizes": {
+      "20": 2
+     },
+     "units": 2
+    },
+    {
+     "mg": 0.0,
+     "mg_sizes": {
+      "other": 0.0
+     },
+     "name": "Honey",
+     "sizes": {
+      "other": 1
+     },
+     "units": 1
+    }
+   ],
+   "total": 27
+  }
+ },
+ {
+  "name": "edibles in psilocybin mode",
+  "pies": {
+   "mg": {
+    "slices": [
+     {
+      "name": "Bluey",
+      "pct": 79,
+      "slot": "s1",
+      "value": 30.0
+     },
+     {
+      "name": "Chocolate",
+      "pct": 21,
+      "slot": "s2",
+      "value": 8.0
+     }
+    ],
+    "total": 38.0
+   },
+   "more": 0,
+   "rows": [
+    {
+     "mg": 30.0,
+     "name": "Bluey",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "10 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 3
+        }
+       ],
+       "title": "Quantity",
+       "total": 3
+      },
+      {
+       "slices": [
+        {
+         "name": "10 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 30.0
+        }
+       ],
+       "title": "Total mg psilocybin",
+       "total": 30.0
+      }
+     ],
+     "slot": "s1",
+     "units": 3
+    },
+    {
+     "mg": 8.0,
+     "name": "Chocolate",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "Booster",
+         "pct": 33,
+         "slot": "db",
+         "value": 1
+        },
+        {
+         "name": "Microdose",
+         "pct": 67,
+         "slot": "dm",
+         "value": 2
+        }
+       ],
+       "title": "Quantity",
+       "total": 3
+      },
+      {
+       "slices": [
+        {
+         "name": "Booster",
+         "pct": 50,
+         "slot": "db",
+         "value": 4.0
+        },
+        {
+         "name": "Microdose",
+         "pct": 50,
+         "slot": "dm",
+         "value": 4.0
+        }
+       ],
+       "title": "Total mg psilocybin",
+       "total": 8.0
+      }
+     ],
+     "slot": "s2",
+     "units": 3
+    }
+   ],
+   "units": {
+    "slices": [
+     {
+      "name": "Bluey",
+      "pct": 50,
+      "slot": "s1",
+      "value": 3
+     },
+     {
+      "name": "Chocolate",
+      "pct": 50,
+      "slot": "s2",
+      "value": 3
+     }
+    ],
+    "total": 6
+   }
+  },
+  "summary": {
+   "mg_mode": "psilocybin",
+   "mg_total": 38.0,
+   "strains": [
+    {
+     "mg": 30.0,
+     "mg_sizes": {
+      "10": 30.0
+     },
+     "name": "Bluey",
+     "sizes": {
+      "10": 3
+     },
+     "units": 3
+    },
+    {
+     "mg": 8.0,
+     "mg_sizes": {
+      "booster": 4.0,
+      "micro": 4.0
+     },
+     "name": "Chocolate",
+     "sizes": {
+      "booster": 1,
+      "micro": 2
+     },
+     "units": 3
+    }
+   ],
+   "total": 6
+  }
+ },
+ {
+  "name": "no mg figures",
+  "pies": {
+   "mg": null,
+   "more": 0,
+   "rows": [
+    {
+     "mg": 0.0,
+     "name": "Bluey",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "25 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 2
+        }
+       ],
+       "title": "Quantity",
+       "total": 2
+      }
+     ],
+     "slot": "s1",
+     "units": 2
+    },
+    {
+     "mg": 0.0,
+     "name": "Avery",
+     "size_pies": [
+      {
+       "slices": [
+        {
+         "name": "5 mg",
+         "pct": 100,
+         "slot": "c",
+         "value": 1
+        }
+       ],
+       "title": "Quantity",
+       "total": 1
+      }
+     ],
+     "slot": "s2",
+     "units": 1
+    }
+   ],
+   "units": {
+    "slices": [
+     {
+      "name": "Bluey",
+      "pct": 67,
+      "slot": "s1",
+      "value": 2
+     },
+     {
+      "name": "Avery",
+      "pct": 33,
+      "slot": "s2",
+      "value": 1
+     }
+    ],
+    "total": 3
+   }
+  },
+  "summary": {
+   "mg_mode": "tpe",
+   "mg_total": 0.0,
+   "strains": [
+    {
+     "mg": 0.0,
+     "mg_sizes": {
+      "25": 0.0
+     },
+     "name": "Bluey",
+     "sizes": {
+      "25": 2
+     },
+     "units": 2
+    },
+    {
+     "mg": 0.0,
+     "mg_sizes": {
+      "5": 0.0
+     },
+     "name": "Avery",
+     "sizes": {
+      "5": 1
+     },
+     "units": 1
+    }
+   ],
+   "total": 3
+  }
+ },
+ {
+  "name": "nothing counted",
+  "pies": {
+   "mg": null,
+   "more": 0,
+   "rows": [],
+   "units": null
+  },
+  "summary": {
+   "mg_mode": "tpe",
+   "mg_total": 0,
+   "strains": [],
+   "total": 0
+  }
+ }
+]

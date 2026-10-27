@@ -1,0 +1,493 @@
+{
+ "canonical_dated": {
+  "spec": {
+   "best_by": "2027-08-31",
+   "best_by_from": "name",
+   "description": "Huautla 25 mg TPE DH (2027-08-31)",
+   "dose_mg_tpe": 25,
+   "net_wt_g": 2.62,
+   "per_unit_mg": {
+    "aeruginascin": 0.0,
+    "baeocystin": 2.8034,
+    "norbaeocystin": 0.0,
+    "norpsilocin": 0.0,
+    "psilocin": 0.0,
+    "psilocybin": 24.9948
+   },
+   "pkpr": "PKPR-71c5e6ad",
+   "psilocybin_from": "coa",
+   "source": "PL-de20657a",
+   "spec_version": 2,
+   "strain": "Huautla",
+   "tpe_mg_per_g": 9.54,
+   "type_code": "DH"
+  },
+  "warnings": []
+ },
+ "canonical_undated_coa_date": {
+  "spec": {
+   "best_by": "2027-08-31",
+   "best_by_from": "test_date",
+   "description": "Maztapec 10 mg TPE DH",
+   "dose_mg_tpe": 10,
+   "net_wt_g": 1.37,
+   "per_unit_mg": {
+    "aeruginascin": 0.0,
+    "baeocystin": 0.0,
+    "norbaeocystin": 0.0,
+    "norpsilocin": 0.0,
+    "psilocin": 0.0,
+    "psilocybin": 10.0421
+   },
+   "pkpr": "PKPR-8a05632f",
+   "psilocybin_from": "coa",
+   "source": "HB-3449c265",
+   "spec_version": 2,
+   "strain": "Maztapec",
+   "tpe_mg_per_g": 7.33,
+   "type_code": "DH"
+  },
+  "warnings": []
+ },
+ "coa_psilocybin": {
+  "spec": {
+   "best_by": "2027-06-30",
+   "best_by_from": "test_date",
+   "description": "Starry Night 25 mg TPE DH",
+   "dose_mg_tpe": 25,
+   "net_wt_g": 1.78,
+   "per_unit_mg": {
+    "aeruginascin": 0.0,
+    "baeocystin": 1.0805,
+    "norbaeocystin": 0.0,
+    "norpsilocin": 0.0,
+    "psilocin": 0.0,
+    "psilocybin": 24.92
+   },
+   "pkpr": "PKPR-00000006",
+   "psilocybin_from": "coa",
+   "source": "HB-6ebc09dc",
+   "spec_version": 2,
+   "strain": "Starry Night",
+   "tpe_mg_per_g": 14.0,
+   "type_code": "DH"
+  },
+  "warnings": []
+ },
+ "dose_rounds_up_without_float_noise": {
+  "spec": {
+   "best_by": "2027-08-31",
+   "best_by_from": "test_date",
+   "description": "GT DH",
+   "dose_mg_tpe": 12,
+   "net_wt_g": 2.0,
+   "per_unit_mg": {
+    "aeruginascin": 0.0,
+    "baeocystin": 0.0,
+    "norbaeocystin": 0.0,
+    "norpsilocin": 0.0,
+    "psilocin": 0.0,
+    "psilocybin": 12.0
+   },
+   "pkpr": "PKPR-0000000f",
+   "psilocybin_from": "coa",
+   "source": "HB-aaaa0001",
+   "spec_version": 2,
+   "strain": "GT",
+   "tpe_mg_per_g": 6.0,
+   "type_code": ""
+  },
+  "warnings": []
+ },
+ "every_reason": {
+  "blocked": [
+   "the package has no unit weight",
+   "lot HB-11112222 has no lab certificate yet, so there are no lab values or best-by date to print",
+   "the package's name has no dose in mg, and the lab values give no TPE to work one out from",
+   "there is no strain name"
+  ],
+  "warnings": []
+ },
+ "fd_24_months": {
+  "spec": {
+   "best_by": "2027-05-31",
+   "best_by_from": "test_date",
+   "description": "Shakti 25 mg TPE FD",
+   "dose_mg_tpe": 25,
+   "net_wt_g": 1.9,
+   "per_unit_mg": {
+    "aeruginascin": 0.0,
+    "baeocystin": 0.0,
+    "norbaeocystin": 0.0,
+    "norpsilocin": 0.0,
+    "psilocin": 0.9443,
+    "psilocybin": 24.89
+   },
+   "pkpr": "PKPR-00000002",
+   "psilocybin_from": "coa",
+   "source": "PL-7c737a92",
+   "spec_version": 2,
+   "strain": "Shakti",
+   "tpe_mg_per_g": 13.79,
+   "type_code": "FD"
+  },
+  "warnings": []
+ },
+ "fd_days": {
+  "spec": {
+   "best_by": "2026-05-23",
+   "best_by_from": "test_date",
+   "description": "Shakti 50 mg TPE FD",
+   "dose_mg_tpe": 50,
+   "net_wt_g": 3.8,
+   "per_unit_mg": {
+    "aeruginascin": 0.0,
+    "baeocystin": 0.0,
+    "norbaeocystin": 0.0,
+    "norpsilocin": 0.0,
+    "psilocin": 1.8886,
+    "psilocybin": 49.78
+   },
+   "pkpr": "PKPR-00000004",
+   "psilocybin_from": "coa",
+   "source": "PL-7c737a92",
+   "spec_version": 2,
+   "strain": "Shakti",
+   "tpe_mg_per_g": 13.79,
+   "type_code": "FD"
+  },
+  "warnings": []
+ },
+ "fractional_dose": {
+  "spec": {
+   "best_by": "2026-05-31",
+   "best_by_from": "test_date",
+   "description": "Shakti 2.5 mg TPE DH",
+   "dose_mg_tpe": 3,
+   "net_wt_g": 0.2,
+   "per_unit_mg": {
+    "aeruginascin": 0.0,
+    "baeocystin": 0.0,
+    "norbaeocystin": 0.0,
+    "norpsilocin": 0.0,
+    "psilocin": 0.0994,
+    "psilocybin": 2.62
+   },
+   "pkpr": "PKPR-00000009",
+   "psilocybin_from": "coa",
+   "source": "PL-7c737a92",
+   "spec_version": 2,
+   "strain": "Shakti",
+   "tpe_mg_per_g": 13.79,
+   "type_code": "DH"
+  },
+  "warnings": []
+ },
+ "lab_printed_total_wins": {
+  "spec": {
+   "best_by": "2027-07-31",
+   "best_by_from": "test_date",
+   "description": "Tat TPE HG",
+   "dose_mg_tpe": 9,
+   "net_wt_g": 1.3,
+   "per_unit_mg": {
+    "aeruginascin": 0.0,
+    "baeocystin": 0.0,
+    "norbaeocystin": 0.0,
+    "norpsilocin": 0.0,
+    "psilocin": 0.8554,
+    "psilocybin": 6.825
+   },
+   "pkpr": "PKPR-71c5e6ae",
+   "psilocybin_from": "coa",
+   "source": "PL-de20657a",
+   "spec_version": 2,
+   "strain": "Tat 3",
+   "tpe_mg_per_g": 6.16,
+   "type_code": ""
+  },
+  "warnings": []
+ },
+ "mazatapec_spelling_and_symbols": {
+  "spec": {
+   "best_by": "2027-01-31",
+   "best_by_from": "test_date",
+   "description": "Mazatapec #2 25 mg TPE DH (2027-01-31)",
+   "dose_mg_tpe": 25,
+   "net_wt_g": 2.2,
+   "per_unit_mg": {
+    "aeruginascin": 0.044,
+    "baeocystin": 0.0,
+    "norbaeocystin": 0.0,
+    "norpsilocin": 0.0,
+    "psilocin": 0.55,
+    "psilocybin": 20.988
+   },
+   "pkpr": "PKPR-0000000e",
+   "psilocybin_from": "coa",
+   "source": "HB-9c564cf",
+   "spec_version": 2,
+   "strain": "Maztapec 2",
+   "tpe_mg_per_g": 9.89,
+   "type_code": ""
+  },
+  "warnings": []
+ },
+ "no_dose_in_name": {
+  "spec": {
+   "best_by": "2027-07-31",
+   "best_by_from": "test_date",
+   "description": "Tat TPE HG",
+   "dose_mg_tpe": 9,
+   "net_wt_g": 1.3,
+   "per_unit_mg": {
+    "aeruginascin": 0.0,
+    "baeocystin": 0.0,
+    "norbaeocystin": 0.0,
+    "norpsilocin": 0.0,
+    "psilocin": 0.8554,
+    "psilocybin": 6.825
+   },
+   "pkpr": "PKPR-6e1f4d1c",
+   "psilocybin_from": "state",
+   "source": "PL-81c53f84",
+   "spec_version": 2,
+   "strain": "Tat 3",
+   "tpe_mg_per_g": 6.17,
+   "type_code": ""
+  },
+  "warnings": []
+ },
+ "no_section": {
+  "blocked": [
+   "lot PL-de20657a has no lab certificate yet, so there are no lab values or best-by date to print"
+  ],
+  "warnings": []
+ },
+ "no_section_dated": {
+  "blocked": [
+   "there is no certificate with lab data linked to this batch/lot"
+  ],
+  "warnings": []
+ },
+ "no_strain": {
+  "blocked": [
+   "there is no strain name"
+  ],
+  "warnings": []
+ },
+ "no_unit_weight": {
+  "blocked": [
+   "the package has no unit weight"
+  ],
+  "warnings": []
+ },
+ "planned_package": {
+  "spec": {
+   "best_by": "2027-06-30",
+   "best_by_from": "given",
+   "description": "Tat 5 mg TPE HG (2027-06-30)",
+   "dose_mg_tpe": 5,
+   "net_wt_g": 0.5,
+   "per_unit_mg": {
+    "aeruginascin": 0.0,
+    "baeocystin": 0.0,
+    "norbaeocystin": 0.0,
+    "norpsilocin": 0.0,
+    "psilocin": 0.329,
+    "psilocybin": 2.625
+   },
+   "pkpr": "",
+   "psilocybin_from": "coa",
+   "source": "PL-de20657a",
+   "spec_version": 2,
+   "strain": "Tat",
+   "tpe_mg_per_g": 6.17,
+   "type_code": "HG"
+  },
+  "warnings": []
+ },
+ "psilocin_missing": {
+  "blocked": [
+   "the linked certificate has no psilocybin/psilocin values"
+  ],
+  "warnings": []
+ },
+ "psilocin_nd": {
+  "spec": {
+   "best_by": "2027-06-30",
+   "best_by_from": "test_date",
+   "description": "GT 25 mg TPE DH",
+   "dose_mg_tpe": 25,
+   "net_wt_g": 2.4,
+   "per_unit_mg": {
+    "aeruginascin": 0.0,
+    "baeocystin": 0.0,
+    "norbaeocystin": 0.0,
+    "norpsilocin": 0.0,
+    "psilocin": 0.0,
+    "psilocybin": 24.96
+   },
+   "pkpr": "PKPR-00000007",
+   "psilocybin_from": "coa",
+   "source": "HB-f2fb0898",
+   "spec_version": 2,
+   "strain": "GT",
+   "tpe_mg_per_g": 10.4,
+   "type_code": "DH"
+  },
+  "warnings": []
+ },
+ "server_strain_and_subtype": {
+  "spec": {
+   "best_by": "2028-07-31",
+   "best_by_from": "test_date",
+   "description": "Tat 10 mg TPE",
+   "dose_mg_tpe": 10,
+   "net_wt_g": 1.3,
+   "per_unit_mg": {
+    "aeruginascin": 0.0,
+    "baeocystin": 0.0,
+    "norbaeocystin": 0.0,
+    "norpsilocin": 0.0,
+    "psilocin": 0.8554,
+    "psilocybin": 6.825
+   },
+   "pkpr": "PKPR-00000021",
+   "psilocybin_from": "coa",
+   "source": "PL-de20657a",
+   "spec_version": 2,
+   "strain": "Penis Envy",
+   "tpe_mg_per_g": 6.17,
+   "type_code": "FD"
+  },
+  "warnings": []
+ },
+ "shelf_days_183": {
+  "spec": {
+   "best_by": "2026-12-01",
+   "best_by_from": "test_date",
+   "description": "BV 25 mg TPE DH",
+   "dose_mg_tpe": 25,
+   "net_wt_g": 2.31,
+   "per_unit_mg": {
+    "aeruginascin": 0.0,
+    "baeocystin": 0.3373,
+    "norbaeocystin": 0.0,
+    "norpsilocin": 0.0,
+    "psilocin": 0.0,
+    "psilocybin": 24.948
+   },
+   "pkpr": "PKPR-00000003",
+   "psilocybin_from": "coa",
+   "source": "HB-668a899e",
+   "spec_version": 2,
+   "strain": "BV",
+   "tpe_mg_per_g": 10.8,
+   "type_code": "DH"
+  },
+  "warnings": []
+ },
+ "state_beats_printed_total": {
+  "spec": {
+   "best_by": "2027-07-31",
+   "best_by_from": "test_date",
+   "description": "Tat TPE HG",
+   "dose_mg_tpe": 9,
+   "net_wt_g": 1.3,
+   "per_unit_mg": {
+    "aeruginascin": 0.0,
+    "baeocystin": 0.0,
+    "norbaeocystin": 0.0,
+    "norpsilocin": 0.0,
+    "psilocin": 0.8554,
+    "psilocybin": 6.825
+   },
+   "pkpr": "PKPR-71c5e6ad",
+   "psilocybin_from": "state",
+   "source": "PL-de20657a",
+   "spec_version": 2,
+   "strain": "Tat 3",
+   "tpe_mg_per_g": 6.17,
+   "type_code": ""
+  },
+  "warnings": []
+ },
+ "state_psilocybin": {
+  "spec": {
+   "best_by": "2027-06-30",
+   "best_by_from": "test_date",
+   "description": "Starry Night 25 mg TPE DH",
+   "dose_mg_tpe": 25,
+   "net_wt_g": 1.78,
+   "per_unit_mg": {
+    "aeruginascin": 0.0,
+    "baeocystin": 1.0805,
+    "norbaeocystin": 0.0,
+    "norpsilocin": 0.0,
+    "psilocin": 0.0,
+    "psilocybin": 25.276
+   },
+   "pkpr": "PKPR-00000005",
+   "psilocybin_from": "state",
+   "source": "HB-6ebc09dc",
+   "spec_version": 2,
+   "strain": "Starry Night",
+   "tpe_mg_per_g": 14.2,
+   "type_code": "DH"
+  },
+  "warnings": []
+ },
+ "strain_from_sample": {
+  "spec": {
+   "best_by": "2027-01-31",
+   "best_by_from": "test_date",
+   "description": "25mg",
+   "dose_mg_tpe": 25,
+   "net_wt_g": 1.5,
+   "per_unit_mg": {
+    "aeruginascin": 0.0,
+    "baeocystin": 0.0,
+    "norbaeocystin": 0.0,
+    "norpsilocin": 0.0,
+    "psilocin": 0.0,
+    "psilocybin": 14.31
+   },
+   "pkpr": "PKPR-0000000c",
+   "psilocybin_from": "coa",
+   "source": "HB-9c564cf",
+   "spec_version": 2,
+   "strain": "Huaulta",
+   "tpe_mg_per_g": 9.54,
+   "type_code": ""
+  },
+  "warnings": []
+ },
+ "undated_no_coa_date": {
+  "spec": {
+   "best_by": "2027-10-31",
+   "best_by_from": "today",
+   "description": "Golden Teacher 5 mg TPE DH",
+   "dose_mg_tpe": 5,
+   "net_wt_g": 0.5,
+   "per_unit_mg": {
+    "aeruginascin": 0.0,
+    "baeocystin": 0.0,
+    "norbaeocystin": 0.0,
+    "norpsilocin": 0.0,
+    "psilocin": 0.0,
+    "psilocybin": 5.2
+   },
+   "pkpr": "PKPR-00000001",
+   "psilocybin_from": "coa",
+   "source": "HB-11112222",
+   "spec_version": 2,
+   "strain": "Golden Teacher",
+   "tpe_mg_per_g": 10.4,
+   "type_code": "DH"
+  },
+  "warnings": [
+   "no certificate date: best-by counted from today"
+  ]
+ }
+}

@@ -1,0 +1,33 @@
+{
+ "workerEmail": "worker@example.com",
+ "deviceId": "7f3c2a9e-4b1d-4e8a-9c55-0d2f6b8e1a34",
+ "reason": "the session could not be renewed (refresh_token rejected: HTTP 400) - please sign in again.",
+ "request": [
+  {
+   "analyteWeight": 7.25,
+   "changes": null,
+   "costEach": 20.5,
+   "dateCreated": "",
+   "dateDeleted": null,
+   "dateOfSale": "2026-09-28T07:00:00.000Z",
+   "deleted": false,
+   "deletedBy": null,
+   "id": 0,
+   "initialDose": 1,
+   "isRefund": "",
+   "notes": "",
+   "numberSold": 1,
+   "productCost": 20.5,
+   "productGroup": "Edible Psilocybin Product",
+   "productGuid": "PKPR-aaaa0001",
+   "productId": 5,
+   "reasonDeleted": null,
+   "saleNumber": "",
+   "secondaryDose": 0,
+   "serviceCenterId": 225,
+   "wasteOuts": [],
+   "weightPerUnit": 0.5
+  }
+ ],
+ "clientId": "d2c4e6f8-1a3b-4c5d-9e7f-0a1b2c3d4e5f"
+}

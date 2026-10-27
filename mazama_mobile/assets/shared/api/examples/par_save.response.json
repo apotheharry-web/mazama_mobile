@@ -1,0 +1,24 @@
+{
+ "levels": [
+  {
+   "strain": "Bluey",
+   "size": 0,
+   "par": 3
+  },
+  {
+   "strain": "Chocolate",
+   "size": -1,
+   "par": 20
+  },
+  {
+   "strain": "Golden Teacher",
+   "size": 25,
+   "par": 4
+  },
+  {
+   "strain": "Golden Teacher",
+   "size": 5,
+   "par": 12
+  }
+ ]
+}

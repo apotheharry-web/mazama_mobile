@@ -1,0 +1,4027 @@
+{
+ "about": "Scan matching, case by case (coa_core::scan; first computed by the server's ocr.find_ids / ocr.closest, which it replaces). find_ids: an id in `guids` that looks like PKPR-<5 to 8 lower-case hex digits> (any case of PKPR-) is found in a line of `texts` (each line on its own, look-alike letters o q i l s z g t read as 0 0 1 1 5 2 9 7, then everything but 0-9 a-z dropped, the first 80 characters kept, lines under 5 skipped) exactly (dist 0), or, for an 8-digit id, with 1 character wrong, missing or extra anywhere, or 2 on a line starting like 'Lot' or in typed text. Best first, then by id. closest: when no id was found, the packages the rest of the label fits: a weight or psilocybin figure read from its own line must match within 0.011 (3 points each), else 1 point each when the figure appears anywhere; 2 for the best-by date, 1 per strain word (at most 3), 2 for a lot number at most 4 characters off; the weight or psilocybin must be on the label; at least 3 points; 6 at most, best first then by id. Run by coa_core/tests/scan_cases.rs, coa/tests/test_scan_cases.py, mazama_sales/tests/unit/test_ocr.py and mazama_mobile/test/coa_core_ffi_test.dart.",
+ "closest": [
+  {
+   "expect": [
+    {
+     "guid": "PKPR-aaaa0001",
+     "mg": 3.625,
+     "record": 0,
+     "score": 10,
+     "stock": 10.0,
+     "weight": 0.5,
+     "why": [
+      "net weight 0.50 g",
+      "psilocybin 3.62 mg",
+      "best by 2027-06-01",
+      "name has golden, teacher"
+     ]
+    },
+    {
+     "guid": "PKPR-0005",
+     "mg": 3.625,
+     "record": 0,
+     "score": 6,
+     "stock": 2.0,
+     "weight": 0.5,
+     "why": [
+      "net weight 0.50 g",
+      "psilocybin 3.62 mg"
+     ]
+    }
+   ],
+   "name": "the whole label but the lot",
+   "packages": [
+    {
+     "guid": "PKPR-aaaa0001",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Golden Teacher 5 mg TPE DH",
+       "expires": "2027-06-01",
+       "quantity": 10,
+       "weightPerUnit": 0.5
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-bbbb0002",
+     "records": [
+      {
+       "analyteWeight": 5.0,
+       "description": "Bluey 5 mg TPE",
+       "expires": null,
+       "quantity": 3,
+       "weightPerUnit": 1.0
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-cccc0003",
+     "records": [
+      {
+       "analyteWeight": 12.5,
+       "description": "Mazatapec 10 mg TPE FD (2027-09-01)",
+       "expires": "2027-09-01",
+       "quantity": 4.0,
+       "weightPerUnit": 0.8
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-0005",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Penis Envy 5 mg TPE DH",
+       "expires": "2027-07-01",
+       "quantity": 2,
+       "weightPerUnit": 0.5
+      }
+     ]
+    }
+   ],
+   "texts": [
+    "Golden Teacher\nNet wt: 0.50 g\nPsilocybin: 3.63 mg\nBest by: 2027-06-01\nLot: ????????"
+   ]
+  },
+  {
+   "expect": [],
+   "name": "a weight that is read and differs rules the package out",
+   "packages": [
+    {
+     "guid": "PKPR-aaaa0001",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Golden Teacher 5 mg TPE DH",
+       "expires": "2027-06-01",
+       "quantity": 10,
+       "weightPerUnit": 0.5
+      }
+     ]
+    }
+   ],
+   "texts": [
+    "Golden Teacher\nNet wt: 0.80 g\nPsilocybin: 3.63 mg"
+   ]
+  },
+  {
+   "expect": [],
+   "name": "a psilocybin amount that is read and differs rules it out",
+   "packages": [
+    {
+     "guid": "PKPR-aaaa0001",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Golden Teacher 5 mg TPE DH",
+       "expires": "2027-06-01",
+       "quantity": 10,
+       "weightPerUnit": 0.5
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-bbbb0002",
+     "records": [
+      {
+       "analyteWeight": 5.0,
+       "description": "Bluey 5 mg TPE",
+       "expires": null,
+       "quantity": 3,
+       "weightPerUnit": 1.0
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-cccc0003",
+     "records": [
+      {
+       "analyteWeight": 12.5,
+       "description": "Mazatapec 10 mg TPE FD (2027-09-01)",
+       "expires": "2027-09-01",
+       "quantity": 4.0,
+       "weightPerUnit": 0.8
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-0005",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Penis Envy 5 mg TPE DH",
+       "expires": "2027-07-01",
+       "quantity": 2,
+       "weightPerUnit": 0.5
+      }
+     ]
+    }
+   ],
+   "texts": [
+    "Net wt: 0.50 g\nPsilocybin: 4.00 mg"
+   ]
+  },
+  {
+   "expect": [],
+   "name": "a name alone is too weak",
+   "packages": [
+    {
+     "guid": "PKPR-aaaa0001",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Golden Teacher 5 mg TPE DH",
+       "expires": "2027-06-01",
+       "quantity": 10,
+       "weightPerUnit": 0.5
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-bbbb0002",
+     "records": [
+      {
+       "analyteWeight": 5.0,
+       "description": "Bluey 5 mg TPE",
+       "expires": null,
+       "quantity": 3,
+       "weightPerUnit": 1.0
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-cccc0003",
+     "records": [
+      {
+       "analyteWeight": 12.5,
+       "description": "Mazatapec 10 mg TPE FD (2027-09-01)",
+       "expires": "2027-09-01",
+       "quantity": 4.0,
+       "weightPerUnit": 0.8
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-0005",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Penis Envy 5 mg TPE DH",
+       "expires": "2027-07-01",
+       "quantity": 2,
+       "weightPerUnit": 0.5
+      }
+     ]
+    }
+   ],
+   "texts": [
+    "Golden Teacher\nWhole Fungi"
+   ]
+  },
+  {
+   "expect": [],
+   "name": "a name and a best-by date alone are too weak",
+   "packages": [
+    {
+     "guid": "PKPR-aaaa0001",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Golden Teacher 5 mg TPE DH",
+       "expires": "2027-06-01",
+       "quantity": 10,
+       "weightPerUnit": 0.5
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-bbbb0002",
+     "records": [
+      {
+       "analyteWeight": 5.0,
+       "description": "Bluey 5 mg TPE",
+       "expires": null,
+       "quantity": 3,
+       "weightPerUnit": 1.0
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-cccc0003",
+     "records": [
+      {
+       "analyteWeight": 12.5,
+       "description": "Mazatapec 10 mg TPE FD (2027-09-01)",
+       "expires": "2027-09-01",
+       "quantity": 4.0,
+       "weightPerUnit": 0.8
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-0005",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Penis Envy 5 mg TPE DH",
+       "expires": "2027-07-01",
+       "quantity": 2,
+       "weightPerUnit": 0.5
+      }
+     ]
+    }
+   ],
+   "texts": [
+    "Golden Teacher\nBest by 2027-06-01"
+   ]
+  },
+  {
+   "expect": [
+    {
+     "guid": "PKPR-cccc0003",
+     "mg": 10.0,
+     "record": 0,
+     "score": 3,
+     "stock": 4.0,
+     "weight": 0.8,
+     "why": [
+      "net weight 0.80 g"
+     ]
+    }
+   ],
+   "name": "the weight line alone is exactly enough",
+   "packages": [
+    {
+     "guid": "PKPR-aaaa0001",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Golden Teacher 5 mg TPE DH",
+       "expires": "2027-06-01",
+       "quantity": 10,
+       "weightPerUnit": 0.5
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-bbbb0002",
+     "records": [
+      {
+       "analyteWeight": 5.0,
+       "description": "Bluey 5 mg TPE",
+       "expires": null,
+       "quantity": 3,
+       "weightPerUnit": 1.0
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-cccc0003",
+     "records": [
+      {
+       "analyteWeight": 12.5,
+       "description": "Mazatapec 10 mg TPE FD (2027-09-01)",
+       "expires": "2027-09-01",
+       "quantity": 4.0,
+       "weightPerUnit": 0.8
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-0005",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Penis Envy 5 mg TPE DH",
+       "expires": "2027-07-01",
+       "quantity": 2,
+       "weightPerUnit": 0.5
+      }
+     ]
+    }
+   ],
+   "texts": [
+    "Net wt: 0.80 g"
+   ]
+  },
+  {
+   "expect": [],
+   "name": "numbers anywhere count one each",
+   "packages": [
+    {
+     "guid": "PKPR-aaaa0001",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Golden Teacher 5 mg TPE DH",
+       "expires": "2027-06-01",
+       "quantity": 10,
+       "weightPerUnit": 0.5
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-bbbb0002",
+     "records": [
+      {
+       "analyteWeight": 5.0,
+       "description": "Bluey 5 mg TPE",
+       "expires": null,
+       "quantity": 3,
+       "weightPerUnit": 1.0
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-cccc0003",
+     "records": [
+      {
+       "analyteWeight": 12.5,
+       "description": "Mazatapec 10 mg TPE FD (2027-09-01)",
+       "expires": "2027-09-01",
+       "quantity": 4.0,
+       "weightPerUnit": 0.8
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-0005",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Penis Envy 5 mg TPE DH",
+       "expires": "2027-07-01",
+       "quantity": 2,
+       "weightPerUnit": 0.5
+      }
+     ]
+    }
+   ],
+   "texts": [
+    "0.50 3.63"
+   ]
+  },
+  {
+   "expect": [
+    {
+     "guid": "PKPR-aaaa0001",
+     "mg": 3.625,
+     "record": 0,
+     "score": 3,
+     "stock": 10.0,
+     "weight": 0.5,
+     "why": [
+      "0.50 g appears on the label",
+      "3.62 mg appears on the label",
+      "name has golden"
+     ]
+    }
+   ],
+   "name": "numbers anywhere and a strain word",
+   "packages": [
+    {
+     "guid": "PKPR-aaaa0001",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Golden Teacher 5 mg TPE DH",
+       "expires": "2027-06-01",
+       "quantity": 10,
+       "weightPerUnit": 0.5
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-bbbb0002",
+     "records": [
+      {
+       "analyteWeight": 5.0,
+       "description": "Bluey 5 mg TPE",
+       "expires": null,
+       "quantity": 3,
+       "weightPerUnit": 1.0
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-cccc0003",
+     "records": [
+      {
+       "analyteWeight": 12.5,
+       "description": "Mazatapec 10 mg TPE FD (2027-09-01)",
+       "expires": "2027-09-01",
+       "quantity": 4.0,
+       "weightPerUnit": 0.8
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-0005",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Penis Envy 5 mg TPE DH",
+       "expires": "2027-07-01",
+       "quantity": 2,
+       "weightPerUnit": 0.5
+      }
+     ]
+    }
+   ],
+   "texts": [
+    "Golden 0.50 3.63"
+   ]
+  },
+  {
+   "expect": [
+    {
+     "guid": "PKPR-cccc0003",
+     "mg": 10.0,
+     "record": 0,
+     "score": 3,
+     "stock": 4.0,
+     "weight": 0.8,
+     "why": [
+      "0.80 g appears on the label",
+      "best by 2027-09-01"
+     ]
+    }
+   ],
+   "name": "a number anywhere and the date",
+   "packages": [
+    {
+     "guid": "PKPR-aaaa0001",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Golden Teacher 5 mg TPE DH",
+       "expires": "2027-06-01",
+       "quantity": 10,
+       "weightPerUnit": 0.5
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-bbbb0002",
+     "records": [
+      {
+       "analyteWeight": 5.0,
+       "description": "Bluey 5 mg TPE",
+       "expires": null,
+       "quantity": 3,
+       "weightPerUnit": 1.0
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-cccc0003",
+     "records": [
+      {
+       "analyteWeight": 12.5,
+       "description": "Mazatapec 10 mg TPE FD (2027-09-01)",
+       "expires": "2027-09-01",
+       "quantity": 4.0,
+       "weightPerUnit": 0.8
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-0005",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Penis Envy 5 mg TPE DH",
+       "expires": "2027-07-01",
+       "quantity": 2,
+       "weightPerUnit": 0.5
+      }
+     ]
+    }
+   ],
+   "texts": [
+    "0.80 on 2027-09-01"
+   ]
+  },
+  {
+   "expect": [],
+   "name": "a number anywhere and one strain word is too weak",
+   "packages": [
+    {
+     "guid": "PKPR-aaaa0001",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Golden Teacher 5 mg TPE DH",
+       "expires": "2027-06-01",
+       "quantity": 10,
+       "weightPerUnit": 0.5
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-bbbb0002",
+     "records": [
+      {
+       "analyteWeight": 5.0,
+       "description": "Bluey 5 mg TPE",
+       "expires": null,
+       "quantity": 3,
+       "weightPerUnit": 1.0
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-cccc0003",
+     "records": [
+      {
+       "analyteWeight": 12.5,
+       "description": "Mazatapec 10 mg TPE FD (2027-09-01)",
+       "expires": "2027-09-01",
+       "quantity": 4.0,
+       "weightPerUnit": 0.8
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-0005",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Penis Envy 5 mg TPE DH",
+       "expires": "2027-07-01",
+       "quantity": 2,
+       "weightPerUnit": 0.5
+      }
+     ]
+    }
+   ],
+   "texts": [
+    "Bluey 1.00"
+   ]
+  },
+  {
+   "expect": [
+    {
+     "guid": "PKPR-0005",
+     "mg": 3.625,
+     "record": 0,
+     "score": 4,
+     "stock": 2.0,
+     "weight": 0.5,
+     "why": [
+      "net weight 0.50 g",
+      "3.62 mg appears on the label"
+     ]
+    },
+    {
+     "guid": "PKPR-aaaa0001",
+     "mg": 3.625,
+     "record": 0,
+     "score": 4,
+     "stock": 10.0,
+     "weight": 0.5,
+     "why": [
+      "net weight 0.50 g",
+      "3.62 mg appears on the label"
+     ]
+    }
+   ],
+   "name": "psilocin is not psilocybin",
+   "packages": [
+    {
+     "guid": "PKPR-aaaa0001",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Golden Teacher 5 mg TPE DH",
+       "expires": "2027-06-01",
+       "quantity": 10,
+       "weightPerUnit": 0.5
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-bbbb0002",
+     "records": [
+      {
+       "analyteWeight": 5.0,
+       "description": "Bluey 5 mg TPE",
+       "expires": null,
+       "quantity": 3,
+       "weightPerUnit": 1.0
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-cccc0003",
+     "records": [
+      {
+       "analyteWeight": 12.5,
+       "description": "Mazatapec 10 mg TPE FD (2027-09-01)",
+       "expires": "2027-09-01",
+       "quantity": 4.0,
+       "weightPerUnit": 0.8
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-0005",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Penis Envy 5 mg TPE DH",
+       "expires": "2027-07-01",
+       "quantity": 2,
+       "weightPerUnit": 0.5
+      }
+     ]
+    }
+   ],
+   "texts": [
+    "Psilocin: 3.63 mg\nNet wt: 0.50 g"
+   ]
+  },
+  {
+   "expect": [
+    {
+     "guid": "PKPR-0005",
+     "mg": 3.625,
+     "record": 0,
+     "score": 3,
+     "stock": 2.0,
+     "weight": 0.5,
+     "why": [
+      "net weight 0.50 g"
+     ]
+    },
+    {
+     "guid": "PKPR-aaaa0001",
+     "mg": 3.625,
+     "record": 0,
+     "score": 3,
+     "stock": 10.0,
+     "weight": 0.5,
+     "why": [
+      "net weight 0.50 g"
+     ]
+    }
+   ],
+   "name": "a misread Net wt",
+   "packages": [
+    {
+     "guid": "PKPR-aaaa0001",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Golden Teacher 5 mg TPE DH",
+       "expires": "2027-06-01",
+       "quantity": 10,
+       "weightPerUnit": 0.5
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-bbbb0002",
+     "records": [
+      {
+       "analyteWeight": 5.0,
+       "description": "Bluey 5 mg TPE",
+       "expires": null,
+       "quantity": 3,
+       "weightPerUnit": 1.0
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-cccc0003",
+     "records": [
+      {
+       "analyteWeight": 12.5,
+       "description": "Mazatapec 10 mg TPE FD (2027-09-01)",
+       "expires": "2027-09-01",
+       "quantity": 4.0,
+       "weightPerUnit": 0.8
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-0005",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Penis Envy 5 mg TPE DH",
+       "expires": "2027-07-01",
+       "quantity": 2,
+       "weightPerUnit": 0.5
+      }
+     ]
+    }
+   ],
+   "texts": [
+    "Nct wt: 0.50 g"
+   ]
+  },
+  {
+   "expect": [
+    {
+     "guid": "PKPR-0005",
+     "mg": 3.625,
+     "record": 0,
+     "score": 3,
+     "stock": 2.0,
+     "weight": 0.5,
+     "why": [
+      "net weight 0.50 g"
+     ]
+    },
+    {
+     "guid": "PKPR-aaaa0001",
+     "mg": 3.625,
+     "record": 0,
+     "score": 3,
+     "stock": 10.0,
+     "weight": 0.5,
+     "why": [
+      "net weight 0.50 g"
+     ]
+    }
+   ],
+   "name": "Net wt without a colon",
+   "packages": [
+    {
+     "guid": "PKPR-aaaa0001",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Golden Teacher 5 mg TPE DH",
+       "expires": "2027-06-01",
+       "quantity": 10,
+       "weightPerUnit": 0.5
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-bbbb0002",
+     "records": [
+      {
+       "analyteWeight": 5.0,
+       "description": "Bluey 5 mg TPE",
+       "expires": null,
+       "quantity": 3,
+       "weightPerUnit": 1.0
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-cccc0003",
+     "records": [
+      {
+       "analyteWeight": 12.5,
+       "description": "Mazatapec 10 mg TPE FD (2027-09-01)",
+       "expires": "2027-09-01",
+       "quantity": 4.0,
+       "weightPerUnit": 0.8
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-0005",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Penis Envy 5 mg TPE DH",
+       "expires": "2027-07-01",
+       "quantity": 2,
+       "weightPerUnit": 0.5
+      }
+     ]
+    }
+   ],
+   "texts": [
+    "Net wt 0.50 g"
+   ]
+  },
+  {
+   "expect": [
+    {
+     "guid": "PKPR-cccc0003",
+     "mg": 10.0,
+     "record": 0,
+     "score": 3,
+     "stock": 4.0,
+     "weight": 0.8,
+     "why": [
+      "psilocybin 10.00 mg"
+     ]
+    }
+   ],
+   "name": "a misread Psilocybin",
+   "packages": [
+    {
+     "guid": "PKPR-aaaa0001",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Golden Teacher 5 mg TPE DH",
+       "expires": "2027-06-01",
+       "quantity": 10,
+       "weightPerUnit": 0.5
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-bbbb0002",
+     "records": [
+      {
+       "analyteWeight": 5.0,
+       "description": "Bluey 5 mg TPE",
+       "expires": null,
+       "quantity": 3,
+       "weightPerUnit": 1.0
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-cccc0003",
+     "records": [
+      {
+       "analyteWeight": 12.5,
+       "description": "Mazatapec 10 mg TPE FD (2027-09-01)",
+       "expires": "2027-09-01",
+       "quantity": 4.0,
+       "weightPerUnit": 0.8
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-0005",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Penis Envy 5 mg TPE DH",
+       "expires": "2027-07-01",
+       "quantity": 2,
+       "weightPerUnit": 0.5
+      }
+     ]
+    }
+   ],
+   "texts": [
+    "Psil0cybin: 10.00 mg"
+   ]
+  },
+  {
+   "expect": [
+    {
+     "guid": "PKPR-cccc0003",
+     "mg": 10.0,
+     "record": 0,
+     "score": 3,
+     "stock": 4.0,
+     "weight": 0.8,
+     "why": [
+      "net weight 0.80 g"
+     ]
+    }
+   ],
+   "name": "a key as near psilocin as psilocybin is not read",
+   "packages": [
+    {
+     "guid": "PKPR-aaaa0001",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Golden Teacher 5 mg TPE DH",
+       "expires": "2027-06-01",
+       "quantity": 10,
+       "weightPerUnit": 0.5
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-bbbb0002",
+     "records": [
+      {
+       "analyteWeight": 5.0,
+       "description": "Bluey 5 mg TPE",
+       "expires": null,
+       "quantity": 3,
+       "weightPerUnit": 1.0
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-cccc0003",
+     "records": [
+      {
+       "analyteWeight": 12.5,
+       "description": "Mazatapec 10 mg TPE FD (2027-09-01)",
+       "expires": "2027-09-01",
+       "quantity": 4.0,
+       "weightPerUnit": 0.8
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-0005",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Penis Envy 5 mg TPE DH",
+       "expires": "2027-07-01",
+       "quantity": 2,
+       "weightPerUnit": 0.5
+      }
+     ]
+    }
+   ],
+   "texts": [
+    "Psilocbin: 3.63 mg\nNet wt: 0.80 g"
+   ]
+  },
+  {
+   "expect": [],
+   "name": "a key under 4 letters is not read",
+   "packages": [
+    {
+     "guid": "PKPR-aaaa0001",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Golden Teacher 5 mg TPE DH",
+       "expires": "2027-06-01",
+       "quantity": 10,
+       "weightPerUnit": 0.5
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-bbbb0002",
+     "records": [
+      {
+       "analyteWeight": 5.0,
+       "description": "Bluey 5 mg TPE",
+       "expires": null,
+       "quantity": 3,
+       "weightPerUnit": 1.0
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-cccc0003",
+     "records": [
+      {
+       "analyteWeight": 12.5,
+       "description": "Mazatapec 10 mg TPE FD (2027-09-01)",
+       "expires": "2027-09-01",
+       "quantity": 4.0,
+       "weightPerUnit": 0.8
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-0005",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Penis Envy 5 mg TPE DH",
+       "expires": "2027-07-01",
+       "quantity": 2,
+       "weightPerUnit": 0.5
+      }
+     ]
+    }
+   ],
+   "texts": [
+    "Wt: 0.80 g"
+   ]
+  },
+  {
+   "expect": [
+    {
+     "guid": "PKPR-0005",
+     "mg": 3.625,
+     "record": 0,
+     "score": 6,
+     "stock": 2.0,
+     "weight": 0.5,
+     "why": [
+      "net weight 0.50 g",
+      "psilocybin 3.62 mg"
+     ]
+    },
+    {
+     "guid": "PKPR-aaaa0001",
+     "mg": 3.625,
+     "record": 0,
+     "score": 6,
+     "stock": 10.0,
+     "weight": 0.5,
+     "why": [
+      "net weight 0.50 g",
+      "psilocybin 3.62 mg"
+     ]
+    }
+   ],
+   "name": "a decimal comma",
+   "packages": [
+    {
+     "guid": "PKPR-aaaa0001",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Golden Teacher 5 mg TPE DH",
+       "expires": "2027-06-01",
+       "quantity": 10,
+       "weightPerUnit": 0.5
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-bbbb0002",
+     "records": [
+      {
+       "analyteWeight": 5.0,
+       "description": "Bluey 5 mg TPE",
+       "expires": null,
+       "quantity": 3,
+       "weightPerUnit": 1.0
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-cccc0003",
+     "records": [
+      {
+       "analyteWeight": 12.5,
+       "description": "Mazatapec 10 mg TPE FD (2027-09-01)",
+       "expires": "2027-09-01",
+       "quantity": 4.0,
+       "weightPerUnit": 0.8
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-0005",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Penis Envy 5 mg TPE DH",
+       "expires": "2027-07-01",
+       "quantity": 2,
+       "weightPerUnit": 0.5
+      }
+     ]
+    }
+   ],
+   "texts": [
+    "Net wt: 0,50 g\nPsilocybin: 3,63 mg"
+   ]
+  },
+  {
+   "expect": [
+    {
+     "guid": "PKPR-0005",
+     "mg": 3.625,
+     "record": 0,
+     "score": 3,
+     "stock": 2.0,
+     "weight": 0.5,
+     "why": [
+      "net weight 0.50 g"
+     ]
+    },
+    {
+     "guid": "PKPR-aaaa0001",
+     "mg": 3.625,
+     "record": 0,
+     "score": 3,
+     "stock": 10.0,
+     "weight": 0.5,
+     "why": [
+      "net weight 0.50 g"
+     ]
+    }
+   ],
+   "name": "the first number on the line",
+   "packages": [
+    {
+     "guid": "PKPR-aaaa0001",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Golden Teacher 5 mg TPE DH",
+       "expires": "2027-06-01",
+       "quantity": 10,
+       "weightPerUnit": 0.5
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-bbbb0002",
+     "records": [
+      {
+       "analyteWeight": 5.0,
+       "description": "Bluey 5 mg TPE",
+       "expires": null,
+       "quantity": 3,
+       "weightPerUnit": 1.0
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-cccc0003",
+     "records": [
+      {
+       "analyteWeight": 12.5,
+       "description": "Mazatapec 10 mg TPE FD (2027-09-01)",
+       "expires": "2027-09-01",
+       "quantity": 4.0,
+       "weightPerUnit": 0.8
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-0005",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Penis Envy 5 mg TPE DH",
+       "expires": "2027-07-01",
+       "quantity": 2,
+       "weightPerUnit": 0.5
+      }
+     ]
+    }
+   ],
+   "texts": [
+    "Net wt: 0.50 g (1.00 oz)"
+   ]
+  },
+  {
+   "expect": [
+    {
+     "guid": "PKPR-0005",
+     "mg": 3.625,
+     "record": 0,
+     "score": 3,
+     "stock": 2.0,
+     "weight": 0.5,
+     "why": [
+      "net weight 0.50 g"
+     ]
+    },
+    {
+     "guid": "PKPR-aaaa0001",
+     "mg": 3.625,
+     "record": 0,
+     "score": 3,
+     "stock": 10.0,
+     "weight": 0.5,
+     "why": [
+      "net weight 0.50 g"
+     ]
+    }
+   ],
+   "name": "the first weight line counts",
+   "packages": [
+    {
+     "guid": "PKPR-aaaa0001",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Golden Teacher 5 mg TPE DH",
+       "expires": "2027-06-01",
+       "quantity": 10,
+       "weightPerUnit": 0.5
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-bbbb0002",
+     "records": [
+      {
+       "analyteWeight": 5.0,
+       "description": "Bluey 5 mg TPE",
+       "expires": null,
+       "quantity": 3,
+       "weightPerUnit": 1.0
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-cccc0003",
+     "records": [
+      {
+       "analyteWeight": 12.5,
+       "description": "Mazatapec 10 mg TPE FD (2027-09-01)",
+       "expires": "2027-09-01",
+       "quantity": 4.0,
+       "weightPerUnit": 0.8
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-0005",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Penis Envy 5 mg TPE DH",
+       "expires": "2027-07-01",
+       "quantity": 2,
+       "weightPerUnit": 0.5
+      }
+     ]
+    }
+   ],
+   "texts": [
+    "Net wt: 0.50 g",
+    "Net wt: 1.00 g"
+   ]
+  },
+  {
+   "expect": [
+    {
+     "guid": "PKPR-0005",
+     "mg": 3.625,
+     "record": 0,
+     "score": 5,
+     "stock": 2.0,
+     "weight": 0.5,
+     "why": [
+      "net weight 0.50 g",
+      "best by 2027-07-01"
+     ]
+    },
+    {
+     "guid": "PKPR-aaaa0001",
+     "mg": 3.625,
+     "record": 0,
+     "score": 5,
+     "stock": 10.0,
+     "weight": 0.5,
+     "why": [
+      "net weight 0.50 g",
+      "best by 2027-06-01"
+     ]
+    }
+   ],
+   "name": "best-by with slashes and dots",
+   "packages": [
+    {
+     "guid": "PKPR-aaaa0001",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Golden Teacher 5 mg TPE DH",
+       "expires": "2027-06-01",
+       "quantity": 10,
+       "weightPerUnit": 0.5
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-bbbb0002",
+     "records": [
+      {
+       "analyteWeight": 5.0,
+       "description": "Bluey 5 mg TPE",
+       "expires": null,
+       "quantity": 3,
+       "weightPerUnit": 1.0
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-cccc0003",
+     "records": [
+      {
+       "analyteWeight": 12.5,
+       "description": "Mazatapec 10 mg TPE FD (2027-09-01)",
+       "expires": "2027-09-01",
+       "quantity": 4.0,
+       "weightPerUnit": 0.8
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-0005",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Penis Envy 5 mg TPE DH",
+       "expires": "2027-07-01",
+       "quantity": 2,
+       "weightPerUnit": 0.5
+      }
+     ]
+    }
+   ],
+   "texts": [
+    "Net wt: 0.50 g\nBest by 2027/06/01",
+    "2027.07.01"
+   ]
+  },
+  {
+   "expect": [
+    {
+     "guid": "PKPR-bbbb0002",
+     "mg": 5.0,
+     "record": 0,
+     "score": 3,
+     "stock": 3.0,
+     "weight": 1.0,
+     "why": [
+      "net weight 1.00 g"
+     ]
+    }
+   ],
+   "name": "a date with no expiry known",
+   "packages": [
+    {
+     "guid": "PKPR-aaaa0001",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Golden Teacher 5 mg TPE DH",
+       "expires": "2027-06-01",
+       "quantity": 10,
+       "weightPerUnit": 0.5
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-bbbb0002",
+     "records": [
+      {
+       "analyteWeight": 5.0,
+       "description": "Bluey 5 mg TPE",
+       "expires": null,
+       "quantity": 3,
+       "weightPerUnit": 1.0
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-cccc0003",
+     "records": [
+      {
+       "analyteWeight": 12.5,
+       "description": "Mazatapec 10 mg TPE FD (2027-09-01)",
+       "expires": "2027-09-01",
+       "quantity": 4.0,
+       "weightPerUnit": 0.8
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-0005",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Penis Envy 5 mg TPE DH",
+       "expires": "2027-07-01",
+       "quantity": 2,
+       "weightPerUnit": 0.5
+      }
+     ]
+    }
+   ],
+   "texts": [
+    "Net wt: 1.00 g 2027-06-01"
+   ]
+  },
+  {
+   "expect": [
+    {
+     "guid": "PKPR-cccc0003",
+     "mg": 10.0,
+     "record": 0,
+     "score": 5,
+     "stock": 4.0,
+     "weight": 0.8,
+     "why": [
+      "net weight 0.80 g",
+      "lot number 1 characters away"
+     ]
+    }
+   ],
+   "name": "a lot two characters off",
+   "packages": [
+    {
+     "guid": "PKPR-aaaa0001",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Golden Teacher 5 mg TPE DH",
+       "expires": "2027-06-01",
+       "quantity": 10,
+       "weightPerUnit": 0.5
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-bbbb0002",
+     "records": [
+      {
+       "analyteWeight": 5.0,
+       "description": "Bluey 5 mg TPE",
+       "expires": null,
+       "quantity": 3,
+       "weightPerUnit": 1.0
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-cccc0003",
+     "records": [
+      {
+       "analyteWeight": 12.5,
+       "description": "Mazatapec 10 mg TPE FD (2027-09-01)",
+       "expires": "2027-09-01",
+       "quantity": 4.0,
+       "weightPerUnit": 0.8
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-0005",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Penis Envy 5 mg TPE DH",
+       "expires": "2027-07-01",
+       "quantity": 2,
+       "weightPerUnit": 0.5
+      }
+     ]
+    }
+   ],
+   "texts": [
+    "Net wt: 0.80 g\nLot: cccc0O13"
+   ]
+  },
+  {
+   "expect": [
+    {
+     "guid": "PKPR-cccc0003",
+     "mg": 10.0,
+     "record": 0,
+     "score": 5,
+     "stock": 4.0,
+     "weight": 0.8,
+     "why": [
+      "net weight 0.80 g",
+      "lot number 4 characters away"
+     ]
+    }
+   ],
+   "name": "a lot four characters off",
+   "packages": [
+    {
+     "guid": "PKPR-aaaa0001",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Golden Teacher 5 mg TPE DH",
+       "expires": "2027-06-01",
+       "quantity": 10,
+       "weightPerUnit": 0.5
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-bbbb0002",
+     "records": [
+      {
+       "analyteWeight": 5.0,
+       "description": "Bluey 5 mg TPE",
+       "expires": null,
+       "quantity": 3,
+       "weightPerUnit": 1.0
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-cccc0003",
+     "records": [
+      {
+       "analyteWeight": 12.5,
+       "description": "Mazatapec 10 mg TPE FD (2027-09-01)",
+       "expires": "2027-09-01",
+       "quantity": 4.0,
+       "weightPerUnit": 0.8
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-0005",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Penis Envy 5 mg TPE DH",
+       "expires": "2027-07-01",
+       "quantity": 2,
+       "weightPerUnit": 0.5
+      }
+     ]
+    }
+   ],
+   "texts": [
+    "Net wt: 0.80 g\nLot: cxcc1113"
+   ]
+  },
+  {
+   "expect": [
+    {
+     "guid": "PKPR-cccc0003",
+     "mg": 10.0,
+     "record": 0,
+     "score": 3,
+     "stock": 4.0,
+     "weight": 0.8,
+     "why": [
+      "net weight 0.80 g"
+     ]
+    }
+   ],
+   "name": "a lot five characters off is no help",
+   "packages": [
+    {
+     "guid": "PKPR-aaaa0001",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Golden Teacher 5 mg TPE DH",
+       "expires": "2027-06-01",
+       "quantity": 10,
+       "weightPerUnit": 0.5
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-bbbb0002",
+     "records": [
+      {
+       "analyteWeight": 5.0,
+       "description": "Bluey 5 mg TPE",
+       "expires": null,
+       "quantity": 3,
+       "weightPerUnit": 1.0
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-cccc0003",
+     "records": [
+      {
+       "analyteWeight": 12.5,
+       "description": "Mazatapec 10 mg TPE FD (2027-09-01)",
+       "expires": "2027-09-01",
+       "quantity": 4.0,
+       "weightPerUnit": 0.8
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-0005",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Penis Envy 5 mg TPE DH",
+       "expires": "2027-07-01",
+       "quantity": 2,
+       "weightPerUnit": 0.5
+      }
+     ]
+    }
+   ],
+   "texts": [
+    "Net wt: 0.80 g\nLot: 9x9c1113"
+   ]
+  },
+  {
+   "expect": [
+    {
+     "guid": "PKPR-0005",
+     "mg": 3.625,
+     "record": 0,
+     "score": 3,
+     "stock": 2.0,
+     "weight": 0.5,
+     "why": [
+      "net weight 0.50 g"
+     ]
+    },
+    {
+     "guid": "PKPR-aaaa0001",
+     "mg": 3.625,
+     "record": 0,
+     "score": 3,
+     "stock": 10.0,
+     "weight": 0.5,
+     "why": [
+      "net weight 0.50 g"
+     ]
+    }
+   ],
+   "name": "a short id gets no lot points",
+   "packages": [
+    {
+     "guid": "PKPR-aaaa0001",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Golden Teacher 5 mg TPE DH",
+       "expires": "2027-06-01",
+       "quantity": 10,
+       "weightPerUnit": 0.5
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-bbbb0002",
+     "records": [
+      {
+       "analyteWeight": 5.0,
+       "description": "Bluey 5 mg TPE",
+       "expires": null,
+       "quantity": 3,
+       "weightPerUnit": 1.0
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-cccc0003",
+     "records": [
+      {
+       "analyteWeight": 12.5,
+       "description": "Mazatapec 10 mg TPE FD (2027-09-01)",
+       "expires": "2027-09-01",
+       "quantity": 4.0,
+       "weightPerUnit": 0.8
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-0005",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Penis Envy 5 mg TPE DH",
+       "expires": "2027-07-01",
+       "quantity": 2,
+       "weightPerUnit": 0.5
+      }
+     ]
+    }
+   ],
+   "texts": [
+    "Net wt: 0.50 g\nLot: 0005"
+   ]
+  },
+  {
+   "expect": [
+    {
+     "guid": "PKPR-0004",
+     "mg": 3.625,
+     "record": 0,
+     "score": 6,
+     "stock": 1.0,
+     "weight": 0.5,
+     "why": [
+      "net weight 0.50 g",
+      "psilocybin 3.62 mg"
+     ]
+    },
+    {
+     "guid": "PKPR-0005",
+     "mg": 3.625,
+     "record": 0,
+     "score": 6,
+     "stock": 2.0,
+     "weight": 0.5,
+     "why": [
+      "net weight 0.50 g",
+      "psilocybin 3.62 mg"
+     ]
+    },
+    {
+     "guid": "PKPR-aaaa0001",
+     "mg": 3.625,
+     "record": 0,
+     "score": 6,
+     "stock": 10.0,
+     "weight": 0.5,
+     "why": [
+      "net weight 0.50 g",
+      "psilocybin 3.62 mg"
+     ]
+    }
+   ],
+   "name": "ties by id",
+   "packages": [
+    {
+     "guid": "PKPR-aaaa0001",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Golden Teacher 5 mg TPE DH",
+       "expires": "2027-06-01",
+       "quantity": 10,
+       "weightPerUnit": 0.5
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-bbbb0002",
+     "records": [
+      {
+       "analyteWeight": 5.0,
+       "description": "Bluey 5 mg TPE",
+       "expires": null,
+       "quantity": 3,
+       "weightPerUnit": 1.0
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-cccc0003",
+     "records": [
+      {
+       "analyteWeight": 12.5,
+       "description": "Mazatapec 10 mg TPE FD (2027-09-01)",
+       "expires": "2027-09-01",
+       "quantity": 4.0,
+       "weightPerUnit": 0.8
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-0005",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Penis Envy 5 mg TPE DH",
+       "expires": "2027-07-01",
+       "quantity": 2,
+       "weightPerUnit": 0.5
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-0004",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Whole Fungi Golden Psilocybin Product",
+       "expires": null,
+       "quantity": 1,
+       "weightPerUnit": 0.5
+      }
+     ]
+    }
+   ],
+   "texts": [
+    "Net wt: 0.50 g\nPsilocybin: 3.63 mg"
+   ]
+  },
+  {
+   "expect": [
+    {
+     "guid": "PKPR-aaaa0001",
+     "mg": 3.625,
+     "record": 1,
+     "score": 5,
+     "stock": 15.5,
+     "weight": 0.5,
+     "why": [
+      "net weight 0.50 g",
+      "name has golden, teacher"
+     ]
+    }
+   ],
+   "name": "the best record of a package; stock counts them all",
+   "packages": [
+    {
+     "guid": "PKPR-aaaa0001",
+     "records": [
+      {
+       "analyteWeight": 5.0,
+       "description": "Golden Teacher x",
+       "expires": null,
+       "quantity": 3,
+       "weightPerUnit": 1.0
+      },
+      {
+       "analyteWeight": 7.25,
+       "description": "Golden Teacher 5 mg TPE DH",
+       "expires": "2027-06-01",
+       "quantity": 10,
+       "weightPerUnit": 0.5
+      },
+      {
+       "analyteWeight": 7.25,
+       "description": "Golden Teacher 5 mg TPE DH",
+       "expires": "2027-06-01",
+       "quantity": 2.5,
+       "weightPerUnit": 0.5
+      }
+     ]
+    }
+   ],
+   "texts": [
+    "Golden Teacher\nNet wt: 0.50 g"
+   ]
+  },
+  {
+   "expect": [],
+   "name": "every record of a package ruled out",
+   "packages": [
+    {
+     "guid": "PKPR-aaaa0001",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Golden Teacher 5 mg TPE DH",
+       "expires": "2027-06-01",
+       "quantity": 10,
+       "weightPerUnit": 0.5
+      },
+      {
+       "analyteWeight": 7.25,
+       "description": "Penis Envy 5 mg TPE DH",
+       "expires": "2027-07-01",
+       "quantity": 2,
+       "weightPerUnit": 0.5
+      }
+     ]
+    }
+   ],
+   "texts": [
+    "Net wt: 0.50 g\nPsilocybin: 9.99 mg"
+   ]
+  },
+  {
+   "expect": [
+    {
+     "guid": "PKPR-aaaa0001",
+     "mg": 3.625,
+     "record": 0,
+     "score": 4,
+     "stock": 10.0,
+     "weight": 0.5,
+     "why": [
+      "0.50 g appears on the label",
+      "name has golden, teacher"
+     ]
+    }
+   ],
+   "name": "a repeated strain word counts twice, named once",
+   "packages": [
+    {
+     "guid": "PKPR-aaaa0001",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Golden Golden Teacher Extra",
+       "expires": "2027-06-01",
+       "quantity": 10,
+       "weightPerUnit": 0.5
+      }
+     ]
+    }
+   ],
+   "texts": [
+    "Golden Teacher 0.50"
+   ]
+  },
+  {
+   "expect": [],
+   "name": "stop words in the name don't count",
+   "packages": [
+    {
+     "guid": "PKPR-0004",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Whole Fungi Golden Psilocybin Product",
+       "expires": null,
+       "quantity": 1,
+       "weightPerUnit": 0.5
+      }
+     ]
+    }
+   ],
+   "texts": [
+    "Whole Fungi Golden Psilocybin Product 0.50"
+   ]
+  },
+  {
+   "expect": [
+    {
+     "guid": "PKPR-aaaa0001",
+     "mg": 3.625,
+     "record": 0,
+     "score": 4,
+     "stock": 10.0,
+     "weight": 0.5,
+     "why": [
+      "0.50 g appears on the label",
+      "name has golden, teacher, penis, envy"
+     ]
+    }
+   ],
+   "name": "at most 3 strain words",
+   "packages": [
+    {
+     "guid": "PKPR-aaaa0001",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Golden Teacher Penis Envy",
+       "expires": "2027-06-01",
+       "quantity": 10,
+       "weightPerUnit": 0.5
+      }
+     ]
+    }
+   ],
+   "texts": [
+    "golden teacher penis envy 0.50"
+   ]
+  },
+  {
+   "expect": [
+    {
+     "guid": "PKPR-0001",
+     "mg": 3.625,
+     "record": 0,
+     "score": 3,
+     "stock": 1.0,
+     "weight": 0.5,
+     "why": [
+      "net weight 0.50 g"
+     ]
+    },
+    {
+     "guid": "PKPR-0002",
+     "mg": 3.625,
+     "record": 0,
+     "score": 3,
+     "stock": 2.0,
+     "weight": 0.5,
+     "why": [
+      "net weight 0.50 g"
+     ]
+    },
+    {
+     "guid": "PKPR-0003",
+     "mg": 3.625,
+     "record": 0,
+     "score": 3,
+     "stock": 3.0,
+     "weight": 0.5,
+     "why": [
+      "net weight 0.50 g"
+     ]
+    },
+    {
+     "guid": "PKPR-0004",
+     "mg": 3.625,
+     "record": 0,
+     "score": 3,
+     "stock": 4.0,
+     "weight": 0.5,
+     "why": [
+      "net weight 0.50 g"
+     ]
+    },
+    {
+     "guid": "PKPR-0005",
+     "mg": 3.625,
+     "record": 0,
+     "score": 3,
+     "stock": 5.0,
+     "weight": 0.5,
+     "why": [
+      "net weight 0.50 g"
+     ]
+    },
+    {
+     "guid": "PKPR-0006",
+     "mg": 3.625,
+     "record": 0,
+     "score": 3,
+     "stock": 6.0,
+     "weight": 0.5,
+     "why": [
+      "net weight 0.50 g"
+     ]
+    }
+   ],
+   "name": "six guesses at most",
+   "packages": [
+    {
+     "guid": "PKPR-0008",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Golden Teacher 5 mg TPE DH",
+       "expires": "2027-06-01",
+       "quantity": 8,
+       "weightPerUnit": 0.5
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-0007",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Golden Teacher 5 mg TPE DH",
+       "expires": "2027-06-01",
+       "quantity": 7,
+       "weightPerUnit": 0.5
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-0006",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Golden Teacher 5 mg TPE DH",
+       "expires": "2027-06-01",
+       "quantity": 6,
+       "weightPerUnit": 0.5
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-0005",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Golden Teacher 5 mg TPE DH",
+       "expires": "2027-06-01",
+       "quantity": 5,
+       "weightPerUnit": 0.5
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-0004",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Golden Teacher 5 mg TPE DH",
+       "expires": "2027-06-01",
+       "quantity": 4,
+       "weightPerUnit": 0.5
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-0003",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Golden Teacher 5 mg TPE DH",
+       "expires": "2027-06-01",
+       "quantity": 3,
+       "weightPerUnit": 0.5
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-0002",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Golden Teacher 5 mg TPE DH",
+       "expires": "2027-06-01",
+       "quantity": 2,
+       "weightPerUnit": 0.5
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-0001",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Golden Teacher 5 mg TPE DH",
+       "expires": "2027-06-01",
+       "quantity": 1,
+       "weightPerUnit": 0.5
+      }
+     ]
+    }
+   ],
+   "texts": [
+    "Net wt: 0.50 g"
+   ]
+  },
+  {
+   "expect": [],
+   "name": "a weight of 0 is never somewhere on the label",
+   "packages": [
+    {
+     "guid": "PKPR-0006",
+     "records": [
+      {
+       "analyteWeight": 0,
+       "description": "Golden Teacher sample",
+       "expires": null,
+       "quantity": 1,
+       "weightPerUnit": 0
+      }
+     ]
+    }
+   ],
+   "texts": [
+    "Golden Teacher 0.00 0.00"
+   ]
+  },
+  {
+   "expect": [
+    {
+     "guid": "PKPR-0006",
+     "mg": 0.0,
+     "record": 0,
+     "score": 8,
+     "stock": 1.0,
+     "weight": 0.0,
+     "why": [
+      "net weight 0.00 g",
+      "psilocybin 0.00 mg",
+      "name has golden, teacher"
+     ]
+    }
+   ],
+   "name": "a weight of 0 read from its line",
+   "packages": [
+    {
+     "guid": "PKPR-0006",
+     "records": [
+      {
+       "analyteWeight": 0,
+       "description": "Golden Teacher sample",
+       "expires": null,
+       "quantity": 1,
+       "weightPerUnit": 0
+      }
+     ]
+    }
+   ],
+   "texts": [
+    "Golden Teacher\nNet wt: 0.00 g\nPsilocybin: 0.00 mg"
+   ]
+  },
+  {
+   "expect": [
+    {
+     "guid": "PKPR-0007",
+     "mg": 0.0,
+     "record": 0,
+     "score": 5,
+     "stock": 1.0,
+     "weight": 0.0,
+     "why": [
+      "net weight 0.00 g",
+      "name has golden, teacher"
+     ]
+    }
+   ],
+   "name": "no weight given reads as 0",
+   "packages": [
+    {
+     "guid": "PKPR-0007",
+     "records": [
+      {
+       "analyteWeight": null,
+       "description": "Golden Teacher",
+       "expires": null,
+       "quantity": 1,
+       "weightPerUnit": null
+      }
+     ]
+    }
+   ],
+   "texts": [
+    "Golden Teacher\nNet wt: 0.00 g"
+   ]
+  },
+  {
+   "expect": [],
+   "name": "within a hundredth",
+   "packages": [
+    {
+     "guid": "PKPR-aaaa0001",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Golden Teacher 5 mg TPE DH",
+       "expires": "2027-06-01",
+       "quantity": 10,
+       "weightPerUnit": 0.5
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-bbbb0002",
+     "records": [
+      {
+       "analyteWeight": 5.0,
+       "description": "Bluey 5 mg TPE",
+       "expires": null,
+       "quantity": 3,
+       "weightPerUnit": 1.0
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-cccc0003",
+     "records": [
+      {
+       "analyteWeight": 12.5,
+       "description": "Mazatapec 10 mg TPE FD (2027-09-01)",
+       "expires": "2027-09-01",
+       "quantity": 4.0,
+       "weightPerUnit": 0.8
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-0005",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Penis Envy 5 mg TPE DH",
+       "expires": "2027-07-01",
+       "quantity": 2,
+       "weightPerUnit": 0.5
+      }
+     ]
+    }
+   ],
+   "texts": [
+    "Net wt: 0.51 g\nPsilocybin: 3.61 mg"
+   ]
+  },
+  {
+   "expect": [],
+   "name": "just over a hundredth",
+   "packages": [
+    {
+     "guid": "PKPR-aaaa0001",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Golden Teacher 5 mg TPE DH",
+       "expires": "2027-06-01",
+       "quantity": 10,
+       "weightPerUnit": 0.5
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-bbbb0002",
+     "records": [
+      {
+       "analyteWeight": 5.0,
+       "description": "Bluey 5 mg TPE",
+       "expires": null,
+       "quantity": 3,
+       "weightPerUnit": 1.0
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-cccc0003",
+     "records": [
+      {
+       "analyteWeight": 12.5,
+       "description": "Mazatapec 10 mg TPE FD (2027-09-01)",
+       "expires": "2027-09-01",
+       "quantity": 4.0,
+       "weightPerUnit": 0.8
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-0005",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Penis Envy 5 mg TPE DH",
+       "expires": "2027-07-01",
+       "quantity": 2,
+       "weightPerUnit": 0.5
+      }
+     ]
+    }
+   ],
+   "texts": [
+    "Net wt: 0.52 g"
+   ]
+  },
+  {
+   "expect": [
+    {
+     "guid": "PKPR-aaaa0001",
+     "mg": 3.625,
+     "record": 0,
+     "score": 7,
+     "stock": 10.0,
+     "weight": 0.5,
+     "why": [
+      "net weight 0.50 g",
+      "best by 2027-06-01",
+      "name has golden, teacher"
+     ]
+    },
+    {
+     "guid": "PKPR-0005",
+     "mg": 3.625,
+     "record": 0,
+     "score": 3,
+     "stock": 2.0,
+     "weight": 0.5,
+     "why": [
+      "net weight 0.50 g"
+     ]
+    }
+   ],
+   "name": "several texts",
+   "packages": [
+    {
+     "guid": "PKPR-aaaa0001",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Golden Teacher 5 mg TPE DH",
+       "expires": "2027-06-01",
+       "quantity": 10,
+       "weightPerUnit": 0.5
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-bbbb0002",
+     "records": [
+      {
+       "analyteWeight": 5.0,
+       "description": "Bluey 5 mg TPE",
+       "expires": null,
+       "quantity": 3,
+       "weightPerUnit": 1.0
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-cccc0003",
+     "records": [
+      {
+       "analyteWeight": 12.5,
+       "description": "Mazatapec 10 mg TPE FD (2027-09-01)",
+       "expires": "2027-09-01",
+       "quantity": 4.0,
+       "weightPerUnit": 0.8
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-0005",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Penis Envy 5 mg TPE DH",
+       "expires": "2027-07-01",
+       "quantity": 2,
+       "weightPerUnit": 0.5
+      }
+     ]
+    }
+   ],
+   "texts": [
+    "Golden Teacher",
+    "Net wt: 0.50 g",
+    "Best by: 2027-06-01"
+   ]
+  },
+  {
+   "expect": [],
+   "name": "no text",
+   "packages": [
+    {
+     "guid": "PKPR-aaaa0001",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Golden Teacher 5 mg TPE DH",
+       "expires": "2027-06-01",
+       "quantity": 10,
+       "weightPerUnit": 0.5
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-bbbb0002",
+     "records": [
+      {
+       "analyteWeight": 5.0,
+       "description": "Bluey 5 mg TPE",
+       "expires": null,
+       "quantity": 3,
+       "weightPerUnit": 1.0
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-cccc0003",
+     "records": [
+      {
+       "analyteWeight": 12.5,
+       "description": "Mazatapec 10 mg TPE FD (2027-09-01)",
+       "expires": "2027-09-01",
+       "quantity": 4.0,
+       "weightPerUnit": 0.8
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-0005",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Penis Envy 5 mg TPE DH",
+       "expires": "2027-07-01",
+       "quantity": 2,
+       "weightPerUnit": 0.5
+      }
+     ]
+    }
+   ],
+   "texts": []
+  },
+  {
+   "expect": [],
+   "name": "no packages",
+   "packages": [],
+   "texts": [
+    "Golden Teacher\nNet wt: 0.50 g\nPsilocybin: 3.63 mg\nBest by: 2027-06-01\nLot: ????????"
+   ]
+  },
+  {
+   "expect": [],
+   "name": "a number with too many digits is not a number",
+   "packages": [
+    {
+     "guid": "PKPR-aaaa0001",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Golden Teacher 5 mg TPE DH",
+       "expires": "2027-06-01",
+       "quantity": 10,
+       "weightPerUnit": 0.5
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-bbbb0002",
+     "records": [
+      {
+       "analyteWeight": 5.0,
+       "description": "Bluey 5 mg TPE",
+       "expires": null,
+       "quantity": 3,
+       "weightPerUnit": 1.0
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-cccc0003",
+     "records": [
+      {
+       "analyteWeight": 12.5,
+       "description": "Mazatapec 10 mg TPE FD (2027-09-01)",
+       "expires": "2027-09-01",
+       "quantity": 4.0,
+       "weightPerUnit": 0.8
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-0005",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Penis Envy 5 mg TPE DH",
+       "expires": "2027-07-01",
+       "quantity": 2,
+       "weightPerUnit": 0.5
+      }
+     ]
+    }
+   ],
+   "texts": [
+    "0.5000 12345.50 3.625"
+   ]
+  },
+  {
+   "expect": [
+    {
+     "guid": "PKPR-aaaa0001",
+     "mg": 3.625,
+     "record": 0,
+     "score": 5,
+     "stock": 10.0,
+     "weight": 0.5,
+     "why": [
+      "net weight 0.50 g",
+      "lot number 1 characters away"
+     ]
+    },
+    {
+     "guid": "PKPR-aaab0002",
+     "mg": 3.625,
+     "record": 0,
+     "score": 5,
+     "stock": 2.0,
+     "weight": 0.5,
+     "why": [
+      "net weight 0.50 g",
+      "lot number 1 characters away"
+     ]
+    }
+   ],
+   "name": "a lot line close to two packages",
+   "packages": [
+    {
+     "guid": "PKPR-aaaa0001",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Golden Teacher 5 mg TPE DH",
+       "expires": "2027-06-01",
+       "quantity": 10,
+       "weightPerUnit": 0.5
+      }
+     ]
+    },
+    {
+     "guid": "PKPR-aaab0002",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Penis Envy 5 mg TPE DH",
+       "expires": "2027-07-01",
+       "quantity": 2,
+       "weightPerUnit": 0.5
+      }
+     ]
+    }
+   ],
+   "texts": [
+    "Net wt: 0.50 g\nLot: aaab0001"
+   ]
+  },
+  {
+   "expect": [
+    {
+     "guid": "pkpr-aaaa0001",
+     "mg": 3.625,
+     "record": 0,
+     "score": 5,
+     "stock": 10.0,
+     "weight": 0.5,
+     "why": [
+      "net weight 0.50 g",
+      "lot number 0 characters away"
+     ]
+    }
+   ],
+   "name": "a lower-case pkpr- id gets lot points",
+   "packages": [
+    {
+     "guid": "pkpr-aaaa0001",
+     "records": [
+      {
+       "analyteWeight": 7.25,
+       "description": "Golden Teacher 5 mg TPE DH",
+       "expires": "2027-06-01",
+       "quantity": 10,
+       "weightPerUnit": 0.5
+      }
+     ]
+    }
+   ],
+   "texts": [
+    "Net wt: 0.50 g\nLot: aaaa0001"
+   ]
+  }
+ ],
+ "find_ids": [
+  {
+   "expect": [
+    {
+     "dist": 0,
+     "guid": "PKPR-579b4701",
+     "hex": "579b4701",
+     "line": "Lot: 579b4701"
+    }
+   ],
+   "guids": [
+    "PKPR-579b4701",
+    "PKPR-12345678",
+    "PKPR-abcde",
+    "PKPR-abc123",
+    "PKPR-abcdef1",
+    "PKPR-zzzz",
+    "BATCH-1",
+    "PKPR-1234567890",
+    "pkpr-d0d0d0d0",
+    "PKPR-ABCDEF12",
+    "0000aaaa"
+   ],
+   "name": "exact lot line",
+   "texts": [
+    "Lot: 579b4701"
+   ],
+   "typed": false
+  },
+  {
+   "expect": [
+    {
+     "dist": 0,
+     "guid": "PKPR-579b4701",
+     "hex": "579b4701",
+     "line": "Lot: 579b47O1"
+    }
+   ],
+   "guids": [
+    "PKPR-579b4701",
+    "PKPR-12345678",
+    "PKPR-abcde",
+    "PKPR-abc123",
+    "PKPR-abcdef1",
+    "PKPR-zzzz",
+    "BATCH-1",
+    "PKPR-1234567890",
+    "pkpr-d0d0d0d0",
+    "PKPR-ABCDEF12",
+    "0000aaaa"
+   ],
+   "name": "look-alike letter O for 0",
+   "texts": [
+    "Lot: 579b47O1"
+   ],
+   "typed": false
+  },
+  {
+   "expect": [
+    {
+     "dist": 0,
+     "guid": "PKPR-579b4701",
+     "hex": "579b4701",
+     "line": "lot 579B47Ol"
+    }
+   ],
+   "guids": [
+    "PKPR-579b4701",
+    "PKPR-12345678",
+    "PKPR-abcde",
+    "PKPR-abc123",
+    "PKPR-abcdef1",
+    "PKPR-zzzz",
+    "BATCH-1",
+    "PKPR-1234567890",
+    "pkpr-d0d0d0d0",
+    "PKPR-ABCDEF12",
+    "0000aaaa"
+   ],
+   "name": "lower-case lot, B and l",
+   "texts": [
+    "lot 579B47Ol"
+   ],
+   "typed": false
+  },
+  {
+   "expect": [
+    {
+     "dist": 0,
+     "guid": "PKPR-579b4701",
+     "hex": "579b4701",
+     "line": "LOT:  579b 4701"
+    }
+   ],
+   "guids": [
+    "PKPR-579b4701",
+    "PKPR-12345678",
+    "PKPR-abcde",
+    "PKPR-abc123",
+    "PKPR-abcdef1",
+    "PKPR-zzzz",
+    "BATCH-1",
+    "PKPR-1234567890",
+    "pkpr-d0d0d0d0",
+    "PKPR-ABCDEF12",
+    "0000aaaa"
+   ],
+   "name": "spaces inside the id",
+   "texts": [
+    "LOT:  579b 4701"
+   ],
+   "typed": false
+  },
+  {
+   "expect": [
+    {
+     "dist": 0,
+     "guid": "PKPR-579b4701",
+     "hex": "579b4701",
+     "line": "579b4701"
+    }
+   ],
+   "guids": [
+    "PKPR-579b4701",
+    "PKPR-12345678",
+    "PKPR-abcde",
+    "PKPR-abc123",
+    "PKPR-abcdef1",
+    "PKPR-zzzz",
+    "BATCH-1",
+    "PKPR-1234567890",
+    "pkpr-d0d0d0d0",
+    "PKPR-ABCDEF12",
+    "0000aaaa"
+   ],
+   "name": "an id with no Lot: before it",
+   "texts": [
+    "579b4701"
+   ],
+   "typed": false
+  },
+  {
+   "expect": [
+    {
+     "dist": 0,
+     "guid": "PKPR-579b4701",
+     "hex": "579b4701",
+     "line": "xx579b4701yy"
+    }
+   ],
+   "guids": [
+    "PKPR-579b4701",
+    "PKPR-12345678",
+    "PKPR-abcde",
+    "PKPR-abc123",
+    "PKPR-abcdef1",
+    "PKPR-zzzz",
+    "BATCH-1",
+    "PKPR-1234567890",
+    "pkpr-d0d0d0d0",
+    "PKPR-ABCDEF12",
+    "0000aaaa"
+   ],
+   "name": "an id inside other text",
+   "texts": [
+    "xx579b4701yy"
+   ],
+   "typed": false
+  },
+  {
+   "expect": [
+    {
+     "dist": 1,
+     "guid": "PKPR-579b4701",
+     "hex": "579b4701",
+     "line": "Lot: 579b4731"
+    }
+   ],
+   "guids": [
+    "PKPR-579b4701",
+    "PKPR-12345678",
+    "PKPR-abcde",
+    "PKPR-abc123",
+    "PKPR-abcdef1",
+    "PKPR-zzzz",
+    "BATCH-1",
+    "PKPR-1234567890",
+    "pkpr-d0d0d0d0",
+    "PKPR-ABCDEF12",
+    "0000aaaa"
+   ],
+   "name": "one wrong digit on a lot line",
+   "texts": [
+    "Lot: 579b4731"
+   ],
+   "typed": false
+  },
+  {
+   "expect": [
+    {
+     "dist": 1,
+     "guid": "PKPR-579b4701",
+     "hex": "579b4701",
+     "line": "Best by 579b4731"
+    }
+   ],
+   "guids": [
+    "PKPR-579b4701",
+    "PKPR-12345678",
+    "PKPR-abcde",
+    "PKPR-abc123",
+    "PKPR-abcdef1",
+    "PKPR-zzzz",
+    "BATCH-1",
+    "PKPR-1234567890",
+    "pkpr-d0d0d0d0",
+    "PKPR-ABCDEF12",
+    "0000aaaa"
+   ],
+   "name": "one wrong digit anywhere",
+   "texts": [
+    "Best by 579b4731"
+   ],
+   "typed": false
+  },
+  {
+   "expect": [
+    {
+     "dist": 2,
+     "guid": "PKPR-579b4701",
+     "hex": "579b4701",
+     "line": "Lot: 579b4331"
+    }
+   ],
+   "guids": [
+    "PKPR-579b4701",
+    "PKPR-12345678",
+    "PKPR-abcde",
+    "PKPR-abc123",
+    "PKPR-abcdef1",
+    "PKPR-zzzz",
+    "BATCH-1",
+    "PKPR-1234567890",
+    "pkpr-d0d0d0d0",
+    "PKPR-ABCDEF12",
+    "0000aaaa"
+   ],
+   "name": "two wrong digits on a lot line",
+   "texts": [
+    "Lot: 579b4331"
+   ],
+   "typed": false
+  },
+  {
+   "expect": [],
+   "guids": [
+    "PKPR-579b4701",
+    "PKPR-12345678",
+    "PKPR-abcde",
+    "PKPR-abc123",
+    "PKPR-abcdef1",
+    "PKPR-zzzz",
+    "BATCH-1",
+    "PKPR-1234567890",
+    "pkpr-d0d0d0d0",
+    "PKPR-ABCDEF12",
+    "0000aaaa"
+   ],
+   "name": "two wrong digits off a lot line",
+   "texts": [
+    "Best by 579b4331"
+   ],
+   "typed": false
+  },
+  {
+   "expect": [
+    {
+     "dist": 2,
+     "guid": "PKPR-579b4701",
+     "hex": "579b4701",
+     "line": "Best by 579b4331"
+    }
+   ],
+   "guids": [
+    "PKPR-579b4701",
+    "PKPR-12345678",
+    "PKPR-abcde",
+    "PKPR-abc123",
+    "PKPR-abcdef1",
+    "PKPR-zzzz",
+    "BATCH-1",
+    "PKPR-1234567890",
+    "pkpr-d0d0d0d0",
+    "PKPR-ABCDEF12",
+    "0000aaaa"
+   ],
+   "name": "two wrong digits typed",
+   "texts": [
+    "Best by 579b4331"
+   ],
+   "typed": true
+  },
+  {
+   "expect": [],
+   "guids": [
+    "PKPR-579b4701",
+    "PKPR-12345678",
+    "PKPR-abcde",
+    "PKPR-abc123",
+    "PKPR-abcdef1",
+    "PKPR-zzzz",
+    "BATCH-1",
+    "PKPR-1234567890",
+    "pkpr-d0d0d0d0",
+    "PKPR-ABCDEF12",
+    "0000aaaa"
+   ],
+   "name": "three wrong digits typed",
+   "texts": [
+    "Lot: 579b3331"
+   ],
+   "typed": true
+  },
+  {
+   "expect": [
+    {
+     "dist": 1,
+     "guid": "PKPR-579b4701",
+     "hex": "579b4701",
+     "line": "Lot: 579b471"
+    }
+   ],
+   "guids": [
+    "PKPR-579b4701",
+    "PKPR-12345678",
+    "PKPR-abcde",
+    "PKPR-abc123",
+    "PKPR-abcdef1",
+    "PKPR-zzzz",
+    "BATCH-1",
+    "PKPR-1234567890",
+    "pkpr-d0d0d0d0",
+    "PKPR-ABCDEF12",
+    "0000aaaa"
+   ],
+   "name": "a missing digit",
+   "texts": [
+    "Lot: 579b471"
+   ],
+   "typed": false
+  },
+  {
+   "expect": [
+    {
+     "dist": 0,
+     "guid": "PKPR-579b4701",
+     "hex": "579b4701",
+     "line": "Lot: 579b47011"
+    }
+   ],
+   "guids": [
+    "PKPR-579b4701",
+    "PKPR-12345678",
+    "PKPR-abcde",
+    "PKPR-abc123",
+    "PKPR-abcdef1",
+    "PKPR-zzzz",
+    "BATCH-1",
+    "PKPR-1234567890",
+    "pkpr-d0d0d0d0",
+    "PKPR-ABCDEF12",
+    "0000aaaa"
+   ],
+   "name": "an extra digit",
+   "texts": [
+    "Lot: 579b47011"
+   ],
+   "typed": false
+  },
+  {
+   "expect": [
+    {
+     "dist": 2,
+     "guid": "PKPR-579b4701",
+     "hex": "579b4701",
+     "line": "Lot: 579b41"
+    }
+   ],
+   "guids": [
+    "PKPR-579b4701",
+    "PKPR-12345678",
+    "PKPR-abcde",
+    "PKPR-abc123",
+    "PKPR-abcdef1",
+    "PKPR-zzzz",
+    "BATCH-1",
+    "PKPR-1234567890",
+    "pkpr-d0d0d0d0",
+    "PKPR-ABCDEF12",
+    "0000aaaa"
+   ],
+   "name": "two missing digits on a lot line",
+   "texts": [
+    "Lot: 579b41"
+   ],
+   "typed": false
+  },
+  {
+   "expect": [
+    {
+     "dist": 2,
+     "guid": "PKPR-579b4701",
+     "hex": "579b4701",
+     "line": "L0t: 579b4331"
+    }
+   ],
+   "guids": [
+    "PKPR-579b4701",
+    "PKPR-12345678",
+    "PKPR-abcde",
+    "PKPR-abc123",
+    "PKPR-abcdef1",
+    "PKPR-zzzz",
+    "BATCH-1",
+    "PKPR-1234567890",
+    "pkpr-d0d0d0d0",
+    "PKPR-ABCDEF12",
+    "0000aaaa"
+   ],
+   "name": "Lot read as L0t",
+   "texts": [
+    "L0t: 579b4331"
+   ],
+   "typed": false
+  },
+  {
+   "expect": [
+    {
+     "dist": 2,
+     "guid": "PKPR-579b4701",
+     "hex": "579b4701",
+     "line": "Lat: 579b4331"
+    }
+   ],
+   "guids": [
+    "PKPR-579b4701",
+    "PKPR-12345678",
+    "PKPR-abcde",
+    "PKPR-abc123",
+    "PKPR-abcdef1",
+    "PKPR-zzzz",
+    "BATCH-1",
+    "PKPR-1234567890",
+    "pkpr-d0d0d0d0",
+    "PKPR-ABCDEF12",
+    "0000aaaa"
+   ],
+   "name": "Lot read as Lat (one letter off)",
+   "texts": [
+    "Lat: 579b4331"
+   ],
+   "typed": false
+  },
+  {
+   "expect": [],
+   "guids": [
+    "PKPR-579b4701",
+    "PKPR-12345678",
+    "PKPR-abcde",
+    "PKPR-abc123",
+    "PKPR-abcdef1",
+    "PKPR-zzzz",
+    "BATCH-1",
+    "PKPR-1234567890",
+    "pkpr-d0d0d0d0",
+    "PKPR-ABCDEF12",
+    "0000aaaa"
+   ],
+   "name": "Lot read as Lxx is not a lot line",
+   "texts": [
+    "Lxx: 579b4331"
+   ],
+   "typed": false
+  },
+  {
+   "expect": [
+    {
+     "dist": 0,
+     "guid": "PKPR-abcde",
+     "hex": "abcde",
+     "line": "Lot: abcde"
+    }
+   ],
+   "guids": [
+    "PKPR-579b4701",
+    "PKPR-12345678",
+    "PKPR-abcde",
+    "PKPR-abc123",
+    "PKPR-abcdef1",
+    "PKPR-zzzz",
+    "BATCH-1",
+    "PKPR-1234567890",
+    "pkpr-d0d0d0d0",
+    "PKPR-ABCDEF12",
+    "0000aaaa"
+   ],
+   "name": "five digits exact",
+   "texts": [
+    "Lot: abcde"
+   ],
+   "typed": false
+  },
+  {
+   "expect": [],
+   "guids": [
+    "PKPR-579b4701",
+    "PKPR-12345678",
+    "PKPR-abcde",
+    "PKPR-abc123",
+    "PKPR-abcdef1",
+    "PKPR-zzzz",
+    "BATCH-1",
+    "PKPR-1234567890",
+    "pkpr-d0d0d0d0",
+    "PKPR-ABCDEF12",
+    "0000aaaa"
+   ],
+   "name": "five digits one off",
+   "texts": [
+    "Lot: abcdf"
+   ],
+   "typed": false
+  },
+  {
+   "expect": [
+    {
+     "dist": 0,
+     "guid": "PKPR-abc123",
+     "hex": "abc123",
+     "line": "Lot: abc123"
+    }
+   ],
+   "guids": [
+    "PKPR-579b4701",
+    "PKPR-12345678",
+    "PKPR-abcde",
+    "PKPR-abc123",
+    "PKPR-abcdef1",
+    "PKPR-zzzz",
+    "BATCH-1",
+    "PKPR-1234567890",
+    "pkpr-d0d0d0d0",
+    "PKPR-ABCDEF12",
+    "0000aaaa"
+   ],
+   "name": "six digits exact",
+   "texts": [
+    "Lot: abc123"
+   ],
+   "typed": false
+  },
+  {
+   "expect": [
+    {
+     "dist": 0,
+     "guid": "PKPR-abcde",
+     "hex": "abcde",
+     "line": "Lot: abcdef1"
+    },
+    {
+     "dist": 0,
+     "guid": "PKPR-abcdef1",
+     "hex": "abcdef1",
+     "line": "Lot: abcdef1"
+    },
+    {
+     "dist": 1,
+     "guid": "PKPR-ABCDEF12",
+     "hex": "abcdef12",
+     "line": "Lot: abcdef1"
+    }
+   ],
+   "guids": [
+    "PKPR-579b4701",
+    "PKPR-12345678",
+    "PKPR-abcde",
+    "PKPR-abc123",
+    "PKPR-abcdef1",
+    "PKPR-zzzz",
+    "BATCH-1",
+    "PKPR-1234567890",
+    "pkpr-d0d0d0d0",
+    "PKPR-ABCDEF12",
+    "0000aaaa"
+   ],
+   "name": "seven digits exact",
+   "texts": [
+    "Lot: abcdef1"
+   ],
+   "typed": false
+  },
+  {
+   "expect": [
+    {
+     "dist": 0,
+     "guid": "PKPR-abcde",
+     "hex": "abcde",
+     "line": "Lot: abcdef2"
+    },
+    {
+     "dist": 1,
+     "guid": "PKPR-ABCDEF12",
+     "hex": "abcdef12",
+     "line": "Lot: abcdef2"
+    }
+   ],
+   "guids": [
+    "PKPR-579b4701",
+    "PKPR-12345678",
+    "PKPR-abcde",
+    "PKPR-abc123",
+    "PKPR-abcdef1",
+    "PKPR-zzzz",
+    "BATCH-1",
+    "PKPR-1234567890",
+    "pkpr-d0d0d0d0",
+    "PKPR-ABCDEF12",
+    "0000aaaa"
+   ],
+   "name": "seven digits one off",
+   "texts": [
+    "Lot: abcdef2"
+   ],
+   "typed": true
+  },
+  {
+   "expect": [
+    {
+     "dist": 0,
+     "guid": "PKPR-ABCDEF12",
+     "hex": "abcdef12",
+     "line": "Lot: ABCDEF12"
+    },
+    {
+     "dist": 0,
+     "guid": "PKPR-abcde",
+     "hex": "abcde",
+     "line": "Lot: ABCDEF12"
+    },
+    {
+     "dist": 0,
+     "guid": "PKPR-abcdef1",
+     "hex": "abcdef1",
+     "line": "Lot: ABCDEF12"
+    }
+   ],
+   "guids": [
+    "PKPR-579b4701",
+    "PKPR-12345678",
+    "PKPR-abcde",
+    "PKPR-abc123",
+    "PKPR-abcdef1",
+    "PKPR-zzzz",
+    "BATCH-1",
+    "PKPR-1234567890",
+    "pkpr-d0d0d0d0",
+    "PKPR-ABCDEF12",
+    "0000aaaa"
+   ],
+   "name": "upper-case package id",
+   "texts": [
+    "Lot: ABCDEF12"
+   ],
+   "typed": false
+  },
+  {
+   "expect": [
+    {
+     "dist": 0,
+     "guid": "pkpr-d0d0d0d0",
+     "hex": "d0d0d0d0",
+     "line": "Lot: d0d0d0d0"
+    }
+   ],
+   "guids": [
+    "PKPR-579b4701",
+    "PKPR-12345678",
+    "PKPR-abcde",
+    "PKPR-abc123",
+    "PKPR-abcdef1",
+    "PKPR-zzzz",
+    "BATCH-1",
+    "PKPR-1234567890",
+    "pkpr-d0d0d0d0",
+    "PKPR-ABCDEF12",
+    "0000aaaa"
+   ],
+   "name": "lower-case pkpr- prefix",
+   "texts": [
+    "Lot: d0d0d0d0"
+   ],
+   "typed": false
+  },
+  {
+   "expect": [
+    {
+     "dist": 2,
+     "guid": "pkpr-d0d0d0d0",
+     "hex": "d0d0d0d0",
+     "line": "Lot: d0d0d0e1"
+    }
+   ],
+   "guids": [
+    "PKPR-579b4701",
+    "PKPR-12345678",
+    "PKPR-abcde",
+    "PKPR-abc123",
+    "PKPR-abcdef1",
+    "PKPR-zzzz",
+    "BATCH-1",
+    "PKPR-1234567890",
+    "pkpr-d0d0d0d0",
+    "PKPR-ABCDEF12",
+    "0000aaaa"
+   ],
+   "name": "pkpr- prefix and two off",
+   "texts": [
+    "Lot: d0d0d0e1"
+   ],
+   "typed": false
+  },
+  {
+   "expect": [],
+   "guids": [
+    "PKPR-579b4701",
+    "PKPR-12345678",
+    "PKPR-abcde",
+    "PKPR-abc123",
+    "PKPR-abcdef1",
+    "PKPR-zzzz",
+    "BATCH-1",
+    "PKPR-1234567890",
+    "pkpr-d0d0d0d0",
+    "PKPR-ABCDEF12",
+    "0000aaaa"
+   ],
+   "name": "two off not on a lot line",
+   "texts": [
+    "something d0d0d0e1 else"
+   ],
+   "typed": false
+  },
+  {
+   "expect": [
+    {
+     "dist": 0,
+     "guid": "PKPR-579b4701",
+     "hex": "579b4701",
+     "line": "PKPR-579b4701"
+    }
+   ],
+   "guids": [
+    "PKPR-579b4701",
+    "PKPR-12345678",
+    "PKPR-abcde",
+    "PKPR-abc123",
+    "PKPR-abcdef1",
+    "PKPR-zzzz",
+    "BATCH-1",
+    "PKPR-1234567890",
+    "pkpr-d0d0d0d0",
+    "PKPR-ABCDEF12",
+    "0000aaaa"
+   ],
+   "name": "typed with the PKPR- prefix",
+   "texts": [
+    "PKPR-579b4701"
+   ],
+   "typed": true
+  },
+  {
+   "expect": [],
+   "guids": [
+    "PKPR-579b4701",
+    "PKPR-12345678",
+    "PKPR-abcde",
+    "PKPR-abc123",
+    "PKPR-abcdef1",
+    "PKPR-zzzz",
+    "BATCH-1",
+    "PKPR-1234567890",
+    "pkpr-d0d0d0d0",
+    "PKPR-ABCDEF12",
+    "0000aaaa"
+   ],
+   "name": "unrelated text",
+   "texts": [
+    "Whole Fungi",
+    "Net wt: 1.50 g",
+    ""
+   ],
+   "typed": false
+  },
+  {
+   "expect": [],
+   "guids": [
+    "PKPR-579b4701",
+    "PKPR-12345678",
+    "PKPR-abcde",
+    "PKPR-abc123",
+    "PKPR-abcdef1",
+    "PKPR-zzzz",
+    "BATCH-1",
+    "PKPR-1234567890",
+    "pkpr-d0d0d0d0",
+    "PKPR-ABCDEF12",
+    "0000aaaa"
+   ],
+   "name": "a short line is skipped",
+   "texts": [
+    "Lot: 1"
+   ],
+   "typed": false
+  },
+  {
+   "expect": [
+    {
+     "dist": 0,
+     "guid": "PKPR-12345678",
+     "hex": "12345678",
+     "line": "Lot: 12345678"
+    },
+    {
+     "dist": 1,
+     "guid": "PKPR-579b4701",
+     "hex": "579b4701",
+     "line": "Lot: 579b4731"
+    }
+   ],
+   "guids": [
+    "PKPR-579b4701",
+    "PKPR-12345678",
+    "PKPR-abcde",
+    "PKPR-abc123",
+    "PKPR-abcdef1",
+    "PKPR-zzzz",
+    "BATCH-1",
+    "PKPR-1234567890",
+    "pkpr-d0d0d0d0",
+    "PKPR-ABCDEF12",
+    "0000aaaa"
+   ],
+   "name": "best first, then by id",
+   "texts": [
+    "Lot: 12345678",
+    "Lot: 579b4731"
+   ],
+   "typed": false
+  },
+  {
+   "expect": [
+    {
+     "dist": 0,
+     "guid": "PKPR-12345678",
+     "hex": "12345678",
+     "line": "Lot: 12345678"
+    },
+    {
+     "dist": 1,
+     "guid": "PKPR-579b4701",
+     "hex": "579b4701",
+     "line": "Lot: 579b4731"
+    }
+   ],
+   "guids": [
+    "PKPR-579b4701",
+    "PKPR-12345678",
+    "PKPR-abcde",
+    "PKPR-abc123",
+    "PKPR-abcdef1",
+    "PKPR-zzzz",
+    "BATCH-1",
+    "PKPR-1234567890",
+    "pkpr-d0d0d0d0",
+    "PKPR-ABCDEF12",
+    "0000aaaa"
+   ],
+   "name": "several texts",
+   "texts": [
+    "nothing here",
+    "Lot: 12345678\nLot: 579b4731"
+   ],
+   "typed": false
+  },
+  {
+   "expect": [
+    {
+     "dist": 0,
+     "guid": "PKPR-579b4701",
+     "hex": "579b4701",
+     "line": "Lot: 579b4701 b"
+    }
+   ],
+   "guids": [
+    "PKPR-579b4701",
+    "PKPR-12345678",
+    "PKPR-abcde",
+    "PKPR-abc123",
+    "PKPR-abcdef1",
+    "PKPR-zzzz",
+    "BATCH-1",
+    "PKPR-1234567890",
+    "pkpr-d0d0d0d0",
+    "PKPR-ABCDEF12",
+    "0000aaaa"
+   ],
+   "name": "found exactly twice: the last line",
+   "texts": [
+    "Lot: 579b4701 a",
+    "Lot: 579b4701 b"
+   ],
+   "typed": false
+  },
+  {
+   "expect": [
+    {
+     "dist": 1,
+     "guid": "PKPR-579b4701",
+     "hex": "579b4701",
+     "line": "Lot: 579b4731"
+    }
+   ],
+   "guids": [
+    "PKPR-579b4701",
+    "PKPR-12345678",
+    "PKPR-abcde",
+    "PKPR-abc123",
+    "PKPR-abcdef1",
+    "PKPR-zzzz",
+    "BATCH-1",
+    "PKPR-1234567890",
+    "pkpr-d0d0d0d0",
+    "PKPR-ABCDEF12",
+    "0000aaaa"
+   ],
+   "name": "a closer misread on a later line wins",
+   "texts": [
+    "Lot: 579b4331",
+    "Lot: 579b4731"
+   ],
+   "typed": false
+  },
+  {
+   "expect": [
+    {
+     "dist": 1,
+     "guid": "PKPR-579b4701",
+     "hex": "579b4701",
+     "line": "Lot: 579b4731"
+    }
+   ],
+   "guids": [
+    "PKPR-579b4701",
+    "PKPR-12345678",
+    "PKPR-abcde",
+    "PKPR-abc123",
+    "PKPR-abcdef1",
+    "PKPR-zzzz",
+    "BATCH-1",
+    "PKPR-1234567890",
+    "pkpr-d0d0d0d0",
+    "PKPR-ABCDEF12",
+    "0000aaaa"
+   ],
+   "name": "an equal misread on a later line does not",
+   "texts": [
+    "Lot: 579b4731",
+    "Lot: 579b4732"
+   ],
+   "typed": false
+  },
+  {
+   "expect": [
+    {
+     "dist": 0,
+     "guid": "PKPR-579b4701",
+     "hex": "579b4701",
+     "line": "579b4701"
+    }
+   ],
+   "guids": [
+    "PKPR-579b4701",
+    "PKPR-12345678",
+    "PKPR-abcde",
+    "PKPR-abc123",
+    "PKPR-abcdef1",
+    "PKPR-zzzz",
+    "BATCH-1",
+    "PKPR-1234567890",
+    "pkpr-d0d0d0d0",
+    "PKPR-ABCDEF12",
+    "0000aaaa"
+   ],
+   "name": "exact beats an earlier misread",
+   "texts": [
+    "Lot: 579b4731",
+    "579b4701"
+   ],
+   "typed": false
+  },
+  {
+   "expect": [],
+   "guids": [
+    "PKPR-579b4701",
+    "PKPR-12345678",
+    "PKPR-abcde",
+    "PKPR-abc123",
+    "PKPR-abcdef1",
+    "PKPR-zzzz",
+    "BATCH-1",
+    "PKPR-1234567890",
+    "pkpr-d0d0d0d0",
+    "PKPR-ABCDEF12",
+    "0000aaaa"
+   ],
+   "name": "past the first 80 characters",
+   "texts": [
+    "Lot xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 579b4701"
+   ],
+   "typed": false
+  },
+  {
+   "expect": [
+    {
+     "dist": 0,
+     "guid": "PKPR-579b4701",
+     "hex": "579b4701",
+     "line": "Lot xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 579b4701"
+    }
+   ],
+   "guids": [
+    "PKPR-579b4701",
+    "PKPR-12345678",
+    "PKPR-abcde",
+    "PKPR-abc123",
+    "PKPR-abcdef1",
+    "PKPR-zzzz",
+    "BATCH-1",
+    "PKPR-1234567890",
+    "pkpr-d0d0d0d0",
+    "PKPR-ABCDEF12",
+    "0000aaaa"
+   ],
+   "name": "just inside the first 80 characters",
+   "texts": [
+    "Lot xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 579b4701"
+   ],
+   "typed": false
+  },
+  {
+   "expect": [
+    {
+     "dist": 0,
+     "guid": "PKPR-579b4701",
+     "hex": "579b4701",
+     "line": "Lot: 579b4701"
+    }
+   ],
+   "guids": [
+    "PKPR-579b4701",
+    "PKPR-12345678",
+    "PKPR-abcde",
+    "PKPR-abc123",
+    "PKPR-abcdef1",
+    "PKPR-zzzz",
+    "BATCH-1",
+    "PKPR-1234567890",
+    "pkpr-d0d0d0d0",
+    "PKPR-ABCDEF12",
+    "0000aaaa"
+   ],
+   "name": "Windows line ends",
+   "texts": [
+    "Net wt\r\nLot: 579b4701\r\n"
+   ],
+   "typed": false
+  },
+  {
+   "expect": [
+    {
+     "dist": 0,
+     "guid": "PKPR-579b4701",
+     "hex": "579b4701",
+     "line": "Lot: 579b4701"
+    }
+   ],
+   "guids": [
+    "PKPR-579b4701",
+    "PKPR-12345678",
+    "PKPR-abcde",
+    "PKPR-abc123",
+    "PKPR-abcdef1",
+    "PKPR-zzzz",
+    "BATCH-1",
+    "PKPR-1234567890",
+    "pkpr-d0d0d0d0",
+    "PKPR-ABCDEF12",
+    "0000aaaa"
+   ],
+   "name": "unicode line separator",
+   "texts": [
+    "Best by Lot: 579b4701 x"
+   ],
+   "typed": false
+  },
+  {
+   "expect": [
+    {
+     "dist": 0,
+     "guid": "PKPR-12345678",
+     "hex": "12345678",
+     "line": "Lot: 12345678"
+    },
+    {
+     "dist": 2,
+     "guid": "PKPR-579b4701",
+     "hex": "579b4701",
+     "line": "Lot: 579b4331"
+    }
+   ],
+   "guids": [
+    "PKPR-579b4701",
+    "PKPR-12345678",
+    "PKPR-abcde",
+    "PKPR-abc123",
+    "PKPR-abcdef1",
+    "PKPR-zzzz",
+    "BATCH-1",
+    "PKPR-1234567890",
+    "pkpr-d0d0d0d0",
+    "PKPR-ABCDEF12",
+    "0000aaaa"
+   ],
+   "name": "form feed and vertical tab split lines",
+   "texts": [
+    "Lot: 579b4331\fLot: 12345678\u000bz"
+   ],
+   "typed": false
+  },
+  {
+   "expect": [
+    {
+     "dist": 0,
+     "guid": "PKPR-579b4701",
+     "hex": "579b4701",
+     "line": "Lot: 579b4701"
+    }
+   ],
+   "guids": [
+    "PKPR-579b4701",
+    "PKPR-12345678",
+    "PKPR-abcde",
+    "PKPR-abc123",
+    "PKPR-abcdef1",
+    "PKPR-zzzz",
+    "BATCH-1",
+    "PKPR-1234567890",
+    "pkpr-d0d0d0d0",
+    "PKPR-ABCDEF12",
+    "0000aaaa"
+   ],
+   "name": "odd whitespace is stripped from the line",
+   "texts": [
+    "\u001f Lot: 579b4701　\u001f"
+   ],
+   "typed": false
+  },
+  {
+   "expect": [
+    {
+     "dist": 1,
+     "guid": "PKPR-579b4701",
+     "hex": "579b4701",
+     "line": "Lot: 579b4703"
+    },
+    {
+     "dist": 1,
+     "guid": "PKPR-579b4702",
+     "hex": "579b4702",
+     "line": "Lot: 579b4703"
+    }
+   ],
+   "guids": [
+    "PKPR-579b4702",
+    "PKPR-579b4701"
+   ],
+   "name": "two ids one apart: both, by id",
+   "texts": [
+    "Lot: 579b4703"
+   ],
+   "typed": false
+  },
+  {
+   "expect": [
+    {
+     "dist": 0,
+     "guid": "PKPR-abcde",
+     "hex": "abcde",
+     "line": "Lot: abcde"
+    }
+   ],
+   "guids": [
+    "PKPR-ABCDE",
+    "PKPR-abcde"
+   ],
+   "name": "the same digits under two spellings: the last",
+   "texts": [
+    "Lot: abcde"
+   ],
+   "typed": false
+  },
+  {
+   "expect": [],
+   "guids": [
+    "PKPR-abcde\n",
+    "PKPR-ABCDEFGH",
+    "PKPR-abcd"
+   ],
+   "name": "a junk id with a newline",
+   "texts": [
+    "Lot: abcde"
+   ],
+   "typed": false
+  },
+  {
+   "expect": [
+    {
+     "dist": 1,
+     "guid": "PKPR-abcdef1\n",
+     "hex": "abcdef1\n",
+     "line": "Lot: abcdef1"
+    }
+   ],
+   "guids": [
+    "PKPR-abcdef1\n"
+   ],
+   "name": "an 8-character id ending in a newline",
+   "texts": [
+    "Lot: abcdef1"
+   ],
+   "typed": false
+  },
+  {
+   "expect": [],
+   "guids": [],
+   "name": "no ids at all",
+   "texts": [
+    "Lot: 579b4701"
+   ],
+   "typed": false
+  },
+  {
+   "expect": [],
+   "guids": [
+    "PKPR-579b4701",
+    "PKPR-12345678",
+    "PKPR-abcde",
+    "PKPR-abc123",
+    "PKPR-abcdef1",
+    "PKPR-zzzz",
+    "BATCH-1",
+    "PKPR-1234567890",
+    "pkpr-d0d0d0d0",
+    "PKPR-ABCDEF12",
+    "0000aaaa"
+   ],
+   "name": "no text at all",
+   "texts": [],
+   "typed": false
+  },
+  {
+   "expect": [
+    {
+     "dist": 2,
+     "guid": "PKPR-579b4701",
+     "hex": "579b4701",
+     "line": "Lot: 570b4801"
+    }
+   ],
+   "guids": [
+    "PKPR-579b4701",
+    "PKPR-12345678",
+    "PKPR-abcde",
+    "PKPR-abc123",
+    "PKPR-abcdef1",
+    "PKPR-zzzz",
+    "BATCH-1",
+    "PKPR-1234567890",
+    "pkpr-d0d0d0d0",
+    "PKPR-ABCDEF12",
+    "0000aaaa"
+   ],
+   "name": "only one piece intact, two off, on a lot line",
+   "texts": [
+    "Lot: 570b4801"
+   ],
+   "typed": false
+  },
+  {
+   "expect": [],
+   "guids": [
+    "PKPR-579b4701",
+    "PKPR-12345678",
+    "PKPR-abcde",
+    "PKPR-abc123",
+    "PKPR-abcdef1",
+    "PKPR-zzzz",
+    "BATCH-1",
+    "PKPR-1234567890",
+    "pkpr-d0d0d0d0",
+    "PKPR-ABCDEF12",
+    "0000aaaa"
+   ],
+   "name": "no piece intact",
+   "texts": [
+    "Lot: 5x9bx7x1"
+   ],
+   "typed": true
+  },
+  {
+   "expect": [
+    {
+     "dist": 2,
+     "guid": "PKPR-579b4701",
+     "hex": "579b4701",
+     "line": "Lot: 579bb4731"
+    }
+   ],
+   "guids": [
+    "PKPR-579b4701",
+    "PKPR-12345678",
+    "PKPR-abcde",
+    "PKPR-abc123",
+    "PKPR-abcdef1",
+    "PKPR-zzzz",
+    "BATCH-1",
+    "PKPR-1234567890",
+    "pkpr-d0d0d0d0",
+    "PKPR-ABCDEF12",
+    "0000aaaa"
+   ],
+   "name": "two misreads, one an extra character",
+   "texts": [
+    "Lot: 579bb4731"
+   ],
+   "typed": false
+  }
+ ]
+}

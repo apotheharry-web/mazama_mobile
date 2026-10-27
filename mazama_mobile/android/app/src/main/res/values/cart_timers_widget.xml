@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The cart timers home-screen widget (CartTimersWidget.kt). Dark-mode colours: values-night/. -->
+<resources>
+    <string name="cart_timers_widget_label">Cart timers</string>
+    <string name="cart_timers_widget_description">Every cart\'s running session timer at your service center</string>
+    <string name="cart_timers_widget_title">Cart timers</string>
+    <string name="cart_timers_widget_title_center">Cart timers · %1$s</string>
+    <string name="cart_timers_widget_empty">No timers running</string>
+    <string name="cart_timers_note_left">left</string>
+    <string name="cart_timers_note_left_booster">left w/ booster</string>
+    <string name="cart_timers_note_over">over · time up</string>
+    <string name="cart_timers_note_elapsed">elapsed</string>
+    <string name="cart_timers_note_ends">elapsed · ends %1$s</string>
+
+    <color name="cart_timers_background">#FFFFFFFF</color>
+    <color name="cart_timers_text">#FF1C1B1F</color>
+    <color name="cart_timers_subtle">#FF5F5B66</color>
+    <color name="cart_timers_over">#FFB3261E</color>
+</resources>
