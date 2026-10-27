@@ -96,7 +96,8 @@ workflows:
 
   android-release:
     name: Android release (GitHub release)
-    instance_type: linux_x2
+    # no instance_type: Codemagic's default Mac (mac_mini_m2), the one machine the free plan offers; Linux machines
+    # need a paid plan
     working_directory: mazama_mobile
     triggering: *release_tags
     environment:
@@ -138,7 +139,7 @@ workflows:
         script: |
           name="mazama_mobile-${CM_TAG}.apk"
           cp build/app/outputs/flutter-apk/app-release.apk "build/$name"
-          (cd build && sha256sum "$name" > "$name.sha256")
+          (cd build && shasum -a 256 "$name" > "$name.sha256")   # macOS has shasum, not sha256sum
           gh release create "$CM_TAG" "build/$name" "build/$name.sha256" \
             --title "Mazama service-center app $CM_TAG" \
             --notes "Built by Codemagic from commit ${CM_COMMIT} of this repository. SHA-256: $(cut -d' ' -f1 "build/$name.sha256")"
