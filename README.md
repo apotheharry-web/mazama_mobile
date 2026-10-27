@@ -17,7 +17,9 @@ it with the output of `sha256sum <file>.apk` (Linux), `shasum -a 256 <file>.apk`
 `certutil -hashfile <file>.apk SHA256` (Windows). Every release is built from this repository's code by Codemagic; see
 [SECURITY.md](SECURITY.md).
 
-**iPhone:** through Apple's App Store; the link will be here once it is listed.
+**iPhone: [join the beta on TestFlight](https://testflight.apple.com/join/MAd2MYn8)**. Install Apple's TestFlight
+app, then open that link on your iPhone and tap *Accept* and *Install*. TestFlight installs each new release as it
+comes out. The App Store link will be here once the app is listed.
 
 All releases: [Releases](../../releases).
 
