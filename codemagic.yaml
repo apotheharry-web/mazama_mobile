@@ -123,6 +123,19 @@ workflows:
           rustup default stable
           rustup target add aarch64-linux-android x86_64-linux-android
           rustc --version
+      - name: Check the signing key
+        # android_signing above gives these four only when Team settings > codemagic.yaml settings > Code signing
+        # identities > Android keystores holds a keystore whose reference name is exactly "codemagic". Names only, no values.
+        script: |
+          missing=""
+          for v in CM_KEYSTORE_PATH CM_KEYSTORE_PASSWORD CM_KEY_ALIAS CM_KEY_PASSWORD; do
+            if [ -n "$(printenv "$v")" ]; then echo "$v is set"; else missing="$missing $v"; fi
+          done
+          if [ -n "$missing" ]; then
+            echo "error: not set:$missing. Upload the keystore under Team settings > codemagic.yaml settings > Code signing identities > Android keystores with the reference name \"codemagic\""; exit 1
+          fi
+          [ -f "$CM_KEYSTORE_PATH" ] || { echo "error: CM_KEYSTORE_PATH points at no file"; exit 1; }
+          echo "keystore: $(basename "$CM_KEYSTORE_PATH"), alias $CM_KEY_ALIAS"
       - name: Build signed APK
         script: |
           unset COA_CORE_OPTIONAL MAZAMA_DEV_RELEASE

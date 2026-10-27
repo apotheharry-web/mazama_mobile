@@ -5,7 +5,7 @@ publish_to: "none"
 # The build number after + is the date and a count, YYMMDDNN (26102700: 2026-10-27, first build): it only goes up,
 # stays above every build TestFlight had from Codemagic's own counter, and is under Android's 2100000000 limit.
 # Each release raises it (mazama_mobile/tool/publish_public.sh refuses one that doesn't; specs/public-app PA-D3).
-version: 0.2.2+26102702
+version: 0.2.2+26102703
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
