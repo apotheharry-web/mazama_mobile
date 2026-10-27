@@ -1,8 +1,25 @@
 # Mazama service-center app
 
+[![Latest release](https://img.shields.io/github/v/release/apotheharry-web/mazama_mobile?label=latest%20release)](../../releases/latest)
+
 The phone app (Android and iPhone) that staff at Oregon psilocybin service centers use with
 [Mazama Mushrooms](https://mazamamushrooms.com), a licensed psilocybin manufacturer. It brings together, on one phone,
 what a center's staff need to sell Mazama's products and keep the state's records right.
+
+## Download
+
+**Android: [download the latest release](../../releases/latest)**. Open the release, tap the `.apk` file under
+*Assets* and install it. Your phone may ask you to allow installs from your browser first. Updates install over the
+earlier version and keep you signed in.
+
+Each release lists the APK's SHA-256. To check that the file you downloaded is the one the release build made, compare
+it with the output of `sha256sum <file>.apk` (Linux), `shasum -a 256 <file>.apk` (macOS) or
+`certutil -hashfile <file>.apk SHA256` (Windows). Every release is built from this repository's code by Codemagic; see
+[SECURITY.md](SECURITY.md).
+
+**iPhone:** through Apple's App Store; the link will be here once it is listed.
+
+All releases: [Releases](../../releases).
 
 ## What it does
 
@@ -44,11 +61,11 @@ assistant. What the app does send to Mazama, who sees it and how long it is kept
 The sign-in steps and test data under `mazama_mobile/assets/` are copies of files Mazama keeps in a private
 repository along with its server; the copies here are the ones the app uses.
 
-## Releases
+## How releases are made
 
 Every release is a tag `v<version>`, matching the `version:` in `mazama_mobile/pubspec.yaml`, built by Codemagic from
-that tag's commit. The Android app is attached to the tag's [GitHub release](../../releases) with its SHA-256; the
-iPhone app is on the App Store.
+that tag's commit ([`codemagic.yaml`](codemagic.yaml)). The Android app is attached to the tag's GitHub release with
+its SHA-256; the iPhone app goes to the App Store.
 
 ## Build it yourself
 
