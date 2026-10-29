@@ -83,7 +83,7 @@ workflows:
           if echo "$syms" | grep -q '_coa_core_ffi_not_built$'; then
             echo "error: the app was linked with the coa_core stand-in"; exit 1
           fi
-          for f in coa_parse_json coa_label_spec_json coa_find_lot_json coa_name_json coa_version coa_free; do
+          for f in coa_parse_json coa_label_spec_json coa_find_lot_json coa_name_json coa_scan_find_ids_json coa_scan_closest_json coa_version coa_free; do
             echo "$syms" | grep -q " _${f}\$" || { echo "error: _${f} is missing from $bin"; exit 1; }
           done
           echo "coa_core: all functions present in the app"

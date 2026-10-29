@@ -50,6 +50,8 @@ char *coa_label_spec_json(const char *s) { (void)s; return 0; }
 char *coa_find_lot_json(const char *s) { (void)s; return 0; }
 char *coa_name_json(const char *s) { (void)s; return 0; }
 char *coa_version(void) { return 0; }
+char *coa_scan_find_ids_json(const char *s) { (void)s; return 0; }
+char *coa_scan_closest_json(const char *s) { (void)s; return 0; }
 void coa_free(char *s) { (void)s; }
 C
   arch_flags=""

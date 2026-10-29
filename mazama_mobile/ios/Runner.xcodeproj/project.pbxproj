@@ -494,6 +494,8 @@
 					"-Wl,-u,_coa_name_json",
 					"-Wl,-u,_coa_version",
 					"-Wl,-u,_coa_free",
+					"-Wl,-u,_coa_scan_find_ids_json",
+					"-Wl,-u,_coa_scan_closest_json",
 					"-weak_framework",
 					WidgetKit,
 				);
@@ -688,6 +690,8 @@
 					"-Wl,-u,_coa_name_json",
 					"-Wl,-u,_coa_version",
 					"-Wl,-u,_coa_free",
+					"-Wl,-u,_coa_scan_find_ids_json",
+					"-Wl,-u,_coa_scan_closest_json",
 					"-weak_framework",
 					WidgetKit,
 				);
@@ -724,6 +728,8 @@
 					"-Wl,-u,_coa_name_json",
 					"-Wl,-u,_coa_version",
 					"-Wl,-u,_coa_free",
+					"-Wl,-u,_coa_scan_find_ids_json",
+					"-Wl,-u,_coa_scan_closest_json",
 					"-weak_framework",
 					WidgetKit,
 				);
