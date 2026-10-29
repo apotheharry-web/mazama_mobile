@@ -40,11 +40,13 @@ import 'cart_store.dart';
 import 'cart_timer_widget.dart';
 import 'coa_data_client.dart' as coa_data_client; // see CartPage.centerIsConfigured: avoids a same-name default-value ambiguity
 import 'coa_data_resolver.dart' as coa_data_resolver; // see CartPage.resolveAdhocInventory: avoids a same-name default-value ambiguity
+import 'coa_uploader.dart' show CoaUploadLot, QueueCoaUploads;
 import 'center_status_client.dart' show CartSettings;
 import 'center_status_client.dart' as center_status_client; // see CartPage.fetchCartSettings: same reason as below
 import 'demo/demo_backend.dart'; // see CartPage.submitCoaForLot: avoids a same-name default-value ambiguity
 import 'device_id.dart';
 import 'enrichment_store.dart';
+import 'features.g.dart';
 import 'flow/flow_runner.dart';
 import 'flow/flow_spec.dart';
 import 'inventory_cache_store.dart';
@@ -67,6 +69,7 @@ import 'scan_match_client.dart' as scan_match_client; // see CartPage.scanMatch:
 import 'local_scan_match.dart' as local_scan_match; // see CartPage.localScanMatch, the same reason
 import 'select_center_page.dart';
 import 'server_error.dart' show isServerUnreachable;
+import 'server_health.dart' show ServerHealth;
 import 'server_link.dart' as server_link; // the defaults for the writes to Mazama's server (README R56)
 import 'sellability.dart';
 import 'selling.dart';
@@ -269,6 +272,18 @@ class CartPage extends StatefulWidget {
   /// Overridable for tests; the real one keeps it in the app's catch-up file.
   final void Function(int stateId, {required String lotGuid, required int packageId, double? statePsilocybin}) keepCoaLotForLater;
 
+  /// CU-R1 (specs/coa-upload): after each load of a CONFIGURED center that Mazama's server answered, every lot whose
+  /// package says coaAvailable false is handed to the app's background uploader (coa_uploader.dart), which sends each
+  /// report at the server's pace without holding up anything on this page. An unconfigured center's lots are queued
+  /// by [resolveAdhocInventory] itself. Overridable for tests; the real one is the app's uploader (server_link.dart), the
+  /// demo's does nothing (CU-R6).
+  final QueueCoaUploads queueCoaUploads;
+
+  /// Whether the background uploader has [lotGuid] waiting or being sent: the cart add's own submission
+  /// (_ensureCoaForCartLine) skips such a lot, so its report isn't downloaded twice at once. Overridable for tests; the
+  /// real one asks the app's uploader (server_link.dart), the demo's always says no.
+  final bool Function(String lotGuid) coaUploadPending;
+
   /// The third resilience tier: the last inventory this center successfully loaded (by either of the tiers
   /// above), good for up to 3 days (see resilient_inventory.dart's own maxAge). Overridable for tests, so a
   /// widget test never reads or writes the real app-data directory for this either - same real-by-default,
@@ -383,6 +398,10 @@ class CartPage extends StatefulWidget {
   /// a sale's success says nothing was sent. Null for a real sign-in.
   final DemoBackend? demo;
 
+  /// The feature registry (specs/features FR-3): the View stock button shows only while center_stock is on for this
+  /// center's license type. The generated one in the app; tests pass a copy with features off.
+  final Map<String, Feature> featureTable;
+
   /// Where the cart's own session stopwatch (_sessionTimerRow) persists its start time across app restarts -
   /// see session_timer_store.dart's own file comment for why. Overridable for tests, so a test never touches
   /// the real app-data directory for this either. Defaults to a real SessionTimerStore, same as cartStore's
@@ -397,6 +416,12 @@ class CartPage extends StatefulWidget {
   /// whenever a timer, a cart's lines or the list of carts changes. Overridable for tests; the real one does nothing
   /// where there's no native widget (a widget test).
   final CartTimerWidget cartTimerWidget;
+
+  /// The app's server tracker (server_health.dart, README R56, R87). Stock read from the state system alone (Mazama's
+  /// server didn't answer, [InventorySource.state]) is loaded again once the tracker goes from offline to online: at
+  /// once while the showing cart has no lines, else as soon as it has none (after a sale, or its lines removed), and
+  /// never while a sale is being sent. Null: never (tests, the demo, the debug launch page).
+  final ServerHealth? health;
 
   CartPage({
     super.key,
@@ -417,6 +442,8 @@ class CartPage extends StatefulWidget {
     this.resolveAdhocInventory = coa_data_resolver.resolveAdhocInventory,
     this.submitCoaForLot = server_link.linkSubmitCoaForLot,
     this.keepCoaLotForLater = server_link.rememberCoaLot,
+    this.queueCoaUploads = server_link.queueCoaUploads,
+    this.coaUploadPending = server_link.coaUploadPending,
     this.inventoryCacheStore = const InventoryCacheStore(),
     this.enrichmentStore = const EnrichmentStore(),
     this.resilienceOptions = const ResilienceOptions(),
@@ -433,6 +460,8 @@ class CartPage extends StatefulWidget {
     this.initialPricingMode = defaultCartPricingMode,
     this.onDraftCountChanged,
     this.demo,
+    this.featureTable = features,
+    this.health,
     Future<FlowSpec>? saleSpec,
     http.Client Function()? httpClientFactory,
   })  : saleSpec = saleSpec ?? rootBundle.loadString('assets/flows/sale.yaml').then(FlowSpec.fromYaml),
@@ -568,6 +597,9 @@ class _CartPageState extends State<CartPage> {
   int _adhocGuidsTotal = 0;
   int _adhocGuidsResolved = 0;
 
+  /// The lots (lower case) onResolved has reported for this load, so a lot is counted once however many packages it has.
+  final _adhocResolvedLots = <String>{};
+
   /// Set when the worker taps "Start Timer" in the cart's own dose summary (_sessionTimerRow) - the wall-clock
   /// moment the administration session actually began, read against widget.now() every tick to show how long
   /// it's been running. Null until started, cleared back to null by _resetSessionTimer (by hand, or
@@ -590,6 +622,36 @@ class _CartPageState extends State<CartPage> {
 
   bool _selling = false;
 
+  /// [CartPage.health] as last seen (offline or not), and whether the server came back while the stock showing is the
+  /// state's alone, so it is loaded again once the cart is empty and no sale is being sent ([_reloadIfServerBack]).
+  bool _wasOffline = false;
+  bool _reloadWhenEmpty = false;
+
+  void _onHealth() {
+    final h = widget.health;
+    if (h == null) return;
+    final cameBack = _wasOffline && h.online;
+    _wasOffline = h.offline;
+    if (!cameBack || !mounted || _inventorySource != InventorySource.state) return;
+    _reloadWhenEmpty = true;
+    _reloadIfServerBack();
+  }
+
+  /// Loads the inventory again if the server came back while the stock was the state's alone ([_onHealth]) and the
+  /// cart is now empty with no sale being sent. Called from the tracker, and wherever the cart may have just emptied
+  /// (a line removed, a sale ended, another cart shown). Forgets the wait once the stock isn't the state's any more or
+  /// the server is offline again (the next time it comes back starts it again).
+  void _reloadIfServerBack() {
+    if (!_reloadWhenEmpty || !mounted) return;
+    if (_inventorySource != InventorySource.state || !(widget.health?.online ?? false)) {
+      _reloadWhenEmpty = false;
+      return;
+    }
+    if (_selling || _lines.isNotEmpty) return;
+    _reloadWhenEmpty = false;
+    _loadInventory();
+  }
+
   /// The cart's settings (SM-16): the built-in rules until the server's answer arrives, which may change the tax
   /// offered, the agreement split, the units allowed in one line and how old a draft may be to come back.
   CartSettings _cartSettings = CartSettings.fallback;
@@ -601,6 +663,8 @@ class _CartPageState extends State<CartPage> {
     _session = widget.session;
     _pricingMode = widget.initialPricingMode;
     _cartSettingsFuture = _fetchCartSettingsOrFallback();
+    _wasOffline = widget.health?.offline ?? false;
+    widget.health?.addListener(_onHealth);
     _loadInventory();
     _restoreSlotsThenCart();
     _renewTimer = Timer.periodic(sessionCheckInterval, (_) => _maybeRenewSession());
@@ -797,6 +861,7 @@ class _CartPageState extends State<CartPage> {
 
   @override
   void dispose() {
+    widget.health?.removeListener(_onHealth);
     _renewTimer?.cancel();
     _sessionTimerTicker?.cancel();
     _pkprController.dispose();
@@ -889,6 +954,7 @@ class _CartPageState extends State<CartPage> {
       _centerConfigured = null;
       _adhocGuidsTotal = 0;
       _adhocGuidsResolved = 0;
+      _adhocResolvedLots.clear();
     });
     unawaited(_loadInventoryAsync());
   }
@@ -921,6 +987,9 @@ class _CartPageState extends State<CartPage> {
           _inventoryAsOf = result.asOf;
           _stockReadAt = result.asOf ?? widget.now();
         });
+        // Only Mazama's own answer says which lots it has no lab report for: a state-only or cached load marks every
+        // lot unknown, not missing (merged_inventory.dart's _unknownCoaLabel).
+        if (result.source == InventorySource.live) _queueMissingCoas(result.packages, serverKeys: result.serverKeys);
       }).catchError((e) {
         if (!mounted) return;
         setState(() => _inventoryError = e.toString());
@@ -951,7 +1020,9 @@ class _CartPageState extends State<CartPage> {
                 _inventory = copy;
               }
             }
-            _adhocGuidsResolved++;
+            // Counted once per lot (a lot with several packages is patched once per package), including a lot the
+            // background uploader resolves after the load has returned.
+            if (_adhocResolvedLots.add(guid.toLowerCase())) _adhocGuidsResolved++;
           });
         },
       );
@@ -961,11 +1032,42 @@ class _CartPageState extends State<CartPage> {
         _stockReadAt = widget.now();
         _inventorySource = InventorySource.adhoc;
         _adhocGuidsTotal = result.guidsTotal;
-        _adhocGuidsResolved = result.guidsResolved;
+        _adhocGuidsResolved =
+            result.guidsResolved > _adhocResolvedLots.length ? result.guidsResolved : _adhocResolvedLots.length;
       });
     } catch (e) {
       if (!mounted) return;
       setState(() => _inventoryError = e.toString());
+    }
+  }
+
+  /// CU-R1: hands every lot of [packages] the server has no lab report for to the app's background uploader, one
+  /// representative package each, with the state's psilocybin figure as the cart add sends it. Only rows the server
+  /// itself sent count ([serverKeys]: a row only the state listed is coaAvailable false because the server was never
+  /// asked, merged_inventory.dart's _unknownCoaLabel), and a lot with any package whose report the server has is left
+  /// alone. Never in the demo (CU-R6); never awaited, never in the way of the page.
+  void _queueMissingCoas(List<Package> packages, {required Set<String>? serverKeys}) {
+    if (widget.demo != null || _session.isDemo || serverKeys == null) return;
+    final lots = <String, CoaUploadLot>{};
+    final hasCoa = <String>{};
+    for (final p in packages) {
+      final guid = p.lotGuid;
+      if (guid == null || guid.isEmpty) continue;
+      final key = guid.toLowerCase();
+      if (p.coaAvailable) {
+        hasCoa.add(key);
+        continue;
+      }
+      if (!serverKeys.contains(inventoryRowKey(p))) continue;
+      lots.putIfAbsent(
+          key, () => CoaUploadLot(lotGuid: guid, packageId: p.id, stateId: widget.center.id, statePsilocybin: p.analyteWeight));
+    }
+    lots.removeWhere((key, _) => hasCoa.contains(key));
+    if (lots.isEmpty) return;
+    try {
+      widget.queueCoaUploads(lots.values.toList());
+    } catch (e) {
+      debugPrint('the lab reports could not be queued for upload (nothing on this page is affected): $e');
     }
   }
 
@@ -1052,7 +1154,7 @@ class _CartPageState extends State<CartPage> {
   /// file without anyone having to notice and go submit it by hand later. A lot whose COA the server already has
   /// but whose label it hasn't drawn yet is left alone (README R64): the server draws the label itself, and
   /// submitting would only cost two calls to the state system and an upload for an answer the server already has. A no-op for an
-  /// UNCONFIGURED center: coa_data_resolver.dart's own resolveAdhocInventory already resolved what it could
+  /// UNCONFIGURED center: coa_data_resolver.dart's own resolveAdhocInventory already queued every lot it was missing
   /// during the load itself, and Package's own coaAvailable/labelAvailable default true for a source (the
   /// adhoc flow) that never sets them, so the `where` below simply finds nothing to do there.
   ///
@@ -1063,7 +1165,14 @@ class _CartPageState extends State<CartPage> {
   /// "one miss is never fatal to the others" rule coa_data_resolver.dart's own worker() already follows.
   Future<void> _ensureCoaForCartLine(PkprGroup group) async {
     if (_centerConfigured != true) return;
-    final needsWork = group.lots.where((l) => !l.coaAvailable && (l.lotGuid?.isNotEmpty ?? false));
+    final needsWork = group.lots.where((l) => !l.coaAvailable && (l.lotGuid?.isNotEmpty ?? false)).where((l) {
+      // already waiting or being sent by the background uploader (specs/coa-upload): not downloaded twice at once
+      try {
+        return !widget.coaUploadPending(l.lotGuid!);
+      } catch (_) {
+        return true;
+      }
+    }).toList();
     if (needsWork.isEmpty) return;
     final deviceId = await widget.deviceIdStore.idOrCreate();
     for (final lot in needsWork) {
@@ -1447,6 +1556,7 @@ class _CartPageState extends State<CartPage> {
   void _removeLine(int i) {
     setState(() => _lines.removeAt(i));
     _recomputeCartPricing();
+    _reloadIfServerBack();
   }
 
   /// Asks before throwing away unsold carts - shared by switching centers and signing out, the two ways a worker can
@@ -1511,7 +1621,11 @@ class _CartPageState extends State<CartPage> {
   Future<void> _onViewStockPressed() async {
     final selected = await Navigator.of(context).push<List<PkprGroup>>(
       MaterialPageRoute(
-        builder: (_) => StockPage(center: widget.center, fetchPackages: _fetchPackagesForStockPage, workerEmail: _session.email),
+        builder: (_) => StockPage(
+            center: widget.center,
+            fetchPackages: _fetchPackagesForStockPage,
+            workerEmail: _session.email,
+            featureTable: widget.featureTable),
       ),
     );
     if (selected == null || selected.isEmpty || !mounted) return;
@@ -1882,6 +1996,7 @@ class _CartPageState extends State<CartPage> {
     } finally {
       client.close();
       if (mounted) setState(() => _selling = false);
+      _reloadIfServerBack(); // the sale went through and emptied the cart, or it didn't and the cart waits as it is
     }
   }
 
@@ -2124,6 +2239,7 @@ class _CartPageState extends State<CartPage> {
     if (!mounted || id != _cartId) return;
     if (restored != null) setState(() => _lines.addAll(restored));
     _recomputeCartPricing(persist: false);
+    _reloadIfServerBack();
     await _restoreSessionTimer();
   }
 
@@ -2460,6 +2576,7 @@ class _CartPageState extends State<CartPage> {
       _rememberSoldDose(cartId, _lines); // one client's dose: every copy is the same sale
       setState(() => _lines.clear());
       _publishTimerWidget();
+      _reloadIfServerBack();
       await widget.cartStore.clear(cartId: cartId);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -2681,7 +2798,8 @@ class _CartPageState extends State<CartPage> {
           ],
         ),
         actions: [
-          IconButton(onPressed: _onViewStockPressed, icon: const Icon(Icons.inventory_2_outlined), tooltip: 'View stock'),
+          if (featureOnForLicense('center_stock', widget.center.licenseType, table: widget.featureTable))
+            IconButton(onPressed: _onViewStockPressed, icon: const Icon(Icons.inventory_2_outlined), tooltip: 'View stock'),
           IconButton(onPressed: _onSwitchCenterPressed, icon: const Icon(Icons.store_outlined), tooltip: 'Switch center'),
           IconButton(onPressed: _onSignOutPressed, icon: const Icon(Icons.logout), tooltip: 'Sign out'),
           _cartButton(),
@@ -2830,22 +2948,20 @@ class _CartPageState extends State<CartPage> {
     );
   }
 
-  /// A plain, non-blocking strip above the usual inventory banner whenever _inventorySource (set by
-  /// _loadInventory) is anything other than live - see resilient_inventory.dart's own file comment for what
-  /// each fallback tier can and can't promise. Null (nothing shown) for the live, ordinary case, so a worker
-  /// whose inventory loaded the normal way sees no change at all from before this feature existed.
+  /// A plain, non-blocking strip above the usual inventory banner when _inventorySource (set by _loadInventory) is
+  /// the cache or the adhoc path - see resilient_inventory.dart's own file comment for what each fallback tier can and
+  /// can't promise. Null (nothing shown) for the live, ordinary case, and for stock read from the state system alone
+  /// ([InventorySource.state]): that only means Mazama's server didn't answer, which the app-wide banner says
+  /// (server_link.dart, README R87); each line still says which figures are the state's (Package.mgFigure).
   Widget? _degradedInventoryNotice() {
     final source = _inventorySource;
-    if (source == null || source == InventorySource.live) return null;
+    if (source == null || source == InventorySource.live || source == InventorySource.state) return null;
     final String text;
     IconData icon = Icons.cloud_off;
-    if (source == InventorySource.state) {
-      // Which strains/TPEs are Mazama's last figures and which are the state's estimates (resilient_inventory.dart).
-      text = stateSourceNotice(_inventory ?? const []);
-    } else if (source == InventorySource.adhoc) {
+    if (source == InventorySource.adhoc) {
       // This center isn't configured in Mazama yet - there is no "server down" problem to retry past, so this
       // case gets its own icon/wording rather than reusing the cloud-off "something's unreachable" framing the
-      // other two tiers share. See coa_data_resolver.dart's own file comment for what's actually happening:
+      // cache tier has. See coa_data_resolver.dart's own file comment for what's actually happening:
       // every lot's strain/potency is read directly from its own lab report, not from a sync this center never
       // had. _adhocGuidsResolved/_adhocGuidsTotal (ticked up live by _loadInventoryAsync's onResolved) says how
       // much of that is still in flight - once they're equal, this strip is just informational, no spinner.
@@ -2862,7 +2978,8 @@ class _CartPageState extends State<CartPage> {
     } else {
       final asOf = _inventoryAsOf;
       final age = asOf == null ? '' : ' from ${_formatAge(widget.now().difference(asOf))} ago';
-      text = 'Neither Mazama\'s server nor the state system could be reached - showing the last inventory '
+      // Mazama's server didn't answer either: the app-wide banner says that (README R87); this is about the state.
+      text = 'The state system couldn\'t be reached - showing the last inventory '
           'downloaded$age. Counts may no longer be accurate.${cachedEstimatesNote(_inventory ?? const [])}';
     }
     return Material(
@@ -2874,8 +2991,9 @@ class _CartPageState extends State<CartPage> {
             Icon(icon, size: 18, color: Theme.of(context).colorScheme.onTertiaryContainer),
             const SizedBox(width: 10),
             Expanded(child: Text(text)),
-            if (source != InventorySource.adhoc || _adhocGuidsResolved >= _adhocGuidsTotal)
-              TextButton(onPressed: _loadInventory, child: const Text('Retry')),
+            // The adhoc banner shows only once the load has returned (_inventorySource is set then): Retry is offered
+            // even while some lots are still being uploaded in the background or have no lab report on file.
+            TextButton(onPressed: _loadInventory, child: const Text('Retry')),
           ],
         ),
       ),

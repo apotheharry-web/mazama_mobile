@@ -41,10 +41,16 @@ String loginSpecPath() => '/p/flows/login';
 String loginHostsPath() => '/p/flows/hosts';
 /// C19: GET /p/flows/login_browser, 200 on success.
 String loginBrowserSpecPath() => '/p/flows/login_browser';
+/// C20: POST /p/ingest/{dataset}/{state_id}, 200 on success.
+String ingestPath(String dataset, int stateId) => '/p/ingest/${Uri.encodeComponent(dataset)}/$stateId';
 
+const packagesRateLimitPerMinute = 60;
+const labelRateLimitPerMinute = 120;
 const inventoryMaxRecords = 5000;
 const inventoryRateLimitPerMinute = 12;
+const centerStatusRateLimitPerMinute = 60;
 const coaDataBatchMaxGuids = 500;
+const coaDataBatchRateLimitPerMinute = 30;
 const coaDataParseMaxPdfBytes = 2000000;
 const coaDataParseRateLimitPerMinute = 20;
 const scanMatchMaxLines = 60;
@@ -52,35 +58,42 @@ const scanMatchMaxLineChars = 200;
 const scanMatchRateLimitPerMinute = 60;
 const saleLogRateLimitPerMinute = 30;
 const saleFailureRateLimitPerMinute = 30;
+const parRateLimitPerMinute = 60;
 const parSaveMaxLevels = 800;
 const parSaveRateLimitPerMinute = 30;
+const mazamaInventoryRateLimitPerMinute = 60;
+const sheetsRateLimitPerMinute = 60;
 const orderMaxLines = 800;
 const orderMaxNoteChars = 1000;
 const orderRateLimitPerMinute = 10;
+const pingRateLimitPerMinute = 60;
 const signinFailureRateLimitPerMinute = 30;
 const loginSpecRateLimitPerMinute = 30;
 const loginHostsRateLimitPerMinute = 30;
 const loginBrowserSpecRateLimitPerMinute = 30;
+const ingestMaxRecords = 5000;
+const ingestRateLimitPerMinute = 12;
 
 /// Every route in routes.yaml, for the tests that hold each client to it.
 const apiRoutes = <String, Map<String, Object>>{
-  'packages': {'id': 'C1', 'method': 'GET', 'path': '/p/packages/{state_id}', 'keyRequired': true, 'request': 'none', 'reply': 'json', 'success': 200, 'fields': <String>[], 'files': <String>[], 'rateLimitPerMinute': 0},
-  'label': {'id': 'C2', 'method': 'GET', 'path': '/p/label/{state_id}/{guid}', 'keyRequired': true, 'request': 'none', 'reply': 'image', 'success': 200, 'fields': <String>[], 'files': <String>[], 'rateLimitPerMinute': 0},
+  'packages': {'id': 'C1', 'method': 'GET', 'path': '/p/packages/{state_id}', 'keyRequired': true, 'request': 'none', 'reply': 'json', 'success': 200, 'fields': <String>[], 'files': <String>[], 'rateLimitPerMinute': 60},
+  'label': {'id': 'C2', 'method': 'GET', 'path': '/p/label/{state_id}/{guid}', 'keyRequired': true, 'request': 'none', 'reply': 'image', 'success': 200, 'fields': <String>[], 'files': <String>[], 'rateLimitPerMinute': 120},
   'inventory': {'id': 'C3', 'method': 'POST', 'path': '/p/inventory/{state_id}', 'keyRequired': true, 'request': 'json', 'reply': 'json', 'success': 200, 'fields': <String>[], 'files': <String>[], 'rateLimitPerMinute': 12},
-  'center_status': {'id': 'C4', 'method': 'GET', 'path': '/p/center-status/{state_id}', 'keyRequired': true, 'request': 'none', 'reply': 'json', 'success': 200, 'fields': <String>[], 'files': <String>[], 'rateLimitPerMinute': 0},
-  'coa_data_batch': {'id': 'C5', 'method': 'POST', 'path': '/p/coa-data/batch', 'keyRequired': true, 'request': 'json', 'reply': 'json', 'success': 200, 'fields': <String>[], 'files': <String>[], 'rateLimitPerMinute': 0},
+  'center_status': {'id': 'C4', 'method': 'GET', 'path': '/p/center-status/{state_id}', 'keyRequired': true, 'request': 'none', 'reply': 'json', 'success': 200, 'fields': <String>[], 'files': <String>[], 'rateLimitPerMinute': 60},
+  'coa_data_batch': {'id': 'C5', 'method': 'POST', 'path': '/p/coa-data/batch', 'keyRequired': true, 'request': 'json', 'reply': 'json', 'success': 200, 'fields': <String>[], 'files': <String>[], 'rateLimitPerMinute': 30},
   'coa_data_parse': {'id': 'C6', 'method': 'POST', 'path': '/p/coa-data/parse', 'keyRequired': true, 'request': 'multipart', 'reply': 'json', 'success': 200, 'fields': <String>['guid', 'doc_id', 'worker_email', 'device_id', 'state_psilocybin'], 'files': <String>['pdf'], 'rateLimitPerMinute': 20},
   'scan_match': {'id': 'C7', 'method': 'POST', 'path': '/p/scan-match/{state_id}', 'keyRequired': true, 'request': 'json', 'reply': 'json', 'success': 200, 'fields': <String>[], 'files': <String>[], 'rateLimitPerMinute': 60},
   'sale_log': {'id': 'C8', 'method': 'POST', 'path': '/p/sale-log/{state_id}', 'keyRequired': true, 'request': 'json', 'reply': 'json', 'success': 201, 'fields': <String>[], 'files': <String>[], 'rateLimitPerMinute': 30},
   'sale_failure': {'id': 'C9', 'method': 'POST', 'path': '/p/sale-failure/{state_id}', 'keyRequired': true, 'request': 'json', 'reply': 'json', 'success': 201, 'fields': <String>[], 'files': <String>[], 'rateLimitPerMinute': 30},
-  'par': {'id': 'C10', 'method': 'GET', 'path': '/p/par/{state_id}', 'keyRequired': true, 'request': 'none', 'reply': 'json', 'success': 200, 'fields': <String>[], 'files': <String>[], 'rateLimitPerMinute': 0},
+  'par': {'id': 'C10', 'method': 'GET', 'path': '/p/par/{state_id}', 'keyRequired': true, 'request': 'none', 'reply': 'json', 'success': 200, 'fields': <String>[], 'files': <String>[], 'rateLimitPerMinute': 60},
   'par_save': {'id': 'C11', 'method': 'POST', 'path': '/p/par/{state_id}', 'keyRequired': true, 'request': 'json', 'reply': 'json', 'success': 200, 'fields': <String>[], 'files': <String>[], 'rateLimitPerMinute': 30},
-  'mazama_inventory': {'id': 'C12', 'method': 'GET', 'path': '/p/mazama-inventory', 'keyRequired': true, 'request': 'none', 'reply': 'json', 'success': 200, 'fields': <String>[], 'files': <String>[], 'rateLimitPerMinute': 0},
-  'sheets': {'id': 'C13', 'method': 'GET', 'path': '/p/sheets/{state_id}', 'keyRequired': true, 'request': 'none', 'reply': 'json', 'success': 200, 'fields': <String>[], 'files': <String>[], 'rateLimitPerMinute': 0},
+  'mazama_inventory': {'id': 'C12', 'method': 'GET', 'path': '/p/mazama-inventory', 'keyRequired': true, 'request': 'none', 'reply': 'json', 'success': 200, 'fields': <String>[], 'files': <String>[], 'rateLimitPerMinute': 60},
+  'sheets': {'id': 'C13', 'method': 'GET', 'path': '/p/sheets/{state_id}', 'keyRequired': true, 'request': 'none', 'reply': 'json', 'success': 200, 'fields': <String>[], 'files': <String>[], 'rateLimitPerMinute': 60},
   'order': {'id': 'C14', 'method': 'POST', 'path': '/p/orders/{state_id}', 'keyRequired': true, 'request': 'json', 'reply': 'json', 'success': 201, 'fields': <String>[], 'files': <String>[], 'rateLimitPerMinute': 10},
-  'ping': {'id': 'C15', 'method': 'GET', 'path': '/p/ping', 'keyRequired': true, 'request': 'none', 'reply': 'json', 'success': 200, 'fields': <String>[], 'files': <String>[], 'rateLimitPerMinute': 0},
+  'ping': {'id': 'C15', 'method': 'GET', 'path': '/p/ping', 'keyRequired': true, 'request': 'none', 'reply': 'json', 'success': 200, 'fields': <String>[], 'files': <String>[], 'rateLimitPerMinute': 60},
   'signin_failure': {'id': 'C16', 'method': 'POST', 'path': '/p/signin-failure', 'keyRequired': true, 'request': 'json', 'reply': 'json', 'success': 201, 'fields': <String>[], 'files': <String>[], 'rateLimitPerMinute': 30},
   'login_spec': {'id': 'C17', 'method': 'GET', 'path': '/p/flows/login', 'keyRequired': true, 'request': 'none', 'reply': 'json', 'success': 200, 'fields': <String>[], 'files': <String>[], 'rateLimitPerMinute': 30},
   'login_hosts': {'id': 'C18', 'method': 'GET', 'path': '/p/flows/hosts', 'keyRequired': true, 'request': 'none', 'reply': 'json', 'success': 200, 'fields': <String>[], 'files': <String>[], 'rateLimitPerMinute': 30},
   'login_browser_spec': {'id': 'C19', 'method': 'GET', 'path': '/p/flows/login_browser', 'keyRequired': true, 'request': 'none', 'reply': 'json', 'success': 200, 'fields': <String>[], 'files': <String>[], 'rateLimitPerMinute': 30},
+  'ingest': {'id': 'C20', 'method': 'POST', 'path': '/p/ingest/{dataset}/{state_id}', 'keyRequired': true, 'request': 'json', 'reply': 'json', 'success': 200, 'fields': <String>[], 'files': <String>[], 'rateLimitPerMinute': 12},
 };

@@ -288,7 +288,8 @@ void main() {
     test('nothing reachable and nothing drawn before is StockUnavailable', () async {
       await expectLater(
         loadCenterStock(stateId: 231, fetchServerPackages: down, fetchStateRecords: stateDown, fetchMazamaLicenses: () async => [], cache: cache()),
-        throwsA(isA<StockUnavailable>()),
+        throwsA(isA<StockUnavailable>().having((e) => '$e', 'text',
+            "The state system can't be reached, and this phone hasn't drawn this center's stock before.")),
       );
     });
 

@@ -9,11 +9,15 @@
 //     (15 s doubling to 5 min) and whenever the app comes back to the foreground.
 //   - [ServerLink.outbox] (server_outbox.dart): sale-attribution logs and failed-sale reports, kept on the phone with a
 //     clientId until the server takes them. Par saves and orders are never queued: they say "try again later".
-//   - [ServerLink.catchUp] (catch_up_store.dart): lab reports that couldn't be submitted and the newest inventory
-//     snapshot per center, sent again once the server answers, with what is current then.
+//   - [ServerLink.catchUp] (catch_up_store.dart): lab reports that couldn't be submitted and the newest inventory and
+//     sales snapshots per center, sent again once the server answers, with what is current then.
 //   - [ServerLink.replies] (reply_store.dart): the last good reply of each read, shown while the server can't be reached.
+//   - [ServerLink.coaUploads] (coa_uploader.dart): every lab report the server is missing, sent in the background at the
+//     server's pace (specs/coa-upload); a lot whose report couldn't reach the server goes on the catch-up list.
 //   - [ServerLinkBanner]: one line above every page while the server can't be reached, saying since when, that selling
-//     still works, and how many reports are waiting. Never in the demo (which has no server at all).
+//     still works, and how many reports are waiting. Never in the demo (which has no server at all). It is the only
+//     notice of the outage: the pages say nothing of their own about it (README R87), and its close button hides it
+//     for the rest of that outage ([ServerHealth.dismissBanner]); the next outage shows it again.
 // When the tracker comes back online (and at start-up, and when the app returns to the foreground while online), the
 // outbox and the catch-up work are sent ([ServerLink.wake]).
 import 'dart:async';
@@ -25,12 +29,15 @@ import 'package:http/http.dart' as http;
 
 import 'catch_up_store.dart';
 import 'coa_data_client.dart' show CoaData;
+import 'coa_uploader.dart';
 import 'configured_coa_submit.dart' as configured_coa_submit;
 import 'demo/demo_banner.dart' show demoModeOn;
 import 'device_id.dart';
 import 'inventory_upload_client.dart' as inventory_upload_client;
+import 'local_store.dart';
 import 'ping_client.dart';
 import 'reply_store.dart';
+import 'sales_upload_client.dart' as sales_upload_client;
 import 'server_error.dart';
 import 'server_health.dart';
 import 'server_offline.dart';
@@ -38,17 +45,19 @@ import 'server_outbox.dart';
 import 'session.dart';
 import 'session_store.dart' show SessionStore, defaultSessionDataDir;
 
-/// Keeps when the server went offline across app restarts (server_health.json), so the banner says since when even
-/// after the phone restarted the app mid-outage.
+/// Keeps when the server went offline across app restarts (the server_health.json document of the folder's
+/// LocalStore), so the banner says since when even after the phone restarted the app mid-outage.
 class ServerHealthStore {
   const ServerHealthStore({Directory Function()? dataDir}) : dataDir = dataDir ?? defaultSessionDataDir;
   final Directory Function() dataDir;
 
-  File get _file => File('${dataDir().path}/server_health.json');
+  static const _name = 'server_health.json';
 
   DateTime? loadOfflineSince() {
     try {
-      final d = jsonDecode(_file.readAsStringSync());
+      final text = LocalStore.forDir(dataDir()).read(_name)?.body;
+      if (text == null) return null;
+      final d = jsonDecode(text);
       final ms = d is Map ? d['offlineSinceMs'] : null;
       return ms is int ? DateTime.fromMillisecondsSinceEpoch(ms, isUtc: true) : null;
     } catch (_) {
@@ -58,12 +67,12 @@ class ServerHealthStore {
 
   void saveOfflineSince(DateTime? since) {
     try {
+      final store = LocalStore.forDir(dataDir());
       if (since == null) {
-        if (_file.existsSync()) _file.deleteSync();
+        store.delete(_name);
         return;
       }
-      dataDir().createSync(recursive: true);
-      _file.writeAsStringSync(jsonEncode({'offlineSinceMs': since.millisecondsSinceEpoch}));
+      store.write(_name, jsonEncode({'offlineSinceMs': since.millisecondsSinceEpoch}));
     } catch (_) {
       // best effort: the banner then counts from this run's first failure
     }
@@ -71,7 +80,15 @@ class ServerHealthStore {
 }
 
 class ServerLink {
-  ServerLink({required this.health, required this.outbox, required this.catchUp, required this.replies}) {
+  /// [coaUploads] defaults to an uploader over [health] and [catchUp], remembering what it sent beside the catch-up file.
+  ServerLink(
+      {required this.health, required this.outbox, required this.catchUp, required this.replies, CoaUploader? coaUploads})
+      : coaUploads = coaUploads ??
+            CoaUploader(
+                health: health,
+                catchUp: catchUp,
+                auth: catchUp.auth,
+                sent: CoaSentMemory(store: CoaSentStore(dataDir: catchUp.store.dataDir))) {
     health.addListener(_onHealth);
     _wasOnline = health.online;
   }
@@ -89,17 +106,21 @@ class ServerLink {
     );
     final sessions = sessionStore ?? SessionStore(dataDir: dir);
     final devices = DeviceIdStore(dataDir: dir);
+    // One memory of the lab reports sent, whichever way they went (the uploader, the catch-up work, a cart add).
+    final sent = CoaSentMemory(store: CoaSentStore(dataDir: dir));
+    final catchUp = CatchUpWork(
+      health: health,
+      store: CatchUpStore(dataDir: dir),
+      submitCoa: (lot, auth) => submitPendingCoaLot(lot, auth, sent: sent),
+      uploadSnapshot: uploadPendingSnapshot,
+      auth: () => savedSessionAuth(sessions, devices),
+    );
     return ServerLink(
       health: health,
       outbox: ServerOutbox(health: health, store: OutboxStore(dataDir: dir)),
-      catchUp: CatchUpWork(
-        health: health,
-        store: CatchUpStore(dataDir: dir),
-        submitCoa: submitPendingCoaLot,
-        uploadSnapshot: uploadPendingSnapshot,
-        auth: () => savedSessionAuth(sessions, devices),
-      ),
+      catchUp: catchUp,
       replies: ReplyStore(dataDir: dir),
+      coaUploads: CoaUploader(health: health, catchUp: catchUp, auth: catchUp.auth, sent: sent),
     );
   }
 
@@ -107,6 +128,7 @@ class ServerLink {
   final ServerOutbox outbox;
   final CatchUpWork catchUp;
   final ReplyStore replies;
+  final CoaUploader coaUploads;
 
   bool _wasOnline = true;
 
@@ -151,9 +173,35 @@ class ServerLink {
     }
   }
 
+  /// The Sales page's upload (specs/center-web CW-R10): [records], the center's sales as just read from the state
+  /// system, go to the ingest route (sales_upload_client.dart), as [uploadInventorySnapshot]: while the server can't be
+  /// reached the read is kept instead (only the newest per center) and sent once it answers; one that reaches the
+  /// server makes any kept older one moot. A refusal (an older server's 404 included) keeps nothing. A read over the
+  /// route's record limit is cut to its newest records first (sales_upload_client.dart's newestSalesForUpload).
+  Future<Map<String, Object?>> uploadSalesSnapshot(int stateId, List<Object?> read,
+      {required String workerEmail, required String deviceId, http.Client? client}) async {
+    final records = sales_upload_client.newestSalesForUpload(read);
+    void keep() => catchUp.keepSnapshot(stateId, records,
+        workerEmail: workerEmail, deviceId: deviceId, kind: snapshotKindSales);
+    if (health.offline) {
+      keep();
+      throw sales_upload_client.SalesUploadError(serverUnreachable, unreachable: true);
+    }
+    try {
+      final out = await sales_upload_client.uploadSalesSnapshot(stateId, records,
+          workerEmail: workerEmail, deviceId: deviceId, client: client);
+      catchUp.snapshotSent(stateId, kind: snapshotKindSales);
+      return out;
+    } catch (e) {
+      if (isServerUnreachable(e)) keep();
+      rethrow;
+    }
+  }
+
   /// [CartPage.submitCoaForLot]'s default: submits [lotGuid]'s lab report (configured_coa_submit.dart). While the
   /// tracker counts the server as offline, fails at once as unreachable without reading anything from the state system
-  /// (the cart then keeps the lot, [rememberCoaLot], for a submission once the server answers).
+  /// (the cart then keeps the lot, [rememberCoaLot], for a submission once the server answers). A lot the server
+  /// answered is remembered as sent, so the background uploader doesn't send it again (CU-R3).
   Future<CoaData?> submitCoaForLot({
     required String lotGuid,
     required int representativePackageId,
@@ -161,19 +209,29 @@ class ServerLink {
     required String workerEmail,
     required String deviceId,
     double? statePsilocybin,
+    http.Client? client,
   }) async {
     if (health.offline) throw configured_coa_submit.ConfiguredCoaSubmitError(serverUnreachable, unreachable: true);
-    return configured_coa_submit.submitCoaForLot(
-        lotGuid: lotGuid,
-        representativePackageId: representativePackageId,
-        accessToken: accessToken,
-        workerEmail: workerEmail,
-        deviceId: deviceId,
-        statePsilocybin: statePsilocybin);
+    try {
+      final data = await configured_coa_submit.submitCoaForLot(
+          lotGuid: lotGuid,
+          representativePackageId: representativePackageId,
+          accessToken: accessToken,
+          workerEmail: workerEmail,
+          deviceId: deviceId,
+          statePsilocybin: statePsilocybin,
+          client: client);
+      if (data != null) coaUploads.sent.markSent(lotGuid);
+      return data;
+    } catch (e) {
+      if (countsAsSent(e)) coaUploads.sent.markSent(lotGuid);
+      rethrow;
+    }
   }
 
   void dispose() {
     health.removeListener(_onHealth);
+    coaUploads.dispose();
     outbox.dispose();
     catchUp.dispose();
     health.dispose();
@@ -193,20 +251,36 @@ void releaseServerLink(ServerLink link) {
   if (identical(_serverLink, link)) _serverLink = null;
 }
 
-/// The catch-up work's submitter: a lot's report through configured_coa_submit.dart with the session current now.
-Future<bool> submitPendingCoaLot(PendingCoaLot lot, CatchUpAuth auth) async =>
-    await configured_coa_submit.submitCoaForLot(
+/// The catch-up work's submitter: a lot's report through configured_coa_submit.dart with the session current now. A lot
+/// the server answered is remembered in [sent] (CU-R3), when given.
+Future<bool> submitPendingCoaLot(PendingCoaLot lot, CatchUpAuth auth, {CoaSentMemory? sent, http.Client? client}) async {
+  try {
+    final data = await configured_coa_submit.submitCoaForLot(
         lotGuid: lot.lotGuid,
         representativePackageId: lot.packageId,
         accessToken: auth.accessToken,
         workerEmail: auth.workerEmail,
         deviceId: auth.deviceId,
-        statePsilocybin: lot.statePsilocybin) !=
-    null;
+        statePsilocybin: lot.statePsilocybin,
+        client: client);
+    if (data != null) sent?.markSent(lot.lotGuid);
+    return data != null;
+  } catch (e) {
+    if (countsAsSent(e)) sent?.markSent(lot.lotGuid);
+    rethrow;
+  }
+}
 
-/// The catch-up work's uploader: a kept snapshot through inventory_upload_client.dart.
-Future<void> uploadPendingSnapshot(PendingSnapshot s) => inventory_upload_client.uploadInventorySnapshot(s.stateId, s.records,
-    workerEmail: s.workerEmail, deviceId: s.deviceId);
+/// The catch-up work's uploader: a kept snapshot through its kind's client (inventory_upload_client.dart, or
+/// sales_upload_client.dart for [snapshotKindSales]). Any other kind is never sent (an inventory upload replaces the
+/// center's whole mirror, so nothing else may go there).
+Future<void> uploadPendingSnapshot(PendingSnapshot s, {http.Client? client}) => switch (s.kind) {
+      snapshotKindSales => sales_upload_client.uploadSalesSnapshot(s.stateId, s.records,
+          workerEmail: s.workerEmail, deviceId: s.deviceId, client: client),
+      snapshotKindInventory => inventory_upload_client.uploadInventorySnapshot(s.stateId, s.records,
+          workerEmail: s.workerEmail, deviceId: s.deviceId, client: client),
+      _ => Future.error(ArgumentError('no upload for a ${s.kind} snapshot')),
+    };
 
 /// The worker's session as last saved (the cart renews and saves it), when it isn't about to expire, with this
 /// install's id; null otherwise (the lab reports then wait: this never signs in or renews by itself).
@@ -243,6 +317,14 @@ Future<CoaData?> linkSubmitCoaForLot({
         deviceId: deviceId,
         statePsilocybin: statePsilocybin);
 
+/// [CartPage.queueCoaUploads]'s default, and the adhoc resolver's (coa_data_resolver.dart): [lots] go to the app's
+/// background uploader (coa_uploader.dart), which sends each report the server is missing at the server's pace.
+void queueCoaUploads(List<CoaUploadLot> lots, {CoaLotResolved? onResolved}) =>
+    serverLink.coaUploads.enqueue(lots, onResolved: onResolved);
+
+/// [CartPage.coaUploadPending]'s default: whether the app's background uploader has [lotGuid] waiting or being sent.
+bool coaUploadPending(String lotGuid) => serverLink.coaUploads.isPending(lotGuid);
+
 /// [CartPage.keepCoaLotForLater]'s default: a lot whose report couldn't reach the server waits in the app's catch-up
 /// work (catch_up_store.dart).
 void rememberCoaLot(int stateId, {required String lotGuid, required int packageId, double? statePsilocybin}) =>
@@ -252,6 +334,11 @@ void rememberCoaLot(int stateId, {required String lotGuid, required int packageI
 Future<Map<String, Object?>> linkUploadInventorySnapshot(int stateId, List<Object?> records,
         {required String workerEmail, required String deviceId}) =>
     serverLink.uploadInventorySnapshot(stateId, records, workerEmail: workerEmail, deviceId: deviceId);
+
+/// The Sales page's upload's default, through the app's link.
+Future<Map<String, Object?>> linkUploadSalesSnapshot(int stateId, List<Object?> records,
+        {required String workerEmail, required String deviceId}) =>
+    serverLink.uploadSalesSnapshot(stateId, records, workerEmail: workerEmail, deviceId: deviceId);
 
 /// What the banner says while the server can't be reached ([since]: when it stopped answering; [waiting]: reports in the
 /// outbox; [dropped]: sale logs dropped because the outbox was full).
@@ -267,7 +354,8 @@ String serverLinkBannerText({required DateTime? since, required int waiting, int
 }
 
 /// The app-wide banner while Mazama's server can't be reached: above every page (MazamaApp's builder), under the demo's
-/// own banner. Shows nothing while online, and nothing in the demo.
+/// own banner. Shows nothing while online, nothing in the demo, and nothing once dismissed for this outage (its close
+/// button, README R87: kept on the tracker, so it holds across pages, and cleared when the server answers again).
 class ServerLinkBanner extends StatelessWidget {
   const ServerLinkBanner({super.key, required this.link, required this.child, ValueNotifier<bool>? demoMode})
       : _demoMode = demoMode;
@@ -281,7 +369,7 @@ class ServerLinkBanner extends StatelessWidget {
     return ListenableBuilder(
       listenable: Listenable.merge([link.health, link.outbox, _demoMode ?? demoModeOn]),
       builder: (context, app) {
-        final visible = link.health.offline && !(_demoMode ?? demoModeOn).value;
+        final visible = link.health.offline && !link.health.bannerDismissed && !(_demoMode ?? demoModeOn).value;
         final scheme = Theme.of(context).colorScheme;
         return Column(
           children: [
@@ -294,7 +382,7 @@ class ServerLinkBanner extends StatelessWidget {
                   child: SizedBox(
                     width: double.infinity,
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.fromLTRB(12, 2, 0, 2),
                       child: Row(
                         children: [
                           Icon(Icons.cloud_off, size: 18, color: scheme.onTertiaryContainer),
@@ -306,6 +394,22 @@ class ServerLinkBanner extends StatelessWidget {
                                   waiting: link.outbox.pendingCount,
                                   dropped: link.outbox.droppedLogs),
                               style: TextStyle(color: scheme.onTertiaryContainer),
+                            ),
+                          ),
+                          // No tooltip: the banner sits above the Navigator, so there is no Overlay for one to show
+                          // in. Its own semantics node instead: a button a screen reader announces as "Dismiss", with
+                          // the tap, standing in for the IconButton's (excluded, so the label isn't lost or doubled).
+                          Semantics(
+                            container: true,
+                            button: true,
+                            label: 'Dismiss',
+                            onTap: link.health.dismissBanner,
+                            excludeSemantics: true,
+                            child: IconButton(
+                              key: const ValueKey('server-link-banner-dismiss'),
+                              visualDensity: VisualDensity.compact,
+                              icon: Icon(Icons.close, size: 18, color: scheme.onTertiaryContainer),
+                              onPressed: link.health.dismissBanner,
                             ),
                           ),
                         ],

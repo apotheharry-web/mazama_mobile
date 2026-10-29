@@ -40,11 +40,13 @@ void main() {
     await s.clear(); // must not throw even though there is nothing left to delete
   });
 
+  // session.json is only ever an older build's file now (its tokens move to the secret store on the first load), so it
+  // is written before the store first opens the folder (plan P-D5).
   test('a corrupted file on disk reads back as null, not a crash', () async {
-    final s = store();
-    await s.save({'access_token': 'A', 'expires_at_ms': 1}); // creates the directory for us
+    await Directory('${tempDir.path}/nested').create(recursive: true);
     await File('${tempDir.path}/nested/session.json').writeAsString('not json{{{');
-    expect(await s.load(), isNull);
+    expect(await store().load(), isNull);
+    expect(File('${tempDir.path}/nested/session.json').existsSync(), isFalse);
   });
 
   test('two independent stores pointed at different directories do not see each other\'s data', () async {

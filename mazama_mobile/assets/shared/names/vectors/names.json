@@ -471,6 +471,105 @@
    "status": "unparsed",
    "strain": null,
    "strain_raw": null
+  },
+  {
+   "code": null,
+   "dose": null,
+   "expiry": null,
+   "label": "11/11/25",
+   "name": "GT Plastic Jars 11/11/25",
+   "note": null,
+   "status": "ok",
+   "strain": "Golden Teacher",
+   "strain_raw": "GT"
+  },
+  {
+   "code": null,
+   "dose": null,
+   "expiry": null,
+   "label": "5/15/25",
+   "name": "Glass Jar MAZ 5/15/25",
+   "note": null,
+   "status": "ok",
+   "strain": "Maztapec",
+   "strain_raw": "MAZ"
+  },
+  {
+   "code": "EX",
+   "dose": null,
+   "expiry": null,
+   "label": "7/25",
+   "name": "BV Extract 7/25",
+   "note": null,
+   "status": "ok",
+   "strain": "BV",
+   "strain_raw": "BV"
+  },
+  {
+   "code": null,
+   "dose": null,
+   "expiry": null,
+   "label": "6.25 #1",
+   "name": "6.25 GT #1",
+   "note": null,
+   "status": "ok",
+   "strain": "Golden Teacher",
+   "strain_raw": "GT"
+  },
+  {
+   "code": null,
+   "dose": "25",
+   "expiry": "2027-04-21",
+   "label": null,
+   "name": "25mg Huatla WDM exp 4/21/27",
+   "note": null,
+   "status": "ok",
+   "strain": "Huatla WDM",
+   "strain_raw": "Huatla WDM"
+  },
+  {
+   "code": "DH",
+   "dose": "25",
+   "expiry": "2027-08-31",
+   "label": null,
+   "name": "Golden Teacher 25 mg TPE DH (2027-08-31)",
+   "note": null,
+   "status": "ok",
+   "strain": "Golden Teacher",
+   "strain_raw": "Golden Teacher"
+  },
+  {
+   "code": null,
+   "dose": null,
+   "expiry": null,
+   "label": null,
+   "name": "SN & SK mix",
+   "note": "'/' and '&' are read as '+'",
+   "status": "partial",
+   "strain": "SN + SK mix",
+   "strain_raw": "SN & SK mix"
+  },
+  {
+   "code": null,
+   "dose": null,
+   "expiry": null,
+   "label": null,
+   "name": "argentina white/brown capped mushrooms",
+   "note": "'/' and '&' are read as '+'; the strain name is longer than 30 characters and was shortened",
+   "status": "partial",
+   "strain": "argentina white+brown capped m",
+   "strain_raw": "argentina white/brown capped mushrooms"
+  },
+  {
+   "code": null,
+   "dose": null,
+   "expiry": null,
+   "label": null,
+   "name": "GT exp 2/30/27",
+   "note": "2/30/27 is not a real date",
+   "status": "partial",
+   "strain": "Golden Teacher",
+   "strain_raw": "GT"
   }
  ],
  "strains": [

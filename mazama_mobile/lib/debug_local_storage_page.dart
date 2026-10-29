@@ -149,7 +149,7 @@ class _DebugLocalStoragePageState extends State<DebugLocalStoragePage> {
           ),
           const Divider(height: 32),
           _section(
-            title: 'Session (session.json)',
+            title: 'Session (Keychain/Keystore; the session document off the phones)',
             text: _sessionText,
             onClear: _clearSession,
             clearLabel: 'Clear session (forces a real sign-in on next app start)',

@@ -28,7 +28,7 @@ void main() {
   // fetchStateFlow loads assets/flows/state_reads.yaml through rootBundle, which needs a binding.
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  (http.Client, List<http.BaseRequest>) router({Object? info}) {
+  (http.Client, List<http.BaseRequest>) router({Object? info, int parseStatus = 200, Object? parseReply}) {
     final seen = <http.BaseRequest>[];
     final client = http_testing.MockClient.streaming((req, body) async {
       await body.drain<void>();
@@ -40,6 +40,9 @@ void main() {
       } else if (p.endsWith('/DownloadDocument/42')) {
         return http.StreamedResponse(Stream.value(utf8.encode('%PDF-1.4 report')), 200);
       } else if (p == '/p/coa-data/parse') {
+        if (parseStatus != 200) {
+          return http.StreamedResponse(Stream.value(utf8.encode(jsonEncode(parseReply ?? {}))), parseStatus);
+        }
         reply = _coa;
       } else {
         return http.StreamedResponse(Stream.value(utf8.encode('{}')), 404);
@@ -84,5 +87,33 @@ void main() {
         lotGuid: 'HB-9bc7d118', representativePackageId: 777, accessToken: 'TEST-TOKEN', workerEmail: 'w', deviceId: 'D-1', client: client);
     expect(data, isNull);
     expect(seen.whereType<http.MultipartRequest>(), isEmpty);
+  });
+
+  // CU-R3, CU-R4: the background uploader (coa_uploader.dart) tells the server's replies apart by their status.
+  for (final (status, body, unreachable) in [
+    (202, {'queued': true}, false),
+    (429, {'detail': 'Too many requests'}, false),
+    (422, {'detail': "this lot isn't in the PDF"}, false),
+    (503, {'detail': 'busy'}, true),
+  ]) {
+    test('a $status from the server throws with its status${unreachable ? ', as unreachable' : ''}', () async {
+      final (client, _) = router(parseStatus: status, parseReply: body);
+      await expectLater(
+        submitCoaForLot(
+            lotGuid: 'HB-9bc7d118', representativePackageId: 777, accessToken: 'TEST-TOKEN', workerEmail: 'w', deviceId: 'D-1', client: client),
+        throwsA(isA<ConfiguredCoaSubmitError>()
+            .having((e) => e.status, 'status', status)
+            .having((e) => e.unreachable, 'unreachable', unreachable)),
+      );
+    });
+  }
+
+  test("the state system's own failure carries no status", () async {
+    final client = http_testing.MockClient((req) async => http.Response('', 500));
+    await expectLater(
+      submitCoaForLot(
+          lotGuid: 'HB-9bc7d118', representativePackageId: 777, accessToken: 'TEST-TOKEN', workerEmail: 'w', deviceId: 'D-1', client: client),
+      throwsA(isA<ConfiguredCoaSubmitError>().having((e) => e.status, 'status', isNull)),
+    );
   });
 }

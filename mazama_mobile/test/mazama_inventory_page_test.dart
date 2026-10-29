@@ -333,7 +333,7 @@ void main() {
   group('the copy kept on the phone', () {
     final at = DateTime.utc(2026, 10, 20, 15, 5);
 
-    testWidgets('each mix the server sends is kept with when, and no notice shows', (tester) async {
+    testWidgets('each mix the server sends is kept with when', (tester) async {
       final kept = <(MazamaInventory, DateTime)>[];
       final now = DateTime.utc(2026, 10, 23, 8);
       await tester.pumpWidget(MaterialApp(
@@ -343,10 +343,10 @@ void main() {
       await tester.pumpAndSettle();
       expect(kept.single.$1, same(_mix));
       expect(kept.single.$2, now);
-      expect(find.byKey(const ValueKey('server-offline-notice')), findsNothing);
     });
 
-    testWidgets('unreachable: the kept mix shows under a notice with its date; Order is still there', (tester) async {
+    // R87: no notice of the page's own over the kept mix: the app-wide banner says the server can't be reached.
+    testWidgets('unreachable: the kept mix shows, with no notice of its own; Order is still there', (tester) async {
       await tester.pumpWidget(MaterialApp(
         home: MazamaInventoryPage(
           load: () async => throw MazamaInventoryError('cannot reach sales.mazamamushrooms.com: SocketException', unreachable: true),
@@ -356,8 +356,9 @@ void main() {
         ),
       ));
       await tester.pumpAndSettle();
-      expect(find.textContaining(serverOfflineNotice(at)), findsOneWidget);
-      expect(find.textContaining("Orders can't be sent until it answers again."), findsOneWidget);
+      expect(find.textContaining("can't be reached"), findsNothing);
+      expect(find.textContaining("Orders can't be sent"), findsNothing);
+      expect(find.text('Retry'), findsNothing);
       expect(find.text('6,000 mg TPE in all'), findsOneWidget);
       expect(find.textContaining('did not load'), findsNothing);
       expect(find.byKey(const ValueKey('order-button')), findsOneWidget);
@@ -383,14 +384,37 @@ void main() {
         ),
       ));
       await tester.pumpAndSettle();
-      expect(find.byKey(const ValueKey('server-offline-notice')), findsOneWidget);
+      expect(find.text('6,000 mg TPE in all'), findsOneWidget); // the kept copy
+      expect(loads, 1);
       up = true;
       health.markReachable();
       await tester.pumpAndSettle();
       expect(loads, 2);
-      expect(find.byKey(const ValueKey('server-offline-notice')), findsNothing);
+      expect(find.text('6,000 mg TPE in all'), findsOneWidget);
     });
 
+    testWidgets("showing the server's own mix: no reload once the tracker is online again", (tester) async {
+      final health = ServerHealth(probe: () async => false, startTimer: FakeTimers().start);
+      addTearDown(health.dispose);
+      health.markUnreachable();
+      var loads = 0;
+      await tester.pumpWidget(MaterialApp(
+        home: MazamaInventoryPage(
+          load: () async {
+            loads++;
+            return _mix;
+          },
+          kept: () async => ServerRead.cached(_mix, at),
+          health: health,
+        ),
+      ));
+      await tester.pumpAndSettle();
+      health.markReachable();
+      await tester.pumpAndSettle();
+      expect(loads, 1);
+    });
+
+    // The error's Retry (nothing kept): the notice that had a Retry of its own is gone (R87).
     testWidgets('Retry asks the server first, then reloads once', (tester) async {
       var probes = 0;
       final health = ServerHealth(probe: () async {
@@ -407,16 +431,16 @@ void main() {
             if (health.offline) throw MazamaInventoryError("Mazama's server can't be reached", unreachable: true);
             return _mix;
           },
-          kept: () async => ServerRead.cached(_mix, at),
+          kept: () async => null,
           health: health,
         ),
       ));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Retry'));
+      await tester.tap(find.widgetWithText(FilledButton, 'Retry'));
       await tester.pumpAndSettle();
       expect(probes, 1);
       expect(loads, 2); // one reload, not one from Retry and another from the tracker
-      expect(find.byKey(const ValueKey('server-offline-notice')), findsNothing);
+      expect(find.text('6,000 mg TPE in all'), findsOneWidget);
     });
 
     testWidgets("a 4xx is the server's own answer: the error, not the kept mix", (tester) async {
@@ -428,7 +452,6 @@ void main() {
       ));
       await tester.pumpAndSettle();
       expect(find.text('Mazama inventory did not load: No manufacturer.'), findsOneWidget);
-      expect(find.byKey(const ValueKey('server-offline-notice')), findsNothing);
     });
 
     testWidgets('unreachable with nothing kept: the error and Retry as before', (tester) async {
@@ -441,25 +464,6 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.textContaining('Mazama inventory did not load: cannot reach'), findsOneWidget);
       expect(find.widgetWithText(FilledButton, 'Retry'), findsOneWidget);
-    });
-
-    testWidgets('Retry on the notice asks the server again; once it answers the notice goes', (tester) async {
-      var calls = 0;
-      await tester.pumpWidget(MaterialApp(
-        home: MazamaInventoryPage(
-          load: () async {
-            calls++;
-            if (calls == 1) throw MazamaInventoryError('cannot reach x', unreachable: true);
-            return _mix;
-          },
-          kept: () async => ServerRead.cached(_mix, at),
-        ),
-      ));
-      await tester.pumpAndSettle();
-      await _tap(tester, find.descendant(of: find.byKey(const ValueKey('server-offline-notice')), matching: find.text('Retry')));
-      expect(calls, 2);
-      expect(find.byKey(const ValueKey('server-offline-notice')), findsNothing);
-      expect(find.text('6,000 mg TPE in all'), findsOneWidget);
     });
   });
 }

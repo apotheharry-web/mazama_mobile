@@ -20,8 +20,8 @@ import 'debug_tools_page.dart';
 import 'demo/demo_backend.dart';
 import 'demo/demo_banner.dart';
 import 'device_id.dart';
+import 'features.g.dart';
 import 'flow/flow_spec.dart';
-import 'inventory_portal_page.dart';
 import 'licenses_client.dart';
 import 'main.dart' show goToSignIn;
 import 'packages_client.dart';
@@ -36,6 +36,7 @@ import 'par_client.dart' as par_client;
 import 'sheets_client.dart' as sheets_client;
 import 'reply_store.dart';
 import 'resilience_options.dart';
+import 'sales_page.dart';
 import 'server_health.dart';
 import 'server_link.dart' as server_link;
 import 'session.dart';
@@ -78,6 +79,15 @@ class SelectCenterPage extends StatefulWidget {
   /// Overridable for tests, same reasoning as fetchRawPackagesFromState above. Defaults to the upload through the
   /// app's server link (server_link.dart: the newest snapshot waits while the server can't be reached).
   final Future<Map<String, Object?>> Function(int stateId, List<Object?> records, {required String workerEmail, required String deviceId}) uploadInventorySnapshot;
+
+  /// The Sales page's read (specs/center-web CW-R10): the center's GetSalesRecords from the state system with the
+  /// session's token. Overridable for tests (a live network call otherwise); the demo's in demo mode.
+  final Future<List<Object?>> Function(int stateId, {required String accessToken}) fetchSalesRecords;
+
+  /// The Sales page's upload of every record read: through the app's server link by default (server_link.dart: the
+  /// newest read waits while the server can't be reached). Overridable for tests; the demo's sends nothing.
+  final Future<Map<String, Object?>> Function(int stateId, List<Object?> records,
+      {required String workerEmail, required String deviceId}) uploadSalesSnapshot;
 
   /// Forwarded straight through to whichever CartPage this page opens - see CartPage's own field by this name.
   /// Overridable for tests, same reasoning as fetchRawPackagesFromState above. Defaults to the submission through
@@ -134,6 +144,10 @@ class SelectCenterPage extends StatefulWidget {
   /// (the app's own folder, as the server link's).
   final ReplyStore replyStore;
 
+  /// The feature registry (specs/features FR-3) the picker, the center home's tabs and their pages follow: the
+  /// generated one in the app (fixed per release, FT-D2); tests pass a copy with features off.
+  final Map<String, Feature> featureTable;
+
   SelectCenterPage({
     super.key,
     required this.session,
@@ -145,6 +159,8 @@ class SelectCenterPage extends StatefulWidget {
     this.fetchRawPackagesFromState = state_packages_client.fetchRawPackagesFromState,
     this.uploadInventorySnapshot = server_link.linkUploadInventorySnapshot,
     this.submitCoaForLot = server_link.linkSubmitCoaForLot,
+    this.fetchSalesRecords = fetchSalesRecordsFromState,
+    this.uploadSalesSnapshot = server_link.linkUploadSalesSnapshot,
     this.fetchParLevels = par_client.fetchParLevels,
     this.saveParLevels = par_client.saveParLevels,
     this.fetchMazamaInventory = _mazamaInventory,
@@ -156,6 +172,7 @@ class SelectCenterPage extends StatefulWidget {
     MazamaInventoryCacheStore? mazamaInventoryCacheStore,
     ReplyStore? replyStore,
     this.demo,
+    this.featureTable = features,
   })  : deviceIdStore = deviceIdStore ?? DeviceIdStore(dataDir: sessionStore.dataDir),
         replyStore = replyStore ?? ReplyStore(dataDir: sessionStore.dataDir),
         stockCacheStore = stockCacheStore ?? StockCacheStore(dataDir: sessionStore.dataDir),
@@ -185,6 +202,8 @@ class SelectCenterPage extends StatefulWidget {
           fetchRawPackagesFromState: demo.fetchRawPackagesFromState,
           uploadInventorySnapshot: demo.uploadInventorySnapshot,
           submitCoaForLot: demo.submitCoaForLot,
+          fetchSalesRecords: demo.fetchSalesRecords,
+          uploadSalesSnapshot: demo.uploadSalesSnapshot,
           fetchParLevels: demo.fetchParLevels,
           saveParLevels: demo.saveParLevels,
           fetchMazamaInventory: demo.fetchMazamaInventory,
@@ -254,7 +273,8 @@ class _SelectCenterPageState extends State<SelectCenterPage> {
 
       final all = await widget.fetchLicenses(_session.accessToken);
       if (!mounted) return;
-      final centers = serviceCenters(all); // SM-21: the server's own rule
+      // SM-21: the server's own rule; FR-3: and only license types with a feature on for them (Q3)
+      final centers = serviceCenters(all).where((l) => licenseTypeListed(l.licenseType, table: widget.featureTable)).toList();
       setState(() => _centers = centers);
       if (centers.length == 1) {
         // Only one license to act for at all - skip the picker, but only after this frame finishes building,
@@ -281,13 +301,8 @@ class _SelectCenterPageState extends State<SelectCenterPage> {
     }
   }
 
-  /// Pushes InventoryPortalPage (inventory_portal_page.dart) on top of this screen - a separate Mazama web
-  /// app shown in-app via webview_flutter, not anything this page itself talks to or depends on. Reachable
-  /// regardless of whether any service centers loaded, errored, or came back empty: it's not part of choosing
-  /// a center, so nothing about this page's own load state should gate it.
-  void _openInventoryPortal() {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const InventoryPortalPage()));
-  }
+  /// FR-3: whether [feature] is on for [center]'s license type.
+  bool _on(String feature, License center) => featureOnForLicense(feature, center.licenseType, table: widget.featureTable);
 
   /// Debug-build-only entry point to DebugToolsPage, the hub for every kDebugMode-only diagnostic screen this
   /// app has (that file's own header comment has the full reasoning) - kDebugMode is a compile-time constant,
@@ -401,6 +416,8 @@ class _SelectCenterPageState extends State<SelectCenterPage> {
         resolveAdhocInventory: d.resolveAdhocInventory,
         submitCoaForLot: d.submitCoaForLot,
         keepCoaLotForLater: d.keepCoaLotForLater,
+        queueCoaUploads: d.queueCoaUploads,
+        coaUploadPending: d.coaUploadPending,
         inventoryCacheStore: d.inventoryCacheStore,
         enrichmentStore: d.enrichmentStore,
         cartStore: d.cartStore,
@@ -416,23 +433,39 @@ class _SelectCenterPageState extends State<SelectCenterPage> {
         httpClientFactory: d.saleClient,
         onDraftCountChanged: onDraftCountChanged,
         demo: d,
+        featureTable: widget.featureTable,
       );
 
-  /// SP-D8, MI-D1: the chosen center's Mazama inventory | Stock | Cart home, opened on Stock.
+  /// The chosen center's Sales page (CW-R10): its sales read with a fresh state token, every record read uploaded as
+  /// the session's worker on this install's device id (never in the demo).
+  SalesPage _salesPage(License center) => SalesPage(
+        stateId: center.id,
+        load: () async => widget.fetchSalesRecords(center.id, accessToken: await _freshStateToken()),
+        upload: (records) async {
+          await widget.uploadSalesSnapshot(center.id, records,
+              workerEmail: _session.email, deviceId: await widget.deviceIdStore.idOrCreate());
+        },
+        replies: widget.replyStore,
+        demo: widget.demo != null,
+      );
+
+  /// SP-D8, MI-D1, CW-R10: the chosen center's Mazama inventory | Stock | Cart | Sales home, opened on Stock.
   void _open(License center) {
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (_) => CenterHomePage(
           center: center,
+          featureTable: widget.featureTable,
           buildMazama: () => MazamaInventoryPage(
             load: widget.fetchMazamaInventory,
             kept: mazamaInventoryReplies(widget.replyStore, legacy: widget.mazamaInventoryCacheStore).load,
             keep: mazamaInventoryReplies(widget.replyStore).save,
             health: _health,
-            orderForm: () => _orderPage(center),
+            orderForm: _on('ordering', center) ? () => _orderPage(center) : null,
           ),
           buildStock: () => _stockPage(center),
+          buildSales: () => _salesPage(center),
           buildCart: (onDraftCountChanged) => widget.demo != null
               ? _demoCart(widget.demo!, center, onDraftCountChanged)
               : CartPage(
@@ -446,6 +479,8 @@ class _SelectCenterPageState extends State<SelectCenterPage> {
             uploadInventorySnapshot: widget.uploadInventorySnapshot,
             submitCoaForLot: widget.submitCoaForLot,
             onDraftCountChanged: onDraftCountChanged,
+            health: _health,
+            featureTable: widget.featureTable,
           ),
         ),
       ),
@@ -468,33 +503,11 @@ class _SelectCenterPageState extends State<SelectCenterPage> {
             ),
         ],
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: _body(),
-              ),
-            ),
-          ),
-          // Always shown, whatever _body() above is doing (loading, errored, empty, or the real picker) -
-          // a separate web app, not something a worker is blocked from reaching just because this account
-          // happens to have no service-center access yet, or the license fetch is still in flight.
-          // Not in the demo: the inventory web app is the real Mazama server (DM-D1).
-          if (widget.demo == null)
-          SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-              child: OutlinedButton.icon(
-                onPressed: _openInventoryPortal,
-                icon: const Icon(Icons.open_in_new),
-                label: const Text('Mazama Mushrooms Inventory'),
-              ),
-            ),
-          ),
-        ],
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: _body(),
+        ),
       ),
     );
   }

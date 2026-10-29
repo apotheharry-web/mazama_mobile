@@ -14,6 +14,7 @@ import 'package:mazama_mobile/main.dart';
 import 'package:mazama_mobile/select_center_page.dart';
 import 'package:mazama_mobile/session.dart';
 import 'package:mazama_mobile/session_store.dart';
+import '../temp_app_data_dir.dart';
 
 late Directory _dir;
 
@@ -29,6 +30,7 @@ Future<void> _signIn(WidgetTester tester, String email, String password) async {
 }
 
 void main() {
+  useTempAppDataDir();
   setUp(() => _dir = Directory.systemTemp.createTempSync('mazama_demo_sign_in_test_'));
   tearDown(() {
     rootBundle.clear();

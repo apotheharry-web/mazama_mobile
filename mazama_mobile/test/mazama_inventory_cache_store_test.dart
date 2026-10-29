@@ -3,6 +3,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mazama_mobile/local_store.dart';
 import 'package:mazama_mobile/mazama_inventory_cache_store.dart';
 import 'package:mazama_mobile/mazama_inventory_client.dart';
 import 'package:mazama_mobile/stock_mix.dart';
@@ -46,12 +47,18 @@ void main() {
     });
   });
 
+  // Each body as an older build's file in a fresh folder, imported when the store first opens it (plan P-D5).
   test('a damaged file counts as nothing kept', () async {
-    File('${_dir.path}/mazama_inventory_cache.json').writeAsStringSync('{not json');
-    expect(await store().load(), isNull);
-    File('${_dir.path}/mazama_inventory_cache.json').writeAsStringSync('{"atMs": 1, "inventory": {"cells": 3}}');
-    expect(await store().load(), isNull);
-    File('${_dir.path}/mazama_inventory_cache.json').writeAsStringSync('[]');
-    expect(await store().load(), isNull);
+    for (final (i, body) in ['{not json', '{"atMs": 1, "inventory": {"cells": 3}}', '[]'].indexed) {
+      final dir = Directory('${_dir.path}/older$i')..createSync();
+      File('${dir.path}/mazama_inventory_cache.json').writeAsStringSync(body);
+      expect(await MazamaInventoryCacheStore(dataDir: () => dir).load(), isNull, reason: body);
+    }
+  });
+
+  test('kept in the database, not in a file', () async {
+    await store().save(const MazamaInventory(name: 'Mazama Mushrooms LLC', cells: [], lots: []), DateTime.utc(2026, 10, 21));
+    expect(File('${_dir.path}/mazama_inventory_cache.json').existsSync(), isFalse);
+    expect(LocalStore.forDir(_dir).read('mazama_inventory_cache.json'), isNotNull);
   });
 }

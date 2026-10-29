@@ -10,6 +10,7 @@
 import 'package:flutter/material.dart';
 
 import 'enrichment_store.dart';
+import 'features.g.dart';
 import 'licenses_client.dart';
 import 'packages_client.dart';
 import 'packages_client.dart' as packages_client; // see StockPage.fetchPackages: avoids a same-name default-value ambiguity
@@ -30,7 +31,16 @@ class StockPage extends StatefulWidget {
   /// a session in hand don't need to change.
   final String workerEmail;
 
-  const StockPage({super.key, required this.center, this.fetchPackages = packages_client.fetchPackages, this.workerEmail = ''});
+  /// The feature registry (specs/features FR-3): the reconcile button shows only while reconcile is on for this
+  /// center's license type. The generated one in the app; tests pass a copy with features off.
+  final Map<String, Feature> featureTable;
+
+  const StockPage(
+      {super.key,
+      required this.center,
+      this.fetchPackages = packages_client.fetchPackages,
+      this.workerEmail = '',
+      this.featureTable = features});
 
   @override
   State<StockPage> createState() => _StockPageState();
@@ -168,9 +178,10 @@ class _StockPageState extends State<StockPage> {
               ),
             ),
             Expanded(child: _body()),
-            // Always shown, not gated on _selectedGuids or search state - reconciling is a separate activity
-            // from picking PKPRs to add to a cart, so it's reachable the same way regardless of what else a
-            // worker is doing on this screen right now.
+            // Shown while reconcile is on for this license's type (specs/features FR-3); not gated on
+            // _selectedGuids or search state - reconciling is a separate activity from picking PKPRs to add to a
+            // cart, so it's reachable the same way regardless of what else a worker is doing on this screen.
+            if (featureOnForLicense('reconcile', widget.center.licenseType, table: widget.featureTable))
             SafeArea(
               top: false,
               child: Padding(

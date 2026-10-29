@@ -129,7 +129,8 @@ void main() {
       final ofRecord = (got['of_record'] as Map).cast<String, Object?>();
       final want = ((jsonDecode(File('${dir.path}/expected.json').readAsStringSync()) as Map)['lots'] as Map)
           .cast<String, Object?>();
-      expect(want, isNotEmpty, reason: dir.path);
+      // a report whose sections are tied to no lot (rcl-2411143-blank-uid: every UID printed blank) holds none
+      if (want.isEmpty) expect(ofRecord, isEmpty, reason: '${dir.path}: no lot is expected of this report');
       for (final MapEntry(key: uid, value: lot as Map) in want.entries) {
         final i = ofRecord[uid.toLowerCase()];
         expect(i, isNotNull, reason: '${dir.path}: $uid is not of record in pdfium\'s parse');

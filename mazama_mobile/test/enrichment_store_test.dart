@@ -5,6 +5,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mazama_mobile/enrichment_store.dart';
+import 'package:mazama_mobile/local_store.dart';
 import 'package:mazama_mobile/packages_client.dart';
 
 void main() {
@@ -66,8 +67,9 @@ void main() {
       }
       final known = await s.load(seenAt.add(const Duration(hours: 1)));
       expect(known.keys.toSet(), {enrichmentKey('PKPR-ab12c', 202), enrichmentKey('PKPR-ab12c', 203), enrichmentKey('PKPR-ab12c', 204)});
-      final onDisk = jsonDecode(File('${tempDir.path}/nested/enrichment.json').readAsStringSync()) as Map;
-      expect((onDisk['entries'] as List).length, 3);
+      expect(File('${tempDir.path}/nested/enrichment.json').existsSync(), isFalse, reason: 'kept in the database');
+      final kept = jsonDecode(LocalStore.forDir(Directory('${tempDir.path}/nested')).read('enrichment.json')!.body) as Map;
+      expect((kept['entries'] as List).length, 3);
     });
 
     test('bounded: entries older than maxAge are not handed back, and are dropped on the next write', () async {
@@ -75,21 +77,23 @@ void main() {
       await s.remember([served(id: 101)], seenAt);
       expect(await s.load(seenAt.add(const Duration(days: 31))), isEmpty);
       await s.remember([served(id: 102)], seenAt.add(const Duration(days: 31)));
-      final onDisk = jsonDecode(File('${tempDir.path}/nested/enrichment.json').readAsStringSync()) as Map;
-      expect([for (final e in onDisk['entries'] as List) (e as Map)['id']], [102]);
+      final kept = jsonDecode(LocalStore.forDir(Directory('${tempDir.path}/nested')).read('enrichment.json')!.body) as Map;
+      expect([for (final e in kept['entries'] as List) (e as Map)['id']], [102]);
     });
 
+    // Each as an older build's file, written before the store first opens its folder (plan P-D5).
     test('a damaged or foreign file reads as empty, and clear removes it', () async {
-      final s = store();
-      Directory('${tempDir.path}/nested').createSync(recursive: true);
-      File('${tempDir.path}/nested/enrichment.json').writeAsStringSync('{"version": 1, "entries": [{"productGuid": 3}');
-      expect(await s.load(seenAt), isEmpty);
-      File('${tempDir.path}/nested/enrichment.json').writeAsStringSync('{"version": 99, "entries": []}');
-      expect(await s.load(seenAt), isEmpty);
-      await s.remember([served()], seenAt);
-      await s.clear();
-      expect(await s.load(seenAt), isEmpty);
-      await s.clear(); // nothing there: still fine
+      for (final (i, body) in ['{"version": 1, "entries": [{"productGuid": 3}', '{"version": 99, "entries": []}'].indexed) {
+        final dir = Directory('${tempDir.path}/older$i')..createSync(recursive: true);
+        File('${dir.path}/enrichment.json').writeAsStringSync(body);
+        final s = EnrichmentStore(dataDir: () => dir);
+        expect(await s.load(seenAt), isEmpty, reason: body);
+        await s.remember([served()], seenAt);
+        await s.clear();
+        expect(await s.load(seenAt), isEmpty);
+        expect(LocalStore.forDir(dir).read('enrichment.json'), isNull);
+        await s.clear(); // nothing there: still fine
+      }
     });
   });
 

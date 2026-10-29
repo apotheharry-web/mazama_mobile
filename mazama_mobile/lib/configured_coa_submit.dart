@@ -39,7 +39,11 @@ class ConfiguredCoaSubmitError implements ServerRequestError {
   /// lot and submits it again once the server answers. A state-system failure is never this.
   @override
   final bool unreachable;
-  ConfiguredCoaSubmitError(this.message, {this.unreachable = false});
+
+  /// Mazama's server's HTTP status when it answered the upload (CoaDataError.status), null when it didn't or the
+  /// failure was the state system's (coa_uploader.dart, CU-R3).
+  final int? status;
+  ConfiguredCoaSubmitError(this.message, {this.unreachable = false, this.status});
   @override
   String toString() => message;
 }
@@ -95,7 +99,7 @@ Future<CoaData?> submitCoaForLot({
         client: server,
       );
     } on CoaDataError catch (ex) {
-      throw ConfiguredCoaSubmitError(ex.message, unreachable: ex.unreachable);
+      throw ConfiguredCoaSubmitError(ex.message, unreachable: ex.unreachable, status: ex.status);
     }
   } finally {
     if (shouldClose) {

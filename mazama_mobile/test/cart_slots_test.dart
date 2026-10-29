@@ -103,15 +103,21 @@ void main() {
     setUp(() => tempDir = Directory.systemTemp.createTempSync('mazama_cart_slots_test_'));
     tearDown(() => tempDir.deleteSync(recursive: true));
 
-    test('saves and loads one center\'s list; nothing saved, another center or a broken file is null', () async {
+    test('saves and loads one center\'s list; nothing saved or another center is null', () async {
       final store = CartSlotsStore(dataDir: () => Directory('${tempDir.path}/nested'));
       expect(await store.load(231), isNull);
       final s = CartSlots.initial().withNew('Room B');
       await store.save(231, s);
       expect((await store.load(231))!.active.name, 'Room B');
       expect(await store.load(232), isNull);
+      expect(File('${tempDir.path}/nested/carts.json').existsSync(), isFalse, reason: 'kept in the database');
+    });
+
+    // An older build's file is imported when the store first opens the folder, so it is written before that (P-D5).
+    test('a broken carts.json from an older build is null', () async {
+      Directory('${tempDir.path}/nested').createSync(recursive: true);
       File('${tempDir.path}/nested/carts.json').writeAsStringSync('{not json');
-      expect(await store.load(231), isNull);
+      expect(await CartSlotsStore(dataDir: () => Directory('${tempDir.path}/nested')).load(231), isNull);
     });
   });
 }

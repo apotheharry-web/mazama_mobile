@@ -6,7 +6,7 @@
 // Each report gets a clientId (a UUID v4) when it is queued and keeps it; the server records a clientId once per center
 // and answers a repeat as already done (appreport.py), so sending one again after a lost reply is safe.
 //
-// One JSON file in the app's data folder (server_outbox.json, *Sync calls as the other stores), so the queue
+// One JSON document in the data folder's LocalStore (server_outbox.json, synchronous calls as the other stores), so the queue
 // survives the app being closed. Sent oldest first, one at a time, when the server tracker comes back online (and at
 // start-up, and right after a report is queued while online):
 //   - a 2xx (or the server's "already have it", the same 201): the report leaves the queue;
@@ -33,6 +33,7 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 
+import 'local_store.dart';
 import 'sale_failure_client.dart' as sale_failure_client;
 import 'sale_log_client.dart' as sale_log_client;
 import 'server_error.dart';
@@ -170,13 +171,15 @@ class OutboxStore {
   /// Overridable for tests, as the other stores.
   final Directory Function() dataDir;
 
-  File get _file => File('${dataDir().path}/server_outbox.json');
+  static const _name = 'server_outbox.json';
 
   /// What was kept; an empty state when nothing (readable) was. Entries that can't be read are skipped, not lost
-  /// silently: the file is only rewritten from what was read, so an unreadable entry goes on the next write.
+  /// silently: the document is only rewritten from what was read, so an unreadable entry goes on the next write.
   OutboxState load() {
     try {
-      final decoded = jsonDecode(_file.readAsStringSync());
+      final text = LocalStore.forDir(dataDir()).read(_name)?.body;
+      if (text == null) return const OutboxState();
+      final decoded = jsonDecode(text);
       if (decoded is! Map) return const OutboxState();
       List<OutboxEntry> list(Object? v) => v is List ? [for (final e in v) OutboxEntry.fromJson(e)].whereType<OutboxEntry>().toList() : const [];
       final dropped = decoded['droppedLogs'];
@@ -189,14 +192,12 @@ class OutboxStore {
   }
 
   void save(OutboxState state) {
-    dataDir().createSync(recursive: true);
-    final tmp = File('${_file.path}.tmp');
-    tmp.writeAsStringSync(jsonEncode({
+    // One write, one transaction: a crash mid-write leaves the previous queue whole.
+    LocalStore.forDir(dataDir()).write(_name, jsonEncode({
       'pending': [for (final e in state.pending) e.toJson()],
       'dead': [for (final e in state.dead) e.toJson()],
       'droppedLogs': state.droppedLogs,
     }));
-    tmp.renameSync(_file.path); // a crash mid-write leaves the previous file whole
   }
 }
 

@@ -3,7 +3,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mazama_mobile/enrichment_store.dart';
 import 'package:mazama_mobile/licenses_client.dart';
 import 'package:mazama_mobile/packages_client.dart';
+import 'package:mazama_mobile/features.g.dart';
 import 'package:mazama_mobile/stock_page.dart';
+
+import 'features_off.dart';
 
 final _center = License(id: 231, licenseId: 'SC-b1c7379a', licenseName: 'Bendable Service Center', licenseType: 'ServiceCenter');
 
@@ -15,8 +18,8 @@ final _inventory = [
   Package(productGuid: 'PKPR-ab99c', productType: 'Extract', id: 103, weightPerUnit: 5.0, analyteWeight: 2.0, strain: 'Maztapec', tpeMg: 3, quantity: 7),
 ];
 
-Widget _stockPage({required Future<List<Package>> Function(int) fetchPackages}) =>
-    MaterialApp(home: StockPage(center: _center, fetchPackages: fetchPackages));
+Widget _stockPage({required Future<List<Package>> Function(int) fetchPackages, Map<String, Feature> featureTable = features}) =>
+    MaterialApp(home: StockPage(center: _center, fetchPackages: fetchPackages, featureTable: featureTable));
 
 void main() {
   testWidgets('shows a spinner, then every package sorted by type then PKPR, with its quantity and mg TPE', (tester) async {
@@ -187,5 +190,17 @@ void main() {
       expect(calls, 2);
       expect(find.text('PKPR-ab12c'), findsOneWidget);
     });
+  });
+
+  // specs/features FR-3: the reconcile page is reached only while reconcile is on for the license's type.
+  testWidgets('the reconcile button shows while reconcile is on, and is hidden when it is off', (tester) async {
+    await tester.pumpWidget(_stockPage(fetchPackages: (id) async => _inventory));
+    await tester.pumpAndSettle();
+    expect(find.text('Reconcile inventory with state'), findsOneWidget);
+
+    await tester.pumpWidget(_stockPage(fetchPackages: (id) async => _inventory, featureTable: featuresWithOff(['reconcile'])));
+    await tester.pumpAndSettle();
+    expect(find.text('Reconcile inventory with state'), findsNothing);
+    expect(find.text('Extract'), findsOneWidget); // the stock list itself is unchanged
   });
 }

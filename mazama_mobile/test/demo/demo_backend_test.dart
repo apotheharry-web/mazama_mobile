@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mazama_mobile/coa_uploader.dart';
 import 'package:mazama_mobile/demo/demo_backend.dart';
 import 'package:mazama_mobile/flow/flow_runner.dart';
 import 'package:mazama_mobile/flow/flow_spec.dart';
@@ -133,7 +134,24 @@ void main() {
     expect((await demo.scanMatch(demoStateId, ['PKPR-abc123'])).matches, isEmpty);
   });
 
+  test("CW-R10: the demo's sales: none read, the upload sends nothing and answers an empty summary", () async {
+    expect(await _demo().uploadSalesSnapshot(231, const [{'saleNumber': 'S-1'}], workerEmail: 'w', deviceId: 'd'),
+        {'rows': 0, 'skipped': 0});
+    expect(await _demo().fetchSalesRecords(231, accessToken: 'demo'), isEmpty);
+  });
+
   test('another center is not the demo', () async {
     await expectLater(_demo().fetchPackages(231), throwsA(anything));
+  });
+
+  test('CU-R6: the demo never uploads a lab report - its queue takes nothing, its loads call back nothing', () async {
+    final demo = _demo();
+    var told = 0;
+    demo.queueCoaUploads([const CoaUploadLot(lotGuid: 'HB-demo', packageId: 1, stateId: demoStateId)],
+        onResolved: (g, d) => told++);
+    final r = await demo.resolveAdhocInventory(
+        stateId: demoStateId, accessToken: 'demo', workerEmail: 'guest', deviceId: 'd', onResolved: (g, p) => told++);
+    expect(r.guidsResolved, r.guidsTotal);
+    expect(told, 0);
   });
 }

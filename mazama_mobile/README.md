@@ -9,6 +9,13 @@ only on its `/p/` routes (labels, packages, lab-report data, scan matching, sale
   `assets/`; the copies are committed, and builds use them as they are: no build runs the script).
 - Native camera text scanners: `ios/Runner/TextScanner.swift` and
   `android/app/src/main/kotlin/com/example/mazama_mobile/TextScanner.kt` (channel `mazama/text_scanner`). iOS builds: the root `codemagic.yaml`.
+- What the app keeps between launches (carts, timers, the device id, caches, kept replies, the outbox, catch-up) is
+  in one SQLite file, `mazama.db`, in the app's data folder, through `lib/local_store.dart`; the session's tokens are
+  in the phone's Keychain/Keystore (`lib/secret_store.dart`). The files older builds wrote are imported on the first
+  launch and renamed `*.migrated` (`session.json` is deleted once moved). Only the sign-in spec and host list are still
+  files. `test/local_store_guard_test.dart` fails on a new file write. (`flutter_secure_storage` registers its Linux
+  plugin too, so a Linux desktop build needs `libsecret-1` installed, although the session never uses it off the
+  phones.)
 - Tests run in CI (`mobile-analyze`, `mobile-test`); see `AGENTS.md` for reading the results.
 
 ## Release builds
@@ -52,4 +59,5 @@ and Codemagic builds the releases there (`specs/public-app/README.md`). To publi
 3. Read the commit, push it, then push the tag it prints (`v<version>`): Codemagic builds both apps from it.
 
 The public repository's own README, SECURITY.md, codemagic.yaml and .gitignore are `tool/public/`. Left out of the
-copy: `tool/`, `test/vendored_test.dart`, the desktop/web folders and the real lab reports (`publish_public.sh`).
+copy: `tool/`, `test/vendored_test.dart`, CI's test bundle (`test/all_tests_*.g.dart`, `test/all_tests_bundle_test.dart`),
+the desktop/web folders and the real lab reports (`publish_public.sh`).

@@ -203,9 +203,8 @@ search for them; line numbers are left out on purpose because they change.
   load in the in-app browser at that moment, with the browser's own cookies, not the app's tokens), and exchanges that code with
   the state's token endpoint. Cookies and site data are cleared before the page opens (every time; a clearing call that
   fails is ignored and the page still opens) and, best effort, after it closes (if the app is killed during a sign-in, that second clearing doesn't happen until the next one). The
-  clearing is app-wide: it also signs the worker out of the app's other in-app page, the Mazama inventory portal
-  (`lib/inventory_portal_page.dart`, Mazama's own site). That page runs with JavaScript on and no host restriction; it
-  is never given credentials or tokens, and these sign-in rules don't apply to it.
+  clearing is app-wide. The sign-in page is the app's only webview: the Mazama inventory portal, a second in-app page
+  that shared its cookie store, was removed (specs/center-web CW-R9).
 - **Where to look:**
   - `lib/browser_sign_in_page.dart`: `decideBrowserNavigation`, the `NavigationDelegate`, and the clearing calls
     (`clearCookies`, `clearCache`, `clearLocalStorage`); its file comment says what the navigation check does and
@@ -237,7 +236,7 @@ search for them; line numbers are left out on purpose because they change.
   `assets/flows_phone/login_browser.yaml` (its `error:` lines).
 - **Tests:** `test/flow/flow_runner_test.dart` (secret-scrubbing cases for the password, email and access token; the
   refresh token goes through the same code without a test of its own); `test/session_test.dart` ("a failed-sale
-  report names a session problem in fixed words, never its message") and `test/cart_page_test.dart` ("a renew error
+  report names a session problem in fixed words, never its message") and `test/cart_page_sell_outcomes_test.dart` ("a renew error
   carrying a captured token ... never reaches the failed-sale report").
 
 ### 7. What the app does send to Mazama's server
@@ -288,8 +287,11 @@ search for them; line numbers are left out on purpose because they change.
 - **Where to look:** `pubspec.yaml` (`dependencies:`), `pubspec.lock`, and the native dependencies in
   `android/app/build.gradle.kts`. The Dart dependencies are:
   - `http`, `crypto`, `cryptography`, `yaml`, `path_provider`, `url_launcher`, `webview_flutter`, `share_plus`,
-    `ffi`, `pdfrx`;
+    `ffi`, `pdfrx`, `sqlite3`, `flutter_secure_storage`;
   - `pdfrx` gets its PDF engine when the app is built; the app opens PDFs only from memory;
+  - `sqlite3` likewise gets a prebuilt SQLite library when the app is built (its build hook); it keeps what the app
+    stores on the phone in one local file (claim 9) and talks to nothing;
+  - `flutter_secure_storage` is the iOS Keychain / Android Keystore, for the session (claim 9);
   - `share_plus` opens the share sheet only when the worker taps "Save report" on the reconciliation report (an image
     that shows the worker's email); in debug builds, also lab-report PDFs and the state's product-info JSON.
 - The phone's own browser engine (Android System WebView, WKWebView) may send its own diagnostics and safe-browsing
@@ -297,32 +299,56 @@ search for them; line numbers are left out on purpose because they change.
 
 ### 9. Where credentials and tokens are stored on the phone
 
-- **Statement:** the password is never stored. The session (email, access token, refresh token and expiry) is saved
-  in one file, `session.json`, in the app's own private data folder, so the worker doesn't have to sign in every time
-  the app opens.
-- **That file is not encrypted by the app itself.** On Android and iPhone it relies on the operating system's per-app
-  sandbox. Moving it to the iOS Keychain or Android Keystore is a planned hardening step, not yet done.
-- **It is kept out of backups.** Android: the app turns backup off (`android:allowBackup="false"`,
+- **Statement:** the password is never stored. The session (email, access token, refresh token and expiry) is kept in
+  the phone's secure storage, so the worker doesn't have to sign in every time the app opens: the iOS Keychain or the
+  Android Keystore (`flutter_secure_storage`, key `mazama.session`, `PlatformSecretStore` in `lib/secret_store.dart`),
+  never in the app's database or any file on those phones. On iPhone the item is
+  `first_unlock_this_device`: readable from the first unlock after the phone starts, never synced to iCloud Keychain
+  and never restored onto another phone.
+- **Builds before this one kept it in a file**, `session.json`, in the app's private data folder, not encrypted by the
+  app. The first launch of this build moves that session into secure storage and deletes the file (deletes, never
+  renames; a corrupt file is deleted too).
+- **A reinstalled app does not get the previous session back.** iOS keeps Keychain items after an app is deleted, so
+  the app keeps a non-secret install marker (the `session_install` document) in its database, which is deleted with
+  the app: when the marker is missing, the app deletes any session in secure storage before it reads one
+  (`SessionStore` in `lib/session_store.dart`, `test/secret_store_test.dart`). If that deletion fails, or the database
+  can't be opened, no session is loaded; a session the worker then saves overwrites the old one and writes the marker,
+  so it is kept.
+- **If secure storage fails** (a locked keychain, a damaged Keystore key), nothing is kept anywhere else: the worker
+  signs in again.
+- **The rest of what the app keeps is in one database file**, `mazama.db` (SQLite, `lib/local_store.dart`), in the
+  app's private data folder, not encrypted by the app (the operating system's per-app sandbox protects it). Builds
+  before this one wrote separate files; the first launch imports them and renames each `<name>.migrated` (deleted by a
+  later release).
+- **These are kept out of backups.** Android: the app turns backup off (`android:allowBackup="false"`,
   `android:fullBackupContent="false"`) and excludes everything from cloud backup and device-to-device transfer
   (`android:dataExtractionRules`, `android/app/src/main/res/xml/data_extraction_rules.xml`), all in
   `android/app/src/main/AndroidManifest.xml`. iPhone: at launch the app marks its Application Support folder, where the
   file lives, as excluded from iCloud and computer backups (`excludeAppSupportFromBackup` in
-  `ios/Runner/AppDelegate.swift`; best effort). Builds made before this change did include the file in backups.
-- **The email is also kept elsewhere**, in the same private, backup-excluded folder: in `server_outbox.json`
-  (`lib/server_outbox.dart`: sale logs and failed-sale reports waiting to reach Mazama's server, which carry it, claim
-  7) and `server_catch_up.json` (`lib/catch_up_store.dart`: work waiting to be redone). Signing out deletes
-  `session.json` only: those two keep what still has to be sent. The reconciliation report image, which shows the
+  `ios/Runner/AppDelegate.swift`; best effort). Builds made before that change did include the session file in
+  backups. (Keychain items themselves are `ThisDeviceOnly`, so an encrypted backup can't carry them to another phone.)
+- **The email is also kept elsewhere**, in `mazama.db` in the same private, backup-excluded folder: in its
+  `server_outbox.json` document (`lib/server_outbox.dart`: sale logs and failed-sale reports waiting to reach Mazama's
+  server, which carry it, claim 7) and its `server_catch_up.json` document (`lib/catch_up_store.dart`: work waiting to
+  be redone), and, until the clean-up release, in the `server_outbox.json.migrated` and
+  `server_catch_up.json.migrated` files an older build left. Signing out deletes the session from secure storage
+  (and any `session.json` left) only: those keep what still has to be sent. The reconciliation report image, which shows the
   email, is written to the app's temporary folder when the worker shares it, and on Android label photos stay in its
   cache folder; the app doesn't delete either (the system may clear those folders). On iPhone, the cart-timers widget's shared settings hold cart names and
   timers (no email or token) outside the backup-excluded folder.
 - The in-app browser keeps the state's page cookies in the phone's own web view storage while that page is open;
   the app clears them before it opens and after it closes (claim 5).
 - Only Android and iPhone builds are made.
-- **Where to look:** `lib/session_store.dart` (`SessionStore`, `initAppDataDir`, which uses `path_provider`'s
-  application support folder) and `lib/session.dart` (`toJson`).
-- On iPhone, the web views' own cookies and site data (the state's page while it is open, and the Mazama inventory
-  portal) are kept by the system outside the Application Support folder, so the backup exclusion may not cover them.
-- **Developer builds only:** `lib/debug_local_storage_page.dart` can show a summary of this file on screen (the email,
+- **Where to look:** `lib/session_store.dart` (`SessionStore`, the install marker and the move, `initAppDataDir`,
+  which uses `path_provider`'s application support folder), `lib/secret_store.dart` (`PlatformSecretStore`),
+  `lib/local_store.dart` and `lib/session.dart` (`toJson`). `test/local_store_guard_test.dart` fails on a file write
+  under `lib/` outside the allowed files, and on the phones' secret store reaching the database.
+- Off the phones (the desktop builds, and `flutter test`), where there is no secure storage, the session is a document
+  in `mazama.db` (`DocumentSecretStore`).
+- On iPhone, the web view's own cookies and site data (the state's sign-in page while it is open, the app's only web
+  view since the Mazama inventory portal was removed, specs/center-web CW-R9) are kept by the system outside the
+  Application Support folder, so the backup exclusion may not cover them.
+- **Developer builds only:** `lib/debug_local_storage_page.dart` can show a summary of the session on screen (the email,
   the expiry and whether tokens are present, not the tokens). It is reachable only in
   debug builds (`kDebugMode`, `lib/debug_tools_page.dart`) and sends nothing.
 

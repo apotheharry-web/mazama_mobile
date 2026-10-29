@@ -8,6 +8,7 @@ import 'package:mazama_mobile/cart_page.dart';
 import 'package:mazama_mobile/center_home_page.dart';
 import 'package:mazama_mobile/center_stock_page.dart';
 import 'package:mazama_mobile/device_id.dart';
+import 'package:mazama_mobile/features.g.dart';
 import 'package:mazama_mobile/flow/flow_spec.dart';
 import 'package:mazama_mobile/licenses_client.dart';
 import 'package:mazama_mobile/mazama_inventory_client.dart';
@@ -16,6 +17,7 @@ import 'package:mazama_mobile/order_form_page.dart';
 import 'package:mazama_mobile/order_par_page.dart';
 import 'package:mazama_mobile/packages_client.dart';
 import 'package:mazama_mobile/resilience_options.dart';
+import 'package:mazama_mobile/sales_page.dart';
 import 'package:mazama_mobile/select_center_page.dart';
 import 'package:mazama_mobile/session.dart';
 import 'package:mazama_mobile/session_store.dart';
@@ -25,13 +27,16 @@ import 'package:mazama_mobile/stock_cache_store.dart';
 import 'package:mazama_mobile/stock_mix.dart';
 import 'package:mazama_mobile/stock_summary.dart';
 
+import 'features_off.dart';
+import 'temp_app_data_dir.dart';
+
 License _license(int id, String name, String type) =>
     License(id: id, licenseId: 'L-$id', licenseName: name, licenseType: type);
 
 Future<List<Package>> _noPackages(int stateId) async => [];
 
 // The REAL default for SelectCenterPage.fetchRawPackagesFromState is a live network call, forwarded straight
-// through to whichever CartPage this page opens - see that field's own doc comment and cart_page_test.dart's
+// through to whichever CartPage this page opens - see that field's own doc comment and cart_page_test_support.dart's
 // own fetchRawPackagesFromState fixture for why this is no longer a tier-2-only fallback a test can just never
 // reach: CartPage's _fetchMergedForCart calls it on every configured-center load. Every test below that taps or
 // auto-opens through to a CartPage needs this wired or it hangs on a real (and in a test sandbox, unreachable)
@@ -61,7 +66,8 @@ Future<List<ProductSheet>> _sheets(int stateId) async => const [
     ];
 
 void main() {
-  // Same rootBundle.loadString Future-caching race widget_test.dart and cart_page_test.dart guard against:
+  useTempAppDataDir();
+  // Same rootBundle.loadString Future-caching race widget_test.dart and the cart_page_*_test.dart files guard against:
   // with exactly one license, this page auto-opens a CartPage, which loads assets/flows/sale.yaml via
   // rootBundle unless saleSpec: is given - clear the cache between tests so a later test can't be left
   // awaiting an earlier test's already-resolved (and wrong-zone) Future.
@@ -271,7 +277,7 @@ void main() {
 
     expect(tokens, contains('SAVED')); // ensureFreshSession on the saved session: fresh, so used as it is
     expect(find.byType(CenterStockPage), findsOneWidget);
-    expect(find.text("Partial: the Mazama server isn't reachable"), findsOneWidget);
+    expect(find.textContaining('Partial'), findsNothing); // R87: the app-wide banner says the server can't be reached
     expect(find.text('14 units'), findsOneWidget);
     // The mg pie is a swipe away from the units pie.
     await tester.drag(find.byKey(const ValueKey('stock-pies')), const Offset(-300, 0));
@@ -289,7 +295,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('order-button')));
     await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('server-offline-notice')), findsOneWidget);
+    expect(find.textContaining('last sent'), findsNothing); // no notice of the page's own (R87)
     expect(
         find.text("Mazama's server can't be reached, so par levels can't be saved now - try again later. "
             'The order starts from the par levels above.'),
@@ -304,6 +310,9 @@ void main() {
   });
 
   testWidgets('choosing a center opens the home page', (tester) async {
+    final salesReads = <(int, String)>[];
+    final salesUploads = <(int, int, String)>[];
+    final today = DateTime.now().toUtc().toIso8601String();
     await tester.pumpWidget(MaterialApp(
       home: SelectCenterPage(
         session: _freshSession(),
@@ -319,6 +328,16 @@ void main() {
         ],
         fetchCenterPackages: _noPackages,
         fetchRawPackagesFromState: _noRawState,
+        fetchSalesRecords: (id, {required accessToken}) async {
+          salesReads.add((id, accessToken));
+          return [
+            {'id': 1, 'saleNumber': 'S-0001', 'dateOfSale': today, 'productName': 'GT 5 mg', 'numberSold': 1, 'productCost': 25},
+          ];
+        },
+        uploadSalesSnapshot: (id, records, {required workerEmail, required deviceId}) async {
+          salesUploads.add((id, records.length, workerEmail));
+          return const {'rows': 1, 'skipped': 0};
+        },
       ),
     ));
     await tester.pumpAndSettle();
@@ -348,6 +367,19 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(CartPage), findsOneWidget);
     expect(find.text('EPIC Healing Eugene'), findsOneWidget); // the cart's own AppBar title
+    expect(salesReads, isEmpty); // review I-1: nothing of the Sales page runs while the worker is on the Cart
+    expect(salesUploads, isEmpty);
+
+    // specs/center-web CW-R10: Sales, right of Cart: the center's sales read with the session's token, every record
+    // uploaded as the signed-in worker.
+    await tester.tap(find.text('Sales'));
+    await tester.pumpAndSettle();
+    final sales = tester.widget<SalesPage>(find.byType(SalesPage));
+    expect(sales.stateId, 183);
+    expect(sales.demo, isFalse);
+    expect(find.text('S-0001'), findsOneWidget);
+    expect(salesReads, [(183, 'TOKEN')]);
+    expect(salesUploads, [(183, 1, 'worker@example.com')]);
   });
 
   // SM-21: the picker lists what the server's directory.service_centers would keep - an id once, never id 0.
@@ -459,5 +491,92 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('no service-center access'), findsOneWidget);
+  });
+
+  // specs/features FR-3: the picker and the Order button follow the feature registry.
+  Widget picker(List<License> licenses, {Map<String, Feature> featureTable = features}) => MaterialApp(
+        home: SelectCenterPage(
+          session: _freshSession(),
+          spec: _dummySpec,
+          sessionStore: sessionStore(),
+          fetchMazamaInventory: _mazamaMix,
+          fetchProductSheets: _sheets,
+          stockCacheStore: StockCacheStore(dataDir: () => _tempDir),
+          fetchMazamaLicenses: (id) async => const [],
+          fetchLicenses: (token) async => licenses,
+          fetchCenterPackages: _noPackages,
+          fetchRawPackagesFromState: _noRawState,
+          featureTable: featureTable,
+        ),
+      );
+
+  final twoCentersAndMazama = [
+    _license(294, 'Mazama Mushrooms LLC', 'Manufacturer'),
+    _license(225, 'Unstuck Psilocybin Treatment Center', 'ServiceCenter'),
+    _license(183, 'EPIC Healing Eugene', 'ServiceCenter'),
+  ];
+
+  testWidgets('lists service centers when center features are on', (tester) async {
+    await tester.pumpWidget(picker(twoCentersAndMazama));
+    await tester.pumpAndSettle();
+    expect(find.text('Choose a service center'), findsOneWidget);
+    expect(find.text('Unstuck Psilocybin Treatment Center'), findsOneWidget);
+    expect(find.text('EPIC Healing Eugene'), findsOneWidget);
+  });
+
+  testWidgets('a Manufacturer license is never listed while no manufacturer feature is on', (tester) async {
+    expect(licenseTypeListed('Manufacturer'), isFalse);
+    await tester.pumpWidget(picker(twoCentersAndMazama));
+    await tester.pumpAndSettle();
+    expect(find.text('Mazama Mushrooms LLC'), findsNothing);
+
+    // And a service center is not listed either once nothing beyond sign-in, the picker, demo and debug
+    // is on for its license type (Q3).
+    final centerOff = featuresWithOff([
+      for (final f in features.values)
+        if (!licensePickerIgnores.contains(f.name)) f.name,
+    ]);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pumpWidget(picker(twoCentersAndMazama, featureTable: centerOff));
+    await tester.pumpAndSettle();
+    expect(find.text('Unstuck Psilocybin Treatment Center'), findsNothing);
+    expect(find.textContaining('no service-center access'), findsOneWidget);
+  });
+
+  // CW-R9: the inventory portal left the phone, with its button.
+  testWidgets('the picker has no inventory portal button', (tester) async {
+    await tester.pumpWidget(picker(twoCentersAndMazama));
+    await tester.pumpAndSettle();
+    expect(find.text('EPIC Healing Eugene'), findsOneWidget);
+    expect(find.text('Mazama Mushrooms Inventory'), findsNothing);
+    expect(find.widgetWithIcon(OutlinedButton, Icons.open_in_new), findsNothing);
+    expect(find.byIcon(Icons.open_in_new), findsNothing);
+  });
+
+  testWidgets('no Order button when ordering is off', (tester) async {
+    final one = [_license(231, 'Bendable Service Center', 'ServiceCenter')];
+    await tester.pumpWidget(picker(one));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Mazama'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('order-button')), findsOneWidget);
+    expect(tester.widget<MazamaInventoryPage>(find.byType(MazamaInventoryPage)).orderForm, isNotNull);
+
+    await tester.pumpWidget(const SizedBox());
+    await tester.pumpWidget(picker(one, featureTable: featuresWithOff(['ordering'])));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Mazama'));
+    await tester.pumpAndSettle();
+    expect(tester.widget<MazamaInventoryPage>(find.byType(MazamaInventoryPage)).orderForm, isNull);
+    expect(find.byKey(const ValueKey('order-button')), findsNothing);
+  });
+
+  testWidgets('the center home it opens follows the same table', (tester) async {
+    await tester.pumpWidget(picker([_license(231, 'Bendable Service Center', 'ServiceCenter')],
+        featureTable: featuresWithOff(['mazama_tab'])));
+    await tester.pumpAndSettle();
+    expect([for (final t in tester.widget<TabBar>(find.byType(TabBar)).tabs) (t as Tab).text], ['Stock', 'Cart', 'Sales']);
+    expect(find.byType(CenterStockPage), findsOneWidget);
+    expect(tester.widget<CenterHomePage>(find.byType(CenterHomePage)).featureTable['mazama_tab']!.onPhone, isEmpty);
   });
 }

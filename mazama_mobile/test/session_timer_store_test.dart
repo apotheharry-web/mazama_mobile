@@ -3,6 +3,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mazama_mobile/local_store.dart';
 import 'package:mazama_mobile/session_timer_store.dart';
 
 void main() {
@@ -47,11 +48,12 @@ void main() {
     await s.clear(); // must not throw even though there is nothing left to delete
   });
 
+  // An older build's file is imported when the store first opens the folder (local_store_import.dart), so these write
+  // it before the store is first used there (plan P-D5).
   test('a corrupted file on disk reads back as null, not a crash', () async {
-    final s = store();
-    await s.save(231, start); // creates the directory for us
+    await Directory('${tempDir.path}/nested').create(recursive: true);
     await File('${tempDir.path}/nested/session_timer.json').writeAsString('not json{{{');
-    expect(await s.load(231), isNull);
+    expect(await store().load(231), isNull);
   });
 
   test('a file missing startMillis reads back as null', () async {
@@ -78,7 +80,8 @@ void main() {
     await s.clear(cartId: 'c2');
     expect(await s.load(231, cartId: 'c2'), isNull);
     expect(await s.load(231), start);
-    expect(File('${tempDir.path}/nested/session_timer.json').existsSync(), isTrue);
+    expect(File('${tempDir.path}/nested/session_timer.json').existsSync(), isFalse, reason: 'kept in the database');
+    expect(LocalStore.forDir(Directory('${tempDir.path}/nested')).read('session_timer.json'), isNotNull);
   });
 
   test('a cart remembers the dose it sold until its timer is cleared (specs/multi-cart MC-D14)', () async {

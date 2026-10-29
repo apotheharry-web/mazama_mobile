@@ -1,12 +1,15 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mazama_mobile/cart_page.dart';
 import 'package:mazama_mobile/debug_launch_cart_page.dart';
 import 'package:mazama_mobile/flow/flow_spec.dart';
 import 'package:mazama_mobile/session.dart';
 import 'package:mazama_mobile/session_store.dart';
+import 'package:mazama_mobile/state_client.dart' show resetStateReadsSpec;
+import 'temp_app_data_dir.dart';
 
 Session _session() => Session(
     accessToken: 'TOKEN', refreshToken: 'REFRESH', email: 'worker@example.com', expiresAtMs: DateTime.now().millisecondsSinceEpoch + 3600 * 1000);
@@ -15,7 +18,7 @@ final _dummySpec = FlowSpec(const {}, const {});
 
 SessionStore _sessionStore() => SessionStore(dataDir: () => Directory.systemTemp.createTempSync());
 
-// CartPage._fetchMergedForCart now calls fetchRawPackagesFromState on every load (see cart_page_test.dart's
+// CartPage._fetchMergedForCart now calls fetchRawPackagesFromState on every load (see the cart_page_*_test.dart files'
 // own fixture for why) - DebugLaunchCartPage doesn't override CartPage's own defaults at all (it opens the
 // real page, deliberately), so every CartPage this page opens needs the real network calls to fail fast
 // rather than hang, same as every other test that opens a real CartPage without its own fixtures.
@@ -42,6 +45,16 @@ Future<void> _closeCart(WidgetTester tester) async {
 }
 
 void main() {
+  useTempAppDataDir();
+  // The real CartPage loads assets/flows/sale.yaml through rootBundle and the state-reads spec (state_client.dart's
+  // stateReadsSpec); both caches keep the Future, which belongs to this test's fake async zone. Left there, a later
+  // test (this file's or, in CI's one-isolate bundle, another file's) awaits it forever: demo_walkthrough_test's
+  // pumpAndSettle never settled, coa_data_resolver_test's setUpAll never ended.
+  tearDown(() {
+    rootBundle.clear();
+    resetStateReadsSpec();
+  });
+
   testWidgets('the state-id field is pre-filled from initialStateId', (tester) async {
     await tester.pumpWidget(_page(initialStateId: 231));
     expect((tester.widget(find.byType(TextField).first) as TextField).controller!.text, '231');

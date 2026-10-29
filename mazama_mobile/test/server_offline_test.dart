@@ -1,9 +1,8 @@
 // What the phone does with Mazama's own pages while Mazama's server can't be reached (lib/server_offline.dart): a read
-// keeps each reply with when, and shows that copy (with its date) only when the server can't be reached; a 4xx, or no
-// copy kept, is the error as before.
+// keeps each reply with when, and gives that copy back only when the server can't be reached; a 4xx, or no copy kept,
+// is the error as before.
 import 'dart:io';
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mazama_mobile/par_client.dart';
 import 'package:mazama_mobile/server_offline.dart';
@@ -77,28 +76,11 @@ void main() {
     });
   });
 
-  test('the notice says the server cannot be reached and when the copy is from, in the phone\'s time', () {
+  test('dates in the phone\'s time, and what a write that cannot reach the server says', () {
     final local = DateTime(2026, 10, 21, 18, 5);
     expect(formatAsOf(local), 'Oct 21, 2026 at 6:05 PM');
     expect(formatAsOf(DateTime(2026, 1, 2, 0, 0)), 'Jan 2, 2026 at 12:00 AM');
     expect(formatAsOf(DateTime(2026, 1, 2, 12, 30)), 'Jan 2, 2026 at 12:30 PM');
-    expect(serverOfflineNotice(local),
-        "Mazama's server can't be reached - showing what it last sent on Oct 21, 2026 at 6:05 PM.");
-    expect(serverOfflineNotice(null), "Mazama's server can't be reached - showing what it last sent.");
     expect(serverTryLater, "Mazama's server can't be reached - try again later.");
-  });
-
-  testWidgets('the notice banner shows the words, an extra sentence and an optional Retry', (tester) async {
-    var retried = 0;
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(body: ServerOfflineNotice(cachedAt: at, extra: 'More later.', onRetry: () => retried++)),
-    ));
-    expect(find.text('${serverOfflineNotice(at)} More later.'), findsOneWidget);
-    await tester.tap(find.text('Retry'));
-    expect(retried, 1);
-
-    await tester.pumpWidget(MaterialApp(home: Scaffold(body: ServerOfflineNotice(cachedAt: at))));
-    expect(find.text(serverOfflineNotice(at)), findsOneWidget);
-    expect(find.text('Retry'), findsNothing);
   });
 }

@@ -2,11 +2,14 @@
 # Changing anything bumps `version`, which becomes part of every stored result's parser_version.
 # Algorithm: specs/coa/04-parsing.md. Facts marked [RCL] were seen in the real Rose City Labs reports in
 # mazama_modules/coa/corpus/real/.
-version: 2026-10-24.1
+version: 2026-10-27.2
 
 anchor:
   labels: ["UID:"]                        # a section starts on the line holding this label...
   id: '(HB|PL)-[0-9a-zA-Z]{5,8}'          # ...followed by a batch/lot id; 7 and 8 hex digits both occur [RCL]
+  client_prefixes: ["HL", "CB"]           # a client's own id printed in place of the state's ("UID: HL-766FBD69",
+                                          # "UID: CB-49011e81") [RCL 2506024, 2605307]: never a lot's own id; its section
+                                          # is a lot's only through the report's request or custody pairing (AD-21)
 
 confusables: {o: "0", q: "0", i: "1", l: "1", s: "5", z: "2", g: "9", t: "7"}   # folded only when no exact match
 
@@ -87,3 +90,6 @@ lab_profiles:                             # the first profile any of whose `dete
 lot_links:                                # AD-19: a report's request / chain of custody pairs a lot with a batch
   batch_labels: ["Batch ID"]              # "Client Batch ID: HB-...", "Batch ID/METRC ID" (id on the next line) [RCL]
   lot_labels: ["Lot/Process Lot"]         # "Harvest Lot/Process Lot: PL-..." or "...Lot Number" (id on the next line) [RCL]
+  item_labels: ["Item/Strain Name"]       # AD-22: a request item's name, on the next line ("Melange X") [RCL 2411143]
+  custody_labels: ["Client Batch ID"]     # AD-21: "#2   Client Batch ID:   HB-d888fd6e", the chain of custody's line for
+                                          # the report's 2nd sample (work-order number ...-02) [RCL 2312001]

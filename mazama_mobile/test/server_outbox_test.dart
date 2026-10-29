@@ -8,6 +8,7 @@ import 'dart:math';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart' as http_testing;
+import 'package:mazama_mobile/local_store.dart';
 import 'package:mazama_mobile/sale_failure_client.dart';
 import 'package:mazama_mobile/sale_log_client.dart';
 import 'package:mazama_mobile/server_health.dart';
@@ -45,9 +46,9 @@ void main() {
     if (next != null) throw next(e);
   }
 
-  ServerOutbox outbox({int cap = outboxCap, OutboxSender? send}) => ServerOutbox(
+  ServerOutbox outbox({int cap = outboxCap, OutboxSender? send, Directory? dir}) => ServerOutbox(
       health: health,
-      store: OutboxStore(dataDir: () => _dir),
+      store: OutboxStore(dataDir: () => dir ?? _dir),
       send: send ?? scripted,
       startTimer: timers.start,
       now: () => DateTime.utc(2026, 10, 23, 18),
@@ -208,10 +209,16 @@ void main() {
     expect(bodies['/p/sale-failure/231']!['reason'], 'expired 2');
   });
 
+  // Each body as an older build's file in a fresh folder, imported when the store first opens it (plan P-D5).
+  Directory olderBuild(String folder, String body) {
+    final dir = Directory('${_dir.path}/$folder')..createSync();
+    File('${dir.path}/server_outbox.json').writeAsStringSync(body);
+    return dir;
+  }
+
   test('an unreadable file counts as an empty outbox; an unreadable entry is skipped', () {
-    File('${_dir.path}/server_outbox.json').writeAsStringSync('{not json');
-    expect(outbox().pendingCount, 0);
-    File('${_dir.path}/server_outbox.json').writeAsStringSync(jsonEncode({
+    expect(outbox(dir: olderBuild('a', '{not json')).pendingCount, 0);
+    final damaged = olderBuild('b', jsonEncode({
       'pending': [
         {'kind': 'sale_log', 'clientId': 'x'}, // damaged
         OutboxEntry(
@@ -225,7 +232,15 @@ void main() {
             .toJson(),
       ],
     }));
-    expect([for (final e in outbox().pending) e.clientId], ['c-1']);
+    expect([for (final e in outbox(dir: damaged).pending) e.clientId], ['c-1']);
+  });
+
+  test('kept in the database, not in a file', () async {
+    health.markUnreachable();
+    await log(outbox());
+    expect(File('${_dir.path}/server_outbox.json').existsSync(), isFalse);
+    expect(File('${_dir.path}/server_outbox.json.tmp').existsSync(), isFalse);
+    expect(LocalStore.forDir(_dir).read('server_outbox.json'), isNotNull);
   });
 
   test('records the sale exactly as given', () async {

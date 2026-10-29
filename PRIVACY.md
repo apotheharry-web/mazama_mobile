@@ -46,6 +46,15 @@ The app sends Mazama's server only what it needs to run the service your center 
 | **Text read from a product label** (not the photo) | when you scan a label | to find the matching product |
 | **Sign-in failure reports**: only fixed words for the step and reason, the state's HTTP status and the install id; never your email, password or any message | when signing in fails for a reason other than a wrong password | to learn quickly when the state's sign-in has changed |
 
+**Until Mazama approves your phone.** Mazama approves each email and phone (install id) together before what they
+send is used; Mazama's server also approves them for one center by itself when a sale the app reported from that
+phone is found in the state's records for that center. Until then, what the app sends (sale records, failed-sale reports, inventory updates, orders, par levels
+and lab reports) is kept on Mazama's server **unused**: it isn't added to your center's records, and a lab report isn't
+opened. Once Mazama approves your email on that phone, what was kept is used as if it had just arrived (anything out
+of date by then, such as an older inventory update, is set aside). What isn't approved is kept, unused, for
+up to 30 days and then deleted (only the record that it was sent stays); Mazama may also delete it sooner. Only Mazama
+sees what is kept.
+
 Like any web server, ours also sees your phone's internet address and the time of each request; we don't use them to
 identify you. The server's own operating logs may also note your email address, for example when an upload is slow.
 

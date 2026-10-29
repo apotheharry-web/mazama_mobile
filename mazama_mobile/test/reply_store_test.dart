@@ -3,6 +3,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mazama_mobile/local_store.dart';
 import 'package:mazama_mobile/mazama_inventory_cache_store.dart';
 import 'package:mazama_mobile/mazama_inventory_client.dart';
 import 'package:mazama_mobile/par_client.dart';
@@ -54,10 +55,19 @@ void main() {
         throwsA(isA<ParError>()));
   });
 
+  // As an older build's file, written before the store first opens the folder (imported then; plan P-D5).
   test('a damaged file counts as nothing kept', () async {
     Directory('${_dir.path}/server_replies').createSync();
     File('${_dir.path}/server_replies/${Uri.encodeComponent('par/231')}.json').writeAsStringSync('{"atMs": "x"');
     expect(store().load('par/231'), isNull);
+  });
+
+  test('kept in the database, not in files; keys come back decoded and sorted', () async {
+    store().save('par/231', [1], at);
+    store().save('packages/231', [2], at);
+    expect(Directory('${_dir.path}/server_replies').existsSync(), isFalse);
+    expect(LocalStore.forDir(_dir).read('server_replies/${Uri.encodeComponent('par/231')}.json'), isNotNull);
+    expect(store().keys(), ['packages/231', 'par/231']);
   });
 
   group('the reads moved here', () {

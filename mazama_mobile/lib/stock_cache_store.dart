@@ -4,12 +4,14 @@
 // product apart in state-only data), the last rows drawn with their mg mode and time (the charts to show,
 // with their age, when nothing is reachable), and the last product information sheets (the lot table). Since README
 // R56 the server's par levels and sheets are kept in the app's reply store (reply_store.dart) instead; the copies
-// builds before it kept here (par, sheets) are only read, once, when the reply store has none yet. One small JSON file per center in the app's data folder, written
-// with the *Sync calls for the same reason as device_id.dart / cart_store.dart (an async write/read race can
-// deadlock inside flutter_test's fake clock); anything unreadable counts as nothing saved.
+// builds before it kept here (par, sheets) are only read, once, when the reply store has none yet. One small JSON document per center
+// (stock_cache_<state id>.json) in the data folder's LocalStore, with synchronous calls for the same reason as
+// device_id.dart / cart_store.dart (an async write/read race deadlocked inside flutter_test's fake clock); anything
+// unreadable counts as nothing saved.
 import 'dart:convert';
 import 'dart:io';
 
+import 'local_store.dart';
 import 'session_store.dart' show defaultSessionDataDir;
 import 'sheets_client.dart' show ProductSheet;
 import 'stock_summary.dart';
@@ -59,11 +61,13 @@ class StockCacheStore {
   /// Overridable for tests, as the other stores.
   final Directory Function() dataDir;
 
-  File _file(int stateId) => File('${dataDir().path}/stock_cache_$stateId.json');
+  String _name(int stateId) => 'stock_cache_$stateId.json';
 
   Map<String, Object?> _read(int stateId) {
     try {
-      final decoded = jsonDecode(_file(stateId).readAsStringSync());
+      final text = LocalStore.forDir(dataDir()).read(_name(stateId))?.body;
+      if (text == null) return {};
+      final decoded = jsonDecode(text);
       return decoded is Map ? Map<String, Object?>.from(decoded) : {};
     } on FileSystemException {
       return {};
@@ -73,8 +77,7 @@ class StockCacheStore {
   }
 
   void _write(int stateId, Map<String, Object?> data) {
-    dataDir().createSync(recursive: true);
-    _file(stateId).writeAsStringSync(jsonEncode(data));
+    LocalStore.forDir(dataDir()).write(_name(stateId), jsonEncode(data));
   }
 
   Future<StockCache> load(int stateId) async {

@@ -1,5 +1,5 @@
 // cart_pricing.dart is plain Dart with no Flutter dependency, so every branch here is exercised directly -
-// no widget harness needed, unlike cart_page_test.dart's own exercise of the same logic through the UI.
+// no widget harness needed, unlike the cart_page_*_test.dart files' own exercise of the same logic through the UI.
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mazama_mobile/cart_pricing.dart';
 

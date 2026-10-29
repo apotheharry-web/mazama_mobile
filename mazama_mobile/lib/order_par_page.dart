@@ -6,8 +6,10 @@
 // It loads the center's stock (for the units on hand) and par levels together, through the same loaders the stock
 // page uses (select_center_page.dart). Stock that doesn't load still lets the par levels be set (on hand shows 0); par
 // levels that don't load can only be retried. Partial stock (the server unreachable, SP-R13), or par levels that are
-// the copy kept on the phone (Mazama's server can't be reached: a notice says when the copy is from,
-// server_offline.dart), show the table read-only: the levels can be confirmed but not saved.
+// the copy kept on the phone (Mazama's server can't be reached, server_offline.dart), show the table read-only: the
+// levels can be confirmed but not saved, and the editor says why. The page has no notice of its own that the server
+// can't be reached: the app-wide banner says so (server_link.dart, README R87), and the page reloads by itself once
+// the server answers again.
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -54,8 +56,9 @@ class OrderParPage extends StatefulWidget {
   /// The order form, starting from [levels]: the ones confirmed or saved here.
   final Widget Function(List<ParLevel> levels) orderForm;
 
-  /// The app's server tracker (server_health.dart, README R56): while the page shows the copy kept on the phone, it
-  /// reloads by itself once the server answers again, and Retry asks the server first. Null: neither (tests, the demo).
+  /// The app's server tracker (server_health.dart, README R56): while the page shows the copy kept on the phone (or
+  /// partial stock), it reloads by itself once the server answers again (README R87), and Retry asks the server first.
+  /// Null: neither (tests, the demo).
   final ServerHealth? health;
 
   @override
@@ -69,9 +72,8 @@ class _OrderParPageState extends State<OrderParPage> {
   List<ParLevel>? _levels;
   String? _parError;
 
-  /// The levels shown are the copy kept on the phone: when the server sent them.
+  /// The levels shown are the copy kept on the phone (the server couldn't be reached).
   bool _parFromCache = false;
-  DateTime? _parAt;
   ParColumns _columns = const ParColumns();
 
   bool get _showingKeptCopy => _parFromCache || (_stock?.partial ?? false);
@@ -161,7 +163,6 @@ class _OrderParPageState extends State<OrderParPage> {
         _levels = levels?.value;
         _parError = levels == null ? '$parError' : null;
         _parFromCache = levels?.fromCache ?? false;
-        _parAt = levels?.cachedAt;
         if (columns != null) _columns = columns!;
       });
     }());
@@ -209,15 +210,7 @@ class _OrderParPageState extends State<OrderParPage> {
         children: [
           Text('Set or confirm your par levels: the order starts from them.', style: theme.textTheme.bodyMedium),
           const SizedBox(height: 12),
-          if (_parFromCache)
-            ServerOfflineNotice(
-                cachedAt: _parAt,
-                extra: "Par levels can't be saved, and an order can't be sent, until it answers again.",
-                onRetry: _retry),
-          if (stock == null)
-            _banner('Stock did not load ($_stockError): units on hand show as 0.')
-          else if (stock.partial)
-            _banner("Partial: the Mazama server isn't reachable"),
+          if (stock == null) _banner('Stock did not load ($_stockError): units on hand show as 0.'),
           ParLevelsEditor(
             rows: stock?.rows ?? const [],
             mgMode: stock?.mgMode ?? 'tpe',

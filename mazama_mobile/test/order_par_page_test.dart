@@ -7,10 +7,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mazama_mobile/licenses_client.dart';
 import 'package:mazama_mobile/order_par_page.dart';
 import 'package:mazama_mobile/par_client.dart';
+import 'package:mazama_mobile/server_health.dart';
 import 'package:mazama_mobile/server_offline.dart';
 import 'package:mazama_mobile/stock_cache_store.dart';
 import 'package:mazama_mobile/stock_rows.dart';
 import 'package:mazama_mobile/stock_summary.dart';
+
+import 'fake_timers.dart';
 
 final _center = License(id: 231, licenseId: 'SC-b1c7379a', licenseName: 'Bendable Service Center', licenseType: 'ServiceCenter');
 
@@ -52,6 +55,7 @@ Widget _page({
   Future<List<ParLevel>> Function(List<ParLevel>)? savePar,
   Future<ParColumns> Function()? loadParColumns,
   Future<void> Function(ParColumns)? saveParColumns,
+  ServerHealth? health,
 }) {
   _opened = [];
   return MaterialApp(
@@ -62,6 +66,7 @@ Widget _page({
       savePar: savePar ?? (levels) async => levels,
       loadParColumns: loadParColumns,
       saveParColumns: saveParColumns,
+      health: health,
       orderForm: (levels) {
         _opened.add(levels);
         return const Scaffold(body: Text('the order form'));
@@ -308,7 +313,8 @@ void main() {
       savePar: (levels) async => fail('nothing is saved while the server is unreachable'),
     ));
     await tester.pumpAndSettle();
-    expect(find.text("Partial: the Mazama server isn't reachable"), findsOneWidget);
+    // R87: no notice of the page's own for the server: the app-wide banner says it; the editor says why it can't save.
+    expect(find.textContaining('Partial'), findsNothing);
     expect(find.text('Edit par levels'), findsNothing);
     expect(find.text(_cantSave), findsOneWidget);
     expect(find.text('0 / 12'), findsOneWidget); // the last par levels fetched, still compared with the stock
@@ -435,7 +441,8 @@ void main() {
 
   // --- Mazama's server unreachable: the copy kept on the phone, and saves that say to try later -------------------
 
-  testWidgets('par levels kept on the phone show under a notice with their date, read-only, and can be confirmed',
+  // R87: no notice of the page's own over the kept levels: the app-wide banner says the server can't be reached.
+  testWidgets('par levels kept on the phone show read-only, with no notice of their own, and can be confirmed',
       (tester) async {
     final at = DateTime.utc(2026, 10, 20, 15, 5);
     await tester.pumpWidget(_page(
@@ -444,8 +451,9 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining(serverOfflineNotice(at)), findsOneWidget);
-    expect(find.textContaining("an order can't be sent, until it answers again"), findsOneWidget);
+    expect(find.textContaining('last sent'), findsNothing);
+    expect(find.textContaining('until it answers again'), findsNothing);
+    expect(find.text('Retry'), findsNothing);
     expect(find.text('10 / 12'), findsOneWidget); // the kept levels against today's stock
     expect(find.text('Edit par levels'), findsNothing);
     expect(find.text(_cantSave), findsOneWidget);
@@ -453,17 +461,71 @@ void main() {
     expect(_opened.single.map(_level), _par.map(_level));
   });
 
-  testWidgets('Retry on the notice asks the server again', (tester) async {
-    var calls = 0;
-    await tester.pumpWidget(_page(loadParRead: () async {
-      calls++;
-      return calls == 1 ? ServerRead.cached(_par, DateTime.utc(2026, 10, 20)) : const ServerRead(_par);
-    }));
-    await tester.pumpAndSettle();
-    await _tap(tester, find.descendant(of: find.byKey(const ValueKey('server-offline-notice')), matching: find.text('Retry')));
-    expect(calls, 2);
-    expect(find.byKey(const ValueKey('server-offline-notice')), findsNothing);
-    expect(find.text('Edit par levels'), findsOneWidget);
+  group('reloads once the server tracker is online again', () {
+    ServerHealth offlineTracker() {
+      final health = ServerHealth(probe: () async => false, startTimer: FakeTimers().start);
+      health.markUnreachable();
+      return health;
+    }
+
+    testWidgets('showing the kept par levels: reloads, and they can then be edited', (tester) async {
+      final health = offlineTracker();
+      addTearDown(health.dispose);
+      var calls = 0;
+      await tester.pumpWidget(_page(
+        loadParRead: () async {
+          calls++;
+          return calls == 1 ? ServerRead.cached(_par, DateTime.utc(2026, 10, 20)) : const ServerRead(_par);
+        },
+        health: health,
+      ));
+      await tester.pumpAndSettle();
+      expect(find.text('Edit par levels'), findsNothing);
+      expect(find.text(_cantSave), findsOneWidget);
+
+      health.markReachable();
+      await tester.pumpAndSettle();
+      expect(calls, 2);
+      expect(find.text('Edit par levels'), findsOneWidget);
+      expect(find.text(_cantSave), findsNothing);
+    });
+
+    testWidgets('showing a partial stock: reloads', (tester) async {
+      final health = offlineTracker();
+      addTearDown(health.dispose);
+      var loads = 0;
+      await tester.pumpWidget(_page(
+        load: () async {
+          loads++;
+          return loads == 1 ? const StockLoad(_stateRows, mgMode: 'psilocybin', partial: true) : const StockLoad(_rows);
+        },
+        health: health,
+      ));
+      await tester.pumpAndSettle();
+      expect(find.text('Edit par levels'), findsNothing);
+
+      health.markReachable();
+      await tester.pumpAndSettle();
+      expect(loads, 2);
+      expect(find.text('Edit par levels'), findsOneWidget);
+    });
+
+    testWidgets("showing the server's own answer: no reload", (tester) async {
+      final health = offlineTracker();
+      addTearDown(health.dispose);
+      var calls = 0;
+      await tester.pumpWidget(_page(
+        loadPar: () async {
+          calls++;
+          return _par;
+        },
+        health: health,
+      ));
+      await tester.pumpAndSettle();
+      health.markReachable();
+      await tester.pumpAndSettle();
+      expect(calls, 1);
+    });
   });
 
   testWidgets('a save that cannot reach the server says to try again later, never queues, and keeps the edits',

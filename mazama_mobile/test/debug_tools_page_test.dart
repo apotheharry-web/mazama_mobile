@@ -6,6 +6,7 @@ import 'package:mazama_mobile/debug_tools_page.dart';
 import 'package:mazama_mobile/flow/flow_spec.dart';
 import 'package:mazama_mobile/session.dart';
 import 'package:mazama_mobile/session_store.dart';
+import 'temp_app_data_dir.dart';
 
 Session _session() => Session(
     accessToken: 'TOKEN', refreshToken: 'REFRESH', email: 'worker@example.com', expiresAtMs: DateTime.now().millisecondsSinceEpoch + 3600 * 1000);
@@ -13,6 +14,7 @@ Session _session() => Session(
 final _dummySpec = FlowSpec(const {}, const {});
 
 void main() {
+  useTempAppDataDir();
   testWidgets('lists every debug tool, and tapping one opens its own page', (tester) async {
     await tester.pumpWidget(MaterialApp(
       home: DebugToolsPage(

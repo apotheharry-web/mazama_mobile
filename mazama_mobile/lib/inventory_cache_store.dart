@@ -1,18 +1,19 @@
 // Persists the last successfully fetched inventory for a service center, so a worker who opens the app with
 // no signal at all - not even enough to reach the state system directly (state_packages_client.dart), let
 // alone Mazama's own server (packages_client.dart) - still sees SOMETHING rather than a blank "Stock did not
-// load" screen. Same hand-written-JSON-file approach as cart_store.dart/session_store.dart, reusing
-// session_store.dart's own defaultSessionDataDir.
+// load" screen. One JSON document (inventory_cache.json) in the data folder's LocalStore, as cart_store.dart keeps
+// its draft, in session_store.dart's own defaultSessionDataDir.
 //
 // Deliberately scoped to exactly one center at a time, the same way cart_store.dart is: a worker who switches
 // centers overwrites whatever was cached for the one before it. A center's inventory refreshes constantly in
 // normal use (CartPage/StockPage both fetch on load), so remembering more than the one most recent center adds
 // nothing worth the extra bookkeeping. See resilient_inventory.dart for the 3-day staleness rule this file
-// itself has no opinion on - it only ever hands back what's on disk, with its own timestamp, and lets the
+// itself has no opinion on - it only ever hands back what's kept, with its own timestamp, and lets the
 // caller decide whether that's still good enough to show.
 import 'dart:convert';
 import 'dart:io';
 
+import 'local_store.dart';
 import 'packages_client.dart';
 import 'session_store.dart' show defaultSessionDataDir;
 
@@ -32,13 +33,12 @@ class InventoryCacheStore {
 
   const InventoryCacheStore({Directory Function()? dataDir}) : dataDir = dataDir ?? defaultSessionDataDir;
 
-  File get _file => File('${dataDir().path}/inventory_cache.json');
+  static const _name = 'inventory_cache.json';
 
   /// Overwrites whatever was cached before (for any center) - see this file's own comment for why remembering
   /// only the one most recent center is enough.
   Future<void> save(int centerId, List<Package> packages, DateTime fetchedAt) async {
-    dataDir().createSync(recursive: true);
-    _file.writeAsStringSync(jsonEncode({
+    LocalStore.forDir(dataDir()).write(_name, jsonEncode({
       'centerId': centerId,
       'fetchedAtMs': fetchedAt.millisecondsSinceEpoch,
       'packages': packages.map((p) => p.toJson()).toList(),
@@ -53,7 +53,9 @@ class InventoryCacheStore {
   /// still worth showing.
   Future<CachedInventory?> load(int centerId) async {
     try {
-      final decoded = jsonDecode(_file.readAsStringSync());
+      final text = LocalStore.forDir(dataDir()).read(_name)?.body;
+      if (text == null) return null;
+      final decoded = jsonDecode(text);
       if (decoded is! Map) return null;
       if ((decoded['centerId'] as num?)?.toInt() != centerId) return null;
       final fetchedAtMs = decoded['fetchedAtMs'];
@@ -81,10 +83,7 @@ class InventoryCacheStore {
   }
 
   Future<void> clear() async {
-    try {
-      _file.deleteSync();
-    } on FileSystemException {
-      // Already gone (or never existed) - exactly the state this call is meant to produce, so that's fine.
-    }
+    // Already gone (or never saved) is exactly the state this call is meant to produce.
+    LocalStore.forDir(dataDir()).delete(_name);
   }
 }

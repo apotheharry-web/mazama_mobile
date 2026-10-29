@@ -5,7 +5,7 @@ publish_to: "none"
 # The build number after + is the date and a count, YYMMDDNN (26102700: 2026-10-27, first build): it only goes up,
 # stays above every build TestFlight had from Codemagic's own counter, and is under Android's 2100000000 limit.
 # Each release raises it (mazama_mobile/tool/publish_public.sh refuses one that doesn't; specs/public-app PA-D3).
-version: 0.2.2+26102703
+version: 0.2.2+26102901
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
@@ -30,6 +30,13 @@ dependencies:
   # lib/pdf_text.dart: a lab report's text with pdfium (plan 08). 2.4 or newer: 2.2's pdfrx_engine 0.3 doesn't
   # compile with CI's Dart. pdfium arrives through a native-asset build hook (downloaded once, on build and test)
   pdfrx: ^2.4.0
+  # lib/local_store.dart: the one database the phone keeps everything in (specs/foundations LS-R1). 3.x brings SQLite
+  # through its own build hook (as pdfrx brings pdfium), on the phones and for flutter test, so no
+  # sqlite3_flutter_libs (end-of-life since 3.0); 3.4 for the url_pattern user-define should a mirror be needed
+  sqlite3: ^3.4.0
+  # lib/secret_store.dart: the session's tokens in Keychain (iOS) / Keystore (Android), never in a file (specs/foundations
+  # LS-R4). 10.x: minSdk 23, which flutter.minSdkVersion meets; iOS 13 as the app already targets
+  flutter_secure_storage: ^10.0.0
 
 dev_dependencies:
   flutter_test:

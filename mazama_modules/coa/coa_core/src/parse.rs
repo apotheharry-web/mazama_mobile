@@ -43,12 +43,23 @@ fn round(v: f64, places: u32) -> f64 {
 /// "HB-3449C265" -> ("HB-3449c265", folded=false); "HB-3449cZ65" -> ("HB-3449c265", true); None if not an id.
 pub(crate) fn normalize_id(raw: &str, rules: &Rules, id_re: &Regex) -> Option<(String, bool)> {
     let raw = raw.trim_matches(|c: char| !c.is_ascii_alphanumeric() && c != '-');
-    if !id_re.is_match(raw) {
+    // a client's own id ("HL-766FBD69", AD-21): `anchor.id` is the shared lot-id pattern, so these are matched here
+    let client = raw.split_once('-').is_some_and(|(p, t)| {
+        rules.anchor.client_prefixes.iter().any(|c| eq(c, p)) && (5..=8).contains(&t.len()) && t.chars().all(|c| c.is_ascii_alphanumeric())
+    });
+    if !client && !id_re.is_match(raw) {
+        // printed without its hyphen, "HBF5653BF9" [RCL 2610107]: only exact hex digits, never folded, since with no
+        // hyphen there is nothing else to tell an id from a word
+        let (prefix, tail) = (raw.get(..2)?, raw.get(2..)?);
+        let prefix = prefix.to_ascii_uppercase();
+        if (prefix == "HB" || prefix == "PL") && (5..=8).contains(&tail.len()) && tail.chars().all(|c| c.is_ascii_hexdigit()) {
+            return Some((format!("{prefix}-{}", tail.to_ascii_lowercase()), false));
+        }
         return None;
     }
     let (prefix, tail) = raw.split_once('-')?;
     let prefix = prefix.to_ascii_uppercase();
-    if prefix != "HB" && prefix != "PL" {
+    if prefix != "HB" && prefix != "PL" && !rules.anchor.client_prefixes.iter().any(|p| eq(p, &prefix)) {
         return None;
     }
     let tail = tail.to_ascii_lowercase();
@@ -60,6 +71,18 @@ pub(crate) fn normalize_id(raw: &str, rules: &Rules, id_re: &Regex) -> Option<(S
         return Some((format!("{prefix}-{folded}"), true));
     }
     None
+}
+
+/// The word at `k` as an id candidate ("" past the end), joined with the next word when the id was printed as two:
+/// "Hb 675561c3" -> "Hb-675561c3" [RCL 2410226]. Only a bare two-letter prefix followed by 5 to 8 hex digits is
+/// joined; `normalize_id` still decides whether the result is an id.
+pub(crate) fn id_word(words: &[Word], k: usize) -> String {
+    let Some(w) = words.get(k) else { return String::new() };
+    let hex = |t: &str| (5..=8).contains(&t.len()) && t.chars().all(|c| c.is_ascii_hexdigit());
+    match words.get(k + 1) {
+        Some(n) if w.text.len() == 2 && w.text.chars().all(|c| c.is_ascii_alphabetic()) && hex(&n.text) => format!("{}-{}", w.text, n.text),
+        _ => w.text.clone(),
+    }
 }
 
 /// "05/23/2025" -> "2025-05-23" for the rules' date formats; None if it isn't a real date.
@@ -93,16 +116,19 @@ struct Anchor {
 }
 
 fn find_anchor(line: &Line, i: usize, rules: &Rules, id_re: &Regex, alone: bool) -> Option<Anchor> {
-    // a lab that prints the id with no label, on a line of its own [ChemHistory]
-    if alone && line.words.len() == 1 {
+    // a lab that prints the id with no label, on a line of its own [ChemHistory], or followed by the strain after a
+    // dash: "HB-c900fd97 - Ecuador" [CH, 2404CH0177]
+    let dash = |w: &Word| matches!(w.text.as_str(), "-" | "\u{2013}" | "\u{2014}");
+    if alone && (line.words.len() == 1 || line.words.get(1).is_some_and(dash)) {
         if let Some((uid, folded)) = normalize_id(&line.words[0].text, rules, id_re) {
             return Some(Anchor { line: i, uid, folded, label_word: 0 });
         }
     }
     for (k, w) in line.words.iter().enumerate() {
         for label in &rules.anchor.labels {
+            let next = id_word(&line.words, k + 1);
             let candidate = if eq(&w.text, label) {
-                line.words.get(k + 1).map(|n| n.text.as_str())
+                (!next.is_empty()).then_some(next.as_str())
             } else if w.text.len() > label.len() && w.text[..label.len()].eq_ignore_ascii_case(label) {
                 Some(&w.text[label.len()..]) // glued: "UID:HB-3449c265"
             } else {
@@ -113,6 +139,12 @@ fn find_anchor(line: &Line, i: usize, rules: &Rules, id_re: &Regex, alone: bool)
             let first = candidate.and_then(|c| c.split(',').next());
             if let Some((uid, folded)) = first.and_then(|c| normalize_id(c, rules, id_re)) {
                 return Some(Anchor { line: i, uid, folded, label_word: k });
+            }
+            // AD-22: "Sample: Melange X   UID:" with the UID blank, or not an id ("UID: Big Foot") [RCL 2411143,
+            // 2501074]: a section with no id, kept only when results follow it (find_sections), never a lot's own,
+            // found only through the request form's item of the same name (lot::find_lot)
+            if eq(&w.text, label) && has_sample_label(line, rules) {
+                return Some(Anchor { line: i, uid: String::new(), folded: false, label_word: k });
             }
         }
     }
@@ -430,6 +462,14 @@ fn find_sections(all: &[Line], body: &[&Line], rules: &Rules, id_re: &Regex, tot
                 .take(n)
                 .find_map(|l| sample_on(l, rules, None)),
         };
+        // a page's repeated client block holds the id again, with no results under it [CH: every page after the
+        // first]: not a section of its own
+        if layout.anchor_alone && rows.is_empty() && out.iter().any(|r| r.anchor.uid == anchor.uid) {
+            continue;
+        }
+        if anchor.uid.is_empty() && rows.is_empty() {
+            continue; // an unnamed anchor with no results under it is not a section
+        }
         let words = on_line.or(below_sample).or_else(above).unwrap_or_default();
         let (sample, is_fd) = split_fd(words, rules);
         prev_end = Some(rows.last().map_or(a, |&(_, i)| i));
@@ -559,7 +599,9 @@ fn compare_duplicates(sections: &mut [Section], rules: &Rules) {
         if sections[p].is_fd {
             continue;
         }
-        let dups: Vec<usize> = (0..sections.len()).filter(|&d| sections[d].is_fd && eq(&sections[d].uid, &sections[p].uid)).collect();
+        // with no id (AD-22) a duplicate is the one with the same sample name
+        let same = |d: usize| eq(&sections[d].uid, &sections[p].uid) && (!sections[p].uid.is_empty() || sections[d].sample == sections[p].sample);
+        let dups: Vec<usize> = (0..sections.len()).filter(|&d| sections[d].is_fd && same(d)).collect();
         for d in dups {
             let (a, b) = (&sections[p], &sections[d]);
             let mut disagree = matches!((a.tpe, b.tpe), (Some(x), Some(y)) if x > 0.0 && (x - y).abs() / x > fd.tpe_tolerance);
@@ -584,7 +626,8 @@ fn compare_duplicates(sections: &mut [Section], rules: &Rules) {
 
 fn of_record(sections: &[Section]) -> BTreeMap<String, usize> {
     let mut out = BTreeMap::new();
-    let mut uids: Vec<String> = sections.iter().map(|s| s.uid.to_lowercase()).collect();
+    // a section with no id (AD-22) is no lot's value of record
+    let mut uids: Vec<String> = sections.iter().map(|s| s.uid.to_lowercase()).filter(|u| !u.is_empty()).collect();
     uids.dedup();
     for uid in uids {
         let mine: Vec<usize> = (0..sections.len()).filter(|&i| sections[i].uid.to_lowercase() == uid).collect();
@@ -680,6 +723,28 @@ mod tests {
         assert_eq!(normalize_id("PL-7c737a9z", &r, &re), Some(("PL-7c737a92".into(), true)));
         assert_eq!(normalize_id("HB-xyzxyz", &r, &re), None);
         assert_eq!(normalize_id("PKPR-8a05632f", &r, &re), None);
+    }
+
+    #[test]
+    fn an_id_printed_without_its_hyphen_is_read_only_when_its_digits_are_exact() {
+        let r = rules();
+        let re = Regex::new(&format!("^(?i:{})$", r.anchor.id)).unwrap();
+        assert_eq!(normalize_id("HBF5653BF9", &r, &re), Some(("HB-f5653bf9".into(), false)));   // RCL 2610107
+        assert_eq!(normalize_id("pl9c564cf", &r, &re), Some(("PL-9c564cf".into(), false)));
+        assert_eq!(normalize_id("HBF5653BFZ", &r, &re), None);   // no confusable folding without the hyphen
+        assert_eq!(normalize_id("PLATES", &r, &re), None);
+        assert_eq!(normalize_id("HB123", &r, &re), None);
+    }
+
+    #[test]
+    fn an_id_printed_as_two_words_is_joined() {
+        let w = |t: &str| Word { text: t.into(), x0: 0.0, y0: 0.0, x1: 1.0, y1: 1.0, conf: None };
+        let line = [w("UID:"), w("Hb"), w("675561c3"), w("x")];
+        assert_eq!(id_word(&line, 1), "Hb-675561c3");                // RCL 2410226: "UID: Hb 675561c3"
+        assert_eq!(id_word(&line, 2), "675561c3");
+        assert_eq!(id_word(&[w("PL"), w("Potency")], 0), "PL");      // not hex: left alone
+        assert_eq!(id_word(&[w("HB"), w("123")], 0), "HB");          // too short to be an id
+        assert_eq!(id_word(&[w("HB-1")], 3), "");
     }
 
     #[test]

@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mazama_mobile/inventory_cache_store.dart';
+import 'package:mazama_mobile/local_store.dart';
 import 'package:mazama_mobile/packages_client.dart';
 
 void main() {
@@ -61,18 +62,24 @@ void main() {
     await s.clear(); // must not throw even though there is nothing left to delete
   });
 
+  // An older build's file is imported when the store first opens the folder (local_store_import.dart), so these write
+  // it before the store is first used there (plan P-D5).
   test('a corrupted file on disk reads back as null, not a crash', () async {
-    final s = store();
-    await s.save(231, packages, fetchedAt); // creates the directory for us
+    await Directory('${tempDir.path}/nested').create(recursive: true);
     await File('${tempDir.path}/nested/inventory_cache.json').writeAsString('not json{{{');
-    expect(await s.load(231), isNull);
+    expect(await store().load(231), isNull);
   });
 
   test('a file missing a required field reads back as null, not a partial result', () async {
-    final s = store();
     await Directory('${tempDir.path}/nested').create(recursive: true);
     await File('${tempDir.path}/nested/inventory_cache.json').writeAsString('{"centerId": 231, "packages": []}'); // no fetchedAtMs
-    expect(await s.load(231), isNull);
+    expect(await store().load(231), isNull);
+  });
+
+  test('kept in the database, not in a file', () async {
+    await store().save(231, packages, fetchedAt);
+    expect(File('${tempDir.path}/nested/inventory_cache.json').existsSync(), isFalse);
+    expect(LocalStore.forDir(Directory('${tempDir.path}/nested')).read('inventory_cache.json'), isNotNull);
   });
 
   test('two independent stores pointed at different directories do not see each other\'s data', () async {

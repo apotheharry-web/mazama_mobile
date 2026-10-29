@@ -1,10 +1,10 @@
 // SL-R16 / SL-D5: the sign-in on the state's own page. The browser sign-in spec (assets/flows_phone/login_browser.yaml,
 // browser_login_spec.dart) has an `open_browser` step; runFlow hands its start URL and `until` prefix to a `browse`
-// callback, and openBrowserSignIn below is that callback: a full-screen webview (webview_flutter, as
-// inventory_portal_page.dart uses) on the state's real B2C page, where the worker types their own email and password
-// (the app never sees them). The page ends when B2C sends the browser to `until` (the redirect_uri, with the code or
-// B2C's own error in the fragment): that navigation is stopped, never loaded, and its URL handed back to the flow,
-// which checks `state` and asks for the token itself. Closing the page hands back null (reason `cancelled`).
+// callback, and openBrowserSignIn below is that callback: a full-screen webview (webview_flutter) on the state's real
+// B2C page, where the worker types their own email and password (the app never sees them). The page ends when B2C
+// sends the browser to `until` (the redirect_uri, with the code or B2C's own error in the fragment): that navigation
+// is stopped, never loaded, and its URL handed back to the flow, which checks `state` and asks for the token itself.
+// Closing the page hands back null (reason `cancelled`).
 //
 // What may load (decideBrowserNavigation, the pure rule every navigation is put through):
 //   - a URL starting with `until` ends the page (checked first, so the code redirect is never loaded);

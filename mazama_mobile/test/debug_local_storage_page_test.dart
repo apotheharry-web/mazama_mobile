@@ -33,6 +33,9 @@ void main() {
 
     expect(find.textContaining('Nothing stored'), findsNWidgets(3)); // session, cart, inventory cache
     expect(find.textContaining('Loading...'), findsNothing);
+    // The session is in Keychain/Keystore (a document off the phones), no longer session.json (re-review N-4).
+    expect(find.textContaining('session.json'), findsNothing);
+    expect(find.textContaining('Session (Keychain/Keystore'), findsOneWidget);
   });
 
   testWidgets('shows a saved session, cart draft and inventory cache, and clear buttons remove each', (tester) async {

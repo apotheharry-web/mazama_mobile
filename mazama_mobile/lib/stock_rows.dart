@@ -70,11 +70,11 @@ String? heldBackReason(Map<String, Object?> record) {
   return w;
 }
 
-/// Neither the server nor the state system answered, and nothing was drawn on this phone before.
+/// Neither the server nor the state system answered, and nothing was drawn on this phone before. Says only the state's
+/// part: the app-wide banner says Mazama's server can't be reached (server_link.dart, README R87).
 class StockUnavailable implements Exception {
   @override
-  String toString() =>
-      "Neither the Mazama server nor the state system can be reached, and this phone hasn't drawn this center's stock before.";
+  String toString() => "The state system can't be reached, and this phone hasn't drawn this center's stock before.";
 }
 
 /// The server can't be asked and the state's sign-in has expired, with nothing drawn here before.

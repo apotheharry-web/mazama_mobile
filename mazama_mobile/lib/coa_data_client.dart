@@ -34,7 +34,12 @@ class CoaDataError implements ServerRequestError {
   /// Mazama's server couldn't be reached (server_error.dart's rule).
   @override
   final bool unreachable;
-  CoaDataError(this.message, {this.unreachable = false});
+
+  /// The server's HTTP status when it answered, null when it couldn't be reached. The background uploader
+  /// (coa_uploader.dart) tells a reply below 500 (the server has the report: queued, held or refused) from a 429 (busy)
+  /// and from no answer at all (CU-R3, CU-R4).
+  final int? status;
+  CoaDataError(this.message, {this.unreachable = false, this.status});
   @override
   String toString() => message;
 }
@@ -105,7 +110,8 @@ Future<bool> centerIsConfigured(int stateId, {String baseUrl = apiBaseUrl, http.
       throw CoaDataError('cannot reach ${uri.host}: ${ex.runtimeType}', unreachable: true);
     }
     if (resp.statusCode != 200) {
-      throw CoaDataError(describeServerError(resp.statusCode, resp.body), unreachable: isUnreachableStatus(resp.statusCode));
+      throw CoaDataError(describeServerError(resp.statusCode, resp.body),
+          status: resp.statusCode, unreachable: isUnreachableStatus(resp.statusCode));
     }
     Object? body;
     try {
@@ -154,7 +160,8 @@ Future<Map<String, CoaData>> fetchCoaDataBatch(List<String> guids, {String baseU
       throw CoaDataError('cannot reach ${uri.host}: ${ex.runtimeType}', unreachable: true);
     }
     if (resp.statusCode != 200) {
-      throw CoaDataError(describeServerError(resp.statusCode, resp.body), unreachable: isUnreachableStatus(resp.statusCode));
+      throw CoaDataError(describeServerError(resp.statusCode, resp.body),
+          status: resp.statusCode, unreachable: isUnreachableStatus(resp.statusCode));
     }
     Object? body;
     try {
@@ -228,16 +235,17 @@ Future<CoaData> uploadCoaParse({
     }
     final resp = await http.Response.fromStream(streamed);
     if (resp.statusCode != 200) {
-      throw CoaDataError(describeServerError(resp.statusCode, resp.body), unreachable: isUnreachableStatus(resp.statusCode));
+      throw CoaDataError(describeServerError(resp.statusCode, resp.body),
+          status: resp.statusCode, unreachable: isUnreachableStatus(resp.statusCode));
     }
     Object? body;
     try {
       body = jsonDecode(resp.body);
     } on FormatException {
-      throw CoaDataError('the server did not answer with JSON');
+      throw CoaDataError('the server did not answer with JSON', status: resp.statusCode);
     }
     if (body is! Map) {
-      throw CoaDataError('unexpected response shape');
+      throw CoaDataError('unexpected response shape', status: resp.statusCode);
     }
     return CoaData.fromJson(guid, Map<String, Object?>.from(body));
   } finally {

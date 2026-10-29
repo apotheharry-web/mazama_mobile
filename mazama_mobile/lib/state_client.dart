@@ -17,6 +17,7 @@
 // failed elsewhere and there's nothing a retry here would fix. This just reports it plainly, the exact "sign
 // in again" message licenses_client.dart/state_packages_client.dart already threw before this refactor, so
 // neither caller's own error handling needed to change.
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:http/http.dart' as http;
 
@@ -41,6 +42,12 @@ Future<FlowSpec>? _specFuture;
 Future<FlowSpec> stateReadsSpec() {
   return _specFuture ??= rootBundle.loadString('assets/flows/state_reads.yaml').then(FlowSpec.fromYaml);
 }
+
+/// Forgets the cached spec, for a test that loaded it inside a widget test: the Future belongs to that test's fake
+/// async zone, and a later test awaiting it (in CI's bundle, one in another file) would wait forever. Such a file
+/// calls this, and `rootBundle.clear()`, in its tearDown.
+@visibleForTesting
+void resetStateReadsSpec() => _specFuture = null;
 
 /// Runs the shared `get_json` flow for one authenticated state-system JSON GET at [path] (e.g.
 /// `'GetSalesRecords/225'`) and returns the parsed body - the Dart twin of StateSession.get() in

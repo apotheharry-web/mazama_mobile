@@ -9,43 +9,37 @@
 //   2. Every distinct lotGuid across that inventory, looked up in one batch (fetchCoaDataBatch) - always tried
 //      first, before anything else below, so a lot any other worker anywhere has ever resolved costs nothing
 //      here.
-//   3. For guids the batch lookup didn't return (capped at [maxMisses], so a center with dozens of brand-new
-//      lots can't hang a single load): GetPackagedProductInfo(packageId) - keyed by one representative
-//      PACKAGE's own state-system id for this lot, never the service center's id (see labpdfs.py's own
-//      _package_candidates/session.packaged_product_info for the server-side precedent this mirrors; an
-//      ordinary JSON read, fetchStateJson already covers it) -> the newest non-deprecated accepted-Potency-test
-//      PDF document id (newestPotencyPdfDocId, ported from labpdfs.py's own _pdf_docs) -> downloadStateDocument
-//      -> uploadCoaParse.
-//      Run through a small fixed-size worker pool ([maxConcurrent] in flight at once) rather than all at once,
-//      so a center with a lot of misses doesn't fire dozens of simultaneous PDF-rendering requests at the
-//      server (see mazama_sales' ratelimit.py's own coa_parse budget).
+//   3. Every guid the batch lookup didn't return, with no cap (CU-R1), is handed to the app's one background
+//      uploader (coa_uploader.dart), keyed by one representative PACKAGE's own state-system id for its lot, never
+//      the service center's id (GetPackagedProductInfo/{center id} isn't a package at all: every lot silently came
+//      back with no PDF on file when this once used the center's id). The uploader runs the chain
+//      (GetPackagedProductInfo -> the newest accepted potency PDF -> downloadStateDocument -> uploadCoaParse,
+//      configured_coa_submit.dart) paced to the server's budget, in the background (CU-R2): this returns as soon as
+//      the batch lookup has been applied, never waiting for an upload.
 //
-// Every guid that resolves - by the batch lookup or by a fresh parse - is applied to its packages immediately
-// (via [onResolved], called as each one lands) rather than waiting for every miss to finish, so a caller can
-// repaint progressively instead of blocking the whole screen on the slowest lot. A guid that never resolves
-// (no PDF found, a parse failure, or past [maxMisses]) simply keeps today's degraded blank-strain/estimated-TPE
-// values - exactly resilient_inventory.dart's own tier-2 behavior - never a retry storm and never a reason to
-// fail the whole load.
-import 'dart:async';
-
+// Every guid that resolves - by the batch lookup or, later, by an upload the server answered with its numbers - is
+// applied to its packages as it lands (via [onResolved]), so a caller can repaint progressively instead of blocking
+// the whole screen on the slowest lot; an upload's answer can come after this function has returned. A guid that
+// never resolves (no PDF found, a parse failure, the server queuing it for later) simply keeps today's degraded
+// blank-strain/estimated-TPE values - exactly resilient_inventory.dart's own tier-2 behavior - never a reason to fail
+// the whole load.
 import 'package:http/http.dart' as http;
 
-import 'api_contract.g.dart';
 import 'coa_data_client.dart';
+import 'coa_uploader.dart';
 import 'dose.dart';
 import 'packages_client.dart';
 import 'select_documents.dart';
+import 'server_link.dart' as server_link;
 import 'server_link_client.dart' show serverClient;
-import 'state_client.dart';
-import 'state_document_client.dart';
 import 'state_packages_client.dart';
 
 /// One load's worth of adhoc-COA results: the enriched packages (whatever fetchCoaDataBatch/uploadCoaParse
 /// resolved already folded in - see _applyCoaData), how many distinct lot guids this inventory had, and how
-/// many of those actually resolved (by cache hit or by a fresh parse). [guidsResolved] < [guidsTotal] means at
-/// least one lot stayed at today's degraded blank-strain/estimated-TPE values (no PDF on file, a parse failure,
-/// or it fell past [maxMisses]) - the caller (CartPage) uses the gap to word its banner, not to retry anything
-/// automatically.
+/// many of those had resolved when it returned (by the batch lookup; an upload's answer comes later, through
+/// onResolved). [guidsResolved] < [guidsTotal] means at least one lot was still at today's degraded
+/// blank-strain/estimated-TPE values (being uploaded in the background, no PDF on file, a parse failure) - the caller
+/// (CartPage) uses the gap to word its banner, not to retry anything automatically.
 class AdhocInventoryResult {
   final List<Package> packages;
   final int guidsTotal;
@@ -87,16 +81,17 @@ Package _applyCoaData(Package p, CoaData data) {
   );
 }
 
-/// How many lab reports one load may upload for parsing at most (SM-23): the server's per-minute budget for
-/// /p/coa-data/parse (routes.yaml), so a load never plans uploads that are bound to be refused with a 429.
-const defaultMaxMisses = coaDataParseRateLimitPerMinute;
-
 /// Runs the whole flow described in this file's own header comment for one center. [onInventoryLoaded] fires
 /// once, as soon as the raw state-system inventory itself is in (before any enrichment at all) - a caller that
 /// wants to show something on screen immediately, before any guid resolves, sets its own list from this rather
-/// than waiting for the return value. [onResolved] is then called once per guid as it resolves - from the batch
-/// lookup as soon as it returns, then once per successful miss resolution - so that same caller can patch each
-/// one in as it lands instead of waiting for the slowest lot in the whole queue.
+/// than waiting for the return value. [onResolved] is then called once per package of each guid as it resolves -
+/// from the batch lookup before this returns, then whenever an upload the server answered with its numbers lands
+/// (possibly after this has returned) - so that same caller can patch each one in as it lands.
+///
+/// [workerEmail] and [deviceId] are kept for callers; the uploader sends the session's own at send time.
+/// [queueUploads] is the app's uploader (server_link.dart's queueCoaUploads) unless a test gives its own. When the
+/// batch lookup itself fails nothing is queued: which lots the server is missing isn't known, and the next load asks
+/// again.
 Future<AdhocInventoryResult> resolveAdhocInventory({
   required int stateId,
   required String accessToken,
@@ -104,13 +99,12 @@ Future<AdhocInventoryResult> resolveAdhocInventory({
   required String deviceId,
   void Function(List<Package> packages)? onInventoryLoaded,
   void Function(String guid, Package updated)? onResolved,
-  int maxConcurrent = 4,
-  int maxMisses = defaultMaxMisses,
+  QueueCoaUploads? queueUploads,
   http.Client? client,
 }) async {
   final c = client ?? http.Client();
-  // Mazama's server's own calls (the batch lookup, the uploads) go through the server link (README R56) unless a
-  // client was given; the state system's never do.
+  // Mazama's server's own call (the batch lookup) goes through the server link (README R56) unless a client was
+  // given; the state system's never do. The uploads are the uploader's (coa_uploader.dart).
   final server = client ?? serverClient();
   final shouldClose = client == null;
   try {
@@ -131,7 +125,7 @@ Future<AdhocInventoryResult> resolveAdhocInventory({
       return AdhocInventoryResult(packages: packages, guidsTotal: 0, guidsResolved: 0);
     }
 
-    Map<String, Package> current = {for (final p in packages) '${p.productGuid}#${p.id}': p};
+    final current = <String, Package>{for (final p in packages) '${p.productGuid}#${p.id}': p};
     void apply(String guid, CoaData data) {
       for (final entry in current.entries.toList()) {
         if (entry.value.lotGuid == guid) {
@@ -142,61 +136,36 @@ Future<AdhocInventoryResult> resolveAdhocInventory({
       }
     }
 
-    Map<String, CoaData> hits;
+    Map<String, CoaData>? hits;
     try {
       hits = await fetchCoaDataBatch(guids, client: server);
     } on CoaDataError {
-      hits = const {}; // the batch lookup failing is not fatal - every guid just falls through to the miss path
+      hits = null; // not fatal: the load shows the state's figures, and nothing is uploaded on a guess (see above)
     }
-    for (final entry in hits.entries) {
+    for (final entry in (hits ?? const <String, CoaData>{}).entries) {
       apply(entry.key, entry.value);
     }
 
-    final misses = guids.where((g) => !hits.containsKey(g)).toList();
-    final toResolve = misses.take(maxMisses).toList();
-    var resolved = hits.length;
-
-    var next = 0;
-    Future<void> worker() async {
-      while (true) {
-        final i = next++;
-        if (i >= toResolve.length) return;
-        final guid = toResolve[i];
-        try {
-          // GetPackagedProductInfo is keyed by a PACKAGE's own state-system id (packaged_product.state_id in
-          // mazama_sales' own schema - see labpdfs.py's _package_candidates/Runner.run, which calls
-          // session.packaged_product_info(cand["state_id"]) with exactly that, never the service center's own
-          // id). byGuid[guid] is this lot's one representative package (any package carrying this guid works -
-          // the test history belongs to the lot, not the specific package, same comment _package_candidates
-          // makes) - using [stateId] (the CENTER's id) here instead was a real bug: GetPackagedProductInfo/
-          // {center id} isn't a package at all, so every lot silently came back with no PDF on file.
-          final info =
-              await fetchStateFlow('packaged_product_info', {'package_id': byGuid[guid]!.id}, accessToken: accessToken, client: c);
-          final docId = newestPotencyPdfDocId(info);
-          if (docId == null) continue; // no lab report on file at all for this lot yet - stays degraded
-          final bytes = await downloadStateDocument(docId, accessToken: accessToken, client: c);
-          final data = await uploadCoaParse(
-            guid: guid,
-            pdfBytes: bytes,
-            docId: docId,
-            workerEmail: workerEmail,
-            deviceId: deviceId,
-            statePsilocybin: byGuid[guid]!.analyteWeight,
-            client: server,
-          );
-          apply(guid, data);
-          resolved++;
-        } catch (_) {
-          // This one lot's miss failing (unreadable report, network hiccup, this guid's own UID not actually in
-          // the document) is never fatal to the rest of the queue or the load as a whole - see this file's own
-          // header comment: it just stays at today's degraded blank-strain/estimated-TPE values.
-        }
+    if (hits != null) {
+      final found = hits;
+      final misses = guids.where((g) => !found.containsKey(g)).toList();
+      if (misses.isNotEmpty) {
+        // The uploader may name a lot in another case than this inventory does (another load enqueued it first).
+        final ours = {for (final g in misses) g.toLowerCase(): g};
+        (queueUploads ?? server_link.queueCoaUploads)(
+          [
+            for (final g in misses)
+              CoaUploadLot(lotGuid: g, packageId: byGuid[g]!.id, stateId: stateId, statePsilocybin: byGuid[g]!.analyteWeight),
+          ],
+          onResolved: (guid, data) {
+            final own = ours[guid.toLowerCase()];
+            if (own != null) apply(own, data);
+          },
+        );
       }
     }
 
-    await Future.wait(List.generate(maxConcurrent.clamp(1, toResolve.length == 0 ? 1 : toResolve.length), (_) => worker()));
-
-    return AdhocInventoryResult(packages: current.values.toList(), guidsTotal: guids.length, guidsResolved: resolved);
+    return AdhocInventoryResult(packages: current.values.toList(), guidsTotal: guids.length, guidsResolved: hits?.length ?? 0);
   } finally {
     if (shouldClose) {
       c.close();

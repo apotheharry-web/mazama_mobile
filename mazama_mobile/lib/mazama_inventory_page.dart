@@ -10,8 +10,9 @@
 // id opens its product information sheet in the browser (MI-D18), and a strain or type picked on a pie narrows the
 // table to it (MI-D20). "Contact" at the top left, across from Order, offers
 // Mazama's website, Signal and email (MI-D19, mazama_contact.dart).
-// While Mazama's server can't be reached, the page shows the last stock it sent (kept on the phone) under a notice
-// saying when that was (server_offline.dart); with none kept, the error and Retry as before.
+// While Mazama's server can't be reached, the page shows the last stock it sent (kept on the phone, server_offline.dart)
+// with no notice of its own: the app-wide banner says the server can't be reached (server_link.dart, README R87), and
+// the page reloads by itself once it answers again. With none kept, the error and Retry as before.
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -63,7 +64,8 @@ class MazamaInventoryPage extends StatefulWidget {
   final OpenLink? openLink;
 
   /// The app's server tracker (server_health.dart, README R56): while the page shows the copy kept on the phone, it
-  /// reloads by itself once the server answers again, and Retry asks the server first. Null: neither (tests, the demo).
+  /// reloads by itself once the server answers again (README R87), and Retry asks the server first. Null: neither
+  /// (tests, the demo).
   final ServerHealth? health;
 
   @override
@@ -84,9 +86,8 @@ class _MazamaInventoryPageState extends State<MazamaInventoryPage> {
   String? _error;
   int _pie = 0;
 
-  /// The mix on screen is the copy kept on the phone (the server can't be reached): when the server sent it.
+  /// The mix on screen is the copy kept on the phone (the server can't be reached).
   bool _fromCache = false;
-  DateTime? _cachedAt;
 
   /// The breakdown that shows, if any: the pie it was picked on (0 By strain, 1 By type) and the strain or type. One
   /// for the page, not one per pie, so an open breakdown stays open, and a closed one closed, across a swipe.
@@ -144,7 +145,6 @@ class _MazamaInventoryPageState extends State<MazamaInventoryPage> {
       _mix = null;
       _error = null;
       _fromCache = false;
-      _cachedAt = null;
     });
     unawaited(() async {
       try {
@@ -164,7 +164,6 @@ class _MazamaInventoryPageState extends State<MazamaInventoryPage> {
           _inventory = inv;
           _mix = stockMix(inv.cells);
           _fromCache = read.fromCache;
-          _cachedAt = read.cachedAt;
         });
       } catch (e) {
         if (!mounted) return;
@@ -230,9 +229,6 @@ class _MazamaInventoryPageState extends State<MazamaInventoryPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (_fromCache)
-            ServerOfflineNotice(
-                cachedAt: _cachedAt, extra: "Orders can't be sent until it answers again.", onRetry: _retry),
           // No maker's name or explanation line above the total (owner, 2026-10-22): the tab says "Mazama".
           if (total <= 0)
             const Padding(

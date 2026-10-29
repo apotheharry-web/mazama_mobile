@@ -7,10 +7,11 @@
 //
 // Data comes through injected loaders, so the page is testable without a network and whoever hosts it decides
 // where rows come from (center_home_page.dart). Rows come as a StockLoad (stock_rows.dart): partial ones (SP-R13, the
-// server unreachable) get a banner and the mg pie in mg psilocybin when they say so (SP-D6); the last rows
-// drawn on this phone (nothing reachable) say how old they are. The lot table's product information sheets, while
-// Mazama's server can't be reached, are the copy kept on the phone, under a notice saying when the server sent them
-// (server_offline.dart).
+// server unreachable) get the mg pie in mg psilocybin when they say so (SP-D6); the last rows drawn on this phone
+// (the state system unreachable too) say how old they are. The lot table's product information sheets, while
+// Mazama's server can't be reached, are the copy kept on the phone (server_offline.dart). Neither has a notice of its
+// own that the server can't be reached: the app-wide banner says so (server_link.dart, README R87), and the page
+// reloads by itself once the server answers again.
 //
 // The units pie and the mg pie share one spot, one at a time: a horizontal swipe on it (or a tap on the dots below
 // it) shows the other; a picked strain's Quantity and mg serving-size pies work the same way. At either end the
@@ -34,7 +35,6 @@ import 'stock_rows.dart';
 import 'stock_summary.dart';
 import 'swipe_pies.dart';
 
-const _partialBanner = "Partial: the Mazama server isn't reachable";
 const _serverQuantitiesBanner =
     "The state system didn't answer: these quantities are the Mazama server's, as of its last sync.";
 const _notSetUpBanner = "This center isn't set up on the Mazama server: these are the state's figures only.";
@@ -86,8 +86,9 @@ class CenterStockPage extends StatefulWidget {
   /// Keeps each list of sheets the server sends, with when ([now]); nothing kept when null.
   final Future<void> Function(List<ProductSheet> sheets, DateTime at)? keepSheets;
 
-  /// The app's server tracker (server_health.dart, README R56): while the page shows the copy kept on the phone, it
-  /// reloads by itself once the server answers again, and Retry asks the server first. Null: neither (tests, the demo).
+  /// The app's server tracker (server_health.dart, README R56): while the page shows the copy kept on the phone (or
+  /// partial stock), it reloads by itself once the server answers again (README R87), and Retry asks the server first.
+  /// Null: neither (tests, the demo).
   final ServerHealth? health;
 
   @override
@@ -128,9 +129,8 @@ class _CenterStockPageState extends State<CenterStockPage> {
   List<ProductSheet>? _sheets;
   String? _sheetsError;
 
-  /// The sheets shown are the copy kept on the phone: when the server sent them.
+  /// The sheets shown are the copy kept on the phone (the server couldn't be reached).
   bool _sheetsFromCache = false;
-  DateTime? _sheetsAt;
 
   bool get _showingKeptCopy => _sheetsFromCache || _partial;
 
@@ -239,7 +239,6 @@ class _CenterStockPageState extends State<CenterStockPage> {
       if (sheets != null) {
         _sheets = sheets!.value;
         _sheetsFromCache = sheets!.fromCache;
-        _sheetsAt = sheets!.cachedAt;
         _sheetsError = null;
       } else if (sheetsError != null) {
         _sheetsError = '$sheetsError';
@@ -308,12 +307,10 @@ class _CenterStockPageState extends State<CenterStockPage> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (_drawnAt != null)
-            _banner("Neither the Mazama server nor the state system can be reached: these are the charts drawn on "
+            _banner("The state system can't be reached: these are the charts drawn on "
                 'this phone ${stockAge(widget.now().difference(_drawnAt!))} ago.')
           else if (_notSetUp)
             _banner(_notSetUpBanner)
-          else if (_partial)
-            _banner(_partialBanner)
           else if (_serverQuantities)
             _banner(_serverQuantitiesBanner),
           if (_signInNeeded) _signInRow(),
@@ -361,7 +358,6 @@ class _CenterStockPageState extends State<CenterStockPage> {
           ],
           if (widget.loadSheets != null) ...[
             const SizedBox(height: 16),
-            if (_sheetsFromCache) ServerOfflineNotice(cachedAt: _sheetsAt, extra: 'The lots below are from then.'),
             _lotTable(selected != null
                 ? lotStrainFilter(selected['name'] as String)
                 : pickedType != null

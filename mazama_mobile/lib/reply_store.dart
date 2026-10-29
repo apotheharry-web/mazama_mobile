@@ -1,13 +1,14 @@
 // The last good reply of each read from Mazama's server, kept on the phone (README R56, server_link.dart), for the pages
-// to show while the server can't be reached (server_offline.dart's readWithCache and ServerOfflineNotice: "showing what
-// it last sent on ..."). One store for every read, keyed by route and parameters ([replyKey]), each reply kept with when
+// to show while the server can't be reached (server_offline.dart's readWithCache; the app-wide banner says the server
+// can't be reached, README R87). One store for every read, keyed by route and parameters ([replyKey]), each reply kept with when
 // the server sent it, so a new read gets offline support by one call:
 //
 //   final read = await replies.read(replyKey('sheets', stateId), fetch: ..., encode: ..., decode: ...);
 //
-// One small JSON file per key under server_replies/ in the app's data folder ({"atMs": ..., "value": ...}), written
-// with the *Sync calls as the other stores (and through a temporary file, so a crash mid-write leaves the old copy
-// whole); anything unreadable counts as nothing kept. No age limit, as before: the notice always says when the copy is
+// One small JSON document per key in the data folder's LocalStore ({"atMs": ..., "value": ...}), named as the file an
+// older build kept under server_replies/ (`server_replies/<the key, URI-encoded>.json`), written with synchronous
+// calls as the other stores, each write in a transaction (a crash mid-write leaves the old copy whole); anything
+// unreadable counts as nothing kept. No age limit, as before: the notice always says when the copy is
 // from, and nothing is sold from these pages.
 //
 // Par levels, the stock page's product information sheets and Mazama's stock moved here from stock_cache_store.dart and
@@ -16,6 +17,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'local_store.dart';
 import 'mazama_inventory_cache_store.dart';
 import 'mazama_inventory_client.dart' show MazamaInventory;
 import 'server_offline.dart';
@@ -41,23 +43,22 @@ class ReplyStore {
   /// Overridable for tests, as the other stores.
   final Directory Function() dataDir;
 
-  Directory get _folder => Directory('${dataDir().path}/server_replies');
+  static const _prefix = 'server_replies/';
 
-  File _file(String key) => File('${_folder.path}/${Uri.encodeComponent(key)}.json');
+  static String _name(String key) => '$_prefix${Uri.encodeComponent(key)}.json';
 
   /// Keeps [value] (JSON-encodable) as [key]'s reply, sent at [at].
   void save(String key, Object? value, DateTime at) {
-    _folder.createSync(recursive: true);
-    final file = _file(key);
-    final tmp = File('${file.path}.tmp');
-    tmp.writeAsStringSync(jsonEncode({'atMs': at.toUtc().millisecondsSinceEpoch, 'value': value}));
-    tmp.renameSync(file.path);
+    final body = jsonEncode({'atMs': at.toUtc().millisecondsSinceEpoch, 'value': value});
+    LocalStore.forDir(dataDir()).write(_name(key), body);
   }
 
   /// [key]'s kept reply; null when none (or none readable) is kept.
   KeptReply? load(String key) {
     try {
-      final decoded = jsonDecode(_file(key).readAsStringSync());
+      final text = LocalStore.forDir(dataDir()).read(_name(key))?.body;
+      if (text == null) return null;
+      final decoded = jsonDecode(text);
       if (decoded is! Map || decoded['atMs'] is! int || !decoded.containsKey('value')) return null;
       return KeptReply(decoded['value'], DateTime.fromMillisecondsSinceEpoch(decoded['atMs'] as int, isUtc: true));
     } catch (_) {
@@ -67,15 +68,16 @@ class ReplyStore {
 
   /// Every key with a reply kept (for the debug page).
   List<String> keys() {
-    try {
-      final names = [for (final f in _folder.listSync().whereType<File>()) f.path.split(Platform.pathSeparator).last];
-      return [
-        for (final n in names)
-          if (n.endsWith('.json')) Uri.decodeComponent(n.substring(0, n.length - '.json'.length))
-      ]..sort();
-    } on FileSystemException {
-      return const [];
+    final keys = <String>[];
+    for (final n in LocalStore.forDir(dataDir()).names(_prefix)) {
+      if (!n.endsWith('.json')) continue;
+      try {
+        keys.add(Uri.decodeComponent(n.substring(_prefix.length, n.length - '.json'.length)));
+      } on ArgumentError {
+        continue; // not a name this store wrote
+      }
     }
+    return keys..sort();
   }
 
   /// [key]'s kept reply as a page's own keep/kept pair (CenterStockPage's keepSheets/keptSheets, MazamaInventoryPage's

@@ -159,6 +159,26 @@ void main() {
     expect(h.online, isTrue);
   });
 
+  // R87: the banner's close button hides it for this outage only; the next outage shows it again.
+  test('the banner dismissed: for this outage only, cleared when the server answers', () {
+    final h = tracker();
+    var notified = 0;
+    h.addListener(() => notified++);
+    h.dismissBanner(); // online: nothing to dismiss
+    expect([h.bannerDismissed, notified], [false, 0]);
+
+    h.markUnreachable();
+    h.dismissBanner();
+    h.dismissBanner(); // twice changes nothing
+    expect([h.offline, h.bannerDismissed, notified], [true, true, 2]);
+    expect(timers.pendingDelays, [probeFirstDelay]); // still probing: dismissing hides the banner, nothing else
+
+    h.markReachable();
+    expect(h.bannerDismissed, isFalse);
+    h.markUnreachable();
+    expect([h.offline, h.bannerDismissed], [true, false]);
+  });
+
   test('after dispose nothing changes and nothing is scheduled', () {
     final h = tracker();
     h.dispose();

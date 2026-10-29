@@ -1,5 +1,5 @@
 {
-  "about": "AD-19 (specs/coa/decisions.md; SM-07): which section of a lab report is a lot's value of record, given the lot id the state links the report to and the state's psilocybin for that lot (mg/g, null when it has none). The lot's own UID first (its of_record section); else the one batch the report's own request / chain of custody pairs the lot with ('Batch ID' then 'Lot/Process Lot', the id on the same line or the next), when that batch's section is a primary; else the one primary section whose psilocybin equals the state's figure at 3 significant figures. Anything else is not found (null). coa_core::lot::find_lot is held to these (tests/lot_cases.rs, and through the binding coa/tests/test_lot_cases.py). 'report' is a corpus case folder; 'expect' is the section found: its uid, whether it is a field duplicate, and how it was found.",
+  "about": "AD-19 (specs/coa/decisions.md; SM-07): which section of a lab report is a lot's value of record, given the lot id the state links the report to and the state's psilocybin for that lot (mg/g, null when it has none). The lot's own UID first (its of_record section); else the one batch the report's own request / chain of custody pairs the lot with ('Batch ID' then 'Lot/Process Lot', the id on the same line or the next), when that batch's section is a primary; else the one primary section whose psilocybin equals the state's figure at 3 significant figures. AD-21 (2026-10-27), before the state's figure: a section printed under a client's own id (HL-, CB-) that the request pairs with the lot in one item ('request'), else the one the chain of custody names by number, '#N Client Batch ID' for the N-th sample when custody lines, sections and work-order numbers all count 1..K ('custody_order'); a client id is never a lot itself. AD-22 after those: a section with no id (UID blank or not an id) whose sample name is the one request item carrying the lot, when no other item and no other primary share the name ('request_name'). Anything else is not found (null). coa_core::lot::find_lot is held to these (tests/lot_cases.rs, and through the binding coa/tests/test_lot_cases.py). 'report' is a corpus case folder; 'expect' is the section found: its uid, whether it is a field duplicate, and how it was found.",
   "cases": [
     {"name": "the lot's own UID", "report": "synthetic/lot-under-batch-id", "lot": "HB-597a95ef", "state_psilocybin": null,
      "expect": {"uid": "HB-597a95ef", "is_fd": false, "via": "own"}},
@@ -30,6 +30,34 @@
     {"name": "a lot made from several batches printed as one UID list: the first batch's section", "report": "synthetic/uid-lists-several-batches", "lot": "PL-ffba25d9", "state_psilocybin": null,
      "expect": {"uid": "HB-82fc6356", "is_fd": false, "via": "request"}},
     {"name": "a real report: the primary, not its field duplicate", "report": "real/rcl-2505144-psilocin-fd", "lot": "PL-7c737a92", "state_psilocybin": null,
-     "expect": {"uid": "PL-7c737a92", "is_fd": false, "via": "own"}}
-  ]
+     "expect": {"uid": "PL-7c737a92", "is_fd": false, "via": "own"}},
+    {"name": "a misprinted UID: no hyphen ('HBF5653BF9') is the lot's own", "report": "real/rcl-2610107-uid-no-hyphen", "lot": "HB-f5653bf9", "state_psilocybin": null,
+     "expect": {"uid": "HB-f5653bf9", "is_fd": false, "via": "own"}},
+    {"name": "a misprinted UID: two words ('Hb 675561c3') is the lot's own", "report": "real/rcl-2410226-uid-spaced", "lot": "HB-675561c3", "state_psilocybin": null,
+     "expect": {"uid": "HB-675561c3", "is_fd": false, "via": "own"}},
+    {"name": "a client's harvest-lot UID the request form pairs with the state batch (Batch ID HB-, Lot Number HL-)", "report": "real/rcl-2506024-lab-lot-id", "lot": "HB-8b96b7a1", "state_psilocybin": null,
+     "expect": {"uid": "HL-766fbd69", "is_fd": false, "via": "request"}},
+    {"name": "a client's own id is never a lot, even with a section of its own", "report": "real/rcl-2506024-lab-lot-id", "lot": "HL-766fbd69", "state_psilocybin": null,
+     "expect": null},
+    {"name": "a request item that pairs two state ids gives no lab-id section (PL-c336b2f0 is only paired with itself)", "report": "real/rcl-2506024-lab-lot-id", "lot": "PL-c336b2f0", "state_psilocybin": null,
+     "expect": null},
+    {"name": "a client id (CB-) the request form pairs with the lot: the primary, not its field duplicate", "report": "real/rcl-2605307-cb-id-fd", "lot": "PL-a0b32998", "state_psilocybin": null,
+     "expect": {"uid": "CB-49011e81", "is_fd": false, "via": "request"}},
+    {"name": "the chain of custody names the batch by sample order: #1 is sample -01", "report": "real/rcl-2312001-custody-order", "lot": "HB-d16e4c7e", "state_psilocybin": null,
+     "expect": {"uid": "HL-1156a994", "is_fd": false, "via": "custody_order"}},
+    {"name": "...#2 is sample -02", "report": "real/rcl-2312001-custody-order", "lot": "HB-d888fd6e", "state_psilocybin": null,
+     "expect": {"uid": "HL-5daa43e8", "is_fd": false, "via": "custody_order"}},
+    {"name": "...#3 is sample -03", "report": "real/rcl-2312001-custody-order", "lot": "HB-944ebc73", "state_psilocybin": null,
+     "expect": {"uid": "HL-18826c0c", "is_fd": false, "via": "custody_order"}},
+    {"name": "a lot the report never names is not found by custody order", "report": "real/rcl-2312001-custody-order", "lot": "HB-11111111", "state_psilocybin": null,
+     "expect": null},
+    {"name": "AD-22: a blank UID's sample name is the one request item ('Melange X') carrying the lot: the primary", "report": "real/rcl-2411143-blank-uid", "lot": "PL-ab900f6", "state_psilocybin": null,
+     "expect": {"uid": "", "is_fd": false, "via": "request_name"}},
+    {"name": "AD-22: a name printed as the UID ('UID: Big Foot'), the request item 'Big Foot' carrying the batch", "report": "real/rcl-2501074-uid-is-name", "lot": "HB-52a4e0b5", "state_psilocybin": null,
+     "expect": {"uid": "", "is_fd": false, "via": "request_name"}},
+    {"name": "...the report's other samples still go by their own UIDs", "report": "real/rcl-2501074-uid-is-name", "lot": "HB-242fcbc4", "state_psilocybin": null,
+     "expect": {"uid": "HB-242fcbc4", "is_fd": false, "via": "own"}},
+    {"name": "a blank UID: the request pairs HB-7d0298b0 with HL-5dc3ab8c, a sample this report doesn't hold", "report": "real/rcl-2411143-blank-uid", "lot": "HB-7d0298b0", "state_psilocybin": null,
+     "expect": null}
+]
 }

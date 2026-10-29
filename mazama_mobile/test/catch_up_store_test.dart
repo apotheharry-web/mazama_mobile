@@ -1,5 +1,6 @@
 // catch_up_store.dart: lab reports and inventory snapshots that wait for Mazama's server (README R56) - the lots are
 // submitted again with the session current then, only the newest snapshot per center is sent.
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -7,6 +8,7 @@ import 'package:mazama_mobile/catch_up_store.dart';
 import 'package:mazama_mobile/coa_data_client.dart';
 import 'package:mazama_mobile/configured_coa_submit.dart';
 import 'package:mazama_mobile/inventory_upload_client.dart';
+import 'package:mazama_mobile/local_store.dart';
 import 'package:mazama_mobile/server_health.dart';
 
 import 'fake_timers.dart';
@@ -112,8 +114,8 @@ void main() {
     clock = clock.add(const Duration(minutes: 5));
     w.keepSnapshot(231, [1, 2], workerEmail: 'w', deviceId: 'd'); // a newer read replaces it
     w.keepSnapshot(183, [1], workerEmail: 'w', deviceId: 'd');
-    expect(work().snapshots.keys.toSet(), {231, 183});
-    expect(work().snapshots[231]!.records, [1, 2]);
+    expect(work().snapshots.keys.toSet(), {'inventory:231', 'inventory:183'});
+    expect(work().snapshots['inventory:231']!.records, [1, 2]);
     health.markReachable();
     await w.flush();
     expect(uploaded.toSet(), {(231, 2), (183, 1)});
@@ -146,6 +148,84 @@ void main() {
     snapScript = [(_) => InventoryUploadError('A sync is already running')];
     await w.flush();
     expect(w.snapshots, isEmpty);
+  });
+
+  test("a center's inventory and sales snapshots wait side by side, each replaced only by its own kind", () async {
+    health.markUnreachable();
+    final w = work();
+    w.keepSnapshot(231, [1, 2, 3], workerEmail: 'w', deviceId: 'd');
+    w.keepSnapshot(231, [9], workerEmail: 'w', deviceId: 'd', kind: 'sales');
+    w.keepSnapshot(231, [8, 7], workerEmail: 'w', deviceId: 'd', kind: 'sales'); // a newer sales read replaces the sales one
+    final again = work();
+    expect(again.snapshots.keys.toSet(), {'inventory:231', 'sales:231'});
+    expect(again.snapshots['inventory:231']!.records, [1, 2, 3]);
+    expect(again.snapshots['inventory:231']!.kind, 'inventory');
+    expect(again.snapshots['sales:231']!.records, [8, 7]);
+    expect(again.snapshots['sales:231']!.kind, 'sales');
+    w.snapshotSent(231, kind: 'sales'); // a newer sales upload reached the server: only the sales one goes
+    expect(w.snapshots.keys, ['inventory:231']);
+    w.keepSnapshot(231, [5], workerEmail: 'w', deviceId: 'd', kind: 'sales');
+    w.snapshotSent(231); // inventory by default
+    expect(w.snapshots.keys, ['sales:231']);
+    health.markReachable();
+    snapScript = [];
+    final kinds = <String>[];
+    final w2 = CatchUpWork(
+      health: health,
+      store: CatchUpStore(dataDir: () => _dir),
+      auth: () async => auth,
+      submitCoa: (lot, a) async => true,
+      uploadSnapshot: (s) async => kinds.add('${s.kind}:${s.stateId}'),
+    );
+    await w2.flush();
+    expect(kinds, ['sales:231']);
+    expect(w2.snapshots, isEmpty);
+    w2.dispose();
+  });
+
+  // Review I-2: a build from before sales snapshots reads `snapshots` as inventory and would send a sales one to
+  // /p/inventory (which replaces the mirror): sales snapshots live under their own key, which it never reads.
+  test("an older build's reader finds no sales snapshot in this build's file; inventory stays where it was", () {
+    health.markUnreachable();
+    final w = work();
+    w.keepSnapshot(231, [9], workerEmail: 'w', deviceId: 'd', kind: 'sales');
+    final doc = jsonDecode(LocalStore.forDir(_dir).read('server_catch_up.json')!.body) as Map;
+    // the reader at main: d['snapshots'], each entry an inventory snapshot keyed by stateId
+    List<int> oldReader(Map d) => [
+          if (d['snapshots'] is List)
+            for (final s in d['snapshots'] as List)
+              if (s is Map && s['stateId'] is int && s['records'] is List && s['workerEmail'] is String &&
+                  s['deviceId'] is String && s['readAtMs'] is int)
+                s['stateId'] as int,
+        ];
+    expect(oldReader(doc), isEmpty);
+    w.keepSnapshot(231, [1, 2], workerEmail: 'w', deviceId: 'd');
+    final both = jsonDecode(LocalStore.forDir(_dir).read('server_catch_up.json')!.body) as Map;
+    expect(oldReader(both), [231]);
+    expect((both['snapshots'] as List).single['records'], [1, 2]);
+    expect(work().snapshots.keys.toSet(), {'inventory:231', 'sales:231'});
+    expect(work().snapshots['sales:231']!.records, [9]);
+  });
+
+  test('a snapshot saved before kinds existed reads as inventory', () {
+    LocalStore.forDir(_dir).write(
+        'server_catch_up.json',
+        '{"lots": [], "snapshots": [{"stateId": 231, "records": [1], "workerEmail": "w", "deviceId": "d", '
+            '"readAtMs": 1761242400000}]}');
+    final w = work();
+    expect(w.snapshots.keys, ['inventory:231']);
+    expect(w.snapshots['inventory:231']!.kind, 'inventory');
+    expect(w.snapshots['inventory:231']!.toJson()['kind'], 'inventory');
+  });
+
+  test('only inventory is read from snapshots and only sales from salesSnapshots; other kinds are never read', () {
+    String snap(int id, String kind, int r) =>
+        '{"stateId": $id, "kind": "$kind", "records": [$r], "workerEmail": "w", "deviceId": "d", "readAtMs": 1761242400000}';
+    LocalStore.forDir(_dir).write(
+        'server_catch_up.json',
+        '{"lots": [], "snapshots": [${snap(231, 'harvest', 1)}, ${snap(183, 'sales', 2)}, ${snap(225, 'inventory', 3)}], '
+            '"salesSnapshots": [${snap(231, 'sales', 4)}, ${snap(183, 'inventory', 5)}, ${snap(225, 'harvest', 6)}]}');
+    expect(work().snapshots.keys.toSet(), {'inventory:225', 'sales:231'});
   });
 
   test('CoaDataError says unreachable through ConfiguredCoaSubmitError', () {

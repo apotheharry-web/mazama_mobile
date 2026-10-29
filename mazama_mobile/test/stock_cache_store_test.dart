@@ -2,6 +2,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mazama_mobile/local_store.dart';
 import 'package:mazama_mobile/sheets_client.dart';
 import 'package:mazama_mobile/stock_cache_store.dart';
 import 'package:mazama_mobile/stock_summary.dart';
@@ -39,14 +40,26 @@ void main() {
     expect(other.rows, isNull);
   });
 
+  /// A fresh folder holding [body] as an older build's stock_cache_231.json, imported when a store first opens it
+  /// (local_store_import.dart; plan P-D5).
+  StockCacheStore olderBuild(String folder, String body) {
+    final dir = Directory('${_dir.path}/$folder')..createSync();
+    File('${dir.path}/stock_cache_231.json').writeAsStringSync(body);
+    return StockCacheStore(dataDir: () => dir);
+  }
+
   test('a damaged file counts as nothing saved', () async {
-    File('${_dir.path}/stock_cache_231.json').writeAsStringSync('{not json');
-    final c = await store().load(231);
+    final c = await olderBuild('a', '{not json').load(231);
     expect(c.rows, isNull);
-    File('${_dir.path}/stock_cache_231.json').writeAsStringSync('{"par": [1, 2], "rows": "x"}');
-    final d = await store().load(231);
+    final d = await olderBuild('b', '{"par": [1, 2], "rows": "x"}').load(231);
     expect(d.par, isNull);
     expect(d.rows, isNull);
+  });
+
+  test('kept in the database, not in a file', () async {
+    await store().saveMazamaLicenses(231, ['mf-1e72fc8f']);
+    expect(File('${_dir.path}/stock_cache_231.json').existsSync(), isFalse);
+    expect(LocalStore.forDir(_dir).read('stock_cache_231.json'), isNotNull);
   });
 
   test('the par columns chosen on this phone round-trip per center, sizes other than the strain sizes dropped', () async {
@@ -95,8 +108,7 @@ void main() {
   test('par kept without a time (an older build) has none; damaged sheets count as none', () async {
     await store().savePar(231, const [ParLevel(strain: 'Bluey', size: 5, par: 2)]);
     expect((await store().load(231)).parAt, isNull);
-    File('${_dir.path}/stock_cache_231.json').writeAsStringSync('{"sheets": [{"guid": 5}], "sheetsAtMs": "x"}');
-    final d = await store().load(231);
+    final d = await olderBuild('sheets', '{"sheets": [{"guid": 5}], "sheetsAtMs": "x"}').load(231);
     expect(d.sheets, isNull);
     expect(d.sheetsAt, isNull);
   });

@@ -56,9 +56,9 @@ class DebugServerLinkPage extends StatelessWidget {
               Text('Lab reports to submit: ${l.catchUp.lots.length}'),
               for (final lot in l.catchUp.lots)
                 Text('  ${lot.lotGuid} (package ${lot.packageId}, center ${lot.stateId}) since ${formatAsOf(lot.addedAt)}'),
-              Text('Inventory snapshots to upload: ${l.catchUp.snapshots.length}'),
+              Text('Snapshots to upload (inventory, sales): ${l.catchUp.snapshots.length}'),
               for (final s in l.catchUp.snapshots.values)
-                Text('  center ${s.stateId}: ${s.records.length} records read ${formatAsOf(s.readAt)}'),
+                Text('  ${s.kind}, center ${s.stateId}: ${s.records.length} records read ${formatAsOf(s.readAt)}'),
               const Divider(),
               const Text('Replies kept for offline:'),
               for (final key in l.replies.keys()) Text('  $key${_keptAt(l, key)}'),

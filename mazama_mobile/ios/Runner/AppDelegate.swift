@@ -25,10 +25,11 @@ import UIKit
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
-  /// The app keeps the worker's state-system session (session.json: email, access and refresh tokens) and its other
-  /// files in Application Support, which iOS includes in iCloud and computer backups by default. A restored copy would
-  /// be a working sign-in on another device, so the whole folder is marked as excluded from backup (SIGN-IN-SECURITY.md,
-  /// claim 9). Best effort: a failure leaves the folder as iOS made it.
+  /// The app keeps what it stores (mazama.db: carts, queued sale reports carrying the worker's email, caches; and, until
+  /// the first launch of a build with the Keychain moves it, an older build's session.json with the tokens) in
+  /// Application Support, which iOS includes in iCloud and computer backups by default. The session itself is in the
+  /// Keychain (ThisDeviceOnly). The whole folder is marked as excluded from backup (SIGN-IN-SECURITY.md, claim 9). Best
+  /// effort: a failure leaves the folder as iOS made it.
   private func excludeAppSupportFromBackup() {
     guard var url = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else { return }
     try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)

@@ -1,12 +1,13 @@
 // Several carts at one center (specs/multi-cart): which carts a center has, what each is called, and which one the
 // Cart screen is showing. Each cart's lines and timer are kept by CartStore/SessionTimerStore under the cart's id
-// (cartFileName); this file keeps only the list itself, in carts.json beside them, scoped to a center the same way
-// the cart draft is (a list saved at another center is never shown here).
+// (cartFileName, the name of each one's document); this file keeps only the list itself, as the carts.json document
+// beside them, scoped to a center the same way the cart draft is (a list saved at another center is never shown here).
 //
-// Same hand-written-JSON-file approach and the same *Sync calls as cart_store.dart (see its file comment for why).
+// The same synchronous LocalStore calls as cart_store.dart (see its file comment for why).
 import 'dart:convert';
 import 'dart:io';
 
+import 'local_store.dart';
 import 'session_store.dart' show defaultSessionDataDir;
 
 /// The first cart's id. Its files keep the names the single cart always had (cart.json, session_timer.json), so a
@@ -152,23 +153,24 @@ class CartSlots {
   }
 }
 
-/// Keeps a center's [CartSlots] in carts.json. Overridable directory for tests, as CartStore's.
+/// Keeps a center's [CartSlots] as the carts.json document of the folder's LocalStore. Overridable directory for
+/// tests, as CartStore's.
 class CartSlotsStore {
   final Directory Function() dataDir;
 
   const CartSlotsStore({Directory Function()? dataDir}) : dataDir = dataDir ?? defaultSessionDataDir;
 
-  File get _file => File('${dataDir().path}/carts.json');
+  static const _name = 'carts.json';
 
   Future<void> save(int centerId, CartSlots slots) async {
-    dataDir().createSync(recursive: true);
-    _file.writeAsStringSync(jsonEncode(slots.toJson(centerId)));
+    LocalStore.forDir(dataDir()).write(_name, jsonEncode(slots.toJson(centerId)));
   }
 
   /// Null when nothing readable is saved for [centerId] (the caller starts from [CartSlots.initial]).
   Future<CartSlots?> load(int centerId) async {
     try {
-      return CartSlots.fromJson(jsonDecode(_file.readAsStringSync()), centerId);
+      final text = LocalStore.forDir(dataDir()).read(_name)?.body;
+      return text == null ? null : CartSlots.fromJson(jsonDecode(text), centerId);
     } on FileSystemException {
       return null;
     } on FormatException {

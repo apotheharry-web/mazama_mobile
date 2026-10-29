@@ -321,6 +321,23 @@ void main() {
         expect(known[enrichmentKey('PKPR-ab12c', 101)]!.analyteWeight, 1);
       });
 
+      test("specs/coa-upload: a live merge says which rows the server sent; a row only the state listed isn't one",
+          () async {
+        final mergedRow = Package(productGuid: 'PKPR-ab12c', productType: 'Extract', id: 101, weightPerUnit: 5, analyteWeight: 2,
+            strain: 'Golden Teacher', tpeMg: 8, quantity: 4);
+        final stateOnly = Package(productGuid: 'PKPR-dd88ee', productType: 'Extract', id: 108, weightPerUnit: 5, analyteWeight: 2,
+            quantity: 1, coaAvailable: false);
+        final result = await mergedInv(
+                enrichmentStore(),
+                () => MergedInventoryResult(
+                    packages: [mergedRow, stateOnly], mazamaOk: true, stateOk: true, mazamaPackages: [serverRow]),
+                t0)
+            .fetch(225);
+        expect(result.serverKeys, {inventoryRowKey(mergedRow)});
+        expect(result.serverKeys!.contains(inventoryRowKey(stateOnly)), isFalse);
+        expect(inventoryRowKey(mergedRow), 'PKPR-ab12c#101');
+      });
+
       test('only the state answered: reported as state, and filled where safe', () async {
         final es = enrichmentStore();
         await es.remember([serverRow], t0);
@@ -330,6 +347,7 @@ void main() {
             t1)
             .fetch(225);
         expect(result.source, InventorySource.state);
+        expect(result.serverKeys, isNull);
         final byId = {for (final p in result.packages) p.id: p};
         expect([byId[101]!.tpeMg, byId[101]!.stateEstimate], [8, false]);
         expect([byId[102]!.tpeMg, byId[102]!.stateEstimate], [5, true]);
@@ -337,51 +355,13 @@ void main() {
     });
   });
 
-  group('stateSourceNotice', () {
+  // R87: stock read from the state system alone has no strip of its own (the app-wide banner says Mazama's server
+  // can't be reached); a cached copy's strip still says when it holds state-only products.
+  group('cachedEstimatesNote', () {
     final at = DateTime.utc(2026, 10, 21, 15);
-    final date = formatEnrichmentDate(at);
-    Package p(String guid, int id, {DateTime? enrichedAt, EnrichmentSource? by, bool estimate = false}) => Package(
+    Package p(String guid, int id, {DateTime? enrichedAt, bool estimate = false}) => Package(
         productGuid: guid, productType: 'Extract', id: id, weightPerUnit: 5, analyteWeight: 1, tpeMg: 5,
-        enrichedAt: enrichedAt, enrichedBy: by, stateEstimate: estimate);
-
-    test("nothing filled: only the state's psilocybin is known, shown as mg psilocybin (SM-D31)", () {
-      final text = stateSourceNotice([p('PKPR-a', 1, estimate: true), p('PKPR-b', 2, estimate: true)]);
-      expect(text, "Mazama's own server could not be reached - showing stock read directly from the state system. "
-          "No TPE is known for these products: amounts are the state's psilocybin only, shown as mg psilocybin, and "
-          'strain names are only what the product names say.');
-      expect(stateSourceNotice(const []), text);
-    });
-
-    test("everything filled: strain and TPE are Mazama's from its last update on the date", () {
-      expect(stateSourceNotice([p('PKPR-a', 1, enrichedAt: at), p('PKPR-b', 2, enrichedAt: at.add(const Duration(days: 1)))]),
-          "Mazama's own server could not be reached - counts are read directly from the state system. Strain and TPE are "
-          "from Mazama's last update on $date; the state's figures for them have not changed since.");
-    });
-
-    test("everything filled by the phone's reading, or by both: says so", () {
-      expect(stateSourceNotice([p('PKPR-a', 1, enrichedAt: at, by: EnrichmentSource.phone)]),
-          "Mazama's own server could not be reached - counts are read directly from the state system. Strain and TPE are "
-          "from this phone's reading of the lab reports, from $date on; the state's figures for them have not changed since.");
-      expect(stateSourceNotice([p('PKPR-a', 1, enrichedAt: at, by: EnrichmentSource.phone), p('PKPR-b', 2, enrichedAt: at)]),
-          "Mazama's own server could not be reached - counts are read directly from the state system. Strain and TPE are "
-          "from Mazama's last update or this phone's reading of the lab reports, from $date on; the state's figures for "
-          'them have not changed since.');
-    });
-
-    test("some filled: how many, and for the rest only the state's psilocybin (counted by PKPR)", () {
-      expect(
-          stateSourceNotice([
-            p('PKPR-a', 1, enrichedAt: at),
-            p('PKPR-b', 2, estimate: true),
-            p('PKPR-c', 3, enrichedAt: at),
-            p('PKPR-c', 4, estimate: true), // one estimated lot makes PKPR-c an estimate
-          ]),
-          "Mazama's own server could not be reached - counts are read directly from the state system. Strain and TPE for "
-          "1 of 3 products are from Mazama's last update on $date. For the other 2 products only the state's psilocybin "
-          'is known: shown as mg psilocybin (marked in the stock list), strain only from the product name.');
-      expect(stateSourceNotice([p('PKPR-a', 1, enrichedAt: at), p('PKPR-b', 2, estimate: true)]),
-          contains("For the other product only the state's psilocybin is known"));
-    });
+        enrichedAt: enrichedAt, stateEstimate: estimate);
 
     test('cachedEstimatesNote flags a cached copy that holds state-only products', () {
       expect(cachedEstimatesNote([p('PKPR-a', 1, estimate: true)]),

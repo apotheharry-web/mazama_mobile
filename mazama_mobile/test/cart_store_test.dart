@@ -5,6 +5,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mazama_mobile/cart_store.dart';
+import 'package:mazama_mobile/local_store.dart';
 import 'package:mazama_mobile/packages_client.dart';
 import 'package:mazama_mobile/cart_page.dart' show CartLine;
 
@@ -90,19 +91,19 @@ void main() {
     await s.clear(); // must not throw even though there is nothing left to delete
   });
 
+  // A file an older build wrote is imported when the store first opens the folder (local_store_import.dart), so these
+  // write it before the store is first used there (plan P-D5).
   test('a corrupted file on disk reads back as null, not a crash', () async {
-    final s = store();
-    await s.save(231, [line]); // creates the directory for us
+    await Directory('${tempDir.path}/nested').create(recursive: true);
     await File('${tempDir.path}/nested/cart.json').writeAsString('not json{{{');
-    expect(await s.load(231), isNull);
+    expect(await store().load(231), isNull);
   });
 
   test('a line missing a required field reads back as null for the whole cart, not a partial list', () async {
-    final s = store();
     await Directory('${tempDir.path}/nested').create(recursive: true);
     await File('${tempDir.path}/nested/cart.json').writeAsString(
         '{"centerId": 231, "lines": [{"lots": [{"productGuid": "PKPR-x"}], "qty": 1}]}'); // no priceCentsEach, no dose
-    expect(await s.load(231), isNull);
+    expect(await store().load(231), isNull);
   });
 
   test('two independent stores pointed at different directories do not see each other\'s data', () async {
@@ -127,10 +128,15 @@ void main() {
       final s = store();
       await s.save(231, [line], now: () => t0);
       expect(await s.load(231, now: () => t0.add(const Duration(days: 30))), hasLength(1));
-      final f = File('${tempDir.path}/nested/cart.json');
-      final old = jsonDecode(f.readAsStringSync()) as Map<String, Object?>..remove('savedAtMs');
-      f.writeAsStringSync(jsonEncode(old));
-      expect(await s.load(231, maxAge: const Duration(minutes: 1), now: () => t0.add(const Duration(days: 30))), hasLength(1));
+      // The same draft without its time, as an older build's cart.json in a folder the store hasn't opened yet.
+      final saved = LocalStore.forDir(Directory('${tempDir.path}/nested')).read('cart.json')!.body;
+      final old = jsonDecode(saved) as Map<String, Object?>..remove('savedAtMs');
+      final olderBuild = Directory('${tempDir.path}/older')..createSync();
+      File('${olderBuild.path}/cart.json').writeAsStringSync(jsonEncode(old));
+      expect(
+          await CartStore(dataDir: () => olderBuild)
+              .load(231, maxAge: const Duration(minutes: 1), now: () => t0.add(const Duration(days: 30))),
+          hasLength(1));
     });
   });
 
@@ -141,8 +147,9 @@ void main() {
       await s.save(231, [line, line.withQty(5)], cartId: 'c2');
       expect(await s.load(231), hasLength(1));
       expect(await s.load(231, cartId: 'c2'), hasLength(2));
-      expect(File('${tempDir.path}/nested/cart.json').existsSync(), isTrue);
-      expect(File('${tempDir.path}/nested/cart_c2.json').existsSync(), isTrue);
+      expect(File('${tempDir.path}/nested/cart.json').existsSync(), isFalse, reason: 'kept in the database, not a file');
+      expect(LocalStore.forDir(Directory('${tempDir.path}/nested')).read('cart.json'), isNotNull);
+      expect(LocalStore.forDir(Directory('${tempDir.path}/nested')).read('cart_c2.json'), isNotNull);
     });
 
     test('clearing one cart leaves the others', () async {

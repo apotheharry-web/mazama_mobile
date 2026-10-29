@@ -126,10 +126,18 @@ void main() {
       expect(find.text('Cart (1)'), findsOneWidget);
       await tester.enterText(find.widgetWithText(TextField, 'Total price for the whole cart'), '40.00');
       await tester.pumpAndSettle();
-      await _tap(tester, find.widgetWithText(FilledButton, 'Sell'));
+      // Sell sits in the cart's fixed bottom bar, always on screen: tapped as it is. (_tap's ensureVisible would also
+      // align the button's left edge in the tabs' PageView, and with Sales right of Cart that snaps to the Sales page.)
+      await tester.tap(find.widgetWithText(FilledButton, 'Sell'));
+      await tester.pumpAndSettle();
       await _tap(tester, find.widgetWithText(FilledButton, 'Confirm sale'));
       expect(find.textContaining('Demo sale: nothing was sent'), findsWidgets);
       expect(find.text('Cart (1)'), findsNothing); // the cart is cleared, as after a real sale
+
+      // CW-R10: the Sales tab, right of Cart: the demo reads no sales and uploads nothing (no request either).
+      await tester.tap(find.text('Sales'));
+      await tester.pumpAndSettle();
+      expect(find.text('No sales in the last 30 days.'), findsOneWidget);
 
       // DM-D4: the demo stock is as it was.
       await tester.tap(find.text('Stock'));

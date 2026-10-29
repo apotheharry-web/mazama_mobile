@@ -1,8 +1,8 @@
 // What Mazama's server last said about each package it sent (strain, tpeMg, expires), kept on the device so that a
 // later read straight from the state system (resilient_inventory.dart's tier 2: Mazama's server unreachable) can show
 // the server's figures again instead of the state-only degraded ones (state_packages_client.dart) - but only for a
-// package whose inputs have not changed since. Same hand-written JSON file approach as inventory_cache_store.dart /
-// session_store.dart, under session_store.dart's defaultSessionDataDir.
+// package whose inputs have not changed since. One JSON document (enrichment.json) in the data folder's LocalStore, as
+// inventory_cache_store.dart keeps its own, under session_store.dart's defaultSessionDataDir.
 //
 // What is kept, per package, and why only this:
 //   - strain: the server's canonical name (its certificate folder and Strains page spellings), which the state alone
@@ -37,6 +37,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'local_store.dart';
 import 'packages_client.dart';
 import 'session_store.dart' show defaultSessionDataDir;
 
@@ -151,14 +152,14 @@ class EnrichmentStore {
     this.maxAge = const Duration(days: 30),
   }) : dataDir = dataDir ?? defaultSessionDataDir;
 
-  File get _file => File('${dataDir().path}/enrichment.json');
+  static const _name = 'enrichment.json';
 
   /// Records [serverRows] - Mazama's server's own rows, exactly as /p/packages sent them - received at [at]. A row
   /// replaces what was kept for the same package; other packages already kept stay (until too old or too many). A row
   /// with no known potency (tpeMg 0) is not kept: there is nothing in it worth reusing.
   ///
-  /// Synchronous file I/O and no awaits (as cart_store.dart and session_store.dart), so the write has finished when
-  /// this returns even when the caller doesn't await it.
+  /// Synchronous LocalStore calls and no awaits (as cart_store.dart), so the write has finished when this returns even
+  /// when the caller doesn't await it.
   Future<void> remember(List<Package> serverRows, DateTime at) async {
     final kept = _read();
     for (final p in serverRows) {
@@ -203,15 +204,14 @@ class EnrichmentStore {
     final fresh = [for (final e in kept.values) if (!_tooOld(e, at)) e]
       ..sort((a, b) => b.seenAt.compareTo(a.seenAt));
     final bounded = fresh.length > maxEntries ? fresh.sublist(0, maxEntries) : fresh;
-    dataDir().createSync(recursive: true);
-    _file.writeAsStringSync(jsonEncode({
+    LocalStore.forDir(dataDir()).write(_name, jsonEncode({
       'version': 1,
       'entries': [for (final e in bounded) e.toJson()],
     }));
   }
 
   /// Every package kept and not older than [maxAge] as of [now], by [enrichmentKey]. Empty when nothing is stored or
-  /// the file can't be read back (no file yet, a partial write, another format).
+  /// what is kept can't be read back (nothing yet, a partial write from an older build, another format).
   Future<Map<String, PackageEnrichment>> load(DateTime now) async {
     final kept = _read();
     kept.removeWhere((_, e) => _tooOld(e, now));
@@ -219,18 +219,16 @@ class EnrichmentStore {
   }
 
   Future<void> clear() async {
-    try {
-      _file.deleteSync();
-    } on FileSystemException {
-      // Already gone (or never existed) - exactly the state this call is meant to produce.
-    }
+    LocalStore.forDir(dataDir()).delete(_name); // nothing kept is exactly the state this call is meant to produce
   }
 
   bool _tooOld(PackageEnrichment e, DateTime now) => now.difference(e.seenAt) > maxAge;
 
   Map<String, PackageEnrichment> _read() {
     try {
-      final decoded = jsonDecode(_file.readAsStringSync());
+      final text = LocalStore.forDir(dataDir()).read(_name)?.body;
+      if (text == null) return {};
+      final decoded = jsonDecode(text);
       if (decoded is! Map || decoded['version'] != 1) return {};
       final entries = decoded['entries'];
       if (entries is! List) return {};

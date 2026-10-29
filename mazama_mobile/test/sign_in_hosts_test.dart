@@ -11,6 +11,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:mazama_mobile/flow/flow_spec.dart';
@@ -20,6 +21,7 @@ import 'package:mazama_mobile/login_spec_store.dart';
 import 'package:mazama_mobile/main.dart';
 import 'package:mazama_mobile/select_center_page.dart';
 import 'package:mazama_mobile/session_store.dart';
+import 'package:mazama_mobile/state_client.dart' show resetStateReadsSpec;
 
 import 'flow/fake_state.dart';
 import 'host_list_signing.dart';
@@ -137,6 +139,14 @@ Future<_Outcome> _signIn(
 }
 
 void main() {
+  // This file's widget tests load the state-reads spec (state_client.dart's stateReadsSpec) and other assets through
+  // rootBundle; both caches keep the Future, which belongs to that test's fake async zone. Forget them after each
+  // test, or a later test (in CI's one-isolate bundle, in another file) awaits them forever.
+  tearDown(() {
+    rootBundle.clear();
+    resetStateReadsSpec();
+  });
+
   setUpAll(() async {
     _listV1 = await signedHostList('2026-11-01.1', [_newHost]);
     _listV2 = await signedHostList('2026-11-01.2', [_newHost]);

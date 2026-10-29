@@ -14,6 +14,10 @@
 // timeout first, and if the server is back the probe brings everything online within a second or so.
 //
 // Selling never goes through here: the sale is sent straight to the state system, whatever this tracker says.
+//
+// The app-wide banner (server_link.dart's ServerLinkBanner) can be dismissed for the outage under way
+// ([ServerHealth.dismissBanner], README R87). That is kept here, beside the outage it belongs to, so it holds across
+// every page; it ends with the outage, so the next one shows the banner again.
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -61,6 +65,7 @@ class ServerHealth extends ChangeNotifier {
   Timer? _timer;
   bool _probing = false;
   bool _disposed = false;
+  bool _bannerDismissed = false;
 
   bool get offline => _offline;
   bool get online => !_offline;
@@ -74,12 +79,24 @@ class ServerHealth extends ChangeNotifier {
   /// Whether a probe is waiting on its timer.
   bool get probeScheduled => _timer != null;
 
+  /// The worker closed the banner for this outage (README R87); false while online and at the start of every outage.
+  bool get bannerDismissed => _offline && _bannerDismissed;
+
+  /// The banner's close button: hides it until the server has answered and then stopped answering again. Changes
+  /// nothing else (the probes go on, the pages still read the copies kept on the phone). Online, does nothing.
+  void dismissBanner() {
+    if (_disposed || !_offline || _bannerDismissed) return;
+    _bannerDismissed = true;
+    notifyListeners();
+  }
+
   /// A /p/ call ended without an answer from the server.
   void markUnreachable() {
     if (_disposed || _offline) return;
     _offline = true;
     _since = now().toUtc();
     _nextDelay = probeFirstDelay;
+    _bannerDismissed = false;
     onOfflineSinceChanged?.call(_since);
     _schedule(_nextDelay);
     notifyListeners();
@@ -90,6 +107,7 @@ class ServerHealth extends ChangeNotifier {
     if (_disposed || !_offline) return;
     _offline = false;
     _since = null;
+    _bannerDismissed = false;
     _nextDelay = probeFirstDelay;
     _timer?.cancel();
     _timer = null;

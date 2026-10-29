@@ -174,7 +174,10 @@ void main() {
           ));
       await expectLater(
         uploadCoaParse(guid: 'G-1', pdfBytes: Uint8List(0), workerEmail: 'w', deviceId: 'd', client: client),
-        throwsA(isA<CoaDataError>().having((e) => e.message, 'message', contains("isn't in the PDF"))),
+        throwsA(isA<CoaDataError>()
+            .having((e) => e.message, 'message', contains("isn't in the PDF"))
+            .having((e) => e.status, 'status', 422)
+            .having((e) => e.unreachable, 'unreachable', isFalse)),
       );
     });
 
@@ -182,7 +185,28 @@ void main() {
       final client = http_testing.MockClient.streaming((req, bodyStream) async => http.StreamedResponse(Stream.value(utf8.encode('')), 503));
       await expectLater(
         uploadCoaParse(guid: 'G-1', pdfBytes: Uint8List(0), workerEmail: 'w', deviceId: 'd', client: client),
-        throwsA(isA<CoaDataError>().having((e) => e.message, 'message', contains('503'))),
+        throwsA(isA<CoaDataError>()
+            .having((e) => e.message, 'message', contains('503'))
+            .having((e) => e.status, 'status', 503)
+            .having((e) => e.unreachable, 'unreachable', isTrue)),
+      );
+    });
+
+    test('CU-R3: a 202 (queued, or held for an unapproved phone) is an error carrying its status, not unreachable',
+        () async {
+      final client = http_testing.MockClient.streaming(
+          (req, bodyStream) async => http.StreamedResponse(Stream.value(utf8.encode(jsonEncode({'queued': true}))), 202));
+      await expectLater(
+        uploadCoaParse(guid: 'G-1', pdfBytes: Uint8List(0), workerEmail: 'w', deviceId: 'd', client: client),
+        throwsA(isA<CoaDataError>().having((e) => e.status, 'status', 202).having((e) => e.unreachable, 'unreachable', isFalse)),
+      );
+    });
+
+    test('no connection: unreachable, with no status', () async {
+      final client = http_testing.MockClient((req) async => throw http.ClientException('connection refused'));
+      await expectLater(
+        uploadCoaParse(guid: 'G-1', pdfBytes: Uint8List(0), workerEmail: 'w', deviceId: 'd', client: client),
+        throwsA(isA<CoaDataError>().having((e) => e.status, 'status', isNull).having((e) => e.unreachable, 'unreachable', isTrue)),
       );
     });
   });

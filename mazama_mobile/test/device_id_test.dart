@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mazama_mobile/device_id.dart';
+import 'package:mazama_mobile/local_store.dart';
 
 void main() {
   late Directory tempDir;
@@ -48,6 +49,8 @@ void main() {
     expect(id, isNotEmpty);
     // The fresh id was actually persisted - a later store reading the same directory sees it too.
     expect(await store().idOrCreate(), id);
+    expect(File('${tempDir.path}/nested/device_id.txt').existsSync(), isFalse, reason: 'kept in the database');
+    expect(LocalStore.forDir(Directory('${tempDir.path}/nested')).read('device_id.txt')!.body, id);
   });
 
   test('whitespace-only content on disk is also treated as nothing saved yet', () async {

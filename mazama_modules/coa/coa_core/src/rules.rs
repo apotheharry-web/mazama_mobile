@@ -38,6 +38,8 @@ pub struct Rules {
 pub struct LotLinks {
     pub batch_labels: Vec<String>,
     pub lot_labels: Vec<String>,
+    pub custody_labels: Vec<String>,
+    pub item_labels: Vec<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -45,6 +47,8 @@ pub struct LotLinks {
 pub struct Anchor {
     pub labels: Vec<String>,
     pub id: String,
+    /// Prefixes of a client's own ids, which may head a section but are never a lot's own id (AD-21).
+    pub client_prefixes: Vec<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]

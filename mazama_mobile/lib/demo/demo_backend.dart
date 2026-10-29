@@ -21,6 +21,7 @@ import '../cart_store.dart';
 import '../center_status_client.dart';
 import '../coa_data_client.dart';
 import '../coa_data_resolver.dart';
+import '../coa_uploader.dart' show CoaLotResolved, CoaUploadLot;
 import '../device_id.dart';
 import '../enrichment_store.dart';
 import '../inventory_cache_store.dart';
@@ -129,8 +130,23 @@ class DemoBackend {
           {required String workerEmail, required String deviceId}) async =>
       {'demo': true, 'records': records.length};
 
+  /// The demo's sales read (CW-R10): no sales are invented, so the Sales page shows none (DM-D4: a demo sale leaves
+  /// nothing behind).
+  Future<List<Object?>> fetchSalesRecords(int stateId, {required String accessToken}) async => const [];
+
+  /// The demo has no server: a center's sales are never uploaded (specs/center-web CW-R10); nothing is sent.
+  Future<Map<String, Object?>> uploadSalesSnapshot(int stateId, List<Object?> records,
+          {required String workerEmail, required String deviceId}) async =>
+      {'rows': 0, 'skipped': 0};
+
   /// The demo has no server to catch up with (README R56): a lot is never kept for later.
   void keepCoaLotForLater(int stateId, {required String lotGuid, required int packageId, double? statePsilocybin}) {}
+
+  /// The demo never uploads a lab report (specs/coa-upload CU-R6): its lots are queued nowhere.
+  void queueCoaUploads(List<CoaUploadLot> lots, {CoaLotResolved? onResolved}) {}
+
+  /// Nothing is ever being uploaded in the demo.
+  bool coaUploadPending(String lotGuid) => false;
 
   /// The invented lab report of the package [representativePackageId] (DM-R2).
   Future<CoaData?> submitCoaForLot({

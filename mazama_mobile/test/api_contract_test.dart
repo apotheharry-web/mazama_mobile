@@ -12,7 +12,7 @@ import 'package:http/testing.dart' as http_testing;
 import 'package:mazama_mobile/api_contract.g.dart';
 import 'package:mazama_mobile/app_api_key.dart';
 import 'package:mazama_mobile/coa_data_client.dart';
-import 'package:mazama_mobile/coa_data_resolver.dart' show defaultMaxMisses;
+import 'package:mazama_mobile/coa_uploader.dart' show coaUploadStartInterval;
 import 'package:mazama_mobile/flow/flow_runner.dart' show FlowStage;
 import 'package:mazama_mobile/flow/flow_spec.dart' show supportedFlowFormat;
 import 'package:mazama_mobile/inventory_upload_client.dart';
@@ -26,6 +26,7 @@ import 'package:mazama_mobile/par_client.dart';
 import 'package:mazama_mobile/ping_client.dart';
 import 'package:mazama_mobile/sale_failure_client.dart';
 import 'package:mazama_mobile/sale_log_client.dart';
+import 'package:mazama_mobile/sales_upload_client.dart';
 import 'package:mazama_mobile/scan_match_client.dart';
 import 'package:mazama_mobile/server_error.dart';
 import 'package:mazama_mobile/server_outbox.dart' show uuidV4;
@@ -79,13 +80,17 @@ void main() {
       'login_spec': loginSpecPath(),
       'login_hosts': loginHostsPath(),
       'login_browser_spec': loginBrowserSpecPath(),
+      'ingest': ingestPath('sales', 225),
     };
     expect(generated.keys.toSet(), apiRoutes.keys.toSet());
     for (final e in generated.entries) {
       final path = apiRoutes[e.key]!['path'] as String;
-      expect(e.value, path.replaceAll('{state_id}', '225').replaceAll('{guid}', 'PKPR-aaaa0001'), reason: e.key);
+      expect(e.value,
+          path.replaceAll('{state_id}', '225').replaceAll('{guid}', 'PKPR-aaaa0001').replaceAll('{dataset}', 'sales'),
+          reason: e.key);
     }
     expect(labelPath(225, 'a/b'), '/p/label/225/a%2Fb');
+    expect(ingestPath('a/b', 225), '/p/ingest/a%2Fb/225');
     expect(appApiKeyHeaderName, appApiKeyHeader); // app_api_key.dart sends the header routes.yaml names
   });
 
@@ -122,6 +127,26 @@ void main() {
       uploadInventorySnapshot(225, List.filled(inventoryMaxRecords + 1, <String, Object?>{}),
           workerEmail: 'w@example.com', deviceId: 'd', client: client),
       throwsA(isA<InventoryUploadError>()),
+    );
+    expect(seen, isEmpty);
+  });
+
+  test('C20 ingest (sales): sends the example request, reads the example reply', () async {
+    final req = _example('ingest', 'request') as Map<String, Object?>;
+    final (client, seen) = _serve(_example('ingest', 'response'));
+    final out = await uploadSalesSnapshot(225, req['records'] as List<Object?>,
+        workerEmail: req['workerEmail'] as String, deviceId: req['deviceId'] as String, client: client);
+    _sameRoute(seen.single, 'ingest', ingestPath('sales', 225));
+    expect(_jsonBody(seen.single), req);
+    expect(out, _example('ingest', 'response'));
+  });
+
+  test('C20 ingest (sales): more records than the server takes is refused before sending', () async {
+    final (client, seen) = _serve({'rows': 0, 'skipped': 0});
+    await expectLater(
+      uploadSalesSnapshot(225, List.filled(ingestMaxRecords + 1, <String, Object?>{}),
+          workerEmail: 'w@example.com', deviceId: 'd', client: client),
+      throwsA(isA<SalesUploadError>()),
     );
     expect(seen, isEmpty);
   });
@@ -359,7 +384,7 @@ void main() {
 
   test('no client writes out the server address or a /p/ path of its own', () {
     for (final name in [
-      'packages_client', 'label_client', 'inventory_upload_client', 'coa_data_client', 'scan_match_client',
+      'packages_client', 'label_client', 'inventory_upload_client', 'sales_upload_client', 'coa_data_client', 'scan_match_client',
       'sale_log_client', 'sale_failure_client', 'par_client', 'mazama_inventory_client',
       'sheets_client', 'order_client', 'ping_client', 'signin_failure_client', 'login_spec_client',
       'login_hosts_client',
@@ -376,6 +401,7 @@ void main() {
       'packages': (c) => fetchPackages(225, client: c),
       'label': (c) => fetchLabel(225, 'PKPR-aaaa0001', client: c),
       'inventory': (c) => uploadInventorySnapshot(225, const [], workerEmail: 'w', deviceId: 'd', client: c),
+      'ingest': (c) => uploadSalesSnapshot(225, const [], workerEmail: 'w', deviceId: 'd', client: c),
       'center_status': (c) => centerIsConfigured(225, client: c),
       'coa_data_batch': (c) => fetchCoaDataBatch(['HB-aaaa0001'], client: c),
       'coa_data_parse': (c) => uploadCoaParse(
@@ -394,7 +420,9 @@ void main() {
       'login_hosts': (c) => requestLoginHosts(client: c),
       'login_browser_spec': (c) => requestBrowserLoginSpec(client: c),
     };
-    test('there is a call for every route', () => expect(calls.keys.toSet(), apiRoutes.keys.toSet()));
+    test('there is a call for every route', () {
+      expect(calls.keys.toSet(), apiRoutes.keys.toSet());
+    });
     for (final status in [401, 429]) {
       for (final e in calls.entries) {
         test('${e.key}: $status', () async {
@@ -412,7 +440,7 @@ void main() {
     }
   });
 
-  test("the resolver never plans more uploads than the server's per-minute budget for them", () {
-    expect(defaultMaxMisses, coaDataParseRateLimitPerMinute);
+  test("the uploader never starts uploads faster than the server's per-minute budget for them (CU-R2)", () {
+    expect(coaUploadStartInterval * coaDataParseRateLimitPerMinute, const Duration(minutes: 1));
   });
 }

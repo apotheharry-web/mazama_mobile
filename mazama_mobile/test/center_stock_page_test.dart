@@ -7,11 +7,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mazama_mobile/center_stock_page.dart';
 import 'package:mazama_mobile/licenses_client.dart';
+import 'package:mazama_mobile/server_health.dart';
 import 'package:mazama_mobile/server_offline.dart';
 import 'package:mazama_mobile/sheets_client.dart';
 import 'package:mazama_mobile/stock_pie.dart';
 import 'package:mazama_mobile/stock_rows.dart';
 import 'package:mazama_mobile/stock_summary.dart';
+
+import 'fake_timers.dart';
 
 final _center = License(id: 231, licenseId: 'SC-b1c7379a', licenseName: 'Bendable Service Center', licenseType: 'ServiceCenter');
 
@@ -39,6 +42,7 @@ Widget _page({
   Future<void> Function(ProductSheet)? openSheet,
   Future<ServerRead<List<ProductSheet>>?> Function()? keptSheets,
   Future<void> Function(List<ProductSheet>, DateTime)? keepSheets,
+  ServerHealth? health,
 }) =>
     MaterialApp(
       home: CenterStockPage(
@@ -49,6 +53,7 @@ Widget _page({
         openSheet: openSheet,
         keptSheets: keptSheets,
         keepSheets: keepSheets,
+        health: health,
       ),
     );
 
@@ -240,6 +245,18 @@ void main() {
     expect(find.textContaining('below par'), findsNothing);
   });
 
+  // R87: about the state system only; the app-wide banner says Mazama's server can't be reached.
+  testWidgets('nothing reachable and nothing drawn before: the state part of the error, and Retry', (tester) async {
+    await tester.pumpWidget(_page(load: () async => throw StockUnavailable()));
+    await tester.pumpAndSettle();
+    expect(
+        find.text("Stock did not load: The state system can't be reached, and this phone hasn't drawn this center's stock "
+            'before.'),
+        findsOneWidget);
+    expect(find.textContaining('Mazama server'), findsNothing);
+    expect(find.widgetWithText(FilledButton, 'Retry'), findsOneWidget);
+  });
+
   testWidgets('a failed load says so and Retry reloads', (tester) async {
     var calls = 0;
     await tester.pumpWidget(_page(loadRows: () async {
@@ -253,10 +270,13 @@ void main() {
     expect(find.text('20 units'), findsOneWidget);
   });
 
-  testWidgets('server unreachable shows the partial banner and the psilocybin title', (tester) async {
+  // R87: the app-wide banner says the server can't be reached; the page has no notice of its own for it.
+  testWidgets('server unreachable: the psilocybin title, and no notice of its own', (tester) async {
     await tester.pumpWidget(_page(load: () async => const StockLoad(_stateRows, mgMode: 'psilocybin', partial: true)));
     await tester.pumpAndSettle();
-    expect(find.text("Partial: the Mazama server isn't reachable"), findsOneWidget);
+    expect(find.textContaining('Partial'), findsNothing);
+    expect(find.textContaining("isn't reachable"), findsNothing);
+    expect(find.textContaining('Mazama server'), findsNothing);
     await _swipePies(tester);
     expect(find.text('mg psilocybin in stock (state figures; TPE needs the server)'), findsOneWidget);
     expect(find.text('mg TPE in stock'), findsNothing);
@@ -272,10 +292,8 @@ void main() {
       now: () => DateTime.utc(2026, 10, 21, 9, 20),
     ));
     await tester.pumpAndSettle();
-    expect(
-        find.text('Neither the Mazama server nor the state system can be reached: these are the charts drawn on this phone 3 h ago.'),
-        findsOneWidget);
-    expect(find.text("Partial: the Mazama server isn't reachable"), findsNothing);
+    expect(find.text("The state system can't be reached: these are the charts drawn on this phone 3 h ago."), findsOneWidget);
+    expect(find.textContaining('Mazama server'), findsNothing);
     expect(find.text('20 units'), findsOneWidget);
   });
 
@@ -290,7 +308,6 @@ void main() {
     await tester.pumpWidget(_page(load: () async => const StockLoad(_stateRows, mgMode: 'psilocybin', partial: true, notSetUp: true)));
     await tester.pumpAndSettle();
     expect(find.text("This center isn't set up on the Mazama server: these are the state's figures only."), findsOneWidget);
-    expect(find.text("Partial: the Mazama server isn't reachable"), findsNothing);
   });
 
   testWidgets('an expired state sign-in asks the worker to sign in again', (tester) async {
@@ -567,27 +584,123 @@ void main() {
 
   // --- Mazama's server unreachable: the sheets it last sent, kept on the phone ----------------------------------
 
-  testWidgets('the sheets the server sends are kept with when; no notice shows', (tester) async {
+  testWidgets('the sheets the server sends are kept with when', (tester) async {
     final kept = <(List<ProductSheet>, DateTime)>[];
     final now = DateTime.utc(2026, 10, 23, 8);
     await tester.pumpWidget(_page(loadSheets: () async => _sheets, keepSheets: (s, t) async => kept.add((s, t)), now: () => now));
     await tester.pumpAndSettle();
     expect(kept.single.$1, same(_sheets));
     expect(kept.single.$2, now);
-    expect(find.byKey(const ValueKey('server-offline-notice')), findsNothing);
   });
 
-  testWidgets('unreachable: the kept sheets fill the lot table under a notice with their date', (tester) async {
+  // R87: no notice of the page's own over the kept sheets: the app-wide banner says the server can't be reached.
+  testWidgets('unreachable: the kept sheets fill the lot table, with no notice of their own', (tester) async {
     final at = DateTime.utc(2026, 10, 20, 15, 5);
     await tester.pumpWidget(_page(
       loadSheets: () async => throw SheetsError('cannot reach sales.mazamamushrooms.com: SocketException', unreachable: true),
       keptSheets: () async => ServerRead.cached(_sheets, at),
     ));
     await tester.pumpAndSettle();
-    expect(find.textContaining(serverOfflineNotice(at)), findsOneWidget);
+    expect(find.textContaining("can't be reached"), findsNothing);
+    expect(find.textContaining('last sent'), findsNothing);
+    expect(find.text('Retry'), findsNothing);
     expect(find.textContaining('Lots did not load'), findsNothing);
     await _openLots(tester);
     expect(_lotRows(tester), contains('Golden Teacher|HB-gt01'));
+  });
+
+  group('reloads once the server tracker is online again', () {
+    ServerHealth offlineTracker() {
+      final health = ServerHealth(probe: () async => false, startTimer: FakeTimers().start);
+      health.markUnreachable();
+      return health;
+    }
+
+    testWidgets('showing the kept sheets: reloads, and the lot table then has the fresh ones', (tester) async {
+      final health = offlineTracker();
+      addTearDown(health.dispose);
+      var up = false;
+      var loads = 0;
+      await tester.pumpWidget(_page(
+        loadSheets: () async {
+          loads++;
+          if (!up) throw SheetsError("Mazama's server can't be reached", unreachable: true);
+          return [_sheets.first];
+        },
+        keptSheets: () async => ServerRead.cached(_sheets, DateTime.utc(2026, 10, 20)),
+        health: health,
+      ));
+      await tester.pumpAndSettle();
+      await _openLots(tester);
+      // The kept copy is all four of _sheets; PL-pe02 is in it and not in the server's fresh answer below.
+      expect(_lotRows(tester), containsAll(['Golden Teacher|HB-gt01', 'Penis Envy|PL-pe02']));
+
+      up = true;
+      health.markReachable();
+      await tester.pumpAndSettle();
+      expect(loads, 2);
+      // The table stays open and now lists only the server's answer (HB-gt01): the kept-only lots are gone.
+      expect(_lotRows(tester), ['Golden Teacher|HB-gt01']);
+      expect(_lotRows(tester), isNot(contains('Penis Envy|PL-pe02')));
+    });
+
+    testWidgets('showing a partial stock (rows without the server): reloads', (tester) async {
+      final health = offlineTracker();
+      addTearDown(health.dispose);
+      var loads = 0;
+      await tester.pumpWidget(_page(
+        load: () async {
+          loads++;
+          return loads == 1 ? const StockLoad(_stateRows, mgMode: 'psilocybin', partial: true) : const StockLoad(_rows);
+        },
+        health: health,
+      ));
+      await tester.pumpAndSettle();
+      expect(find.text('13 units'), findsOneWidget);
+
+      health.markReachable();
+      await tester.pumpAndSettle();
+      expect(loads, 2);
+      expect(find.text('20 units'), findsOneWidget);
+    });
+
+    testWidgets("showing the server's own answer: no reload, and none for a banner dismissed", (tester) async {
+      final health = offlineTracker();
+      addTearDown(health.dispose);
+      var loads = 0;
+      await tester.pumpWidget(_page(
+        loadRows: () async {
+          loads++;
+          return _rows;
+        },
+        loadSheets: () async => _sheets,
+        health: health,
+      ));
+      await tester.pumpAndSettle();
+      health.dismissBanner();
+      await tester.pumpAndSettle();
+      health.markReachable();
+      await tester.pumpAndSettle();
+      expect(loads, 1);
+    });
+
+    testWidgets('the listener goes with the page', (tester) async {
+      final health = offlineTracker();
+      addTearDown(health.dispose);
+      var loads = 0;
+      await tester.pumpWidget(_page(
+        load: () async {
+          loads++;
+          return const StockLoad(_stateRows, mgMode: 'psilocybin', partial: true);
+        },
+        health: health,
+      ));
+      await tester.pumpAndSettle();
+      await tester.pumpWidget(const MaterialApp(home: Text('elsewhere')));
+      health.markReachable(); // the page is gone: nothing reloads
+      await tester.pumpAndSettle();
+      expect(loads, 1);
+    });
   });
 
   testWidgets("a 4xx is the server's own answer: the error in the table, not the kept sheets", (tester) async {
@@ -597,6 +710,5 @@ void main() {
     ));
     await tester.pumpAndSettle();
     expect(find.text('Lots did not load: No such service center.'), findsOneWidget);
-    expect(find.byKey(const ValueKey('server-offline-notice')), findsNothing);
   });
 }

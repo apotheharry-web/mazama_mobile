@@ -26,7 +26,8 @@
 // analyteWeight they were worked out from. Whenever stock comes from the state system alone instead (tier 2, or a
 // [ResilientInventory.merged] read the server didn't answer), those are filled back in for each package whose weight
 // and state potency are exactly what they were then (applyEnrichment); every other package stays the state's estimate
-// and is marked Package.stateEstimate, so the screens can say which figures are which (stateSourceNotice). Since SM-D31
+// and is marked Package.stateEstimate, so the screens can say which figures are which (Package.mgFigure, enrichment_store.dart's
+// tpeProvenanceNote; README R87: no strip of the cart's own says the server didn't answer). Since SM-D31
 // the figures kept also include the phone's own coa_core reading of a lab report (phone_label.dart), and a package with
 // neither shows only the state's psilocybin, called mg psilocybin on every screen (Package.mgFigure).
 //
@@ -59,8 +60,17 @@ class InventoryFetch {
   final List<Package> packages;
   final InventorySource source;
   final DateTime? asOf;
-  InventoryFetch({required this.packages, required this.source, this.asOf});
+
+  /// For [InventorySource.live] only: the [inventoryRowKey]s of the rows Mazama's server itself sent. A merged row
+  /// only the state listed has coaAvailable false because the server was never asked about it, not because its lab
+  /// report is missing (merged_inventory.dart's _unknownCoaLabel), so the background uploader (specs/coa-upload CU-R1)
+  /// queues only these. Null when the server's rows aren't known.
+  final Set<String>? serverKeys;
+  InventoryFetch({required this.packages, required this.source, this.asOf, this.serverKeys});
 }
+
+/// One row's key, as the merge matches the server's rows to the state's (merged_inventory.dart): PKPR and package id.
+String inventoryRowKey(Package p) => '${p.productGuid}#${p.id}';
 
 class ResilientInventory {
   /// Tier 1 as a plain list: Mazama's server's own rows, exactly as /p/packages sent them (remembered as they are in
@@ -142,7 +152,10 @@ class ResilientInventory {
         if (result.mazamaOk && serverRows != null) {
           _remember(serverRows);
           unawaited(cache.save(stateId, result.packages, now()));
-          return InventoryFetch(packages: result.packages, source: InventorySource.live);
+          return InventoryFetch(
+              packages: result.packages,
+              source: InventorySource.live,
+              serverKeys: {for (final p in serverRows) inventoryRowKey(p)});
         }
         final filled = await _fill(result.packages);
         unawaited(cache.save(stateId, filled, now()));
@@ -151,7 +164,8 @@ class ResilientInventory {
       final pkgs = await base!(stateId);
       _remember(pkgs);
       unawaited(cache.save(stateId, pkgs, now()));
-      return InventoryFetch(packages: pkgs, source: InventorySource.live);
+      return InventoryFetch(
+          packages: pkgs, source: InventorySource.live, serverKeys: {for (final p in pkgs) inventoryRowKey(p)});
     } catch (e) {
       liveError = e;
     }
@@ -183,45 +197,6 @@ class ResilientInventory {
   /// where it has an _inventorySource field to put it in; nothing downstream of StockPage/SelectCenterPage
   /// needs to know.
   Future<List<Package>> fetchPackages(int stateId) async => (await fetch(stateId)).packages;
-}
-
-/// The banner for stock read from the state system alone ([InventorySource.state]), from what its packages say about
-/// themselves (applyEnrichment's marks), counted by PKPR as the screens show them (SM-D31):
-///   - nothing filled in from figures kept on the phone (or no marks at all): only the state's psilocybin is known, and
-///     the amounts are shown as mg psilocybin, not TPE.
-///   - every PKPR filled in: says where the strain and TPE are from - Mazama's last update, this phone's reading of the
-///     lab reports, or both - on the oldest date involved, and that the counts are the state's (a banner is still shown:
-///     the counts and the COA/label flags are not Mazama's live word).
-///   - some filled, some not: the same, for how many, and says that for the rest only the state's psilocybin is known,
-///     shown as mg psilocybin and marked in the stock list.
-String stateSourceNotice(List<Package> packages) {
-  const degraded = "Mazama's own server could not be reached - showing stock read directly from the state system. "
-      "No TPE is known for these products: amounts are the state's psilocybin only, shown as mg psilocybin, and "
-      'strain names are only what the product names say.';
-  final groups = groupByPkpr(packages);
-  final filled = [for (final g in groups) if (!groupIsEstimate(g) && groupEnrichedAt(g) != null) g];
-  if (filled.isEmpty) return degraded;
-  var oldest = groupEnrichedAt(filled.first)!;
-  for (final g in filled) {
-    final at = groupEnrichedAt(g)!;
-    if (at.isBefore(oldest)) oldest = at;
-  }
-  final date = formatEnrichmentDate(oldest);
-  final byPhone = filled.where((g) => groupEnrichedBy(g) == EnrichmentSource.phone).length;
-  final from = byPhone == 0
-      ? "Mazama's last update on $date"
-      : byPhone == filled.length
-          ? "this phone's reading of the lab reports, from $date on"
-          : "Mazama's last update or this phone's reading of the lab reports, from $date on";
-  const lead = "Mazama's own server could not be reached - counts are read directly from the state system.";
-  final rest = groups.length - filled.length;
-  if (rest == 0) {
-    return '$lead Strain and TPE are from $from; the state\'s figures for them have not changed since.';
-  }
-  final others = rest == 1 ? 'the other product' : 'the other $rest products';
-  return '$lead Strain and TPE for ${filled.length} of ${groups.length} products are from $from. '
-      'For $others only the state\'s psilocybin is known: shown as mg psilocybin (marked in the stock list), strain '
-      'only from the product name.';
 }
 
 /// Added to the cached-stock banner ([InventorySource.cache]) when the copy kept was itself a state-only read with
