@@ -5,7 +5,7 @@ publish_to: "none"
 # The build number after + is the date and a count, YYMMDDNN (26102700: 2026-10-27, first build): it only goes up,
 # stays above every build TestFlight had from Codemagic's own counter, and is under Android's 2100000000 limit.
 # Each release raises it (mazama_mobile/tool/publish_public.sh refuses one that doesn't; specs/public-app PA-D3).
-version: 0.2.2+26102902
+version: 0.2.4+26103003
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
@@ -26,7 +26,7 @@ dependencies:
   url_launcher: ^6.3.1
   webview_flutter: ^4.9.0
   share_plus: ^10.1.3
-  ffi: ^2.1.3                     # lib/coa_core_ffi.dart: the shared lab-report reader through dart:ffi
+  ffi: ^2.1.3                     # lib/mazama_core.dart: the shared core through dart:ffi
   # lib/pdf_text.dart: a lab report's text with pdfium (plan 08). 2.4 or newer: 2.2's pdfrx_engine 0.3 doesn't
   # compile with CI's Dart. pdfium arrives through a native-asset build hook (downloaded once, on build and test)
   pdfrx: ^2.4.0

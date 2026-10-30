@@ -6,8 +6,10 @@
 // Each report gets a clientId (a UUID v4) when it is queued and keeps it; the server records a clientId once per center
 // and answers a repeat as already done (appreport.py), so sending one again after a lost reply is safe.
 //
-// One JSON document in the data folder's LocalStore (server_outbox.json, synchronous calls as the other stores), so the queue
-// survives the app being closed. Sent oldest first, one at a time, when the server tracker comes back online (and at
+// Kept in the sync engine's queue (lib/sync/sync_queue.dart, specs/phone-sync PS-R4: kinds sale_log and sale_failure,
+// keyed by clientId), so the queue survives the app being closed; ServerOutbox is the facade the app's callers use, and
+// OutboxStore reads the server_outbox.json document older builds kept, which the engine moves in (sync_migration.dart).
+// Sent oldest first, one at a time, when the server tracker comes back online (and at
 // start-up, and right after a report is queued while online):
 //   - a 2xx (or the server's "already have it", the same 201): the report leaves the queue;
 //   - the server can't be reached (no connection, no answer in time, a 5xx; or the tracker already counts it as
@@ -39,6 +41,9 @@ import 'sale_log_client.dart' as sale_log_client;
 import 'server_error.dart';
 import 'server_health.dart';
 import 'session_store.dart' show defaultSessionDataDir;
+import 'sync/sync_migration.dart' show openSyncTables;
+import 'sync/sync_queue.dart';
+import 'sync/sync_tables.dart' show QueueItem, queueDead;
 
 /// How many reports may wait (see the file comment for why this many, and what happens past it).
 const outboxCap = 1000;
@@ -171,7 +176,9 @@ class OutboxStore {
   /// Overridable for tests, as the other stores.
   final Directory Function() dataDir;
 
-  static const _name = 'server_outbox.json';
+  /// The document's name (older builds' only copy of the queue).
+  static const documentName = 'server_outbox.json';
+  static const _name = documentName;
 
   /// What was kept; an empty state when nothing (readable) was. Entries that can't be read are skipped, not lost
   /// silently: the document is only rewritten from what was read, so an unreadable entry goes on the next write.
@@ -179,16 +186,22 @@ class OutboxStore {
     try {
       final text = LocalStore.forDir(dataDir()).read(_name)?.body;
       if (text == null) return const OutboxState();
-      final decoded = jsonDecode(text);
-      if (decoded is! Map) return const OutboxState();
-      List<OutboxEntry> list(Object? v) => v is List ? [for (final e in v) OutboxEntry.fromJson(e)].whereType<OutboxEntry>().toList() : const [];
-      final dropped = decoded['droppedLogs'];
-      return OutboxState(pending: list(decoded['pending']), dead: list(decoded['dead']), droppedLogs: dropped is int ? dropped : 0);
+      return parse(text);
     } on FileSystemException {
       return const OutboxState();
     } on FormatException {
       return const OutboxState();
     }
+  }
+
+  /// The document's [text] read; throws a FormatException when it isn't JSON.
+  static OutboxState parse(String text) {
+    final decoded = jsonDecode(text);
+    if (decoded is! Map) return const OutboxState();
+    List<OutboxEntry> list(Object? v) =>
+        v is List ? [for (final e in v) OutboxEntry.fromJson(e)].whereType<OutboxEntry>().toList() : const [];
+    final dropped = decoded['droppedLogs'];
+    return OutboxState(pending: list(decoded['pending']), dead: list(decoded['dead']), droppedLogs: dropped is int ? dropped : 0);
   }
 
   void save(OutboxState state) {
@@ -219,6 +232,30 @@ int? _statusOf(Object error) => error is sale_log_client.SaleLogError
         ? error.status
         : null;
 
+/// The engine's sender for a queued report: [send] it, and say what its answer means (the file comment).
+QueueSender outboxQueueSender(OutboxSender send) => (item) async {
+      final OutboxEntry? entry;
+      try {
+        entry = OutboxEntry.fromJson(jsonDecode(item.body));
+      } on FormatException {
+        return const DeadLetter('a report this build cannot read');
+      }
+      if (entry == null) return const DeadLetter('a report this build cannot read');
+      try {
+        await send(entry);
+        return const Done();
+      } catch (e) {
+        final status = _statusOf(e);
+        if (status == 429 || status == 408) return RetryAfter(outboxRetryAfterBusy, error: '$e', status: status);
+        if (isServerUnreachable(e)) return Unreachable(error: '$e', status: status);
+        return DeadLetter('$e', status: status);
+      }
+    };
+
+QueueKind _queueKind(OutboxKind k) => k == OutboxKind.saleLog ? QueueKind.saleLog : QueueKind.saleFailure;
+
+/// The outbox as the app's callers know it, over the sync engine's queue ([queue]: the engine's, from
+/// ServerLink.standard; otherwise one of its own over [store]'s folder, with [send], [startTimer], [now] and [cap]).
 class ServerOutbox extends ChangeNotifier {
   ServerOutbox({
     required this.health,
@@ -228,17 +265,26 @@ class ServerOutbox extends ChangeNotifier {
     this.startTimer = _timer,
     this.cap = outboxCap,
     Random? random,
-  }) : _random = random {
-    try {
-      _state = store.load();
-    } catch (_) {
-      _state = const OutboxState();
-    }
+    SyncQueue? queue,
+  })  : _random = random,
+        _ownsQueue = queue == null,
+        queue = queue ??
+            SyncQueue(
+              tables: openSyncTables(LocalStore.forDir(store.dataDir())),
+              health: health,
+              senders: {QueueKind.saleLog: outboxQueueSender(send), QueueKind.saleFailure: outboxQueueSender(send)},
+              now: now,
+              startTimer: startTimer,
+              cap: cap,
+            ) {
+    this.queue.addListener(_changed);
   }
 
   static Timer _timer(Duration d, void Function() f) => Timer(d, f);
 
   final ServerHealth health;
+
+  /// The document older builds kept the queue in (moved into [queue] when it is opened).
   final OutboxStore store;
   final OutboxSender send;
   final DateTime Function() now;
@@ -246,35 +292,66 @@ class ServerOutbox extends ChangeNotifier {
   final int cap;
   final Random? _random;
 
-  late OutboxState _state;
-  bool _flushing = false;
-  bool _flushAgain = false;
-  Timer? _busyTimer;
+  /// Where the reports wait (lib/sync/sync_queue.dart).
+  final SyncQueue queue;
+  final bool _ownsQueue;
   bool _disposed = false;
 
-  /// Reports waiting, oldest first.
-  List<OutboxEntry> get pending => List.unmodifiable(_state.pending);
-
-  /// Reports the server refused (kept, never sent again).
-  List<OutboxEntry> get dead => List.unmodifiable(_state.dead);
-
-  int get pendingCount => _state.pending.length;
-
-  /// How many sale-attribution logs were dropped because the queue was full (see the file comment).
-  int get droppedLogs => _state.droppedLogs;
-
-  /// Whether sending is waiting out a 429/408.
-  bool get waitingOutBusy => _busyTimer != null;
-
-  void _set(OutboxState next) {
-    _state = next;
-    try {
-      store.save(next);
-    } catch (e) {
-      debugPrint('the outbox could not be saved (kept in memory until the next write): $e');
-    }
+  void _changed() {
     if (!_disposed) notifyListeners();
   }
+
+  List<OutboxEntry> _entries({required bool dead}) {
+    try {
+      final items = [
+        for (final k in const [QueueKind.saleLog, QueueKind.saleFailure])
+          ...queue.tables.items(k.stored).where((i) => (i.state == queueDead) == dead),
+      ]..sort((a, b) => a.queuedAt == b.queuedAt ? a.id!.compareTo(b.id!) : a.queuedAt.compareTo(b.queuedAt));
+      return [
+        for (final i in items)
+          if (_entry(i) case final e?) e,
+      ];
+    } catch (e) {
+      debugPrint('the outbox could not be read: $e');
+      return const [];
+    }
+  }
+
+  static OutboxEntry? _entry(QueueItem i) {
+    try {
+      final e = OutboxEntry.fromJson(jsonDecode(i.body));
+      if (e == null) return null;
+      return OutboxEntry(
+          clientId: e.clientId,
+          kind: e.kind,
+          stateId: e.stateId,
+          workerEmail: e.workerEmail,
+          deviceId: e.deviceId,
+          request: e.request,
+          response: e.response,
+          reason: e.reason,
+          createdAt: e.createdAt,
+          attempts: i.attempts,
+          lastError: e.lastError,
+          status: e.status);
+    } on FormatException {
+      return null;
+    }
+  }
+
+  /// Reports waiting, oldest first.
+  List<OutboxEntry> get pending => List.unmodifiable(_entries(dead: false));
+
+  /// Reports the server refused (kept, never sent again).
+  List<OutboxEntry> get dead => List.unmodifiable(_entries(dead: true));
+
+  int get pendingCount => queue.waitingReports;
+
+  /// How many sale-attribution logs were dropped because the queue was full (see the file comment).
+  int get droppedLogs => queue.droppedSaleLogs;
+
+  /// Whether sending is waiting out a 429/408.
+  bool get waitingOutBusy => queue.waitingOutBusy;
 
   /// Queues a confirmed sale's attribution log (sale_log_client.dart) and sends it now if the server is answering.
   Future<String> addSaleLog(int stateId,
@@ -303,88 +380,27 @@ class ServerOutbox extends ChangeNotifier {
           createdAt: now().toUtc()));
 
   Future<String> _add(OutboxEntry entry) async {
-    final queue = [..._state.pending];
-    var dropped = _state.droppedLogs;
-    while (queue.length >= cap) {
-      final i = queue.indexWhere((e) => e.kind == OutboxKind.saleLog);
-      if (i == -1) break; // only failed-sale reports left: never dropped, so this one goes past the cap
-      queue.removeAt(i);
-      dropped++;
+    try {
+      queue.add(_queueKind(entry.kind), entry.clientId, entry.toJson());
+    } catch (e) {
+      debugPrint('a report could not be queued: $e');
     }
-    if (queue.length >= cap && entry.kind == OutboxKind.saleLog) {
-      dropped++; // a full queue of failed-sale reports: this sale log is the one that doesn't fit
-    } else {
-      queue.add(entry);
-    }
-    _set(OutboxState(pending: queue, dead: _state.dead, droppedLogs: dropped));
-    unawaited(flush());
     return entry.clientId;
   }
 
-  /// Sends what's waiting, oldest first, one at a time, until the queue is empty or the server can't take more just
-  /// now (see the file comment). One flush at a time; a call during one makes it go round once more.
+  /// Sends what's waiting (the queue's flush: oldest first, one at a time, until it is empty or the server can't take
+  /// more just now).
   Future<void> flush() async {
     if (_disposed) return;
-    if (_flushing) {
-      _flushAgain = true;
-      return;
-    }
-    _flushing = true;
-    try {
-      do {
-        _flushAgain = false;
-        await _flushOnce();
-      } while (_flushAgain && !_disposed);
-    } finally {
-      _flushing = false;
-    }
-  }
-
-  Future<void> _flushOnce() async {
-    while (!_disposed && _state.pending.isNotEmpty && health.online && _busyTimer == null) {
-      final head = _state.pending.first;
-      try {
-        await send(head);
-      } catch (e) {
-        if (_disposed) return;
-        final status = _statusOf(e);
-        if (isServerUnreachable(e) && health.offline) {
-          _replaceHead(head.tried('$e', status: status));
-          return; // the tracker is offline now: its coming back online flushes again
-        }
-        // 429/408, or a 5xx the server answered itself (the tracker stays online, so nothing else would wake this)
-        if (status == 429 || status == 408 || isServerUnreachable(e)) {
-          _replaceHead(head.tried('$e', status: status));
-          _busyTimer = startTimer(outboxRetryAfterBusy, () {
-            _busyTimer = null;
-            unawaited(flush());
-          });
-          if (!_disposed) notifyListeners();
-          return;
-        }
-        _set(OutboxState(
-            pending: [..._state.pending]..remove(head),
-            dead: [..._state.dead, head.tried('$e', status: status)],
-            droppedLogs: _state.droppedLogs));
-        continue;
-      }
-      if (_disposed) return;
-      _set(OutboxState(pending: [..._state.pending]..remove(head), dead: _state.dead, droppedLogs: _state.droppedLogs));
-    }
-  }
-
-  void _replaceHead(OutboxEntry updated) {
-    final queue = [..._state.pending];
-    final i = queue.indexWhere((e) => e.clientId == updated.clientId);
-    if (i != -1) queue[i] = updated;
-    _set(OutboxState(pending: queue, dead: _state.dead, droppedLogs: _state.droppedLogs));
+    await queue.flush();
   }
 
   @override
   void dispose() {
+    if (_disposed) return;
     _disposed = true;
-    _busyTimer?.cancel();
-    _busyTimer = null;
+    queue.removeListener(_changed);
+    if (_ownsQueue) queue.dispose();
     super.dispose();
   }
 }

@@ -5,6 +5,7 @@ import 'package:mazama_mobile/licenses_client.dart';
 import 'package:mazama_mobile/packages_client.dart';
 import 'package:mazama_mobile/features.g.dart';
 import 'package:mazama_mobile/stock_page.dart';
+import 'package:mazama_mobile/sync/updated_line.dart';
 
 import 'features_off.dart';
 
@@ -18,8 +19,18 @@ final _inventory = [
   Package(productGuid: 'PKPR-ab99c', productType: 'Extract', id: 103, weightPerUnit: 5.0, analyteWeight: 2.0, strain: 'Maztapec', tpeMg: 3, quantity: 7),
 ];
 
-Widget _stockPage({required Future<List<Package>> Function(int) fetchPackages, Map<String, Feature> featureTable = features}) =>
-    MaterialApp(home: StockPage(center: _center, fetchPackages: fetchPackages, featureTable: featureTable));
+Widget _stockPage(
+        {required Future<List<Package>> Function(int) fetchPackages,
+        Map<String, Feature> featureTable = features,
+        Future<DateTime?> Function(int stateId)? readAt,
+        DateTime Function()? now}) =>
+    MaterialApp(
+        home: StockPage(
+            center: _center,
+            fetchPackages: fetchPackages,
+            featureTable: featureTable,
+            readAt: readAt,
+            now: now ?? DateTime.now));
 
 void main() {
   testWidgets('shows a spinner, then every package sorted by type then PKPR, with its quantity and mg TPE', (tester) async {
@@ -202,5 +213,45 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Reconcile inventory with state'), findsNothing);
     expect(find.text('Extract'), findsOneWidget); // the stock list itself is unchanged
+  });
+
+  // specs/phone-sync Task 8b Step 8 (PS-R7, PS-D5): the list's age, from when the stock it shows was read (the cart
+  // passes the center_stock dataset's time), asked again after each download.
+  group('the stock list shows its age', () {
+    final now = DateTime.utc(2026, 10, 30, 12);
+
+    testWidgets('from the time of the stock it shows, again after a pull-down', (tester) async {
+      var readAt = now.subtract(const Duration(minutes: 20));
+      final asked = <int>[];
+      await tester.pumpWidget(_stockPage(
+        fetchPackages: (id) async => _inventory,
+        readAt: (id) async {
+          asked.add(id);
+          return readAt;
+        },
+        now: () => now,
+      ));
+      expect(find.byKey(updatedLineKey), findsNothing); // nothing shown yet
+      await tester.pumpAndSettle();
+      expect(find.text('Updated 20 min ago'), findsOneWidget);
+      expect(asked, [231]);
+      readAt = now;
+      await tester.fling(find.byType(ListView), const Offset(0, 400), 1000);
+      await tester.pumpAndSettle();
+      expect(find.text('Updated just now'), findsOneWidget);
+      expect(asked, [231, 231]);
+    });
+
+    testWidgets('none with no time known, or when the time cannot be read; the list shows either way', (tester) async {
+      await tester.pumpWidget(_stockPage(fetchPackages: (id) async => _inventory, readAt: (id) async => null));
+      await tester.pumpAndSettle();
+      expect(find.byKey(updatedLineKey), findsNothing);
+      expect(find.text('PKPR-ab12c'), findsOneWidget);
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpWidget(_stockPage(fetchPackages: (id) async => _inventory, readAt: (id) async => throw StateError('no db')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(updatedLineKey), findsNothing);
+      expect(find.text('PKPR-ab12c'), findsOneWidget);
+    });
   });
 }

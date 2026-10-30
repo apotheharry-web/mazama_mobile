@@ -3,7 +3,7 @@
 // returns to the form with everything kept, the notes included; "Submit order" is what sends it
 // (order_client.dart, route C14). A refusal keeps this page as it was, with the server's message; an order that
 // can't reach Mazama's server is never queued: the page says to try again later, with the order and notes as they were
-// (server_offline.dart).
+// (sync/server_read.dart).
 import 'package:flutter/material.dart';
 
 import 'api_contract.g.dart';
@@ -11,7 +11,7 @@ import 'licenses_client.dart';
 import 'order_client.dart';
 import 'responsive.dart';
 import 'server_error.dart';
-import 'server_offline.dart';
+import 'sync/server_read.dart' show serverTryLater;
 import 'stock_summary.dart';
 
 /// What the review page hands back to the form: the notes as they stand, and the stored order once it was sent.

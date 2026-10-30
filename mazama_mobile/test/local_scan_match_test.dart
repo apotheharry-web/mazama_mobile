@@ -1,16 +1,13 @@
-// Scan matching on the phone (local_scan_match.dart): the cart's stock and a label's lines turned into coa_core's
-// input the way the server's public_scan_match builds it, and its answer into the ScanMatchResult the server's
-// reply becomes. The matcher's own answers are held to the shared cases in coa_core_ffi_test.dart; these check the
-// adapting around it. CI builds the library and passes its path as COA_CORE_FFI_LIB; without it those tests skip.
-import 'dart:io';
-
+// Scan matching on the phone (local_scan_match.dart): the cart's stock and a label's lines turned into the shared
+// core's input the way the server's public_scan_match builds it, and its answer into the ScanMatchResult the server's
+// reply becomes. The matcher's own answers are held to the shared cases in mazama_core_test.dart; these check the
+// adapting around it. CI builds the library and passes its path as MAZAMA_CORE_FFI_LIB (test/support/core.dart).
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mazama_mobile/coa_core_ffi.dart';
+import 'package:mazama_mobile/mazama_core.dart';
 import 'package:mazama_mobile/local_scan_match.dart';
 import 'package:mazama_mobile/packages_client.dart';
 
-final String? _lib = Platform.environment['COA_CORE_FFI_LIB'];
-final String? _skip = _lib == null ? 'COA_CORE_FFI_LIB is not set (CI sets it after building coa_core_ffi)' : null;
+import 'support/core.dart';
 
 Package _pk(String guid, int id, String description, int quantity,
         {double weight = 0.5, double potency = 5, DateTime? expires}) =>
@@ -35,12 +32,12 @@ final _stock = [
 ];
 
 void main() {
-  test('without coa_core there is no local match: the cart keeps the server\'s error', () {
-    expect(localScanMatchWith(null, _stock, ['Lot: 579b4701']), isNull);
+  test('a core that can\'t answer gives no local match: the cart keeps the server\'s error', () {
+    expect(localScanMatchWith(_FailingCore(), _stock, ['Lot: 579b4701']), isNull);
   });
 
   group('through the library', () {
-    late final CoaCore core = CoaCore.tryLoad(path: _lib)!;
+    late final MazamaCore core = loadTestCore();
 
     test('a lot number is named by its first record, with the units of all its records', () {
       final r = localScanMatchWith(core, _stock, ['Lot: 579b4731'])!;
@@ -93,5 +90,11 @@ void main() {
       final r = localScanMatchWith(core, const [], ['Lot: 579b4701', 'Net wt: 0.50 g'])!;
       expect([r.matches, r.guesses], [isEmpty, isEmpty]);
     });
-  }, skip: _skip);
+  });
+}
+
+/// A core whose every answer is an error.
+class _FailingCore implements CoreFunctions {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw const MazamaCoreError('no');
 }

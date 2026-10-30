@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "manufacturing.coa_edit output",
+  "description": "The changes to make to the image's description, in order: drop the keys in `drop`, then set each [key, text] (a key already there keeps its place, a new one goes last). `errors` (names of what to fix, for the person) means nothing is to be changed and `set` is empty.",
+  "type": "object",
+  "required": [
+    "errors",
+    "drop",
+    "set"
+  ],
+  "properties": {
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "drop": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "set": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "prefixItems": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "string"
+          }
+        ],
+        "minItems": 2,
+        "maxItems": 2
+      }
+    }
+  }
+}

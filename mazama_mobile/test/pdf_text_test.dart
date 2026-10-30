@@ -1,14 +1,17 @@
 // PDF text for the shared reader: pdfium's characters grouped into words (CoaText, coa_text.schema.json), plan 08
 // Task 7. The real lab reports are this app's vendored copies (assets/shared/coa/corpus/real/, tool/sync_flows.sh).
-// The corpus test needs the shared reader (COA_CORE_FFI_LIB, built by CI's coa-ffi-build) and pdfium on the host
-// (pdfrx downloads it on first use); without either it skips and says why.
+// The corpus test needs the shared core (MAZAMA_CORE_FFI_LIB, built by CI's core-ffi-build; it fails without it,
+// test/support/core.dart) and pdfium on the host (pdfrx downloads it on first use; without it the test skips and
+// says why).
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mazama_mobile/coa_core_ffi.dart';
+import 'package:mazama_mobile/mazama_core.dart';
 import 'package:mazama_mobile/pdf_text.dart';
 import 'package:pdfrx/pdfrx.dart' show pdfrxInitialize;
+
+import 'support/core.dart';
 
 /// Characters of one line at baseline [top], 10 pt tall, 6 pt wide each, starting at [x] (a space is a gap char).
 List<PdfCharBox> _line(String s, {double x = 10, double top = 100, double advance = 6, double width = 6}) => [
@@ -85,11 +88,7 @@ void main() {
   });
 
   test('extractCoaText reads every real corpus PDF like the server', () async {
-    final core = CoaCore.tryLoad(path: Platform.environment['COA_CORE_FFI_LIB']);
-    if (core == null) {
-      markTestSkipped('COA_CORE_FFI_LIB is not set (CI sets it after building coa_core_ffi)');
-      return;
-    }
+    final MazamaCore core = loadTestCore();
     if (!Directory(_real).existsSync() && !File('../mazama_modules/vendored.txt').existsSync()) {
       // the public copy of this app (specs/public-app PA-R5): the real lab reports are not published
       markTestSkipped('$_real is not in this copy of the app');

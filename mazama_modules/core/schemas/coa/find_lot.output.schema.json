@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "coa.find_lot output",
+  "description": "The report read, and the section that is the lot's value of record (null when none is).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "result",
+    "found"
+  ],
+  "properties": {
+    "result": {
+      "$ref": "https://mazamamushrooms.com/schema/coa_parse_result/1"
+    },
+    "found": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "required": [
+            "section",
+            "uid",
+            "via"
+          ],
+          "properties": {
+            "section": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "uid": {
+              "type": "string"
+            },
+            "via": {
+              "enum": [
+                "own",
+                "request",
+                "custody_order",
+                "request_name",
+                "state_psilocybin"
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    }
+  }
+}

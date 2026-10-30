@@ -43,6 +43,10 @@ String loginHostsPath() => '/p/flows/hosts';
 String loginBrowserSpecPath() => '/p/flows/login_browser';
 /// C20: POST /p/ingest/{dataset}/{state_id}, 200 on success.
 String ingestPath(String dataset, int stateId) => '/p/ingest/${Uri.encodeComponent(dataset)}/$stateId';
+/// C21: GET /p/app/latest, 200 on success.
+String appLatestPath() => '/p/app/latest';
+/// C22: GET /p/app/apk/{build}, 200 on success.
+String appApkPath(int build) => '/p/app/apk/$build';
 
 const packagesRateLimitPerMinute = 60;
 const labelRateLimitPerMinute = 120;
@@ -73,6 +77,8 @@ const loginHostsRateLimitPerMinute = 30;
 const loginBrowserSpecRateLimitPerMinute = 30;
 const ingestMaxRecords = 5000;
 const ingestRateLimitPerMinute = 12;
+const appLatestRateLimitPerMinute = 30;
+const appApkRateLimitPerMinute = 6;
 
 /// Every route in routes.yaml, for the tests that hold each client to it.
 const apiRoutes = <String, Map<String, Object>>{
@@ -96,4 +102,6 @@ const apiRoutes = <String, Map<String, Object>>{
   'login_hosts': {'id': 'C18', 'method': 'GET', 'path': '/p/flows/hosts', 'keyRequired': true, 'request': 'none', 'reply': 'json', 'success': 200, 'fields': <String>[], 'files': <String>[], 'rateLimitPerMinute': 30},
   'login_browser_spec': {'id': 'C19', 'method': 'GET', 'path': '/p/flows/login_browser', 'keyRequired': true, 'request': 'none', 'reply': 'json', 'success': 200, 'fields': <String>[], 'files': <String>[], 'rateLimitPerMinute': 30},
   'ingest': {'id': 'C20', 'method': 'POST', 'path': '/p/ingest/{dataset}/{state_id}', 'keyRequired': true, 'request': 'json', 'reply': 'json', 'success': 200, 'fields': <String>[], 'files': <String>[], 'rateLimitPerMinute': 12},
+  'app_latest': {'id': 'C21', 'method': 'GET', 'path': '/p/app/latest', 'keyRequired': true, 'request': 'none', 'reply': 'json', 'success': 200, 'fields': <String>[], 'files': <String>[], 'rateLimitPerMinute': 30},
+  'app_apk': {'id': 'C22', 'method': 'GET', 'path': '/p/app/apk/{build}', 'keyRequired': true, 'request': 'none', 'reply': 'file', 'success': 200, 'fields': <String>[], 'files': <String>[], 'rateLimitPerMinute': 6},
 };

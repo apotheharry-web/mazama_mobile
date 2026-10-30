@@ -29,7 +29,7 @@ took over that server could do the same.
 
 ## The claims, in detail
 
-[`mazama_mobile/SIGN-IN-SECURITY.md`](mazama_mobile/SIGN-IN-SECURITY.md) breaks that promise into nine precise claims
+[`mazama_mobile/SIGN-IN-SECURITY.md`](mazama_mobile/SIGN-IN-SECURITY.md) breaks that promise into ten precise claims
 and names the exact files and functions that make each one true:
 
 1. The password goes only to the state's sign-in, as a form field of a POST.

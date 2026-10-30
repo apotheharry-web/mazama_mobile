@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "label.spec input",
+  "description": "LabelInput (mazama_core::label): the package, its lab section of record (null when it has none), the shelf-life settings and today's date.",
+  "type": "object",
+  "required": [
+    "package",
+    "settings",
+    "today"
+  ],
+  "properties": {
+    "package": {
+      "type": "object",
+      "required": [
+        "pkpr",
+        "description",
+        "weight_per_unit"
+      ],
+      "properties": {
+        "pkpr": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "weight_per_unit": {
+          "type": "number"
+        },
+        "product_type": {
+          "type": "string"
+        },
+        "analyte_weight": {
+          "type": "number"
+        },
+        "lot": {
+          "type": "string"
+        },
+        "strain": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "subtype": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "best_by": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^\\d{4}-\\d\\d-\\d\\d$"
+        },
+        "dose_mg": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      }
+    },
+    "section": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object"
+        }
+      ]
+    },
+    "settings": {
+      "type": "object",
+      "required": [
+        "shelf_months",
+        "fd_months"
+      ],
+      "properties": {
+        "shelf_months": {
+          "type": "integer"
+        },
+        "fd_months": {
+          "type": "integer"
+        },
+        "shelf_days": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "fd_days": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      }
+    },
+    "today": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d\\d-\\d\\d$"
+    },
+    "test_date": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^\\d{4}-\\d\\d-\\d\\d$"
+    }
+  }
+}

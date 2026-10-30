@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "manufacturing.coa_edit input",
+  "description": "specs/core row 12 (FM-09): one correction of a certificate image's lab data. `raw` holds only what the rule reads of the image's description: `keys` (which of subtype, psilocin, baeocystine, norbaeocystine, norpsilocin, aeruginascin and aeruginosin it has) and the value of `subtype`; `form` the typed text fields (a field not present is blank, `subtype` present or not matters); `uid` and `psilocybin` are the state's.",
+  "type": "object",
+  "required": [
+    "raw",
+    "uid",
+    "psilocybin",
+    "form",
+    "kind"
+  ],
+  "properties": {
+    "raw": {
+      "type": "object",
+      "required": [
+        "keys"
+      ],
+      "properties": {
+        "keys": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "subtype": {}
+      }
+    },
+    "uid": {
+      "type": "string"
+    },
+    "psilocybin": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "form": {
+      "type": "object",
+      "additionalProperties": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "kind": {
+      "type": "string"
+    }
+  }
+}

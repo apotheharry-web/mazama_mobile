@@ -54,7 +54,8 @@ assistant. What the app does send to Mazama, who sees it and how long it is kept
 | Path | What |
 |---|---|
 | `mazama_mobile/` | The app (Flutter). `lib/` is the code, `test/` its tests, `assets/` what it bundles, `android/` and `ios/` the native parts. [`SIGN-IN-SECURITY.md`](mazama_mobile/SIGN-IN-SECURITY.md) is the detailed account of the sign-in. |
-| `mazama_modules/coa/` | The lab-report reader the app compiles in (Rust: `coa_core`, its C interface `coa_core_ffi`, and the rules it reads, `rules/coa_rules.yaml`). |
+| `mazama_modules/core/` | The shared core the app compiles in (Rust: `mazama_core`, the rules both the app and Mazama's server use, the lab-report reader among them; its C interface `mazama_core_ffi`; `functions.yaml`, the list of its functions, and their JSON Schemas in `schemas/`). The app needs Rust to build. |
+| `mazama_modules/coa/rules/` | The lab-report reading rules the core embeds (`coa_rules.yaml`). |
 | `login.yaml`, `login_browser.yaml`, `hosts.json` and their `.sig` files | Signed copies of the app's sign-in steps and allowed sign-in addresses, which let Mazama follow a change to the state's sign-in page without a new app release (see SECURITY.md). |
 | `SECURITY.md`, `PRIVACY.md`, `AUDIT.md`, `audits/` | Security, the privacy policy, the audit prompt and our audit reports. |
 | `codemagic.yaml` | How the released apps are built. |
@@ -77,7 +78,8 @@ You need Flutter (stable) and Rust (`rustup`), with the targets for your phone:
 cd mazama_mobile
 rustup target add aarch64-linux-android x86_64-linux-android     # Android; iPhone: aarch64-apple-ios
 flutter pub get
-flutter test
+(cd ../mazama_modules/core/mazama_core_ffi && cargo build --release)    # the core, which the tests load
+MAZAMA_CORE_FFI_LIB=$PWD/../mazama_modules/core/mazama_core_ffi/target/release/libmazama_core_ffi.so flutter test
 flutter run                                                     # a debug build on a connected phone
 ```
 

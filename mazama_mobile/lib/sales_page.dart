@@ -3,29 +3,30 @@
 // through the shared get_json flow, state_client.dart). Each row: the date, the sale number, the product (its name,
 // else its id), how many were sold and the line's cost in dollars; a deleted (voided) record isn't shown.
 //
-// After a good read the page keeps it on the phone (reply_store.dart, `state_sales/<stateId>`) and hands every record
+// After a good read the page keeps it on the phone (the sync engine's recent_sales dataset, specs/phone-sync phase 4;
+// an older build's reply-store copy, `state_sales/<stateId>`, is moved there) and hands every record
 // read (not only the 30 days shown) to [SalesPage.upload], which sends them to Mazama's server for invoicing
 // (server_link.dart's uploadSalesSnapshot, kept while the server can't be reached). The page never waits on the upload
 // and never shows its outcome; selling never waits on either. Never in the demo.
 //
-// A failed read shows the copy kept from the last good one with no notice of its own (sales README R87: the app-wide
-// banner is the only outage notice) and Retry; with none kept, the error and Retry. It loads once, when its tab is first
-// opened (center_home_page.dart builds it only then, never beside the Cart); Retry reads again.
+// Local first (PS-R7): the copy kept from the last good read shows at once, with its age ("Updated ..."), while the page
+// reads again. A failed read keeps showing that copy with no notice of its own (sales README R87: the app-wide banner
+// is the only outage notice) and Retry; with none kept, the error and Retry. It reads when its tab is first opened
+// (center_home_page.dart builds it only then, never beside the Cart); Retry, or pulling the list down, reads again.
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 
 import 'pricing.dart' show money;
-import 'reply_store.dart';
 import 'responsive.dart';
-import 'select_documents.dart' show stateDateIso;
 import 'state_client.dart';
+import 'state_date.dart';
+import 'sync/sync_datasets.dart';
+import 'sync/updated_line.dart';
 
 /// How far back the page shows (CW-D14): today and the 29 days before it.
 const recentSalesDays = 30;
-
-/// The reply-store key of [stateId]'s last good sales read.
-String salesReplyKey(int stateId) => replyKey('state_sales', [stateId]);
 
 /// The state system's GetSalesRecords for [stateId], through the shared get_json flow (state_client.dart).
 Future<List<Object?>> fetchSalesRecordsFromState(int stateId, {required String accessToken}) async {
@@ -104,7 +105,7 @@ class SalesPage extends StatefulWidget {
     required this.stateId,
     required this.load,
     required this.upload,
-    required this.replies,
+    required this.datasets,
     this.now = DateTime.now,
     this.demo = false,
   });
@@ -119,8 +120,8 @@ class SalesPage extends StatefulWidget {
   /// whatever it throws is dropped. Never called in the demo.
   final Future<void> Function(List<Object?> records) upload;
 
-  /// Where the last good read is kept, for a failed read.
-  final ReplyStore replies;
+  /// Where the last good read is kept (the recent_sales dataset of the center), shown at once and after a failed read.
+  final Datasets datasets;
 
   /// The clock: the 30-day window and when a read was kept. Overridable for tests.
   final DateTime Function() now;
@@ -140,10 +141,32 @@ class _SalesPageState extends State<SalesPage> {
   /// The last read failed: Retry shows (over the kept copy, or the error).
   bool _failed = false;
 
+  /// When the records on screen were read (the age line); null while none are.
+  DateTime? _readAt;
+
+  String get _key => '${widget.stateId}';
+
   @override
   void initState() {
     super.initState();
-    _load();
+    final kept = _kept();
+    if (kept != null) {
+      _rows = recentSales(kept.$1, now: widget.now());
+      _readAt = kept.$2;
+    }
+    unawaited(_load());
+  }
+
+  /// The copy kept from the last good read, with when; null when none (or none readable).
+  (List<Object?>, DateTime)? _kept() {
+    try {
+      final row = widget.datasets.read(Dataset.recentSales, _key);
+      if (row == null) return null;
+      final body = jsonDecode(row.body);
+      return body is List ? (List<Object?>.from(body), row.fetchedAt) : null;
+    } catch (_) {
+      return null;
+    }
   }
 
   void _upload(List<Object?> records) {
@@ -155,49 +178,63 @@ class _SalesPageState extends State<SalesPage> {
     }
   }
 
-  void _load() {
+  /// The read under way; a pull-down or Retry meanwhile joins it rather than starting a second one.
+  Future<void>? _reading;
+
+  Future<void> _load() {
+    final running = _reading;
+    if (running != null) return running;
+    final read = _read();
+    _reading = read;
+    return read.whenComplete(() => _reading = null);
+  }
+
+  Future<void> _read() async {
+    if (!mounted) return;
     setState(() {
       _loading = true;
       _error = null;
     });
-    unawaited(() async {
-      List<Object?> records;
-      try {
-        records = await widget.load();
-      } catch (e) {
-        if (!mounted) return;
-        List<Object?>? kept;
-        try {
-          final k = widget.replies.load(salesReplyKey(widget.stateId))?.value;
-          if (k is List) kept = List<Object?>.from(k);
-        } catch (_) {
-          kept = null;
-        }
-        setState(() {
-          _loading = false;
-          _failed = true;
-          if (kept != null) {
-            _rows = recentSales(kept, now: widget.now());
-          } else {
-            _rows = null;
-            _error = '$e';
-          }
-        });
-        return;
-      }
-      try {
-        widget.replies.save(salesReplyKey(widget.stateId), records, widget.now().toUtc());
-      } catch (_) {
-        // the copy for a failed read is best effort
-      }
-      _upload(records);
+    List<Object?> records;
+    try {
+      records = await widget.load();
+    } catch (e) {
       if (!mounted) return;
+      try {
+        widget.datasets.failed(Dataset.recentSales, _key, '$e', at: widget.now());
+      } catch (_) {
+        // recording the failure is best effort
+      }
+      final kept = _kept();
       setState(() {
         _loading = false;
-        _failed = false;
-        _rows = recentSales(records, now: widget.now());
+        _failed = true;
+        if (kept != null) {
+          _rows = recentSales(kept.$1, now: widget.now());
+          _readAt = kept.$2;
+        } else {
+          _rows = null;
+          _readAt = null;
+          _error = '$e';
+        }
       });
-    }());
+      return;
+    }
+    final at = widget.now().toUtc();
+    try {
+      widget.datasets.put(Dataset.recentSales, _key, jsonEncode(records),
+          source: widget.demo ? sourceDemo : sourceState, at: at); // PS-R8: the demo's rows say demo
+    } catch (_) {
+      // the copy for a failed read is best effort
+    }
+    _upload(records);
+    if (!mounted) return;
+    setState(() {
+      _loading = false;
+      _failed = false;
+      _rows = recentSales(records, now: widget.now());
+      _readAt = at;
+    });
   }
 
   Widget _retry() => Padding(
@@ -205,7 +242,7 @@ class _SalesPageState extends State<SalesPage> {
         child: Center(
           child: OutlinedButton.icon(
             key: const ValueKey('sales-retry'),
-            onPressed: _loading ? null : _load,
+            onPressed: _loading ? null : () => unawaited(_load()),
             icon: const Icon(Icons.refresh),
             label: const Text('Retry'),
           ),
@@ -239,12 +276,19 @@ class _SalesPageState extends State<SalesPage> {
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
         child: Text('The last $recentSalesDays days', style: Theme.of(context).textTheme.titleSmall),
       ),
+      UpdatedLine.at(_readAt, now: widget.now),
       if (_failed) _retry(),
       if (rows.isEmpty) const Padding(padding: EdgeInsets.all(16), child: Text('No sales in the last 30 days.')),
     ];
-    return ListView.builder(
-      itemCount: head.length + rows.length,
-      itemBuilder: (context, i) => i < head.length ? head[i] : _row(rows[i - head.length]),
+    // Pulled down: read again (MI-D5 keeps the pull-down to the stock list, the picker and this tab).
+    return RefreshIndicator(
+      key: const ValueKey('sales-refresh'),
+      onRefresh: _load,
+      child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
+        itemCount: head.length + rows.length,
+        itemBuilder: (context, i) => i < head.length ? head[i] : _row(rows[i - head.length]),
+      ),
     );
   }
 

@@ -32,12 +32,22 @@ const maxListedHosts = 10;
 final _hostRe = RegExp(r'^[a-z0-9-]+(\.[a-z0-9-]+)+$');
 final _numberLabelRe = RegExp(r'^([0-9]+|0x[0-9a-f]*)$');
 
+/// specs/app-updates AU-R16 (review I2): the hosts the app reads the owner's signed files and its updates from
+/// (github_files.dart) are never sign-in hosts, so no signed list may name one (login_hosts.py's GITHUB_HOSTS).
+const githubHostsNeverListed = {
+  'raw.githubusercontent.com',
+  'github.com',
+  'release-assets.githubusercontent.com',
+  'objects.githubusercontent.com',
+};
+
 /// One exact host as a list may name it: lower-case ASCII letters, digits and hyphens in two or more dot-separated
 /// labels of 1-63 characters, none starting or ending with a hyphen, at most 253 characters, and a last label that is
-/// not a number (so no IP address literal). No dot at either end, no `*`, port, scheme or path (login_hosts.py's
-/// valid_host is the twin).
+/// not a number (so no IP address literal). No dot at either end, no `*`, port, scheme or path, and never one of
+/// [githubHostsNeverListed] (login_hosts.py's valid_host is the twin).
 bool validListedHost(Object? host) {
   if (host is! String || host.length > 253 || !_hostRe.hasMatch(host)) return false;
+  if (githubHostsNeverListed.contains(host)) return false;
   final labels = host.split('.');
   if (labels.any((l) => l.length > 63 || l.startsWith('-') || l.endsWith('-'))) return false;
   return !_numberLabelRe.hasMatch(labels.last);

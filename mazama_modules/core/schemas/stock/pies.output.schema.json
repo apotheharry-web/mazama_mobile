@@ -1,0 +1,171 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "stock.pies output",
+  "type": "object",
+  "required": [
+    "units",
+    "mg",
+    "rows",
+    "more"
+  ],
+  "properties": {
+    "units": {
+      "anyOf": [
+        {
+          "type": "object",
+          "required": [
+            "total",
+            "slices"
+          ],
+          "properties": {
+            "total": {
+              "type": "number"
+            },
+            "title": {
+              "type": "string"
+            },
+            "slices": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "value",
+                  "slot",
+                  "pct"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "number"
+                  },
+                  "slot": {
+                    "type": "string"
+                  },
+                  "pct": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "mg": {
+      "anyOf": [
+        {
+          "type": "object",
+          "required": [
+            "total",
+            "slices"
+          ],
+          "properties": {
+            "total": {
+              "type": "number"
+            },
+            "title": {
+              "type": "string"
+            },
+            "slices": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "value",
+                  "slot",
+                  "pct"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "number"
+                  },
+                  "slot": {
+                    "type": "string"
+                  },
+                  "pct": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "more": {
+      "type": "integer"
+    },
+    "rows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "units",
+          "mg",
+          "slot",
+          "size_pies"
+        ],
+        "properties": {
+          "size_pies": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "total",
+                "slices"
+              ],
+              "properties": {
+                "total": {
+                  "type": "number"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "slices": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "name",
+                      "value",
+                      "slot",
+                      "pct"
+                    ],
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "value": {
+                        "type": "number"
+                      },
+                      "slot": {
+                        "type": "string"
+                      },
+                      "pct": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,7 +1,7 @@
 // Scan matching on the phone, for when the Mazama server can't be reached: the same matcher the server's
-// /p/scan-match/{state_id} runs (coa_core's scan.rs - the server through its Python binding, this through the C
-// interface, coa_core_ffi.dart), run against the cart's own copy of the center's stock instead of the server's
-// mirror. Never re-implemented in Dart: this only builds coa_core's input the way the server's public_scan_match
+// /p/scan-match/{state_id} runs (the shared core's scan.rs - the server through its Python binding, this through the
+// C interface, mazama_core.dart), run against the cart's own copy of the center's stock instead of the server's
+// mirror. Never re-implemented in Dart: this only builds the core's input the way the server's public_scan_match
 // builds it, and turns the answer into the same ScanMatchResult the server's reply becomes (scan_match_client.dart),
 // so CartPage handles both alike.
 //
@@ -14,23 +14,21 @@
 // The cart's stock (/p/packages, or the state-system fallback) already leaves out what can't be sold, so in practice
 // every record here is sellable; the check is kept so the two answers can't drift apart.
 import 'api_contract.g.dart';
-import 'coa_core_ffi.dart';
+import 'mazama_core.dart';
 import 'packages_client.dart';
-import 'product_names.dart';
 import 'scan_match_client.dart';
 import 'sellability.dart';
 
-/// Matches a label's [lines] against [inventory] on this phone. Null when it can't: [core] is null (coa_core isn't
-/// built into this app) or the library can't answer (one built before scan matching moved into coa_core).
+/// Matches a label's [lines] against [inventory] on this phone. Null when the core can't answer (an error from it, or
+/// a reply of the wrong shape): the caller then says the server couldn't be reached.
 typedef LocalScanMatcher = ScanMatchResult? Function(List<Package> inventory, List<String> lines, {bool typed});
 
-/// [LocalScanMatcher] with this app's own coa_core (product_names.dart's sharedCoaCore).
+/// [LocalScanMatcher] with this app's own core ([MazamaCore.instance]).
 ScanMatchResult? localScanMatch(List<Package> inventory, List<String> lines, {bool typed = false}) =>
-    localScanMatchWith(sharedCoaCore(), inventory, lines, typed: typed);
+    localScanMatchWith(MazamaCore.instance, inventory, lines, typed: typed);
 
-/// [localScanMatch] with the library given ([core]: null when it isn't built). Never throws.
-ScanMatchResult? localScanMatchWith(CoaCore? core, List<Package> inventory, List<String> lines, {bool typed = false}) {
-  if (core == null) return null;
+/// [localScanMatch] with the core given. Never throws.
+ScanMatchResult? localScanMatchWith(CoreFunctions core, List<Package> inventory, List<String> lines, {bool typed = false}) {
   final text = [
     for (final l in lines.take(scanMatchMaxLines)) l.length > scanMatchMaxLineChars ? l.substring(0, scanMatchMaxLineChars) : l
   ].join('\n');
@@ -43,7 +41,7 @@ ScanMatchResult? localScanMatchWith(CoaCore? core, List<Package> inventory, List
   int stock(List<Package> recs) => recs.fold<num>(0, (sum, r) => sum + r.exactQuantity).toInt();
   try {
     final matches = [
-      for (final m in core.scanFindIds([text], byGuid.keys.toList(), typed: typed))
+      for (final m in core.findIds([text], byGuid.keys.toList(), typed: typed))
         if (byGuid[m['guid']] case final recs?)
           ScanMatch(
             guid: m['guid'] as String,
@@ -73,7 +71,7 @@ ScanMatchResult? localScanMatchWith(CoaCore? core, List<Package> inventory, List
             ],
           }
       ];
-      for (final g in core.scanClosest([text], packages)) {
+      for (final g in core.closestPackages([text], packages)) {
         final guid = g['guid'] as String;
         final record = ok[guid]![(g['record'] as num).toInt()];      // the server names a guess by its best record
         guesses.add(ScanGuess(
@@ -87,7 +85,7 @@ ScanMatchResult? localScanMatchWith(CoaCore? core, List<Package> inventory, List
     }
     return ScanMatchResult(matches: matches, guesses: guesses);
   } catch (_) {
-    // CoaCoreUnavailable, ArgumentError from a library without the scan functions, or a reply of the wrong shape:
+    // MazamaCoreError, or a reply of the wrong shape (a TypeError from a cast):
     // this phone can't match, and the caller says the server couldn't be reached, as before
     return null;
   }

@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "stock.mix_cells output",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [
+      "strain",
+      "type",
+      "mg"
+    ],
+    "properties": {
+      "strain": {
+        "type": "string"
+      },
+      "type": {
+        "type": "string"
+      },
+      "mg": {
+        "type": "number"
+      }
+    }
+  }
+}

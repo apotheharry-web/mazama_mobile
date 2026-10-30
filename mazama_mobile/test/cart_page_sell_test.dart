@@ -141,7 +141,8 @@ void main() {
         await tester.pumpWidget(cartPage(
           fetchPackages: (id) async => inventory,
           fetchRawPackagesFromState: (id, {required accessToken}) async {
-            if (!loaded) throw StatePackagesError('not read at load in this test');
+            // the load reads the state too (a load it didn't answer is never taken as confirmed, SM-25)
+            if (!loaded) return [ab12cRecord];
             reads++;
             return reread();
           },

@@ -113,7 +113,7 @@ class MazamaInventory {
         lots: [for (final l in lots) MazamaLot.fromJson(Map<String, Object?>.from(l as Map))]);
   }
 
-  /// As route C12 sends it, so the copy kept on the phone (mazama_inventory_cache_store.dart) reads back through [fromJson].
+  /// As route C12 sends it, so the copy kept on the phone (the mazama_inventory dataset) reads back through [fromJson].
   Map<String, Object?> toJson() => {
         'name': name,
         'cells': [for (final c in cells) c.toJson()],

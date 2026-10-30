@@ -1,10 +1,10 @@
 // Orchestrates the whole adhoc-COA flow (see coa_data_client.dart's own file comment for the three HTTP calls
 // this builds on) for a service center mazama_sales has never heard of - the thing CartPage actually calls
 // once centerIsConfigured (coa_data_client.dart) has said "no" for this center's stateId, in place of its
-// normal ResilientInventory.fetch.
+// normal load (lib/sync/center_stock.dart's CenterStock.fetch).
 //
 //   1. fetchPackagesFromState (state_packages_client.dart) - the center's raw inventory, direct from the state
-//      system. This IS resilient_inventory.dart's own tier 2, reused here as the only source there is: tier 1
+//      system. This IS center_stock.dart's own step 2, reused here as the only source there is: step 1
 //      (Mazama's own server) has nothing for a center it was never configured for, by definition.
 //   2. Every distinct lotGuid across that inventory, looked up in one batch (fetchCoaDataBatch) - always tried
 //      first, before anything else below, so a lot any other worker anywhere has ever resolved costs nothing
@@ -21,7 +21,7 @@
 // applied to its packages as it lands (via [onResolved]), so a caller can repaint progressively instead of blocking
 // the whole screen on the slowest lot; an upload's answer can come after this function has returned. A guid that
 // never resolves (no PDF found, a parse failure, the server queuing it for later) simply keeps today's degraded
-// blank-strain/estimated-TPE values - exactly resilient_inventory.dart's own tier-2 behavior - never a reason to fail
+// blank-strain/estimated-TPE values - exactly center_stock.dart's own step-2 behavior - never a reason to fail
 // the whole load.
 import 'package:http/http.dart' as http;
 

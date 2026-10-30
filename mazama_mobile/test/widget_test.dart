@@ -19,7 +19,6 @@ import 'package:mazama_mobile/catch_up_store.dart';
 import 'package:mazama_mobile/flow/flow_spec.dart';
 import 'package:mazama_mobile/login_hosts_store.dart';
 import 'package:mazama_mobile/login_spec_store.dart';
-import 'package:mazama_mobile/reply_store.dart';
 import 'package:mazama_mobile/server_health.dart';
 import 'package:mazama_mobile/server_link.dart';
 import 'package:mazama_mobile/server_outbox.dart';
@@ -46,7 +45,6 @@ ServerLink _link() {
         submitCoa: (l, a) async => true,
         uploadSnapshot: (s) async {},
         auth: () async => null),
-    replies: ReplyStore(dataDir: () => _tempDir),
   );
 }
 

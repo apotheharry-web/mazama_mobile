@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "records.package_keys output",
+  "description": "One answer per record, in the order given: the key the server's state/mapping.packaged_product would give it, or the reason it is skipped.",
+  "type": "array",
+  "items": {
+    "oneOf": [
+      {
+        "type": "object",
+        "required": [
+          "state_id",
+          "pkpr"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "state_id": {
+            "type": "integer"
+          },
+          "pkpr": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      {
+        "type": "object",
+        "required": [
+          "problem"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "problem": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    ]
+  }
+}

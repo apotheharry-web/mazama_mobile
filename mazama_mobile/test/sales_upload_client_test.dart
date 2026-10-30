@@ -9,7 +9,6 @@ import 'package:http/testing.dart' as http_testing;
 import 'package:mazama_mobile/api_contract.g.dart';
 import 'package:mazama_mobile/app_api_key.dart';
 import 'package:mazama_mobile/catch_up_store.dart';
-import 'package:mazama_mobile/reply_store.dart';
 import 'package:mazama_mobile/sales_upload_client.dart';
 import 'package:mazama_mobile/server_error.dart';
 import 'package:mazama_mobile/server_health.dart';
@@ -121,7 +120,6 @@ void main() {
           },
           auth: () async => null,
         ),
-        replies: ReplyStore(dataDir: () => dir),
       );
     }
 

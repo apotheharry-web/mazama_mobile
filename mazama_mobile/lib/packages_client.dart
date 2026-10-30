@@ -26,7 +26,7 @@ class PackagesError implements Exception {
 }
 
 /// Which figure a package's [Package.tpeMg] is (SM-D31): its mg TPE (the server's, or one kept on the phone, from the
-/// server or from the phone's own coa_core reading of the lab report), or - for a package read from the state system
+/// server or from the phone's own mazama_core reading of the lab report), or - for a package read from the state system
 /// with neither - only the state's psilocybin (weightPerUnit x analyteWeight, rounded up), which the screens must call
 /// "mg psilocybin", never "mg TPE".
 enum MgFigure { tpe, psilocybin }
@@ -35,7 +35,7 @@ enum MgFigure { tpe, psilocybin }
 String mgFigureLabel(MgFigure f) => f == MgFigure.psilocybin ? 'mg psilocybin' : 'mg TPE';
 
 /// Where the figures filled into a state-system read came from (enrichment_store.dart): Mazama's server's last answer
-/// for the package, or this phone's own coa_core reading of the package's lab report (phone_label.dart, SM-D31).
+/// for the package, or this phone's own mazama_core reading of the package's lab report (phone_label.dart, SM-D31).
 enum EnrichmentSource { server, phone }
 
 /// One row of /p/packages/{state_id}: a packaged product this service center can sell, matched by its state
@@ -106,7 +106,7 @@ class Package {
   /// counted under its product (specs/edibles ED-R2). null from an older server: the stock rules read it from the name.
   final String? type;
 
-  /// Set only on a package read straight from the state system (resilient_inventory.dart's tier 2) whose strain, tpeMg
+  /// Set only on a package read straight from the state system (lib/sync/center_stock.dart) whose strain, tpeMg
   /// and expires were filled in from what Mazama's server last sent for this very package (enrichment_store.dart):
   /// when that server answer was received. Null everywhere else, including on every row the server itself sends.
   final DateTime? enrichedAt;
@@ -123,7 +123,13 @@ class Package {
   /// Which figure [tpeMg] is (SM-D31): only the state's psilocybin for a [stateEstimate] package, its mg TPE otherwise.
   MgFigure get mgFigure => stateEstimate ? MgFigure.psilocybin : MgFigure.tpe;
 
-  /// README R64: coa_core's LabelInput for this record as the server builds it for its own labels (/p/packages'
+  /// specs/phone-sync PS-R5: true only on a record only the state listed, in a read where Mazama's server answered and
+  /// joined another record of the same product (sync/stock_merge.dart). Its [tpeMg] is only the state's psilocybin, but
+  /// it is not a [stateEstimate]: its product is shown, priced and capped by its first lot's figure as before, and
+  /// only notes these units and their own figure ([PkprGroup.stateOnlyNote], the owner's choice of 2026-10-30).
+  final bool stateOnly;
+
+  /// README R64: mazama_core's LabelInput for this record as the server builds it for its own labels (/p/packages'
   /// `labelInput`), without `today`. phone_label.dart draws the label from it with no call to the state system. Null when
   /// the server has no certificate for the lot, for an older server, and for a record only the state system sent.
   final Map<String, Object?>? labelInput;
@@ -150,6 +156,7 @@ class Package {
     this.enrichedAt,
     EnrichmentSource? enrichedBy,
     this.stateEstimate = false,
+    this.stateOnly = false,
     this.labelInput,
   })  : _exactQuantity = exactQuantity,
         enrichedBy = enrichedAt == null ? null : (enrichedBy ?? EnrichmentSource.server);
@@ -178,6 +185,7 @@ class Package {
             : null,
         enrichedBy: j['enrichedBy'] == 'phone' ? EnrichmentSource.phone : null,
         stateEstimate: j['stateEstimate'] == true,
+        stateOnly: j['stateOnly'] == true,
         labelInput: j['labelInput'] is Map ? Map<String, Object?>.from(j['labelInput'] as Map) : null,
       );
 
@@ -234,6 +242,7 @@ class Package {
         if (enrichedAt != null) 'enrichedAtMs': enrichedAt!.millisecondsSinceEpoch,
         if (enrichedAt != null && enrichedBy == EnrichmentSource.phone) 'enrichedBy': 'phone',
         if (stateEstimate) 'stateEstimate': true,
+        if (stateOnly) 'stateOnly': true,
         if (labelInput != null) 'labelInput': labelInput,
       };
 }
@@ -346,6 +355,19 @@ class PkprGroup {
 
   /// "mg TPE" or "mg psilocybin" ([mgFigure]), for every screen that shows [tpeMg].
   String get mgLabel => mgFigureLabel(mgFigure);
+
+  /// specs/phone-sync PS-R5 (the owner, 2026-10-30): when some of this product's lots are known only by the state
+  /// ([Package.stateOnly]), how many units they hold and their own figure, the state's psilocybin - "includes 2 unit(s)
+  /// known only by the state: 6 mg psilocybin each" ("5 or 6 mg" when they differ). Null when there are none. A note
+  /// only: [tpeMg], the price and the dose cap stay the first lot's.
+  String? get stateOnlyNote {
+    final only = lots.where((l) => l.stateOnly).toList();
+    if (only.isEmpty) return null;
+    final units = only.fold<int>(0, (sum, l) => sum + l.quantity);
+    final figures = (only.map((l) => l.tpeMg).toSet().toList()..sort()).join(' or ');
+    return 'includes $units unit(s) known only by the state: $figures ${mgFigureLabel(MgFigure.psilocybin)} each';
+  }
+
   int get quantity => lots.fold(0, (sum, l) => sum + l.quantity);
 
   /// Whether EVERY lot behind this PKPR already has a certificate/label on file - a sale can draw from more

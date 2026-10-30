@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "names.name output",
+  "description": "The name read for display: the strain as written, the strain cleaned and spelled the built-in way (null when the name has no usable one), the type code and the ISO best-by date in the name.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "strain_raw",
+    "strain",
+    "code",
+    "expiry"
+  ],
+  "properties": {
+    "strain_raw": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "strain": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "code": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "expiry": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^\\d{4}-\\d\\d-\\d\\d$"
+    }
+  }
+}

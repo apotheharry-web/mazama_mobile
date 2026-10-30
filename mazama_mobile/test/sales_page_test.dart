@@ -3,12 +3,16 @@
 // (never in the demo). A failed read shows the copy kept from the last good one with no notice of its own (sales
 // README R87) and Retry; with none kept, the error and Retry.
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mazama_mobile/reply_store.dart';
+
+import 'package:mazama_mobile/local_store.dart';
 import 'package:mazama_mobile/sales_page.dart';
+import 'package:mazama_mobile/sync/sync_datasets.dart';
+import 'package:mazama_mobile/sync/updated_line.dart';
 
 late Directory _dir;
 
@@ -45,7 +49,7 @@ Widget _page({
         stateId: 231,
         load: load,
         upload: upload ?? (_) async {},
-        replies: ReplyStore(dataDir: () => _dir),
+        datasets: Datasets.forDir(() => _dir),
         now: () => _now,
         demo: demo,
       ),
@@ -58,7 +62,16 @@ List<String> _shownNumbers(WidgetTester tester) => [
 
 void main() {
   setUp(() => _dir = Directory.systemTemp.createTempSync('mazama_sales_page_test_'));
-  tearDown(() => _dir.deleteSync(recursive: true));
+  tearDown(() {
+    LocalStore.debugCloseAll();
+    _dir.deleteSync(recursive: true);
+  });
+
+  Datasets datasets() => Datasets.forDir(() => _dir);
+  List<Object?>? keptRecords() {
+    final row = datasets().read(Dataset.recentSales, '231');
+    return row == null ? null : jsonDecode(row.body) as List;
+  }
 
   test('recentSales: the last 30 days, newest first, deleted ones left out', () {
     final rows = recentSales(_records, now: _now);
@@ -99,7 +112,9 @@ void main() {
     expect(find.text('Too old'), findsNothing);
     expect(find.text(r'$1,250.00'), findsOneWidget);
     expect(uploads, [_records]); // all records read, not only the 30 days shown
-    expect(ReplyStore(dataDir: () => _dir).load(replyKey('state_sales', [231]))?.value, _records);
+    expect(keptRecords(), _records); // the recent_sales dataset (specs/phone-sync phase 4)
+    expect(datasets().read(Dataset.recentSales, '231')!.source, sourceState);
+    expect(find.text('Updated just now'), findsOneWidget);
     expect(find.byKey(const ValueKey('sales-retry')), findsNothing);
   });
 
@@ -123,16 +138,17 @@ void main() {
     expect(_shownNumbers(tester), hasLength(3));
   });
 
-  testWidgets('the demo uploads nothing', (tester) async {
+  testWidgets('the demo uploads nothing, and its kept read says demo (PS-R8)', (tester) async {
     final uploads = <List<Object?>>[];
     await tester.pumpWidget(_page(load: () async => _records, upload: (r) async => uploads.add(r), demo: true));
     await tester.pumpAndSettle();
     expect(_shownNumbers(tester), hasLength(3));
     expect(uploads, isEmpty);
+    expect(datasets().read(Dataset.recentSales, '231')!.source, sourceDemo);
   });
 
   testWidgets('a failed read shows the kept copy with no notice of its own, and Retry reads again', (tester) async {
-    ReplyStore(dataDir: () => _dir).save(replyKey('state_sales', [231]), _records, _now.toUtc());
+    datasets().put(Dataset.recentSales, '231', jsonEncode(_records), source: sourceState, at: _now.subtract(const Duration(hours: 2)));
     var fail = true;
     var reads = 0;
     final uploads = <List<Object?>>[];
@@ -171,5 +187,79 @@ void main() {
     await tester.pumpWidget(_page(load: () async => [_records[0]]));
     await tester.pumpAndSettle();
     expect(find.text('No sales in the last 30 days.'), findsOneWidget);
+  });
+
+  // specs/phone-sync PS-R7: local first.
+  testWidgets('shows the stored copy at once with its age, then the fresh read', (tester) async {
+    datasets().put(Dataset.recentSales, '231', jsonEncode([_records[2]]), source: sourceState,
+        at: _now.subtract(const Duration(minutes: 20)));
+    final gate = Completer<List<Object?>>();
+    await tester.pumpWidget(_page(load: () => gate.future));
+    await tester.pump();
+    expect(_shownNumbers(tester), ['S-0003']); // before the read answers
+    expect(find.text('Updated 20 min ago'), findsOneWidget);
+    gate.complete(_records);
+    await tester.pumpAndSettle();
+    expect(_shownNumbers(tester), ['S-0004', 'S-0003', 'S-0002']);
+    expect(find.text('Updated just now'), findsOneWidget);
+  });
+
+  testWidgets('a failed read keeps the stored copy and its age; the failure is recorded', (tester) async {
+    datasets().put(Dataset.recentSales, '231', jsonEncode(_records), source: sourceState,
+        at: _now.subtract(const Duration(hours: 2)));
+    await tester.pumpWidget(_page(load: () async => throw Exception('cannot reach the state system')));
+    await tester.pumpAndSettle();
+    expect(_shownNumbers(tester), ['S-0004', 'S-0003', 'S-0002']);
+    expect(find.byKey(updatedLineKey), findsOneWidget);
+    expect(find.text('Updated just now'), findsNothing);
+    expect(datasets().read(Dataset.recentSales, '231')!.lastError, contains('cannot reach'));
+  });
+
+  testWidgets('a pull-down while a read is under way joins it', (tester) async {
+    final gate = Completer<List<Object?>>();
+    var reads = 0;
+    datasets().put(Dataset.recentSales, '231', jsonEncode(_records), source: sourceState, at: _now);
+    await tester.pumpWidget(_page(load: () {
+      reads++;
+      return gate.future;
+    }));
+    await tester.pump();
+    expect(reads, 1); // the read the page starts on opening, still under way
+    // what a pull-down calls, while that read runs (the indicator calls it once its snap ends, so call it directly)
+    final onRefresh = tester.widget<RefreshIndicator>(find.byKey(const ValueKey('sales-refresh'))).onRefresh;
+    final joined = onRefresh();
+    final again = onRefresh();
+    expect(reads, 1);
+    gate.complete(_records);
+    await tester.pumpAndSettle();
+    await joined;
+    await again;
+    expect(reads, 1);
+    expect(_shownNumbers(tester), ['S-0004', 'S-0003', 'S-0002']);
+  });
+
+  testWidgets('pulling the list down reads again', (tester) async {
+    var reads = 0;
+    await tester.pumpWidget(_page(load: () async {
+      reads++;
+      return _records;
+    }));
+    await tester.pumpAndSettle();
+    expect(reads, 1);
+    await tester.fling(find.byKey(const ValueKey('sale-number')).first, const Offset(0, 400), 1000);
+    await tester.pumpAndSettle();
+    expect(reads, 2);
+  });
+
+  testWidgets("an older build's kept read (the reply store) shows at once", (tester) async {
+    // as reply_store.dart (removed in Task 10) kept it: server_replies/<route/params, URI-encoded>.json
+    LocalStore.forDir(_dir).write('server_replies/${Uri.encodeComponent('state_sales/231')}.json',
+        jsonEncode({'atMs': _now.toUtc().millisecondsSinceEpoch, 'value': _records}));
+    final gate = Completer<List<Object?>>();
+    await tester.pumpWidget(_page(load: () => gate.future));
+    await tester.pump();
+    expect(_shownNumbers(tester), ['S-0004', 'S-0003', 'S-0002']);
+    gate.complete(_records);
+    await tester.pumpAndSettle();
   });
 }

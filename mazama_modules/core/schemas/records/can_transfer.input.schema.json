@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "records.can_transfer input",
+  "description": "The packages to check, the state id of the org that would send them, and the transfer's mode (\"retrieve\": held by that center; anything else: held by that manufacturer, with no center).",
+  "type": "object",
+  "required": [
+    "records",
+    "holder_state_id",
+    "mode"
+  ],
+  "properties": {
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "description": "State records as the state system sends them (the mirror's raw, or a phone's upload); only the keys the rules read matter."
+    },
+    "holder_state_id": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "null: an org without a state id (then only a record without that id is its own)."
+    },
+    "mode": {
+      "type": "string"
+    }
+  }
+}

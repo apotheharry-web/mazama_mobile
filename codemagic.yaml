@@ -3,7 +3,12 @@
 # A release is a tag v<version> where <version> is mazama_mobile/pubspec.yaml's `version:` exactly (e.g. v0.2.2+31).
 # Pushing it builds that commit twice:
 #   - ios-release: signed for the App Store and uploaded to App Store Connect (TestFlight, then App Review by hand);
-#   - android-release: signed with the owner's upload key and attached, with its SHA-256, to the GitHub release of the tag.
+#   - android-release: signed with the owner's upload key and attached, with its SHA-256, to the GitHub release of the tag,
+#     with a draft, unsigned latest.json (the release file phones are offered, specs/app-updates AU-R19). Phones and
+#     Mazama's server read only the signed copy at this repository's root: the owner checks the draft's sha256 against
+#     the .sha256 asset and the Codemagic log's commit against the tag, signs it on the server
+#     (`sudo mazama-sales sign latest.json`, which prints what it signs) and commits latest.json and latest.json.sig at
+#     the root (owner step O2). Codemagic never holds the signing key.
 # Both refuse a tag that isn't the pubspec version and a build without the app key. Build numbers come from the
 # pubspec (the "+31"), so they only go up whichever service builds.
 #
@@ -57,8 +62,8 @@ workflows:
       - name: Get Flutter packages
         script: flutter pub get
       - *icons
-      - name: Install Rust for the lab-report reader
-        # ios/build_coa_core_ffi.sh (an Xcode build phase) compiles ../mazama_modules/coa/coa_core_ffi into the app
+      - name: Install Rust for the shared core
+        # ios/build_mazama_core_ffi.sh (an Xcode build phase) compiles ../mazama_modules/core/mazama_core_ffi into the app
         script: |
           if ! command -v rustup >/dev/null 2>&1 && [ ! -x "$HOME/.cargo/bin/rustup" ]; then
             curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
@@ -72,21 +77,22 @@ workflows:
         script: xcode-project use-profiles
       - name: Build signed IPA
         script: |
-          unset COA_CORE_OPTIONAL
           flutter build ipa --release \
             --dart-define=APP_API_KEY="$APP_API_KEY" \
             --export-options-plist=/Users/builder/export_options.plist
-      - name: Check the lab-report reader is in the app
+      - name: Check the shared core is in the app
         script: |
           bin=build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app/Runner
           syms=$(nm -gU "$bin")
-          if echo "$syms" | grep -q '_coa_core_ffi_not_built$'; then
-            echo "error: the app was linked with the coa_core stand-in"; exit 1
-          fi
-          for f in coa_parse_json coa_label_spec_json coa_find_lot_json coa_name_json coa_scan_find_ids_json coa_scan_closest_json coa_version coa_free; do
+          list=../mazama_modules/core/ios_symbols.txt
+          [ -s "$list" ] || { echo "error: $list is missing or empty"; exit 1; }
+          n=0
+          for f in $(cat "$list"); do
             echo "$syms" | grep -q " _${f}\$" || { echo "error: _${f} is missing from $bin"; exit 1; }
+            n=$((n+1))
           done
-          echo "coa_core: all functions present in the app"
+          [ "$n" -ge 1 ] || { echo "error: $list names no symbol"; exit 1; }
+          echo "mazama_core: all functions present in the app"
     artifacts:
       - build/ios/ipa/*.ipa
     publishing:
@@ -109,11 +115,22 @@ workflows:
         - github_release
     scripts:
       - *check_release
+      - name: Check the build number
+        # AU-R1: the build is YYMMDDNN, a real date at most tomorrow (UTC), so a release file can't name a far-future build
+        script: |
+          build="$(grep '^version:' pubspec.yaml | awk '{print $2}' | cut -d+ -f2)"
+          echo "$build" | grep -Eq '^[0-9]{8}$' || { echo "error: the build '$build' is not YYMMDDNN"; exit 1; }
+          day="20${build:0:2}-${build:2:2}-${build:4:2}"
+          parsed="$(date -u -j -f '%Y-%m-%d' "$day" '+%Y-%m-%d' 2>/dev/null || true)"   # macOS date
+          [ "$parsed" = "$day" ] || { echo "error: $day is not a date"; exit 1; }
+          tomorrow="$(date -u -v+1d '+%Y-%m-%d')"
+          if [[ "$day" > "$tomorrow" ]]; then echo "error: the build is dated $day, after tomorrow ($tomorrow)"; exit 1; fi
+          echo "build $build, dated $day"
       - name: Get Flutter packages
         script: flutter pub get
       - *icons
-      - name: Install Rust for the lab-report reader
-        # android/app/build.gradle.kts compiles ../mazama_modules/coa/coa_core_ffi for both ABIs with the NDK
+      - name: Install Rust for the shared core
+        # android/app/build.gradle.kts compiles ../mazama_modules/core/mazama_core_ffi for both ABIs with the NDK
         script: |
           if ! command -v rustup >/dev/null 2>&1 && [ ! -x "$HOME/.cargo/bin/rustup" ]; then
             curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
@@ -138,16 +155,16 @@ workflows:
           echo "keystore: $(basename "$CM_KEYSTORE_PATH"), alias $CM_KEY_ALIAS"
       - name: Build signed APK
         script: |
-          unset COA_CORE_OPTIONAL MAZAMA_DEV_RELEASE
+          unset MAZAMA_DEV_RELEASE
           export PATH="$HOME/.cargo/bin:$PATH"
           flutter build apk --release --dart-define=APP_API_KEY="$APP_API_KEY"
-      - name: Check the lab-report reader is in the app
+      - name: Check the shared core is in the app
         script: |
           apk=build/app/outputs/flutter-apk/app-release.apk
           for abi in arm64-v8a x86_64; do
-            unzip -l "$apk" | grep -q "lib/$abi/libcoa_core_ffi.so" || { echo "error: lib/$abi/libcoa_core_ffi.so is missing from $apk"; exit 1; }
+            unzip -l "$apk" | grep -q "lib/$abi/libmazama_core_ffi.so" || { echo "error: lib/$abi/libmazama_core_ffi.so is missing from $apk"; exit 1; }
           done
-          echo "coa_core: present for arm64-v8a and x86_64"
+          echo "mazama_core: present for arm64-v8a and x86_64"
       - name: Publish the GitHub release
         script: |
           name="mazama_mobile-${CM_TAG}.apk"
@@ -156,6 +173,26 @@ workflows:
           gh release create "$CM_TAG" "build/$name" "build/$name.sha256" \
             --title "Mazama service-center app $CM_TAG" \
             --notes "Built by Codemagic from commit ${CM_COMMIT} of this repository. SHA-256: $(cut -d' ' -f1 "build/$name.sha256")"
+      - name: Attach the draft release file (unsigned)
+        # AU-R19: latest.json's keys in AU-R1's order; the owner signs it and commits it at the repository root (O2)
+        script: |
+          name="mazama_mobile-${CM_TAG}.apk"
+          version="$(grep '^version:' pubspec.yaml | awk '{print $2}' | cut -d+ -f1)"
+          build="$(grep '^version:' pubspec.yaml | awk '{print $2}' | cut -d+ -f2)"
+          apk_url="$(gh api "repos/$CM_REPO_SLUG/releases/tags/$CM_TAG" --jq '.assets[] | select(.name | endswith(".apk")) | .browser_download_url')"
+          [ -n "$apk_url" ] || { echo "error: the release has no .apk asset"; exit 1; }
+          sha="$(cut -d' ' -f1 "build/$name.sha256")"
+          size="$(stat -f%z "build/$name")"                        # macOS stat
+          aapt2="$(ls "$ANDROID_SDK_ROOT"/build-tools/*/aapt2 | sort -V | tail -1)"
+          min_sdk="$("$aapt2" dump badging "build/$name" | sed -n "s/^sdkVersion:'\([0-9]*\)'/\1/p")"
+          [ -n "$min_sdk" ] || { echo "error: aapt2 gave no sdkVersion"; exit 1; }
+          jq -n --arg version "$version" --argjson build "$build" --arg apk "$apk_url" --arg sha256 "$sha" \
+            --argjson size "$size" --argjson minSdk "$min_sdk" \
+            '{kind: "mazama-mobile-release", version: $version, build: $build, apk: $apk, sha256: $sha256, size: $size, minSdk: $minSdk}' \
+            > build/latest.json
+          cat build/latest.json
+          gh release upload "$CM_TAG" build/latest.json
     artifacts:
       - build/mazama_mobile-*.apk
       - build/mazama_mobile-*.apk.sha256
+      - build/latest.json

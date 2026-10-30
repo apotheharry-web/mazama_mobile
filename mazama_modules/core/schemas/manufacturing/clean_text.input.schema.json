@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "manufacturing.clean_text input",
+  "description": "specs/core row 12 (FM-10): saved ingredient or allergen text and the most characters it may keep.",
+  "type": "object",
+  "required": [
+    "text",
+    "limit"
+  ],
+  "properties": {
+    "text": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "limit": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

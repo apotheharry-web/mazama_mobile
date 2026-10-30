@@ -3,9 +3,10 @@
 // real tpeMg, and the coaAvailable/labelAvailable flags items 3b/4 need) AND the state system directly
 // (state_packages_client.dart's fetchPackagesFromState - the freshest quantity, now that mazama_sales' own
 // mirror can go stale for up to settings.auto_sync_interval_hours, or indefinitely with auto-sync turned
-// off entirely) - merged every time this is called, not as a failure fallback. ResilientInventory already
-// covers the "one side is simply unreachable" case; this is a different, always-on merge for when both sides
-// answer but may disagree about what's actually in stock right now.
+// off entirely) - merged every time this is called, not as a failure fallback. The cart no longer calls this: it reads
+// through lib/sync/center_stock.dart (the same join, in sync/stock_merge.dart's mergeStock, with its fallbacks); this
+// is still the stock page's (stock_rows.dart's loadCenterStock) and a debug page's, for when both sides answer but may
+// disagree about what's actually in stock right now.
 //
 // Merge key: productGuid + id (one lot - see packages_client.dart's own PkprGroup comment on why a PKPR can
 // have more than one). The state's own row wins for quantity/weightPerUnit/analyteWeight - those are the
@@ -27,9 +28,9 @@ import 'packages_client.dart' as packages_client;
 import 'state_packages_client.dart' as state_packages_client;
 
 /// -> [fetchMergedInventory]'s result: the merged packages, plus which of the two sources actually answered
-/// (CartPage uses these to decide whether to show a "state system only" / "Mazama only" banner, the same
-/// spirit as ResilientInventory's own InventorySource - but both sources missing is the only case that's
-/// fatal here, surfaced by [fetchMergedInventory] throwing rather than returning an empty, misleading result).
+/// (the stock page uses these to decide what to say about the figures it shows, in the same spirit as
+/// center_stock.dart's InventorySource - but both sources missing is the only case that's fatal here, surfaced by
+/// [fetchMergedInventory] throwing rather than returning an empty, misleading result).
 class MergedInventoryResult {
   final List<packages_client.Package> packages;
   final bool mazamaOk;
@@ -82,11 +83,9 @@ packages_client.Package _unknownCoaLabel(packages_client.Package p) => packages_
 
 /// Runs mazama_sales' fetchPackages and the state system's own fetchPackagesFromState concurrently and merges
 /// them (see this file's own header comment for the exact rule). Throws [MergedInventoryError] only when
-/// BOTH sources fail - either one succeeding is enough to return something CartPage can show, same spirit as
-/// ResilientInventory's own "the original failure is what's worth surfacing" rule, except here there is no
-/// third tier to fall further back to (that's still ResilientInventory's job upstream of this, for the
-/// "mazama_sales itself is down" case - this function is what runs once that tier already succeeded, or once
-/// a caller has decided both sources are worth asking every time regardless).
+/// BOTH sources fail - either one succeeding is enough to return something a page can show, in the same spirit as
+/// center_stock.dart's "the original failure is what's worth surfacing" rule, except here there is no kept copy to
+/// fall further back to (the caller's job: stock_rows.dart falls back to the rows last drawn on the phone).
 Future<MergedInventoryResult> fetchMergedInventory(
   int stateId, {
   required String accessToken,

@@ -1,16 +1,20 @@
 // MI-R3 (specs/mazama-inventory): the Mazama inventory page - total mg TPE By strain and By type, one pie at a time
 // (MI-D3), a tap for a strain's types or a type's strains (MI-D4), no pull to refresh (MI-D5). The numbers are
 // stock_mix.dart's, held to the shared vectors in stock_mix_test.dart; here, what the page shows of them.
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mazama_mobile/mazama_contact.dart';
 import 'package:mazama_mobile/mazama_inventory_client.dart';
 import 'package:mazama_mobile/mazama_inventory_page.dart';
 import 'package:mazama_mobile/server_health.dart';
-import 'package:mazama_mobile/server_offline.dart';
+import 'package:mazama_mobile/sync/server_read.dart';
 import 'package:mazama_mobile/mazama_lot_table.dart';
 import 'package:mazama_mobile/stock_mix.dart';
 import 'package:mazama_mobile/stock_pie.dart';
+import 'package:mazama_mobile/sync/sync_datasets.dart';
 
 import 'fake_timers.dart';
 
@@ -362,6 +366,61 @@ void main() {
       expect(find.text('6,000 mg TPE in all'), findsOneWidget);
       expect(find.textContaining('did not load'), findsNothing);
       expect(find.byKey(const ValueKey('order-button')), findsOneWidget);
+    });
+
+    // specs/phone-sync phase 2: the copy is the sync engine's mazama_inventory dataset.
+    testWidgets("the server's mix is kept as the dataset, and shown from it while the server can't be reached",
+        (tester) async {
+      final dir = Directory.systemTemp.createTempSync('mazama_inventory_page_test_');
+      addTearDown(() => dir.deleteSync(recursive: true));
+      final keeper = mazamaInventoryDataset(Datasets.forDir(() => dir));
+      await tester.pumpWidget(MaterialApp(
+        home: MazamaInventoryPage(load: () async => _mix, keep: keeper.save, kept: keeper.load, now: () => at),
+      ));
+      await tester.pumpAndSettle();
+      expect(Datasets.forDir(() => dir).read(Dataset.mazamaInventory, '')!.fetchedAt, at);
+
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpWidget(MaterialApp(
+        home: MazamaInventoryPage(
+          load: () async => throw MazamaInventoryError('cannot reach sales.mazamamushrooms.com: SocketException', unreachable: true),
+          keep: keeper.save,
+          kept: keeper.load,
+        ),
+      ));
+      await tester.pumpAndSettle();
+      expect(find.text('6,000 mg TPE in all'), findsOneWidget);
+      expect(find.textContaining('did not load'), findsNothing);
+    });
+
+    // specs/phone-sync PS-R7: local first.
+    testWidgets('the kept mix shows at once with its age, then the fresh one', (tester) async {
+      final gate = Completer<MazamaInventory>();
+      final now = at.add(const Duration(minutes: 20));
+      await tester.pumpWidget(MaterialApp(
+        home: MazamaInventoryPage(load: () => gate.future, kept: () async => ServerRead.cached(_mix, at), now: () => now),
+      ));
+      await tester.pump();
+      expect(find.text('6,000 mg TPE in all'), findsOneWidget); // before the server answers
+      expect(find.text('Updated 20 min ago'), findsOneWidget);
+      gate.complete(_mix);
+      await tester.pumpAndSettle();
+      expect(find.text('Updated just now'), findsOneWidget);
+    });
+
+    testWidgets("the server unreachable after the kept copy showed: it stays, with its age and no notice of its own",
+        (tester) async {
+      final now = at.add(const Duration(minutes: 20));
+      await tester.pumpWidget(MaterialApp(
+        home: MazamaInventoryPage(
+            load: () async => throw MazamaInventoryError("Mazama's server can't be reached", unreachable: true),
+            kept: () async => ServerRead.cached(_mix, at),
+            now: () => now),
+      ));
+      await tester.pumpAndSettle();
+      expect(find.text('6,000 mg TPE in all'), findsOneWidget);
+      expect(find.text('Updated 20 min ago'), findsOneWidget);
+      expect(find.textContaining("can't be reached"), findsNothing);
     });
 
     // README R56: the page reads whether the server answers from the app's tracker.

@@ -5,7 +5,7 @@
 //   429 - this phone sent more requests than the route allows per minute (routes.yaml rate_limit): wait.
 //
 // And whether a failure means Mazama's server couldn't be reached at all, one rule for every client (the pages then
-// show the copy kept on the phone, server_offline.dart, or ask the worker to try again later): no connection, no
+// show the copy kept on the phone, sync/server_read.dart, or ask the worker to try again later): no connection, no
 // answer in time, or a 5xx (the server, or the proxy in front of it, is down or broken). A 4xx is the server's own
 // answer (a bad app key, an unknown center, a refused value, a rate limit) and is shown as an error, as before.
 import 'dart:async' show TimeoutException;

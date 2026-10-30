@@ -29,7 +29,7 @@ import 'local_store_import.dart';
 const localStoreFileName = 'mazama.db';
 
 /// `PRAGMA user_version` once every migration in [_migrations] has run.
-const localStoreSchemaVersion = 1;
+const localStoreSchemaVersion = 2;
 
 /// Index i moves `user_version` from i to i + 1, in its own transaction. Append only: a phone may be at any version.
 final List<void Function(Database)> _migrations = [
@@ -38,6 +38,21 @@ final List<void Function(Database)> _migrations = [
     // The legacy files already imported (local_store_import.dart), so one whose rename failed is never imported again
     // after its document is deleted (a sold cart coming back).
     db.execute('CREATE TABLE imported_files (name TEXT PRIMARY KEY, saved_at_ms INTEGER NOT NULL)');
+  },
+  // specs/phone-sync PS-R2: the sync engine's tables (lib/sync/sync_tables.dart), beside the documents (PS-D4). The
+  // queue's ids are AUTOINCREMENT, never reused: an item replaced while it was being sent must never share its id with
+  // the newer one, which the sender's "done" would then delete.
+  (db) {
+    db.execute('CREATE TABLE sync_dataset ('
+        'name TEXT NOT NULL, key TEXT NOT NULL, body TEXT NOT NULL, source TEXT NOT NULL, '
+        'fetched_at_ms INTEGER NOT NULL, last_try_ms INTEGER, last_error TEXT, PRIMARY KEY (name, key))');
+    db.execute('CREATE TABLE sync_queue ('
+        'id INTEGER PRIMARY KEY AUTOINCREMENT, kind TEXT NOT NULL, key TEXT NOT NULL, body TEXT NOT NULL, '
+        'queued_at_ms INTEGER NOT NULL, next_at_ms INTEGER NOT NULL, attempts INTEGER NOT NULL DEFAULT 0, '
+        'state TEXT NOT NULL, reason TEXT)');
+    db.execute("CREATE UNIQUE INDEX sync_queue_kind_key ON sync_queue (kind, key) WHERE state <> 'dead'");
+    db.execute('CREATE TABLE sync_sent ('
+        'kind TEXT NOT NULL, key TEXT NOT NULL, sent_at_ms INTEGER NOT NULL, PRIMARY KEY (kind, key))');
   },
 ];
 
@@ -59,6 +74,10 @@ class LocalStore {
   bool _closed = false;
 
   LocalStore._(this._db, this._path);
+
+  /// A database that lives only in memory, for when the real one can't be opened (the queue then works for this run
+  /// only, and the app still starts). Not shared: every call is a new one.
+  static LocalStore inMemory() => LocalStore._(_openDatabase(':memory:'), ':memory:');
 
   /// The database of [dir] (created if need be, with the folder). The same instance is returned while its file
   /// exists; when `mazama.db` is gone (the folder deleted under it: a test's tear-down, the debug page's fresh
@@ -200,6 +219,16 @@ class LocalStore {
         final rows = _db.select('SELECT name FROM documents WHERE substr(name, 1, length(?1)) = ?1', [prefix]);
         return [for (final r in rows) r['name'] as String]..sort();
       });
+
+  /// Runs one statement of [sql] with [params] (never values built into the text), in a transaction of its own or the
+  /// one it is inside. For the sync engine's typed tables (lib/sync/sync_tables.dart, specs/phone-sync PS-D4).
+  void execute(String sql, [List<Object?> params = const []]) {
+    transaction(() => _db.execute(sql, params));
+  }
+
+  /// The rows [sql] selects with [params], as maps by column name. For the sync engine's typed tables, as [execute].
+  List<Map<String, Object?>> select(String sql, [List<Object?> params = const []]) =>
+      _run(() => [for (final r in _db.select(sql, params)) Map<String, Object?>.from(r)]);
 
   /// For local_store_import.dart: whether the legacy file [name] was imported once already.
   bool legacyFileImported(String name) =>

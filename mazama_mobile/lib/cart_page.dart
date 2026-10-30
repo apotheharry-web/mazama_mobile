@@ -55,7 +55,6 @@ import 'label_preview.dart';
 import 'licenses_client.dart';
 import 'login_hosts_store.dart' show currentAllowedHosts;
 import 'main.dart' show goToSignIn;
-import 'merged_inventory.dart' as merged_inventory;
 import 'package_ids.dart';
 import 'packages_client.dart';
 import 'packages_client.dart' as packages_client; // see CartPage.fetchPackages: avoids a same-name default-value ambiguity
@@ -77,7 +76,10 @@ import 'session.dart';
 import 'session_store.dart';
 import 'session_timer_store.dart';
 import 'resilience_options.dart';
-import 'resilient_inventory.dart';
+import 'sync/center_stock.dart';
+import 'sync/sync_datasets.dart' show sourceServer, sourceState;
+import 'sync/sync_tables.dart' show DatasetRow;
+import 'sync/updated_line.dart' show updatedLine, updatedLineKey;
 import 'state_packages_client.dart' as state_packages_client; // see CartPage.fetchPackagesFromState: avoids a same-name default-value ambiguity
 import 'text_scanner.dart';
 import 'text_scanner.dart' as text_scanner; // see CartPage.scanLabelText: avoids a same-name default-value ambiguity
@@ -196,9 +198,9 @@ class CartPage extends StatefulWidget {
   /// import above purely to avoid any ambiguity with this field's own same name.
   final Future<List<Package>> Function(int stateId) fetchPackages;
 
-  /// The second of the three resilience tiers around [fetchPackages] (see resilient_inventory.dart's own file
-  /// comment for all three): a direct call to the real state system's own GetPackagedProducts, tried only when
-  /// [fetchPackages] itself fails. Overridable for tests, so a widget test exercising a failed inventory load
+  /// The second of the steps around [fetchPackages] (see lib/sync/center_stock.dart's own file
+  /// comment for all of them): a direct call to the real state system's own GetPackagedProducts, tried only when
+  /// [fetchPackages] and the state's raw read both fail. Overridable for tests, so a widget test exercising a failed inventory load
   /// never makes a real network call for this fallback either - defaults to the real fetchPackagesFromState
   /// (state_packages_client.dart), referenced through the aliased import above for the same reason as
   /// fetchLabel.
@@ -217,7 +219,7 @@ class CartPage extends StatefulWidget {
   /// MergedInventoryResult.rawStateRecords) back to mazama_sales' POST /p/inventory/{stateId}, so its mirror
   /// stays current from this device instead of waiting on the server's own (now possibly manual-only) sync.
   /// Called fire-and-forget after every successful merged load for a configured center - see
-  /// _fetchMergedForCart. Overridable for tests for the same reason as fetchPackagesFromState. Defaults to the
+  /// _resilient (lib/sync/center_stock.dart's onStateRead). Overridable for tests for the same reason as fetchPackagesFromState. Defaults to the
   /// real upload through the app's server link (server_link.dart): while Mazama's server can't be reached the newest
   /// snapshot per center is kept and sent once it answers (catch_up_store.dart).
   final Future<Map<String, Object?>> Function(int stateId, List<Object?> records, {required String workerEmail, required String deviceId}) uploadInventorySnapshot;
@@ -284,14 +286,14 @@ class CartPage extends StatefulWidget {
   /// real one asks the app's uploader (server_link.dart), the demo's always says no.
   final bool Function(String lotGuid) coaUploadPending;
 
-  /// The third resilience tier: the last inventory this center successfully loaded (by either of the tiers
-  /// above), good for up to 3 days (see resilient_inventory.dart's own maxAge). Overridable for tests, so a
+  /// Where every load keeps what it read, and the last step: the last inventory this center successfully loaded (by
+  /// either of the steps above), shown at any age with its age, sold from for up to 3 days (Q3, [stockTooOld]). Overridable for tests, so a
   /// widget test never reads or writes the real app-data directory for this either - same real-by-default,
   /// redirected-in-tests pattern as cartStore/sessionTimerStore/deviceIdStore.
   final InventoryCacheStore inventoryCacheStore;
 
   /// What Mazama's server last sent per package (strain, TPE, expiry), filled back in when stock has to come from the
-  /// state system alone (enrichment_store.dart, resilient_inventory.dart). Overridable for tests, as
+  /// state system alone (enrichment_store.dart, lib/sync/center_stock.dart). Overridable for tests, as
   /// [inventoryCacheStore].
   final EnrichmentStore enrichmentStore;
 
@@ -308,9 +310,9 @@ class CartPage extends StatefulWidget {
   final Future<Uint8List> Function(int stateId, String guid) fetchLabel;
 
   /// When [fetchLabel] has no label (or can't be reached): the package's label drawn on the phone from its lab
-  /// report (phone_label.dart's drawPhoneLabelSpec - the shared coa_core rules, run on the device), so the worker
-  /// still has a label to compare against. Returns coa_core's LabelSpec, drawn by LabelPreview; throws with the
-  /// reason when even the phone can't make one (no lab report on file, no coa_core in this build, ...).
+  /// report (phone_label.dart's drawPhoneLabelSpec - the shared mazama_core rules, run on the device), so the worker
+  /// still has a label to compare against. Returns mazama_core's LabelSpec, drawn by LabelPreview; throws with the
+  /// reason when even the phone can't make one (no lab report on file, a report that doesn't name the lot, ...).
   /// Overridable for tests, so a widget test never makes a real state-system call for it. Null (the default) is the real
   /// one, keeping what the phone read from the lab report in [enrichmentStore] (SM-D31, _drawLabel).
   final Future<Map<String, Object?>> Function(int stateId, String pkpr, {required String accessToken, String strain})? drawLabel;
@@ -349,9 +351,9 @@ class CartPage extends StatefulWidget {
   /// file comment), referenced through the aliased import above for the same reason as fetchLabel.
   final Future<ScanMatchResult> Function(int stateId, List<String> lines, {bool typed}) scanMatch;
 
-  /// The same matcher (coa_core's, through the FFI) run on this phone against the cart's own copy of the stock,
+  /// The same matcher (mazama_core's, through the FFI) run on this phone against the cart's own copy of the stock,
   /// for when [scanMatch] can't get an answer from the server (ScanMatchError.serverUnavailable); null from it
-  /// when coa_core isn't built into this app. Overridable for tests, defaulting to local_scan_match.dart's own.
+  /// when the core can't answer. Overridable for tests, defaulting to local_scan_match.dart's own.
   final local_scan_match.LocalScanMatcher localScanMatch;
 
   /// This device's own install id (see device_id.dart) - read fresh on every postSaleLog/postSaleFailure call
@@ -423,6 +425,16 @@ class CartPage extends StatefulWidget {
   /// never while a sale is being sent. Null: never (tests, the demo, the debug launch page).
   final ServerHealth? health;
 
+  /// specs/phone-sync Task 8b: the center's stock as the sync engine keeps it (engine.watch of center_stock; null: none,
+  /// as in tests and the demo). A copy newer than the one on screen is taken only while the cart has no lines and no
+  /// sale is being sent; otherwise it waits until both hold (as the reload when the server comes back). Defaults to the
+  /// app's link (server_link.dart's linkWatchStock), none while no link is set.
+  final Stream<DatasetRow?>? Function(int stateId) watchStock;
+
+  /// PS-R6: after a confirmed sale, asks for the center's stock to be refreshed (the sync engine's center_stock dataset,
+  /// server_link.dart's linkRequestStockRefresh), never awaited. Overridable for tests.
+  final void Function(int stateId) requestStockRefresh;
+
   CartPage({
     super.key,
     required this.session,
@@ -462,6 +474,8 @@ class CartPage extends StatefulWidget {
     this.demo,
     this.featureTable = features,
     this.health,
+    this.requestStockRefresh = server_link.linkRequestStockRefresh,
+    this.watchStock = server_link.linkWatchStock,
     Future<FlowSpec>? saleSpec,
     http.Client Function()? httpClientFactory,
   })  : saleSpec = saleSpec ?? rootBundle.loadString('assets/flows/sale.yaml').then(FlowSpec.fromYaml),
@@ -525,55 +539,28 @@ class _CartPageState extends State<CartPage> {
   final _drawnLabels = <String, Future<Map<String, Object?>>>{};
   Timer? _renewTimer;
 
-  /// Wraps widget.fetchPackages with the state-system and 3-day-cache fallbacks (resilient_inventory.dart) -
-  /// built once initState has set _session, and read through `() => _session` rather than captured once, so
-  /// tier 2 (the state fallback) always uses whatever access token _maybeRenewSession most recently put there.
-  /// _resilient.fetchPackages (not widget.fetchPackages directly) is what _loadInventory calls, and what gets
-  /// handed down to StockPage/SelectCenterPage below - so both inherit the exact same resilience CartPage's
-  /// own inventory load gets, with no changes needed to either of those widgets themselves.
-  ///
-  /// `base` is [_fetchMergedForCart], not widget.fetchPackages directly (item 2: a configured center now
-  /// merges BOTH mazama_sales and the state system on every load, not just on a tier-1 failure - see that
-  /// method's own doc comment). Tiers 2/3 (the state-only fallback, then the 3-day cache) are unchanged: they
-  /// still exist for when the merge itself fails outright (no session, both sources down at once), the same
-  /// safety net this page had before item 2 existed.
-  late final ResilientInventory _resilient = ResilientInventory(
-    merged: _fetchMergedForCart,
-    enrichment: widget.enrichmentStore,
+  /// The center's stock (lib/sync/center_stock.dart, specs/phone-sync phase 3): Mazama's server and the state at once,
+  /// put together by the one merge rule (stock_merge.dart), else the state's own packages, else the stock last kept for
+  /// the center at any age (Q3: shown with its age; [_onSellPressed] refuses to sell from it once it is older than
+  /// ResilienceOptions.cacheMaxAge). The session is read fresh at every load (`() => _session`), so the state is read
+  /// with whatever token _maybeRenewSession last put there. Whenever the state answered, that read is pushed to
+  /// Mazama's server as the center's snapshot (item 3a, widget.uploadInventorySnapshot), fire-and-forget: a failed push
+  /// only means the server's copy stays one read behind. Handed down to StockPage/SelectCenterPage below
+  /// (_fetchPackagesForStockPage) so they load the same way. Selling never goes through it (PS-D3).
+  late final CenterStock _resilient = CenterStock(
+    fetchServer: widget.fetchPackages,
+    fetchRawState: widget.fetchRawPackagesFromState,
     fetchFromState: widget.fetchPackagesFromState,
     cache: widget.inventoryCacheStore,
     session: () => _session,
-    maxAge: widget.resilienceOptions.cacheMaxAge,
+    enrichment: widget.enrichmentStore,
+    now: widget.now,
     enableStateFallback: widget.resilienceOptions.enableStateFallback,
+    onStateRead: (stateId, raw) => unawaited(() async {
+      final deviceId = await widget.deviceIdStore.idOrCreate();
+      await widget.uploadInventorySnapshot(stateId, raw, workerEmail: _session.email, deviceId: deviceId);
+    }().catchError((_) {})),
   );
-
-  /// Tier 1 of [_resilient] for a configured center (item 2): fetches BOTH mazama_sales (widget.fetchPackages)
-  /// and the state system (widget.fetchRawPackagesFromState) and merges them every time (merged_inventory.dart's
-  /// own file comment has the exact rule - the state's own quantity wins, mazama's own strain/tpeMg/coaAvailable/
-  /// labelAvailable wins). Whenever the state side actually answered, that same fresh read is also pushed
-  /// straight back to mazama_sales (item 3a, widget.uploadInventorySnapshot) fire-and-forget: a push failing is
-  /// never surfaced to the worker, since the merge already used the fresh numbers for this screen regardless -
-  /// a failed push only means the SERVER's own copy stays one read further behind, not that anything on screen
-  /// right now is wrong.
-  ///
-  /// Returns the whole merge result: _resilient remembers the server's own rows from it, and reports a merge only the
-  /// state answered as InventorySource.state (with Mazama's last figures filled in where safe), not as live.
-  Future<merged_inventory.MergedInventoryResult> _fetchMergedForCart(int stateId) async {
-    final result = await merged_inventory.fetchMergedInventory(
-      stateId,
-      accessToken: _session.accessToken,
-      fetchMazama: widget.fetchPackages,
-      fetchRawState: widget.fetchRawPackagesFromState,
-    );
-    final raw = result.rawStateRecords;
-    if (raw != null) {
-      unawaited(() async {
-        final deviceId = await widget.deviceIdStore.idOrCreate();
-        await widget.uploadInventorySnapshot(stateId, raw, workerEmail: _session.email, deviceId: deviceId);
-      }().catchError((_) {}));
-    }
-    return result;
-  }
 
   /// Which tier _inventory actually came from, set by _loadInventory right alongside it - null until the first
   /// load finishes. Read by _body to show a banner whenever it's anything other than live: a worker should
@@ -581,9 +568,18 @@ class _CartPageState extends State<CartPage> {
   InventorySource? _inventorySource;
   DateTime? _inventoryAsOf;
 
-  /// When the stock now on screen was read (a cached copy: when it was saved), so a sale can read it again first
-  /// when it's older than ResilienceOptions.stockRecheckAge (SM-25). Null until stock has loaded.
+  /// When the stock now on screen was read (a kept copy: when it was read then), for Q3's limit and the banner: never
+  /// moved by a recheck or a sale. Null until stock has loaded.
   DateTime? _stockReadAt;
+
+  /// SM-25: when the state itself last confirmed the whole stock on screen (a load the state answered, or the bulk
+  /// sale's read), and when it last confirmed each lot a sale re-read (by package id). A sale within
+  /// ResilienceOptions.stockRecheckAge of either needs no read of its own. Null / empty after a load the state didn't
+  /// answer (Mazama's server's rows alone, a kept copy), after a load a sale ran across or that ended under lines, after
+  /// every sale sent whatever its outcome (the stock has moved, or may have), after an engine copy is taken, and when
+  /// lines are brought back from a draft (they carry older lots).
+  DateTime? _stateReadAt;
+  final Map<int, DateTime> _lotsCheckedAt = {};
 
   /// Set by _loadInventoryAsync right after widget.centerIsConfigured answers, before either branch below it
   /// runs - null only during that one check itself. Read by _fetchPackagesForStockPage so StockPage's own
@@ -642,6 +638,7 @@ class _CartPageState extends State<CartPage> {
   /// (a line removed, a sale ended, another cart shown). Forgets the wait once the stock isn't the state's any more or
   /// the server is offline again (the next time it comes back starts it again).
   void _reloadIfServerBack() {
+    _takeRefreshedStock(); // a refreshed copy waiting for the cart to empty (Task 8b)
     if (!_reloadWhenEmpty || !mounted) return;
     if (_inventorySource != InventorySource.state || !(widget.health?.online ?? false)) {
       _reloadWhenEmpty = false;
@@ -657,10 +654,89 @@ class _CartPageState extends State<CartPage> {
   CartSettings _cartSettings = CartSettings.fallback;
   late final Future<CartSettings> _cartSettingsFuture;
 
+  /// Task 8b: the engine's copy of this center's stock, and the newest one not taken yet.
+  StreamSubscription<DatasetRow?>? _stockWatch;
+  DatasetRow? _refreshedStock;
+
+  /// When a sale flow last started (any outcome: an uncertain sale may have moved stock too), a count raised when each
+  /// sale flow starts and again when it ends (a load that a send ran across never vouches for its counts: I-C and N-1,
+  /// counted rather than timed
+  /// so a clock that doesn't move between the two can't hide it), and how many cart switches are between their clear and
+  /// their restore (their lines are about to come back): no engine copy read before that sale, or taken in that gap,
+  /// may go on screen (review of Task 8b, C1 and C2; a count, so overlapping switches each hold it, M-a).
+  DateTime? _stockMovedAt;
+  int _saleSends = 0;
+  int _switchingCarts = 0;
+
+  /// When the load that failed started, so the rescue below takes only a copy read after it (review I2).
+  DateTime? _loadStartedAt;
+
+  void _onStockRow(DatasetRow? row) {
+    if (row == null) return;
+    _refreshedStock = row;
+    _takeRefreshedStock();
+  }
+
+  /// Puts the engine's newer copy of the stock on screen, only when: the center is configured, the cart's own load has
+  /// ended (or failed), the copy is newer than what is shown (and, after a failed load, was read after that load
+  /// started), the copy was read after the last sale flow started, the showing cart has no lines, no sale is being
+  /// sent, and no cart is being switched in.
+  ///
+  /// A copy taken never counts as the state's word (review of Task 8b, C1 and C2): [_stateReadAt] and [_lotsCheckedAt]
+  /// are cleared, so the next sale reads the state itself (SM-25) whatever the copy says. Only the cart's own state read
+  /// at load, and SM-25's own rechecks, confirm stock, exactly as before this branch. [_stockReadAt] becomes the copy's
+  /// own read time (Q3's limit and its age), and a copy older than the recheck age is shown as the kept copy with its
+  /// age, as tier 3 is.
+  void _takeRefreshedStock() {
+    final row = _refreshedStock;
+    if (row == null || !mounted) return;
+    if (_centerConfigured != true || (_inventory == null && _inventoryError == null)) return;
+    final failedLoad = _inventory == null;
+    final against = failedLoad ? _loadStartedAt : _stockReadAt;
+    if (against != null && !row.fetchedAt.isAfter(against)) {
+      _refreshedStock = null; // not newer than what is shown, or older than the load that failed
+      return;
+    }
+    final moved = _stockMovedAt;
+    if (moved != null && !row.fetchedAt.isAfter(moved)) {
+      _refreshedStock = null; // read before the last sale: its counts may still hold what that sale took
+      return;
+    }
+    if (_selling || _switchingCarts > 0 || _lines.isNotEmpty) return; // waits for the cart to be empty and still
+    _refreshedStock = null;
+    final packages = InventoryCacheStore.packagesFromBody(row.body);
+    if (packages == null) return;
+    final old = stockTooOld(row.fetchedAt, widget.now(), widget.resilienceOptions.stockRecheckAge);
+    setState(() {
+      _inventory = packages;
+      _inventoryError = null;
+      _inventorySource = old
+          ? InventorySource.cache
+          : row.source == sourceState
+              ? InventorySource.state
+              : InventorySource.live;
+      _inventoryAsOf = old ? row.fetchedAt : null;
+      _stockReadAt = row.fetchedAt;
+      _stateReadAt = null; // never the state's word: the next sale reads it (SM-25)
+      _lotsCheckedAt.clear();
+    });
+    // CU-R1: a copy of the server's rows alone says which lots it holds no lab report for, as a load does. A merged
+    // copy doesn't keep which of its rows the server sent (a row only the state listed has no report known, not a
+    // missing one), so it queues nothing: the cart's next own load does, with the server's own keys (review M-b).
+    if (!old && row.source == sourceServer) {
+      _queueMissingCoas(packages, serverKeys: {for (final p in packages) inventoryRowKey(p)});
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _session = widget.session;
+    try {
+      _stockWatch = widget.watchStock(widget.center.id)?.listen(_onStockRow, onError: (Object _) {});
+    } catch (_) {
+      // no engine copy to follow: the cart loads its stock itself, as always
+    }
     _pricingMode = widget.initialPricingMode;
     _cartSettingsFuture = _fetchCartSettingsOrFallback();
     _wasOffline = widget.health?.offline ?? false;
@@ -737,7 +813,12 @@ class _CartPageState extends State<CartPage> {
     final id = _cartId;
     final restored = await widget.cartStore.load(widget.center.id, maxAge: settings.life, cartId: id);
     if (restored == null || restored.isEmpty || !mounted || id != _cartId) return;
-    setState(() => _lines.addAll(restored));
+    setState(() {
+      _lines.addAll(restored);
+      // its lines carry the lots as they were when they were added: no earlier read vouches for them (I-D)
+      _stateReadAt = null;
+      _lotsCheckedAt.clear();
+    });
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Restored an unsold cart from last time - double-check it before selling.')),
     );
@@ -861,6 +942,7 @@ class _CartPageState extends State<CartPage> {
 
   @override
   void dispose() {
+    unawaited(_stockWatch?.cancel());
     widget.health?.removeListener(_onHealth);
     _renewTimer?.cancel();
     _sessionTimerTicker?.cancel();
@@ -946,6 +1028,9 @@ class _CartPageState extends State<CartPage> {
   }
 
   void _loadInventory() {
+    _loadStartedAt = widget.now();
+    // _stockReadAt stays the time of the stock the cart's lines were built from until this load ends (Q3 holds during
+    // a Retry: review I-A); the newer check doesn't use it while no stock is shown.
     setState(() {
       _inventory = null;
       _inventoryError = null;
@@ -956,14 +1041,15 @@ class _CartPageState extends State<CartPage> {
       _adhocGuidsResolved = 0;
       _adhocResolvedLots.clear();
     });
-    unawaited(_loadInventoryAsync());
+    unawaited(_loadInventoryAsync(_saleSends));
   }
 
   /// The real body of _loadInventory, split out so it can `await` widget.centerIsConfigured before deciding
   /// which of the two branches below to run - see that field's own doc comment on this page, and
   /// coa_data_client.dart/coa_data_resolver.dart's own file comments for why an unconfigured center needs an
   /// entirely different path from [_resilient]'s usual three tiers, not just a fourth tier bolted onto them.
-  Future<void> _loadInventoryAsync() async {
+  /// [sendsAtStart] is [_saleSends] when this load started: [_vouches] says whether its read may confirm the stock.
+  Future<void> _loadInventoryAsync(int sendsAtStart) async {
     bool configured;
     try {
       configured = await widget.centerIsConfigured(widget.center.id);
@@ -986,13 +1072,17 @@ class _CartPageState extends State<CartPage> {
           _inventorySource = result.source;
           _inventoryAsOf = result.asOf;
           _stockReadAt = result.asOf ?? widget.now();
+          _stateReadAt = result.stateRead && _vouches(sendsAtStart) ? widget.now() : null;
+          _lotsCheckedAt.clear();
         });
         // Only Mazama's own answer says which lots it has no lab report for: a state-only or cached load marks every
         // lot unknown, not missing (merged_inventory.dart's _unknownCoaLabel).
         if (result.source == InventorySource.live) _queueMissingCoas(result.packages, serverKeys: result.serverKeys);
+        _takeRefreshedStock(); // an engine copy that came during the load, if newer (Task 8b)
       }).catchError((e) {
         if (!mounted) return;
         setState(() => _inventoryError = e.toString());
+        _takeRefreshedStock();
       });
       return;
     }
@@ -1030,6 +1120,8 @@ class _CartPageState extends State<CartPage> {
       setState(() {
         _inventory = result.packages;
         _stockReadAt = widget.now();
+        _stateReadAt = _vouches(sendsAtStart) ? widget.now() : null; // the adhoc stock is the state's own read
+        _lotsCheckedAt.clear();
         _inventorySource = InventorySource.adhoc;
         _adhocGuidsTotal = result.guidsTotal;
         _adhocGuidsResolved =
@@ -1040,6 +1132,12 @@ class _CartPageState extends State<CartPage> {
       setState(() => _inventoryError = e.toString());
     }
   }
+
+  /// Whether a load that started when [_saleSends] was [sendsAtStart] may count as the state confirming the stock it
+  /// read (SM-25), now that it has ended: not when a sale was sent while it ran (its counts may be from before that
+  /// sale: review I-C), and not when the cart has lines (they were built from an older stock, or restored from a draft,
+  /// and carry those lots' counts: review I-D). Either way the next sale reads the state itself.
+  bool _vouches(int sendsAtStart) => _saleSends == sendsAtStart && _lines.isEmpty;
 
   /// CU-R1: hands every lot of [packages] the server has no lab report for to the app's background uploader, one
   /// representative package each, with the state's psilocybin figure as the cart add sends it. Only rows the server
@@ -1085,9 +1183,21 @@ class _CartPageState extends State<CartPage> {
         workerEmail: _session.email,
         deviceId: deviceId,
       );
+      _adhocListReadAt = widget.now();
       return result.packages;
     }
     return _resilient.fetchPackages(stateId);
+  }
+
+  /// When an adhoc center's stock list was last read (by [_fetchPackagesForStockPage], on the spot: nothing keeps it).
+  DateTime? _adhocListReadAt;
+
+  /// StockPage's age line (PS-R7, Task 8b Step 8): when the stock it was just handed was read. A configured center's
+  /// is the center_stock dataset's time: every load of [_resilient] keeps what it read there, with its time, before it
+  /// returns, and a kept copy it falls back to has its own; an adhoc center's is its read's.
+  Future<DateTime?> _stockListReadAt(int stateId) async {
+    if (_centerConfigured == false) return _adhocListReadAt;
+    return (await widget.inventoryCacheStore.load(stateId))?.fetchedAt;
   }
 
   Future<void> _onAddPkpr() async {
@@ -1223,7 +1333,7 @@ class _CartPageState extends State<CartPage> {
     }
   }
 
-  /// widget.drawLabel, else the real phone drawing with this page's enrichment store, so what coa_core read from the lab
+  /// widget.drawLabel, else the real phone drawing with this page's enrichment store, so what mazama_core read from the lab
   /// report is kept for a later read from the state system alone (phone_label.dart, SM-D31). [labelInput] is the
   /// server's for the product (PkprGroup.labelInput, README R64): with it the label is drawn without any state call.
   Future<Map<String, Object?>> _drawLabel(int stateId, String pkpr,
@@ -1343,6 +1453,8 @@ class _CartPageState extends State<CartPage> {
                   Text(group.productGuid),
                   if (group.strain.isNotEmpty) Text(group.strain, style: Theme.of(context).textTheme.bodySmall),
                   Text('${group.quantity} in stock (as of last sync)', style: Theme.of(context).textTheme.bodySmall),
+                  // PS-R5 (the owner, 2026-10-30): units only the state knows, and their own figure; a note only
+                  if (group.stateOnlyNote case final note?) Text(note, style: Theme.of(context).textTheme.bodySmall),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: qtyController,
@@ -1460,7 +1572,7 @@ class _CartPageState extends State<CartPage> {
   }
 
   /// Opens the native camera + on-device text recognizer (text_scanner.dart), sends what it read to the
-  /// server's matcher (scan_match_client.dart - coa_core's, the same a label photo gets on the web) or, when the
+  /// server's matcher (scan_match_client.dart - mazama_core's, the same a label photo gets on the web) or, when the
   /// server can't answer, runs that matcher on this phone against the cart's stock (_matchScanLocally), and lands
   /// on exactly the same path manual entry uses: fills _pkprController with the resolved PKPR and calls
   /// _onAddPkpr(), so nothing downstream of that (the label-compare dialog, the quantity/price/dose dialog, merging
@@ -1495,11 +1607,11 @@ class _CartPageState extends State<CartPage> {
     await _onAddPkpr();
   }
 
-  /// The scan matched on this phone (widget.localScanMatch: coa_core through the FFI) against the stock the cart
+  /// The scan matched on this phone (widget.localScanMatch: mazama_core through the FFI) against the stock the cart
   /// already holds, when the server's matcher failed with [error] because it couldn't answer - unreachable or
   /// failing, not a request it refused (ScanMatchError.serverUnavailable; anything that isn't a ScanMatchError is
   /// a failure to reach it too). Null - and the caller shows the server's error as before - when the server refused
-  /// the request, no stock is loaded yet, or coa_core isn't built into this app.
+  /// the request, no stock is loaded yet, or the core can't answer.
   ScanMatchResult? _matchScanLocally(Object error, List<String> lines) {
     if (error is ScanMatchError && !error.serverUnavailable) return null;
     final inventory = _inventory;
@@ -1624,6 +1736,8 @@ class _CartPageState extends State<CartPage> {
         builder: (_) => StockPage(
             center: widget.center,
             fetchPackages: _fetchPackagesForStockPage,
+            readAt: _stockListReadAt,
+            now: widget.now,
             workerEmail: _session.email,
             featureTable: widget.featureTable),
       ),
@@ -1714,8 +1828,15 @@ class _CartPageState extends State<CartPage> {
   /// be sent (SM-25, SM-D20). Every lot a line draws from (allocateLots) is checked with saleLineRefusal, the sale
   /// worker's own rule. A state system that can't be read refuses the sale too: it is never sent unchecked.
   Future<String?> _recheckOldStock() async {
-    final readAt = _stockReadAt;
-    if (readAt != null && widget.now().difference(readAt) <= widget.resilienceOptions.stockRecheckAge) return null;
+    final now = widget.now();
+    final lots = [
+      for (final l in _lines)
+        for (final (lot, _) in allocateLots(l.group.lots, l.qty) ?? const <(Package, int)>[]) lot,
+    ];
+    if (_confirmedRecently(_stateReadAt, now) ||
+        (lots.isNotEmpty && lots.every((lot) => _confirmedRecently(_lotsCheckedAt[lot.id], now)))) {
+      return null;
+    }
     final List<Object?> raw;
     try {
       raw = await widget.fetchRawPackagesFromState(widget.center.id, accessToken: _session.accessToken);
@@ -1732,8 +1853,24 @@ class _CartPageState extends State<CartPage> {
         if (why != null) return why;
       }
     }
-    if (mounted) setState(() => _stockReadAt = widget.now());
+    final at = widget.now();
+    for (final lot in lots) {
+      _lotsCheckedAt[lot.id] = at; // only the lots read again: the rest of the stock on screen is as old as it was
+    }
     return null;
+  }
+
+  /// Whether the state confirmed something at [at] recently enough for a sale at [now] to skip its own read (SM-25): a
+  /// time in the future (the clock moved back since) never counts, so the state is read then.
+  bool _confirmedRecently(DateTime? at, DateTime now) =>
+      at != null && !at.isAfter(now) && now.difference(at) <= widget.resilienceOptions.stockRecheckAge;
+
+  /// Q3: whether the stock on screen is too old to sell from - the one test the Sell button and the stock banner both
+  /// use: when the stock itself was read ([_stockReadAt]: a kept copy's own time; a recheck doesn't move it), on the
+  /// page's clock.
+  bool get _tooOldToSell {
+    final readAt = _stockReadAt;
+    return readAt != null && stockTooOld(readAt, widget.now(), widget.resilienceOptions.cacheMaxAge);
   }
 
   /// The first line holding more units than its lots have, or null (SM-17).
@@ -1745,6 +1882,13 @@ class _CartPageState extends State<CartPage> {
   }
 
   Future<void> _onSellPressed() async {
+    // Q3 (owner, 2026-10-28): stock of any age is shown, but never sold from once it is older than cacheMaxAge.
+    if (_tooOldToSell) {
+      setState(() {}); // the stock strip offers Retry, whatever tier the stock came from (M-1)
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(staleStockRefusal(widget.resilienceOptions.cacheMaxAge))));
+      return;
+    }
     final over = _overStockLine();
     if (over != null) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -1882,6 +2026,8 @@ class _CartPageState extends State<CartPage> {
 
       final saleSpec = await widget.saleSpec;
       saleFlowStarted = true;
+      _stockMovedAt = widget.now(); // the stock may move now: no copy read before this goes on screen (C1)
+      _saleSends++;
       final result = await runFlow(saleSpec, 'sale', {'access_token': _session.accessToken, 'records': records},
           client: client, allowedHosts: currentAllowedHosts());
       final created = result['created'];
@@ -1919,11 +2065,21 @@ class _CartPageState extends State<CartPage> {
       // depends on being reachable at all (see packages_client.dart/label_client.dart's own file comments).
       saleConfirmed = true;
       unawaited(_logSaleAttribution(records, created));
+      // The stock has moved: the next sale reads the state first (SM-25), as after a bulk sale (MC-D13). _stockReadAt
+      // stays the stock's own read time: Q3 still refuses it once it is too old (review I-A).
+      _stateReadAt = null;
+      _lotsCheckedAt.clear();
 
       if (!mounted) return;
       _rememberSoldDose(_cartId, _lines);
       setState(() => _lines.clear());
       _publishTimerWidget();
+      // PS-R6: the center's stock is asked to refresh once the cart is cleared, never awaited (the sale is recorded).
+      try {
+        widget.requestStockRefresh(widget.center.id);
+      } catch (e) {
+        debugPrint('the stock refresh could not be asked for (the sale itself was not affected): $e');
+      }
       // The sale just succeeded, so whatever draft was on disk for this cart is stale the instant this
       // runs - nothing left in it should ever come back on a future restore. Only this cart (MC-D7).
       await widget.cartStore.clear(cartId: _cartId);
@@ -1995,6 +2151,13 @@ class _CartPageState extends State<CartPage> {
       );
     } finally {
       client.close();
+      if (saleFlowStarted) {
+        // whatever the outcome, the stock may have moved: the next sale reads the state first, as the bulk sale (I-E);
+        // and a load that started while this was being sent (so after the count above went up) doesn't vouch (N-1)
+        _saleSends++;
+        _stateReadAt = null;
+        _lotsCheckedAt.clear();
+      }
       if (mounted) setState(() => _selling = false);
       _reloadIfServerBack(); // the sale went through and emptied the cart, or it didn't and the cart waits as it is
     }
@@ -2222,6 +2385,7 @@ class _CartPageState extends State<CartPage> {
     final pricing = _pricingByCart[slots.activeId] ?? _CartPricing(widget.initialPricingMode, '', '', CartTaxMode.included);
     _sessionTimerTicker?.cancel();
     _sessionTimerTicker = null;
+    _switchingCarts++; // C2: no copy goes on screen between this clear and the restore below
     setState(() {
       _slots = slots;
       _lines.clear();
@@ -2235,9 +2399,22 @@ class _CartPageState extends State<CartPage> {
     });
     _saveSlots();
     final id = slots.activeId;
-    final restored = await widget.cartStore.load(widget.center.id, cartId: id, maxAge: _cartSettings.life);
-    if (!mounted || id != _cartId) return;
-    if (restored != null) setState(() => _lines.addAll(restored));
+    List<CartLine>? restored;
+    try {
+      restored = await widget.cartStore.load(widget.center.id, cartId: id, maxAge: _cartSettings.life);
+    } finally {
+      _switchingCarts--; // this switch's own hold only (a later switch keeps its own), even when the load throws
+    }
+    final back = restored ?? const <CartLine>[];
+    if (!mounted || id != _cartId) return; // another switch took over, or the page is gone
+    if (back.isNotEmpty) {
+      setState(() {
+        _lines.addAll(back);
+        // the other cart's lines carry the lots as they were when they were added: no read since vouches for them (I-D)
+        _stateReadAt = null;
+        _lotsCheckedAt.clear();
+      });
+    }
     _recomputeCartPricing(persist: false);
     _reloadIfServerBack();
     await _restoreSessionTimer();
@@ -2480,7 +2657,7 @@ class _CartPageState extends State<CartPage> {
       final why = saleLineRefusal(fresh[d.lot.id], d.lot.productGuid, d.units);
       if (why != null) return why;
     }
-    if (mounted) setState(() => _stockReadAt = widget.now());
+    // (nothing stamped: MC-D13 makes the next sale read the state again in any case)
     return null;
   }
 
@@ -2520,6 +2697,8 @@ class _CartPageState extends State<CartPage> {
           }
           final saleSpec = await widget.saleSpec;
           flowStarted = true;
+          _stockMovedAt = widget.now(); // as the single sale: no copy read before this copy's send goes on screen
+          _saleSends++;
           final result = await runFlow(saleSpec, 'sale', {'access_token': _session.accessToken, 'records': records},
               client: client, allowedHosts: currentAllowedHosts());
           final created = result['created'];
@@ -2563,11 +2742,14 @@ class _CartPageState extends State<CartPage> {
       }
     } finally {
       client.close();
-      // MC-D13: stock has moved (or may have), so the next sale reads it again first
+      // MC-D13: stock has moved (or may have), so the next sale reads it again first; and a load that started while the
+      // last copy was being sent doesn't vouch for what it read (N-1)
+      _saleSends++;
       if (mounted) {
         setState(() {
           _selling = false;
-          _stockReadAt = null;
+          _stateReadAt = null;
+          _lotsCheckedAt.clear(); // _stockReadAt stays the stock's own read time, for Q3 (review I-A)
         });
       }
     }
@@ -2794,7 +2976,7 @@ class _CartPageState extends State<CartPage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(widget.center.licenseName),
-            Text(_slots.active.name, key: const Key('cartName'), style: Theme.of(context).textTheme.bodySmall),
+            _cartNameLine(),
           ],
         ),
         actions: [
@@ -2850,10 +3032,20 @@ class _CartPageState extends State<CartPage> {
                         final title = l.productType.isEmpty ? l.productGuid : l.productType;
                         final doseLabel = l.dose == doseSecondary ? ' · secondary dose' : '';
                         final strainLabel = l.group.strain.isEmpty ? '' : '${l.group.strain} · ';
+                        final summary = Text(
+                            '${l.productGuid} · $strainLabel${l.qty} x ${money(l.priceCentsEach)} · ${l.group.tpeMg}${l.group.mgLabel} each$doseLabel');
+                        // PS-R5 (the owner, 2026-10-30): the line stays priced and capped by the product's figure; units
+                        // only the state knows are noted under it with their own figure
+                        final stateOnlyNote = l.group.stateOnlyNote;
                         return ListTile(
                           title: Text(title),
-                          subtitle: Text(
-                              '${l.productGuid} · $strainLabel${l.qty} x ${money(l.priceCentsEach)} · ${l.group.tpeMg}${l.group.mgLabel} each$doseLabel'),
+                          subtitle: stateOnlyNote == null
+                              ? summary
+                              : Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [summary, Text(stateOnlyNote)],
+                                ),
                           onTap: () => _onEditLine(i), // same dialog a fresh add uses, pre-filled from this line
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -2908,6 +3100,31 @@ class _CartPageState extends State<CartPage> {
     );
   }
 
+  /// The app bar's second line: the cart's name and, once stock is shown, its age (specs/phone-sync PS-R7, PS-D5, Task 8b
+  /// Step 8): when the stock on screen was read ([_stockReadAt], Q3's own time). It shares the name's line so the
+  /// selling screen is no taller: a row of its own above the dose summary pushed the cart's lines under Total/Sell.
+  /// The name keeps up to [_cartNameMaxWidth]; the age takes what is left, shortened with an ellipsis on a narrow phone.
+  Widget _cartNameLine() {
+    final style = Theme.of(context).textTheme.bodySmall;
+    final readAt = _inventory == null ? null : _stockReadAt;
+    final name = Text(_slots.active.name,
+        key: const Key('cartName'), style: style, maxLines: 1, overflow: TextOverflow.ellipsis, softWrap: false);
+    if (readAt == null) return name;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ConstrainedBox(constraints: const BoxConstraints(maxWidth: _cartNameMaxWidth), child: name),
+        Text(' · ', style: style),
+        Flexible(
+          child: Text(updatedLine(readAt, widget.now()),
+              key: updatedLineKey, style: style, maxLines: 1, overflow: TextOverflow.ellipsis, softWrap: false),
+        ),
+      ],
+    );
+  }
+
+  static const _cartNameMaxWidth = 140.0;
+
   Widget _inventoryBanner() {
     if (_inventoryError != null) {
       return Material(
@@ -2917,7 +3134,7 @@ class _CartPageState extends State<CartPage> {
           child: Row(
             children: [
               Expanded(child: Text('Inventory did not load: $_inventoryError')),
-              TextButton(onPressed: _loadInventory, child: const Text('Retry')),
+              TextButton(onPressed: _selling ? null : _loadInventory, child: const Text('Retry')),
             ],
           ),
         ),
@@ -2949,16 +3166,23 @@ class _CartPageState extends State<CartPage> {
   }
 
   /// A plain, non-blocking strip above the usual inventory banner when _inventorySource (set by _loadInventory) is
-  /// the cache or the adhoc path - see resilient_inventory.dart's own file comment for what each fallback tier can and
+  /// the cache or the adhoc path - see lib/sync/center_stock.dart's own file comment for what each fallback step can and
   /// can't promise. Null (nothing shown) for the live, ordinary case, and for stock read from the state system alone
   /// ([InventorySource.state]): that only means Mazama's server didn't answer, which the app-wide banner says
-  /// (server_link.dart, README R87); each line still says which figures are the state's (Package.mgFigure).
+  /// (server_link.dart, README R87); each line still says which figures are the state's (Package.mgFigure) - unless
+  /// that stock is too old to sell from (Q3), when it offers Retry (review M-1).
   Widget? _degradedInventoryNotice() {
     final source = _inventorySource;
-    if (source == null || source == InventorySource.live || source == InventorySource.state) return null;
+    if (source == null) return null;
+    final ownRead = source == InventorySource.live || source == InventorySource.state;
+    if (ownRead && !_tooOldToSell) return null;
     final String text;
     IconData icon = Icons.cloud_off;
-    if (source == InventorySource.adhoc) {
+    if (ownRead) {
+      // Q3 refuses this stock, and its refusal says Retry: the strip offers it, as the kept copy's does (review M-1)
+      icon = Icons.history;
+      text = 'The stock on this phone is too old to sell from. Retry to load it again.';
+    } else if (source == InventorySource.adhoc) {
       // This center isn't configured in Mazama yet - there is no "server down" problem to retry past, so this
       // case gets its own icon/wording rather than reusing the cloud-off "something's unreachable" framing the
       // cache tier has. See coa_data_resolver.dart's own file comment for what's actually happening:
@@ -2979,8 +3203,10 @@ class _CartPageState extends State<CartPage> {
       final asOf = _inventoryAsOf;
       final age = asOf == null ? '' : ' from ${_formatAge(widget.now().difference(asOf))} ago';
       // Mazama's server didn't answer either: the app-wide banner says that (README R87); this is about the state.
+      final tooOld = _tooOldToSell;
       text = 'The state system couldn\'t be reached - showing the last inventory '
-          'downloaded$age. Counts may no longer be accurate.${cachedEstimatesNote(_inventory ?? const [])}';
+          'downloaded$age. Counts may no longer be accurate.${cachedEstimatesNote(_inventory ?? const [])}'
+          '${tooOld ? ' It is too old to sell from: Retry once the state system can be reached.' : ''}';
     }
     return Material(
       color: Theme.of(context).colorScheme.tertiaryContainer,
@@ -2993,7 +3219,7 @@ class _CartPageState extends State<CartPage> {
             Expanded(child: Text(text)),
             // The adhoc banner shows only once the load has returned (_inventorySource is set then): Retry is offered
             // even while some lots are still being uploaded in the background or have no lab report on file.
-            TextButton(onPressed: _loadInventory, child: const Text('Retry')),
+            TextButton(onPressed: _selling ? null : _loadInventory, child: const Text('Retry')),
           ],
         ),
       ),

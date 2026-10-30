@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "scan.closest input",
+  "description": "Scan matching, step two: a label's text lines and the packages it may be (only records that can be sold).",
+  "type": "object",
+  "required": [
+    "texts",
+    "packages"
+  ],
+  "properties": {
+    "texts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "packages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "guid",
+          "records"
+        ],
+        "properties": {
+          "guid": {
+            "type": "string"
+          },
+          "records": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "weightPerUnit": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "analyteWeight": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "description": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "quantity": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "expires": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "pattern": "^\\d{4}-\\d\\d-\\d\\d$"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -8,11 +8,16 @@
 // On every launch, MazamaApp itself checks for a session saved by a previous run (session_store.dart) before
 // ever showing this sign-in form - see its own _resolveHome for exactly what that does and doesn't cover.
 import 'dart:async';
+import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart' show getTemporaryDirectory;
 
+import 'app_update_check.dart';
+import 'app_update_download.dart' show clearUpdates;
+import 'app_update_store.dart';
 import 'browser_login_spec.dart';
 import 'browser_sign_in_page.dart';
 import 'cart_timer_widget.dart';
@@ -22,10 +27,12 @@ import 'demo/demo_banner.dart';
 import 'device_id.dart';
 import 'flow/flow_runner.dart';
 import 'flow/flow_spec.dart';
+import 'github_signin_files.dart';
 import 'login_hosts_client.dart';
 import 'login_hosts_store.dart';
 import 'login_spec_client.dart';
 import 'login_spec_store.dart';
+import 'missing_core_app.dart';
 import 'open_source_link.dart';
 import 'resilience_options.dart';
 import 'select_center_page.dart';
@@ -45,7 +52,8 @@ Future<void> main() async {
   // Where a build-specific offline-resilience tweak goes (resilience_options.dart's own file comment) - e.g.
   // `const MazamaApp(resilienceOptions: ResilienceOptions(cacheMaxAge: Duration(days: 1)))` for a build that
   // wants a tighter cache window. Left at the default here, same as every call site before this existed.
-  runApp(const MazamaApp());
+  // CR-R3: the shared core is loaded once, here, before the first frame; without it the app shows MissingCoreApp
+  runApp(startWidgetFor());
 }
 
 /// Sends the worker back to a fresh sign-in, clearing whatever session was stored - the one path both
@@ -95,6 +103,10 @@ class _MazamaAppState extends State<MazamaApp> with WidgetsBindingObserver {
   /// The app's server link, made the app-wide one ([useServerLink]) before any page can call a /p/ route.
   late final ServerLink _link;
 
+  /// specs/app-updates AU-R8: the app's update checker ([useAppUpdateChecker]), checking at start-up and whenever the
+  /// app comes back to the foreground (at most every 6 hours, Android only, never in the demo), unawaited.
+  late final AppUpdateChecker _updates;
+
   @override
   void initState() {
     super.initState();
@@ -102,17 +114,29 @@ class _MazamaAppState extends State<MazamaApp> with WidgetsBindingObserver {
     useServerLink(_link);
     WidgetsBinding.instance.addObserver(this);
     _link.wake(); // anything a previous run left waiting, if the server answers
+    _updates = AppUpdateChecker(store: AppUpdateStore(dataDir: widget.sessionStore.dataDir));
+    useAppUpdateChecker(_updates);
+    // AU-D11: a download a previous run left behind is deleted (none on a phone that never updated)
+    if (Platform.isAndroid) unawaited(getTemporaryDirectory().then(clearUpdates).catchError((Object _) {}));
+    unawaited(_updates.check());
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) _link.onForeground();
+    if (state == AppLifecycleState.resumed) {
+      _link.onForeground();
+      unawaited(_updates.check());
+    } else if (state == AppLifecycleState.paused || state == AppLifecycleState.hidden) {
+      _link.onBackground(); // specs/phone-sync PS-D6: no refresh in the background
+    }
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     releaseServerLink(_link);
+    releaseAppUpdateChecker(_updates);
+    _updates.dispose();
     if (widget.serverLink == null) _link.dispose();
     super.dispose();
   }
@@ -307,7 +331,7 @@ class SignInPage extends StatefulWidget {
   /// Injected by tests so nothing is posted or written to disk.
   final SigninFailureReporter? reportSigninFailure;
 
-  /// SL-R10: asks for the newest sign-in spec after a failed sign-in (not `credentials`); null means fetchLoginSpec
+  /// SL-R10: asks for the newest sign-in spec after a failed sign-in (not `credentials`); null means requestLoginSpec
   /// (Mazama's server, through the server link). Answers null when there is none to be had.
   final Future<FetchedSpec?> Function()? fetchSpec;
 
@@ -316,7 +340,7 @@ class SignInPage extends StatefulWidget {
   final LoginSpecStore? specStore;
 
   /// SL-R18: asks for the owner's signed host list, alongside [fetchSpec], and answers it only when it verifies
-  /// against the bundled key; null means fetchLoginHosts (Mazama's server, through the server link). Answers null
+  /// against the bundled key; null means requestLoginHosts and verifiedLoginHostsReply (Mazama's server, through the server link). Answers null
   /// when there is none to be had.
   final Future<HostList?> Function()? fetchHosts;
 
@@ -338,7 +362,7 @@ class SignInPage extends StatefulWidget {
   final Future<FlowSpec> Function()? browserSpec;
 
   /// SL-R19: asks for the newest browser sign-in spec after a failed browser sign-in (not `cancelled`/`credentials`);
-  /// null means fetchBrowserLoginSpec (Mazama's server, through the server link). Answers null when there is none.
+  /// null means requestBrowserLoginSpec (Mazama's server, through the server link). Answers null when there is none.
   final Future<FetchedSpec?> Function()? fetchBrowserSpec;
 
   /// SL-R19: where a newer browser spec that just signed in is kept; null means a LoginSpecStore.browser in the
@@ -347,6 +371,20 @@ class SignInPage extends StatefulWidget {
 
   /// PA-R6: opens the link to this app's published source; null means the phone's browser. Injected by tests.
   final Future<bool> Function(Uri uri)? openLink;
+
+  /// specs/app-updates AU-R17: whether Mazama's server can't answer (the server link counts it offline); null means
+  /// the app's server link. Asked only after a fetch above answered nothing.
+  final bool Function()? serverOffline;
+
+  /// AU-R17: the signed sign-in spec read from GitHub when the server can't answer, given the attempt's hosts; null
+  /// means github_signin_files.dart's githubLoginSpec (login.yaml). Injected by tests.
+  final Future<FetchedSpec?> Function(Iterable<String> allowedHosts)? githubFetchSpec;
+
+  /// AU-R17: as [githubFetchSpec], for the browser sign-in (login_browser.yaml).
+  final Future<FetchedSpec?> Function(Iterable<String> allowedHosts)? githubFetchBrowserSpec;
+
+  /// AU-R17: the signed host list read from GitHub when the server can't answer; null means githubHostList.
+  final Future<HostList?> Function()? githubFetchHosts;
 
   const SignInPage({
     super.key,
@@ -365,6 +403,10 @@ class SignInPage extends StatefulWidget {
     this.fetchBrowserSpec,
     this.browserSpecStore,
     this.openLink,
+    this.serverOffline,
+    this.githubFetchSpec,
+    this.githubFetchBrowserSpec,
+    this.githubFetchHosts,
   });
 
   @override
@@ -429,13 +471,51 @@ class _SignInPageState extends State<SignInPage> {
 
   /// SL-R10: the newest sign-in spec to be had, or null - a fetch that fails or throws (even before returning a
   /// Future) counts as none. The default fetch holds the reply to [allowedHosts] (the hosts of this attempt).
+  ///
+  /// AU-R17: when that answers nothing and the server can't answer, the owner's signed login.yaml from GitHub
+  /// (verified with the bundled key, usable under [allowedHosts]); when the server answers, GitHub is not asked.
   Future<FetchedSpec?> _fetchSpec(Iterable<String> allowedHosts) async {
     final Future<FetchedSpec?> Function() fetch =
-        widget.fetchSpec ?? () => fetchLoginSpec(allowedHosts: allowedHosts);
+        widget.fetchSpec ?? () => requestLoginSpec(allowedHosts: allowedHosts);
+    final (fetched, noAnswer) = await _tryFetch(fetch);
+    if (fetched != null || !(noAnswer || _serverOffline())) return fetched;
+    final Future<FetchedSpec?> Function(Iterable<String>) github = widget.githubFetchSpec ??
+        (Iterable<String> hosts) => githubLoginSpec(served: ServedAs.login, allowedHosts: hosts);
+    return _orNull(() => github(allowedHosts));
+  }
+
+  /// [fetch]'s answer (null when it fails or throws, even before returning a Future), and whether it failed for want
+  /// of any answer from the server (no connection, a timeout): AU-R17 then asks GitHub, whatever the server link has
+  /// noticed yet (review I1: the link counts the server offline only after its own, longer, read timeout).
+  Future<(T?, bool)> _tryFetch<T>(Future<T?> Function() fetch) async {
     try {
-      return await Future<FetchedSpec?>.sync(fetch);
+      return (await Future<T?>.sync(fetch), false);
+    } catch (e) {
+      return (null, _noAnswer(e));
+    }
+  }
+
+  static bool _noAnswer(Object e) =>
+      (e is LoginSpecError && e.unreachable) ||
+      (e is LoginHostsError && e.unreachable) ||
+      e is TimeoutException ||
+      e is http.ClientException;
+
+  /// [fetch]'s answer, or null when it fails or throws (even before returning a Future).
+  Future<T?> _orNull<T>(Future<T?> Function() fetch) async {
+    try {
+      return await Future<T?>.sync(fetch);
     } catch (_) {
       return null;
+    }
+  }
+
+  /// AU-R17: Mazama's server can't answer (the server link counts it offline).
+  bool _serverOffline() {
+    try {
+      return (widget.serverOffline ?? () => serverLink.health.offline)();
+    } catch (_) {
+      return false;
     }
   }
 
@@ -443,12 +523,12 @@ class _SignInPageState extends State<SignInPage> {
   /// [allowedHosts] and to the browser served mode.
   Future<FetchedSpec?> _fetchBrowserSpec(Iterable<String> allowedHosts) async {
     final Future<FetchedSpec?> Function() fetch =
-        widget.fetchBrowserSpec ?? () => fetchBrowserLoginSpec(allowedHosts: allowedHosts);
-    try {
-      return await Future<FetchedSpec?>.sync(fetch);
-    } catch (_) {
-      return null;
-    }
+        widget.fetchBrowserSpec ?? () => requestBrowserLoginSpec(allowedHosts: allowedHosts);
+    final (fetched, noAnswer) = await _tryFetch(fetch);
+    if (fetched != null || !(noAnswer || _serverOffline())) return fetched;
+    final Future<FetchedSpec?> Function(Iterable<String>) github = widget.githubFetchBrowserSpec ??
+        (Iterable<String> hosts) => githubLoginSpec(served: ServedAs.browser, allowedHosts: hosts);
+    return _orNull(() => github(allowedHosts));
   }
 
   LoginSpecStore get _browserSpecStore =>
@@ -474,13 +554,15 @@ class _SignInPageState extends State<SignInPage> {
   }
 
   /// SL-R18: the signed host list to be had (verified), or null - a fetch that fails or throws counts as none.
+  ///
+  /// AU-R17: when that answers nothing and the server can't answer, the owner's signed hosts.json from GitHub
+  /// (verified with the bundled key; kept as any list is, only when newer and after a sign-in it enabled).
   Future<HostList?> _fetchHosts() async {
-    final Future<HostList?> Function() fetch = widget.fetchHosts ?? fetchLoginHosts;
-    try {
-      return await Future<HostList?>.sync(fetch);
-    } catch (_) {
-      return null;
-    }
+    final Future<HostList?> Function() fetch =
+        widget.fetchHosts ?? () async => verifiedLoginHostsReply(await requestLoginHosts());
+    final (fetched, noAnswer) = await _tryFetch(fetch);
+    if (fetched != null || !(noAnswer || _serverOffline())) return fetched;
+    return _orNull(widget.githubFetchHosts ?? githubHostList);
   }
 
   /// FlowError's own message is already scrubbed of email/password/tokens (see flow_runner.dart's defaultSecretKeys)

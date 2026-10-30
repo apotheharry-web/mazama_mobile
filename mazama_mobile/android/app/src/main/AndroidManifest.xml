@@ -4,6 +4,10 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <!-- CartTimersWidget.kt redraws its clocks after a restart (they count on a clock that restarts from zero). -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- specs/app-updates AU-R13: hand a downloaded, checked update to Android's installer, which always asks the worker
+         to confirm (AppInstaller.kt). Android also needs "install unknown apps" on for the app; the app opens that
+         setting when it is off and installs nothing. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <uses-feature android:name="android.hardware.camera.any" android:required="false" />
 
     <application
@@ -57,6 +61,11 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
+        <!-- The installer session's status (AppInstaller.kt): starts Android's own confirmation screen. -->
+        <receiver
+            android:name=".AppInstallReceiver"
+            android:exported="false" />
+
         <!-- The cart timers home-screen widget (CartTimersWidget.kt, specs/multi-cart MC-D15). TIME_SET,
              TIMEZONE_CHANGED and BOOT_COMPLETED are among the broadcasts a manifest receiver still gets: each
              row's clock is worked out from the wall clock and the since-boot clock, so a change to either redraws
@@ -92,6 +101,14 @@
              resolve the intent to the device's camera app at all. -->
         <intent>
             <action android:name="android.media.action.IMAGE_CAPTURE"/>
+        </intent>
+        <!-- AppInstallReceiver checks that Android's install confirmation opens a system app before starting it
+             (specs/app-updates review N1): the package installer must be visible to resolveActivity. -->
+        <intent>
+            <action android:name="android.content.pm.action.CONFIRM_INSTALL"/>
+        </intent>
+        <intent>
+            <action android:name="android.content.pm.action.CONFIRM_PERMISSIONS"/>
         </intent>
     </queries>
 </manifest>

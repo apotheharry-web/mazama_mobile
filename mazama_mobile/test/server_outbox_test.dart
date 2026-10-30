@@ -13,6 +13,7 @@ import 'package:mazama_mobile/sale_failure_client.dart';
 import 'package:mazama_mobile/sale_log_client.dart';
 import 'package:mazama_mobile/server_health.dart';
 import 'package:mazama_mobile/server_outbox.dart';
+import 'package:mazama_mobile/sync/sync_tables.dart';
 
 import 'fake_timers.dart';
 
@@ -97,7 +98,8 @@ void main() {
     await again.flush();
     expect([for (final e in sent) e.clientId], [a, b, c]);
     expect(again.pendingCount, 0);
-    expect(OutboxStore(dataDir: () => _dir).load().pending, isEmpty);
+    expect(SyncTables(LocalStore.forDir(_dir)).items('sale_log'), isEmpty);
+    expect(SyncTables(LocalStore.forDir(_dir)).items('sale_failure'), isEmpty);
   });
 
   test('an unreachable send keeps the report and stops; the next online flush picks it up again', () async {
@@ -235,12 +237,13 @@ void main() {
     expect([for (final e in outbox(dir: damaged).pending) e.clientId], ['c-1']);
   });
 
-  test('kept in the database, not in a file', () async {
+  test('kept in the sync queue, not in a file or the old document (specs/phone-sync)', () async {
     health.markUnreachable();
     await log(outbox());
     expect(File('${_dir.path}/server_outbox.json').existsSync(), isFalse);
     expect(File('${_dir.path}/server_outbox.json.tmp').existsSync(), isFalse);
-    expect(LocalStore.forDir(_dir).read('server_outbox.json'), isNotNull);
+    expect(LocalStore.forDir(_dir).read('server_outbox.json'), isNull);
+    expect(SyncTables(LocalStore.forDir(_dir)).items('sale_log'), hasLength(1));
   });
 
   test('records the sale exactly as given', () async {

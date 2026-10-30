@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "manufacturing.coa_number input",
+  "description": "specs/core row 12: a typed mg/g figure; `required` false lets a blank mean 0.",
+  "type": "object",
+  "required": [
+    "text",
+    "required"
+  ],
+  "properties": {
+    "text": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "required": {
+      "type": "boolean"
+    }
+  }
+}

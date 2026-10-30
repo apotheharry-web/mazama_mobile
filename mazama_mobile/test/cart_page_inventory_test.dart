@@ -239,7 +239,10 @@ void main() {
     expect(find.textContaining('server unreachable'), findsOneWidget);
   });
 
-  testWidgets('resilienceOptions.cacheMaxAge shortens the window a cached inventory is still trusted in', (tester) async {
+  // Q3 (specs/phone-sync phase 3): kept stock is shown at any age, with its age; cacheMaxAge is how old it may be
+  // to be sold from (test/cart_page_selling_guarantees_test.dart holds the refusal itself).
+  testWidgets('resilienceOptions.cacheMaxAge: kept stock older than it is still shown, marked too old to sell from',
+      (tester) async {
     final store = InventoryCacheStore(dataDir: () => tempDir);
     final fetchedAt = DateTime.now().subtract(const Duration(hours: 2));
     await store.save(center.id, inventory, fetchedAt);
@@ -247,13 +250,14 @@ void main() {
       fetchPackages: (id) async => throw Exception('mazama server unreachable'),
       fetchPackagesFromState: (stateId, {required accessToken}) async => throw StatePackagesError('state unreachable too'),
       inventoryCacheStore: store,
-      // A 2-hour-old cache would normally be well within the default 3-day window - this build's own 1-hour
-      // window means it's already too old to trust, so the original tier-1 error should surface instead.
+      // A 2-hour-old copy is well within the default 3 days; this build's 1-hour limit makes it too old to sell from.
       resilienceOptions: const ResilienceOptions(cacheMaxAge: Duration(hours: 1)),
     ));
     await tester.pumpAndSettle();
-    expect(find.textContaining('server unreachable'), findsOneWidget);
-    expect(find.textContaining("The state system couldn't be reached"), findsNothing);
+    expect(find.textContaining("The state system couldn't be reached - showing the last inventory downloaded from 2 hours ago"),
+        findsOneWidget);
+    expect(find.textContaining('too old to sell from'), findsOneWidget);
+    expect(find.textContaining('server unreachable'), findsNothing);
   });
 
   testWidgets('centerIsConfigured false: switches to the adhoc flow entirely, never touching fetchPackages', (tester) async {

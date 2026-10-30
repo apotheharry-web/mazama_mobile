@@ -1,11 +1,13 @@
 // InventoryCacheStore itself has no Flutter dependency (plain dart:io, like SessionStore/CartStore), but lives
 // under test/ alongside everything else in this app - same reasoning as cart_store_test.dart.
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mazama_mobile/inventory_cache_store.dart';
 import 'package:mazama_mobile/local_store.dart';
 import 'package:mazama_mobile/packages_client.dart';
+import 'package:mazama_mobile/sync/sync_datasets.dart';
 
 void main() {
   late Directory tempDir;
@@ -76,10 +78,31 @@ void main() {
     expect(await store().load(231), isNull);
   });
 
-  test('kept in the database, not in a file', () async {
-    await store().save(231, packages, fetchedAt);
+  test("kept in the database as the center's center_stock dataset (specs/phone-sync phase 3), not in a file", () async {
+    await store().save(231, packages, fetchedAt, source: sourceState);
     expect(File('${tempDir.path}/nested/inventory_cache.json').existsSync(), isFalse);
-    expect(LocalStore.forDir(Directory('${tempDir.path}/nested')).read('inventory_cache.json'), isNotNull);
+    final row = Datasets.forDir(() => Directory('${tempDir.path}/nested')).read(Dataset.centerStock, '231')!;
+    expect([row.source, row.fetchedAt, (jsonDecode(row.body) as Map)['source']], [sourceState, fetchedAt, sourceState]);
+  });
+
+  test("each center's stock is kept: a second center doesn't replace the first", () async {
+    final s = store();
+    await s.save(231, packages, fetchedAt);
+    await s.save(183, [packages.first], fetchedAt);
+    expect((await s.load(231))!.packages, hasLength(2));
+    expect((await s.load(183))!.packages, hasLength(1));
+  });
+
+  test("an older build's inventory_cache.json is moved into the dataset on first use, with its time", () async {
+    final dir = Directory('${tempDir.path}/older')..createSync(recursive: true);
+    File('${dir.path}/inventory_cache.json').writeAsStringSync(jsonEncode({
+      'centerId': 231,
+      'fetchedAtMs': fetchedAt.millisecondsSinceEpoch,
+      'packages': [for (final p in packages) p.toJson()],
+    }));
+    final restored = (await InventoryCacheStore(dataDir: () => dir).load(231))!;
+    expect([restored.fetchedAt, restored.packages.length, restored.packages[0].strain], [fetchedAt, 2, 'Golden Teacher']);
+    expect(LocalStore.forDir(dir).read('inventory_cache.json'), isNull);
   });
 
   test('two independent stores pointed at different directories do not see each other\'s data', () async {

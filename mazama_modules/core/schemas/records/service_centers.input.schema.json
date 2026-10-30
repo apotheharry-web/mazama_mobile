@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "records.service_centers input",
+  "description": "specs/core row 10 (SM-21): a GetApplicableLicenses answer as the state system sent it; an entry that is not an object is skipped.",
+  "type": "object",
+  "required": [
+    "licenses"
+  ],
+  "properties": {
+    "licenses": {
+      "type": "array",
+      "items": true
+    }
+  }
+}

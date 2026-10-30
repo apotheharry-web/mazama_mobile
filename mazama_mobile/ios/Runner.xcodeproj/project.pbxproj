@@ -198,7 +198,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 97C147051CF9000F007C117D /* Build configuration list for PBXNativeTarget "Runner" */;
 			buildPhases = (
-				C0A0C0DE2E9A4F1000B1D5A1 /* Build coa_core_ffi */,
+				C0A0C0DE2E9A4F1000B1D5A1 /* Build mazama_core_ffi */,
 				39C44C0A3B5C9581332F6DAA /* Embed Foundation Extensions */,
 				9740EEB61CF901F6004384FC /* Run Script */,
 				97C146EA1CF9000F007C117D /* Sources */,
@@ -306,7 +306,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		C0A0C0DE2E9A4F1000B1D5A1 /* Build coa_core_ffi */ = {
+		C0A0C0DE2E9A4F1000B1D5A1 /* Build mazama_core_ffi */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -314,13 +314,13 @@
 			);
 			inputPaths = (
 			);
-			name = "Build coa_core_ffi";
+			name = "Build mazama_core_ffi";
 			outputPaths = (
-				"$(TARGET_TEMP_DIR)/coa_core_ffi/libcoa_core_ffi.a",
+				"$(TARGET_TEMP_DIR)/mazama_core_ffi/libmazama_core_ffi.a",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "/bin/sh \"$PROJECT_DIR/build_coa_core_ffi.sh\"\n";
+			shellScript = "/bin/sh \"$PROJECT_DIR/build_mazama_core_ffi.sh\"\n";
 		};
 		3B06AD1E1E4923F5004D2608 /* Thin Binary */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -487,15 +487,34 @@
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-force_load",
-					"\"$(TARGET_TEMP_DIR)/coa_core_ffi/libcoa_core_ffi.a\"",
-					"-Wl,-u,_coa_parse_json",
-					"-Wl,-u,_coa_label_spec_json",
-					"-Wl,-u,_coa_find_lot_json",
-					"-Wl,-u,_coa_name_json",
-					"-Wl,-u,_coa_version",
-					"-Wl,-u,_coa_free",
-					"-Wl,-u,_coa_scan_find_ids_json",
-					"-Wl,-u,_coa_scan_closest_json",
+					"\"$(TARGET_TEMP_DIR)/mazama_core_ffi/libmazama_core_ffi.a\"",
+					"-Wl,-u,_mz_coa_parse_json",
+					"-Wl,-u,_mz_coa_parse_with_rules_json",
+					"-Wl,-u,_mz_coa_find_lot_json",
+					"-Wl,-u,_mz_coa_select_documents_json",
+					"-Wl,-u,_mz_label_spec_json",
+					"-Wl,-u,_mz_names_name_json",
+					"-Wl,-u,_mz_scan_find_ids_json",
+					"-Wl,-u,_mz_scan_closest_json",
+					"-Wl,-u,_mz_records_judge_json",
+					"-Wl,-u,_mz_records_can_transfer_json",
+					"-Wl,-u,_mz_records_package_keys_json",
+					"-Wl,-u,_mz_records_service_centers_json",
+					"-Wl,-u,_mz_stock_filter_json",
+					"-Wl,-u,_mz_stock_summarize_json",
+					"-Wl,-u,_mz_stock_pies_json",
+					"-Wl,-u,_mz_stock_par_table_json",
+					"-Wl,-u,_mz_stock_mix_json",
+					"-Wl,-u,_mz_stock_mix_cells_json",
+					"-Wl,-u,_mz_stock_by_type_json",
+					"-Wl,-u,_mz_stock_order_check_json",
+					"-Wl,-u,_mz_stock_order_form_json",
+					"-Wl,-u,_mz_manufacturing_coa_edit_json",
+					"-Wl,-u,_mz_manufacturing_coa_number_json",
+					"-Wl,-u,_mz_manufacturing_clean_text_json",
+					"-Wl,-u,_mz_names_product_name_json",
+					"-Wl,-u,_mz_version",
+					"-Wl,-u,_mz_free",
 					"-weak_framework",
 					WidgetKit,
 				);
@@ -683,15 +702,34 @@
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-force_load",
-					"\"$(TARGET_TEMP_DIR)/coa_core_ffi/libcoa_core_ffi.a\"",
-					"-Wl,-u,_coa_parse_json",
-					"-Wl,-u,_coa_label_spec_json",
-					"-Wl,-u,_coa_find_lot_json",
-					"-Wl,-u,_coa_name_json",
-					"-Wl,-u,_coa_version",
-					"-Wl,-u,_coa_free",
-					"-Wl,-u,_coa_scan_find_ids_json",
-					"-Wl,-u,_coa_scan_closest_json",
+					"\"$(TARGET_TEMP_DIR)/mazama_core_ffi/libmazama_core_ffi.a\"",
+					"-Wl,-u,_mz_coa_parse_json",
+					"-Wl,-u,_mz_coa_parse_with_rules_json",
+					"-Wl,-u,_mz_coa_find_lot_json",
+					"-Wl,-u,_mz_coa_select_documents_json",
+					"-Wl,-u,_mz_label_spec_json",
+					"-Wl,-u,_mz_names_name_json",
+					"-Wl,-u,_mz_scan_find_ids_json",
+					"-Wl,-u,_mz_scan_closest_json",
+					"-Wl,-u,_mz_records_judge_json",
+					"-Wl,-u,_mz_records_can_transfer_json",
+					"-Wl,-u,_mz_records_package_keys_json",
+					"-Wl,-u,_mz_records_service_centers_json",
+					"-Wl,-u,_mz_stock_filter_json",
+					"-Wl,-u,_mz_stock_summarize_json",
+					"-Wl,-u,_mz_stock_pies_json",
+					"-Wl,-u,_mz_stock_par_table_json",
+					"-Wl,-u,_mz_stock_mix_json",
+					"-Wl,-u,_mz_stock_mix_cells_json",
+					"-Wl,-u,_mz_stock_by_type_json",
+					"-Wl,-u,_mz_stock_order_check_json",
+					"-Wl,-u,_mz_stock_order_form_json",
+					"-Wl,-u,_mz_manufacturing_coa_edit_json",
+					"-Wl,-u,_mz_manufacturing_coa_number_json",
+					"-Wl,-u,_mz_manufacturing_clean_text_json",
+					"-Wl,-u,_mz_names_product_name_json",
+					"-Wl,-u,_mz_version",
+					"-Wl,-u,_mz_free",
 					"-weak_framework",
 					WidgetKit,
 				);
@@ -721,15 +759,34 @@
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-force_load",
-					"\"$(TARGET_TEMP_DIR)/coa_core_ffi/libcoa_core_ffi.a\"",
-					"-Wl,-u,_coa_parse_json",
-					"-Wl,-u,_coa_label_spec_json",
-					"-Wl,-u,_coa_find_lot_json",
-					"-Wl,-u,_coa_name_json",
-					"-Wl,-u,_coa_version",
-					"-Wl,-u,_coa_free",
-					"-Wl,-u,_coa_scan_find_ids_json",
-					"-Wl,-u,_coa_scan_closest_json",
+					"\"$(TARGET_TEMP_DIR)/mazama_core_ffi/libmazama_core_ffi.a\"",
+					"-Wl,-u,_mz_coa_parse_json",
+					"-Wl,-u,_mz_coa_parse_with_rules_json",
+					"-Wl,-u,_mz_coa_find_lot_json",
+					"-Wl,-u,_mz_coa_select_documents_json",
+					"-Wl,-u,_mz_label_spec_json",
+					"-Wl,-u,_mz_names_name_json",
+					"-Wl,-u,_mz_scan_find_ids_json",
+					"-Wl,-u,_mz_scan_closest_json",
+					"-Wl,-u,_mz_records_judge_json",
+					"-Wl,-u,_mz_records_can_transfer_json",
+					"-Wl,-u,_mz_records_package_keys_json",
+					"-Wl,-u,_mz_records_service_centers_json",
+					"-Wl,-u,_mz_stock_filter_json",
+					"-Wl,-u,_mz_stock_summarize_json",
+					"-Wl,-u,_mz_stock_pies_json",
+					"-Wl,-u,_mz_stock_par_table_json",
+					"-Wl,-u,_mz_stock_mix_json",
+					"-Wl,-u,_mz_stock_mix_cells_json",
+					"-Wl,-u,_mz_stock_by_type_json",
+					"-Wl,-u,_mz_stock_order_check_json",
+					"-Wl,-u,_mz_stock_order_form_json",
+					"-Wl,-u,_mz_manufacturing_coa_edit_json",
+					"-Wl,-u,_mz_manufacturing_coa_number_json",
+					"-Wl,-u,_mz_manufacturing_clean_text_json",
+					"-Wl,-u,_mz_names_product_name_json",
+					"-Wl,-u,_mz_version",
+					"-Wl,-u,_mz_free",
 					"-weak_framework",
 					WidgetKit,
 				);

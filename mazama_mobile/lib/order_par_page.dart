@@ -6,7 +6,7 @@
 // It loads the center's stock (for the units on hand) and par levels together, through the same loaders the stock
 // page uses (select_center_page.dart). Stock that doesn't load still lets the par levels be set (on hand shows 0); par
 // levels that don't load can only be retried. Partial stock (the server unreachable, SP-R13), or par levels that are
-// the copy kept on the phone (Mazama's server can't be reached, server_offline.dart), show the table read-only: the
+// the copy kept on the phone (Mazama's server can't be reached, sync/server_read.dart), show the table read-only: the
 // levels can be confirmed but not saved, and the editor says why. The page has no notice of its own that the server
 // can't be reached: the app-wide banner says so (server_link.dart, README R87), and the page reloads by itself once
 // the server answers again.
@@ -18,8 +18,8 @@ import 'licenses_client.dart';
 import 'par_levels_editor.dart';
 import 'responsive.dart';
 import 'server_health.dart';
-import 'server_offline.dart';
-import 'stock_cache_store.dart';
+import 'sync/server_read.dart' show ServerRead;
+import 'par_columns.dart';
 import 'stock_rows.dart';
 import 'stock_summary.dart';
 

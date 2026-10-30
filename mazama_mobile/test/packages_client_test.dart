@@ -101,6 +101,22 @@ void main() {
       expect([PkprGroup([phone]).mgLabel, PkprGroup([phone, stateOnly]).mgLabel], ['mg TPE', 'mg psilocybin']);
     });
 
+    test('PS-R5: a lot only the state lists keeps its mark through a saved copy, and its product says how many and what figure', () {
+      Package lot(int id, {int tpeMg = 8, int quantity = 3, bool stateOnly = false, DateTime? expires}) => Package(
+          productGuid: 'G-1', productType: 'Extract', id: id, weightPerUnit: 5, analyteWeight: 1, tpeMg: tpeMg,
+          quantity: quantity, stateOnly: stateOnly, expires: expires);
+      final joined = lot(1, expires: DateTime(2027, 3, 1));
+      final s1 = lot(2, tpeMg: 6, quantity: 2, stateOnly: true), s2 = lot(3, tpeMg: 5, quantity: 1, stateOnly: true);
+      expect([Package.fromJson(s1.toJson()).stateOnly, Package.fromJson(joined.toJson()).stateOnly], [true, false]);
+      expect(joined.toJson().containsKey('stateOnly'), isFalse);
+      expect(s1.mgFigure, MgFigure.tpe); // not a stateEstimate: the product keeps showing the joined lot's figure
+      expect(PkprGroup([joined]).stateOnlyNote, isNull);
+      expect(PkprGroup([joined, s1]).stateOnlyNote, 'includes 2 unit(s) known only by the state: 6 mg psilocybin each');
+      expect(PkprGroup([joined, s1, s2]).stateOnlyNote, 'includes 3 unit(s) known only by the state: 5 or 6 mg psilocybin each');
+      // the figure, price and cap inputs stay the product's first lot's
+      expect([PkprGroup([s1, joined]).tpeMg, PkprGroup([s1, joined]).mgLabel], [8, 'mg TPE']);
+    });
+
     test('a 404 says so in its status, so the stock page can tell "not set up" from "unreachable"', () async {
       await expectLater(fetchPackages(999, client: http_testing.MockClient((req) async => http.Response('', 404))),
           throwsA(isA<PackagesError>().having((e) => e.status, 'status', 404)));

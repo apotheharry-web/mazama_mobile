@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "records.judge input",
+  "description": "specs/core row 3 (specs/foundations Part A): the records to judge, all of a list in one call (CR-D5).",
+  "type": "object",
+  "required": [
+    "records"
+  ],
+  "properties": {
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "description": "State records as the state system sends them (the mirror's raw, or a phone's upload); only the keys the rules read matter."
+    }
+  }
+}

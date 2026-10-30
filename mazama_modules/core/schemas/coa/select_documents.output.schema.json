@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "coa.select_documents output",
+  "description": "The documents to read, newest test first, each with its test's ISO date (null when the test has none).",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "doc_id",
+      "date"
+    ],
+    "properties": {
+      "doc_id": {
+        "type": "integer"
+      },
+      "date": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "pattern": "^\\d{4}-\\d\\d-\\d\\d$"
+      }
+    }
+  }
+}

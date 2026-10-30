@@ -1,15 +1,16 @@
 // SP-R13, SP-D6: the stock page's rows from the state alone (stockRowsFromState) and the order the page's data
 // comes in: the server, else the state (partial, mg psilocybin), else the last rows drawn here (lib/stock_rows.dart).
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mazama_mobile/reply_store.dart';
+import 'package:mazama_mobile/local_store.dart';
 import 'package:mazama_mobile/packages_client.dart';
 import 'package:mazama_mobile/par_client.dart';
 import 'package:mazama_mobile/session.dart';
-import 'package:mazama_mobile/stock_cache_store.dart';
 import 'package:mazama_mobile/stock_rows.dart';
 import 'package:mazama_mobile/stock_summary.dart';
+import 'package:mazama_mobile/sync/sync_datasets.dart';
 
 Map<String, Object?> _record({
   Object? id = 6600,
@@ -49,9 +50,11 @@ late Directory _dir;
 
 void main() {
   setUp(() => _dir = Directory.systemTemp.createTempSync('mazama_stock_rows_test_'));
-  tearDown(() => _dir.deleteSync(recursive: true));
-  StockCacheStore cache() => StockCacheStore(dataDir: () => _dir);
-  ReplyStore replies() => ReplyStore(dataDir: () => _dir);
+  tearDown(() {
+    LocalStore.debugCloseAll();
+    _dir.deleteSync(recursive: true);
+  });
+  Datasets datasets() => Datasets.forDir(() => _dir);
 
   group('state rows', () {
     test('licence decides mazama', () {
@@ -159,17 +162,17 @@ void main() {
           _record(id: 9, guid: 'PKPR-locked'), // a lot the server left out (SP-D9): not counted
         ],
         fetchMazamaLicenses: () async => ['mf-1e72fc8f'],
-        cache: cache(),
+        datasets: datasets(),
         now: () => DateTime.utc(2026, 10, 21, 9),
       );
       expect([load.mgMode, load.partial, load.drawnAt, load.notSetUp], ['tpe', false, null, false]);
       expect(load.rows.map((r) => '${r.productGuid} ${r.quantity}'), ['PKPR-a 3.5']); // PKPR-gone: the state no longer has it
       final r = load.rows.single;
       expect([r.mazama, r.unitMgTpe, r.description, r.strain], [true, 25, 'GT 25 mg', 'Golden Teacher']); // the server's word
-      final saved = await cache().load(231);
-      expect(saved.mazamaLicenses, ['mf-1e72fc8f']);
-      expect(saved.rows!.single.productGuid, 'PKPR-a');
-      expect(saved.rowsAt, DateTime.utc(2026, 10, 21, 9));
+      expect(keptMazamaLicenses(datasets(), 231), ['mf-1e72fc8f']);
+      final saved = keptStockRows(datasets(), 231)!;
+      expect(saved.rows.single.productGuid, 'PKPR-a');
+      expect(saved.at, DateTime.utc(2026, 10, 21, 9));
     });
 
     test('the state unreachable: the server\'s own rows and quantities', () async {
@@ -178,26 +181,26 @@ void main() {
         fetchServerPackages: () async => [served('PKPR-a', 1, quantity: 7)],
         fetchStateRecords: stateDown,
         fetchMazamaLicenses: () async => [],
-        cache: cache(),
+        datasets: datasets(),
       );
       expect([load.mgMode, load.partial], ['tpe', false]);
       expect(load.rows.single.quantity, 7);
     });
 
     test('the server unreachable: the state\'s records, partial, in mg psilocybin, with the kept licenses', () async {
-      await cache().saveMazamaLicenses(231, ['mf-1e72fc8f']);
+      keepMazamaLicenses(datasets(), 231, ['mf-1e72fc8f'], DateTime.utc(2026, 10, 20));
       final load = await loadCenterStock(
         stateId: 231,
         fetchServerPackages: down,
         fetchStateRecords: () async => [_record(id: 1), _record(id: 2, license: 'MF-other'), 'junk'],
         fetchMazamaLicenses: () async => throw Exception('down'),
-        cache: cache(),
+        datasets: datasets(),
         now: () => _today,
       );
       expect([load.mgMode, load.partial, load.drawnAt, load.notSetUp], ['psilocybin', true, null, false]);
       expect(load.rows.map((r) => r.mazama), [true, false]);
-      expect((await cache().load(231)).rowsMgMode, 'psilocybin');
-      expect((await cache().load(231)).mazamaLicenses, ['mf-1e72fc8f']); // a failed fetch keeps the last list
+      expect(keptStockRows(datasets(), 231)!.mgMode, 'psilocybin');
+      expect(keptMazamaLicenses(datasets(), 231), ['mf-1e72fc8f']); // a failed fetch keeps the last list
     });
 
     test("a center the server hasn't set up (404) is not 'unreachable', and its licenses are still fetched", () async {
@@ -206,12 +209,12 @@ void main() {
         fetchServerPackages: () async => throw PackagesError('no service center with id 231', status: 404),
         fetchStateRecords: () async => [_record(id: 1), _record(id: 2, license: 'MF-other')],
         fetchMazamaLicenses: () async => ['mf-1e72fc8f'],
-        cache: cache(),
+        datasets: datasets(),
         now: () => _today,
       );
       expect([load.notSetUp, load.partial, load.mgMode], [true, true, 'psilocybin']);
       expect(load.rows.map((r) => r.mazama), [true, false]); // the licenses fetched this time
-      expect((await cache().load(231)).mazamaLicenses, ['mf-1e72fc8f']);
+      expect(keptMazamaLicenses(datasets(), 231), ['mf-1e72fc8f']);
     });
 
     test('server unreachable: locked, flagged and pending-transfer records are held back, not counted', () async {
@@ -220,7 +223,7 @@ void main() {
         fetchServerPackages: down,
         fetchStateRecords: () async => _mixedRecords(),
         fetchMazamaLicenses: () async => [],
-        cache: cache(),
+        datasets: datasets(),
         now: () => _today,
       );
       expect(load.rows.map((r) => r.productGuid), ['PKPR-ok']);
@@ -233,7 +236,7 @@ void main() {
         fetchServerPackages: () async => throw PackagesError('no service center with id 231', status: 404),
         fetchStateRecords: () async => _mixedRecords(),
         fetchMazamaLicenses: () async => [],
-        cache: cache(),
+        datasets: datasets(),
         now: () => _today,
       );
       expect(load.notSetUp, isTrue);
@@ -247,7 +250,7 @@ void main() {
         fetchServerPackages: () async => [served('PKPR-ok', 1)],
         fetchStateRecords: () async => _mixedRecords(),
         fetchMazamaLicenses: () async => [],
-        cache: cache(),
+        datasets: datasets(),
         now: () => _today,
       );
       expect(load.rows.map((r) => r.productGuid), ['PKPR-ok']);
@@ -261,25 +264,25 @@ void main() {
         fetchServerPackages: () async => [served('PKPR-a', 1, quantity: 7)],
         fetchStateRecords: () async => throw SessionExpired('please sign in again'),
         fetchMazamaLicenses: () async => [],
-        cache: cache(),
+        datasets: datasets(),
       );
       expect([load.partial, load.serverQuantities, load.signInNeeded], [false, true, true]);
       expect(load.rows.single.quantity, 7);
       // The state merely unreachable: the server's quantities, no sign-in.
       final other = await loadCenterStock(
-          stateId: 231, fetchServerPackages: () async => [served('PKPR-a', 1)], fetchStateRecords: stateDown, fetchMazamaLicenses: () async => [], cache: cache());
+          stateId: 231, fetchServerPackages: () async => [served('PKPR-a', 1)], fetchStateRecords: stateDown, fetchMazamaLicenses: () async => [], datasets: datasets());
       expect([other.serverQuantities, other.signInNeeded], [true, false]);
     });
 
     test('nothing reachable: the last rows drawn here, with their time', () async {
       final at = DateTime.utc(2026, 10, 21, 6);
-      await cache().saveRows(231, [served('PKPR-s', 1).toStockRow()], mgMode: 'tpe', at: at);
+      keepStockRows(datasets(), 231, [served('PKPR-s', 1).toStockRow()], mgMode: 'tpe', at: at);
       final load = await loadCenterStock(
         stateId: 231,
         fetchServerPackages: down,
         fetchStateRecords: stateDown,
         fetchMazamaLicenses: () async => [],
-        cache: cache(),
+        datasets: datasets(),
       );
       expect([load.mgMode, load.partial, load.drawnAt, load.signInNeeded], ['tpe', true, at, false]);
       expect(load.rows.single.productGuid, 'PKPR-s');
@@ -287,7 +290,7 @@ void main() {
 
     test('nothing reachable and nothing drawn before is StockUnavailable', () async {
       await expectLater(
-        loadCenterStock(stateId: 231, fetchServerPackages: down, fetchStateRecords: stateDown, fetchMazamaLicenses: () async => [], cache: cache()),
+        loadCenterStock(stateId: 231, fetchServerPackages: down, fetchStateRecords: stateDown, fetchMazamaLicenses: () async => [], datasets: datasets()),
         throwsA(isA<StockUnavailable>().having((e) => '$e', 'text',
             "The state system can't be reached, and this phone hasn't drawn this center's stock before.")),
       );
@@ -296,12 +299,12 @@ void main() {
     test('an expired state sign-in asks for a new one, with or without charts kept', () async {
       Future<List<Object?>> expired() async => throw SessionExpired('please sign in again');
       await expectLater(
-        loadCenterStock(stateId: 231, fetchServerPackages: down, fetchStateRecords: expired, fetchMazamaLicenses: () async => [], cache: cache()),
+        loadCenterStock(stateId: 231, fetchServerPackages: down, fetchStateRecords: expired, fetchMazamaLicenses: () async => [], datasets: datasets()),
         throwsA(isA<StockSignInNeeded>()),
       );
-      await cache().saveRows(231, [served('PKPR-s', 1).toStockRow()], mgMode: 'tpe', at: DateTime.utc(2026, 10, 21));
+      keepStockRows(datasets(), 231, [served('PKPR-s', 1).toStockRow()], mgMode: 'tpe', at: DateTime.utc(2026, 10, 21));
       final load = await loadCenterStock(
-          stateId: 231, fetchServerPackages: down, fetchStateRecords: expired, fetchMazamaLicenses: () async => [], cache: cache());
+          stateId: 231, fetchServerPackages: down, fetchStateRecords: expired, fetchMazamaLicenses: () async => [], datasets: datasets());
       expect([load.signInNeeded, load.partial], [true, true]);
     });
   });
@@ -310,35 +313,41 @@ void main() {
     test('from the server, kept with when; unreachable the kept copy with that time; with no copy the error', () async {
       const levels = [ParLevel(strain: 'Golden Teacher', size: 25, par: 12)];
       final at = DateTime.utc(2026, 10, 21, 9, 30);
-      final fresh = await loadCenterPar(stateId: 231, fetchPar: () async => levels, replies: replies(), now: () => at);
+      final fresh = await loadCenterPar(stateId: 231, fetchPar: () async => levels, datasets: datasets(), now: () => at);
       expect(fresh.value.single.par, 12);
       expect(fresh.fromCache, isFalse);
-      expect(replies().load('par/231')!.at, at); // the app's reply store (README R56)
+      expect(datasets().read(Dataset.par, '231')!.fetchedAt, at); // the engine's par dataset (specs/phone-sync phase 2)
 
       final offline = await loadCenterPar(
-          stateId: 231, fetchPar: () async => throw ParError('cannot reach x: SocketException', unreachable: true), replies: replies());
+          stateId: 231, fetchPar: () async => throw ParError('cannot reach x: SocketException', unreachable: true), datasets: datasets());
       expect(offline.value.single.strain, 'Golden Teacher');
       expect(offline.fromCache, isTrue);
       expect(offline.cachedAt, at);
 
       await expectLater(
-        loadCenterPar(stateId: 183, fetchPar: () async => throw ParError('down', unreachable: true), replies: replies(), legacy: cache()),
+        loadCenterPar(stateId: 183, fetchPar: () async => throw ParError('down', unreachable: true), datasets: datasets()),
         throwsA(isA<ParError>()),
       );
     });
 
-    test("unreachable with only an older build's copy (stock_cache_store.dart): that copy, with its time", () async {
+    test("unreachable with only an older build's copy (stock_cache_store.dart, removed): that copy, with its time", () async {
       final at = DateTime.utc(2026, 10, 20, 8);
-      await cache().savePar(231, const [ParLevel(strain: 'Golden Teacher', size: 25, par: 12)], at: at);
+      // as the older build kept it; moved into the par dataset on the folder's first open (sync_migration.dart)
+      LocalStore.forDir(_dir).write(
+          'stock_cache_231.json',
+          jsonEncode({
+            'par': [const ParLevel(strain: 'Golden Teacher', size: 25, par: 12).toJson()],
+            'parAtMs': at.millisecondsSinceEpoch,
+          }));
       final offline = await loadCenterPar(
-          stateId: 231, fetchPar: () async => throw ParError('down', unreachable: true), replies: replies(), legacy: cache());
+          stateId: 231, fetchPar: () async => throw ParError('down', unreachable: true), datasets: datasets());
       expect([offline.value.single.par, offline.fromCache, offline.cachedAt], [12, true, at]);
     });
 
     test("the server's own refusal (4xx) is an error even with a copy kept", () async {
-      await cache().savePar(231, const [ParLevel(strain: 'Golden Teacher', size: 25, par: 12)]);
+      await parDataset(datasets(), 231).save(const [ParLevel(strain: 'Golden Teacher', size: 25, par: 12)], DateTime.utc(2026, 10, 20));
       await expectLater(
-        loadCenterPar(stateId: 231, fetchPar: () async => throw ParError('No such service center.'), replies: replies(), legacy: cache()),
+        loadCenterPar(stateId: 231, fetchPar: () async => throw ParError('No such service center.'), datasets: datasets()),
         throwsA(isA<ParError>().having((e) => e.message, 'message', 'No such service center.')),
       );
     });

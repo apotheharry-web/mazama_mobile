@@ -12,7 +12,8 @@ final _fileWrite = RegExp(r'writeAsStringSync|writeAsBytesSync|writeAsString\(|w
 
 /// The files allowed to: LocalStore itself and its legacy import; session_store.dart (moving and deleting an older
 /// build's session.json); the sign-in spec and host list, which stay files (plan P-D4); reconcile_page.dart (the image
-/// it shares); and the debug pages (kDebugMode builds only).
+/// it shares); app_update_download.dart (the APK handed to Android's installer, specs/app-updates AU-D11); and the
+/// debug pages (kDebugMode builds only).
 bool _allowed(String path) {
   final name = path.split('/').last;
   return const {
@@ -22,6 +23,7 @@ bool _allowed(String path) {
         'lib/login_spec_store.dart',
         'lib/login_hosts_store.dart',
         'lib/reconcile_page.dart',
+        'lib/app_update_download.dart', // the APK handed to Android's installer, AU-D11
       }.contains(path) ||
       RegExp(r'^debug_.*_page\.dart$').hasMatch(name);
 }

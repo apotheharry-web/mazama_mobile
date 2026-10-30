@@ -8,8 +8,8 @@
 // GetPackagedProducts/{state_id}/ServiceCenter, confirmed from client.py's DATASETS/fetch and _who()).
 //
 // IMPORTANT - this is a DEGRADED view, not a substitute for Mazama's own enrichment:
-//   - strain is only the one written in the package's name (product_names.dart: coa_core reads it the way the
-//     server's names.py does, with the built-in spellings; '' when coa_core isn't built into the app). The server's
+//   - strain is only the one written in the package's name (product_names.dart: the shared core reads it the way
+//     the server's names.py does, with the built-in spellings; '' when the name has none). The server's
 //     strain (web/stock_pages.py's public_packages) can also come from its certificate folder and the Strains
 //     page's own spellings (stockdata.py's strain_of/canonical) - data this phone can't see from the state alone.
 //   - tpeMg is only ceil(weightPerUnit x analyteWeight) - the state's own raw potency figure, with no chance to
@@ -30,8 +30,8 @@
 // retried the way StateSession.get() retries one.
 import 'package:http/http.dart' as http;
 
-import 'coa_core_ffi.dart';
 import 'dose.dart';
+import 'mazama_core.dart';
 import 'package_ids.dart';
 import 'packages_client.dart';
 import 'product_names.dart';
@@ -72,9 +72,9 @@ Future<List<Object?>> fetchRawPackagesFromState(int stateId, {required String ac
 /// needs them unmapped for inventory_upload_client.dart's uploadInventorySnapshot) can map them without a
 /// second network round trip.
 ///
-/// [core] reads each name's strain (SM-19); it defaults to this app's coa_core, and without one the strain stays ''.
-List<Package> mapRawPackagesFromState(List<Object?> body, {CoaCore? core}) {
-  final reader = core ?? sharedCoaCore();
+/// [core] reads each name's strain (SM-19); it defaults to this app's ([MazamaCore.instance]).
+List<Package> mapRawPackagesFromState(List<Object?> body, {CoreFunctions? core}) {
+  final reader = core ?? MazamaCore.instance;
   final out = <Package>[];
   for (final e in body) {
     if (e is! Map) continue;

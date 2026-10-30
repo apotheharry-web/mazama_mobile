@@ -10,9 +10,9 @@ import 'package:http/http.dart' as http;
 
 import 'api_contract.g.dart';
 import 'app_api_key.dart';
-import 'select_documents.dart' show stateDateIso;
 import 'server_error.dart';
 import 'server_link_client.dart' show serverClient;
+import 'state_date.dart';
 
 /// The ingest dataset this client sends (routes.yaml C20's `{dataset}`).
 const salesDataset = 'sales';

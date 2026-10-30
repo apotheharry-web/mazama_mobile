@@ -1,0 +1,5 @@
+{
+ "build": 26103001,
+ "manifest": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4%2B26103001/mazama-mobile-0.2.4%2B26103001.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+ "signature": "ZBPXdvshgphNkgabKhk2HE2oC5Rd44JmUNgUFEq1rXgQ9sJ0v98n4k5+6ewG0aPEQFwYLqYhZj8tlGbX8spwBA==\n"
+}

@@ -71,7 +71,9 @@ class TextScanner(private val activity: Activity) : MethodChannel.MethodCallHand
         // be written to a file this app owns, via a FileProvider URI (a raw file:// Uri can't be granted to
         // another app from API 24 on - the FileProvider in AndroidManifest.xml and res/xml/file_paths.xml are the entries
         // this depends on).
-        val photoFile = File(activity.cacheDir, "scan_${System.currentTimeMillis()}.jpg")
+        // under cache/scans/, the one folder file_paths.xml shares
+        val scansDir = File(activity.cacheDir, "scans").apply { mkdirs() }
+        val photoFile = File(scansDir, "scan_${System.currentTimeMillis()}.jpg")
         val uri = FileProvider.getUriForFile(activity, "${activity.packageName}.fileprovider", photoFile)
         photoUri = uri
         val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE).apply {

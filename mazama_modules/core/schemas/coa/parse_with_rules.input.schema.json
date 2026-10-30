@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "coa.parse_with_rules input",
+  "description": "A lab report's words and a rules file (coa_rules.yaml's format) to read them with instead of the built-in one.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "coa_text",
+    "rules_yaml"
+  ],
+  "properties": {
+    "coa_text": {
+      "$ref": "https://mazamamushrooms.com/schema/coa_text/1"
+    },
+    "rules_yaml": {
+      "type": "string"
+    }
+  }
+}

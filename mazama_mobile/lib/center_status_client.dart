@@ -70,6 +70,16 @@ class CartSettings {
       maxUnitsPerLine: pick('max_units_per_line', f.maxUnitsPerLine, min: 1),
     );
   }
+
+  /// The server's "cart" object again ([CartSettings.fromJson] reads it back): the sync engine's center_status body.
+  Map<String, Object?> toJson() => {
+        'minutes': minutes,
+        'tax_percent': taxPercent,
+        'agreement_edible': agreementEdible,
+        'agreement_dried': agreementDried,
+        'dedupe_seconds': dedupeSeconds,
+        'max_units_per_line': maxUnitsPerLine,
+      };
 }
 
 class CenterStatus {
@@ -81,6 +91,16 @@ class CenterStatus {
   final List<String> mazamaLicenses;
 
   const CenterStatus({required this.configured, required this.cart, this.mazamaLicenses = const []});
+
+  /// The server's reply ([configured] a bool; the caller checks), or the sync engine's center_status body.
+  factory CenterStatus.fromJson(Map<String, Object?> j) => CenterStatus(
+        configured: j['configured'] as bool,
+        cart: CartSettings.fromJson(j['cart']),
+        mazamaLicenses: _licenses(j['mazamaLicenses']),
+      );
+
+  /// The reply again, as [CenterStatus.fromJson] reads it.
+  Map<String, Object?> toJson() => {'configured': configured, 'cart': cart.toJson(), 'mazamaLicenses': mazamaLicenses};
 }
 
 List<String> _licenses(Object? json) {
@@ -109,11 +129,7 @@ Future<CenterStatus> fetchCenterStatus(int stateId, {String baseUrl = apiBaseUrl
       throw CenterStatusError('the server did not answer with JSON');
     }
     if (body is! Map || body['configured'] is! bool) throw CenterStatusError('unexpected response shape');
-    return CenterStatus(
-      configured: body['configured'] as bool,
-      cart: CartSettings.fromJson(body['cart']),
-      mazamaLicenses: _licenses(body['mazamaLicenses']),
-    );
+    return CenterStatus.fromJson(Map<String, Object?>.from(body));
   } finally {
     if (shouldClose) c.close();
   }

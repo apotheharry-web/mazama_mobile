@@ -1,12 +1,12 @@
 // A package's label drawn on the phone, for when Mazama's server has none on file (the cart's compare popup and
 // edit dialog, cart_page.dart). The same chain the "COA → label" debug page runs step by step
 // (debug_coa_label_page.dart), without the page: the package's own state record, its lot's newest accepted potency
-// report from the state, the report's text (pdfium), coa_core's lot finder and label spec (coa_core_ffi.dart). Every
-// number comes from coa_core, the same rules the server's labels use (labelspec.py); the phone only gathers the
+// report from the state, the report's text (pdfium), mazama_core's lot finder and label spec (mazama_core.dart). Every
+// number comes from mazama_core, the same rules the server's labels use (labelspec.py); the phone only gathers the
 // input. Drawn by LabelPreview (label_preview.dart): black text on white, like the server's label for a package
 // Mazama didn't make (AD-L18).
 //
-// README R64: when /p/packages sent the package's `labelInput` (Package.labelInput: coa_core's LabelInput exactly as the
+// README R64: when /p/packages sent the package's `labelInput` (Package.labelInput: mazama_core's LabelInput exactly as the
 // server builds it for its own labels, its shelf life, subtype and strain included), the label is drawn from that with
 // the phone's own today and nothing else: no call to the state system, no lab report, nothing kept. The chain below runs
 // only for a package the server has no certificate for.
@@ -16,18 +16,18 @@
 // its strain alias table (the strain the server's COA data gave the package is passed when there is one). Only the
 // best-by of a package whose name carries no date depends on the shelf life.
 //
-// What the phone keeps from it (SM-D31, amending SM-D15): once coa_core has read the lot's report and given a label,
-// every record of this product at the center on the same lot gets coa_core's own label answer for its own weight and
-// state figure, and its TPE (LabelSpec tpe_mg_per_g: coa_core::tpe to 2 places, the server's coa.tpe figure), psilocin
+// What the phone keeps from it (SM-D31, amending SM-D15): once mazama_core has read the lot's report and given a label,
+// every record of this product at the center on the same lot gets mazama_core's own label answer for its own weight and
+// state figure, and its TPE (LabelSpec tpe_mg_per_g: mazama_core::tpe to 2 places, the server's coa.tpe figure), psilocin
 // per unit and per-unit mg TPE (unit weight x that TPE rounded up, dose.dart - what /p/packages sends as tpeMg; never
 // the label's printed dose, which prefers the name's) are saved in the enrichment store (enrichment_store.dart's
 // rememberPhone), so a later read from the state system alone can show them. Nothing is saved when no label can be
 // drawn, and a failed save never stops the label.
 import 'dart:typed_data';
 
-import 'coa_core_ffi.dart';
 import 'dose.dart';
 import 'enrichment_store.dart';
+import 'mazama_core.dart';
 import 'package_ids.dart';
 import 'packages_client.dart' show EnrichmentSource;
 import 'pdf_text.dart';
@@ -51,10 +51,10 @@ const phoneLabelSettings = {'shelf_months': 12, 'fd_months': 24, 'shelf_days': n
 String _isoDay(DateTime d) =>
     '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
-/// The label spec coa_core gives for [pkpr] at the center [stateId] (its LabelSpec: strain, dose_mg_tpe, net_wt_g,
+/// The label spec mazama_core gives for [pkpr] at the center [stateId] (its LabelSpec: strain, dose_mg_tpe, net_wt_g,
 /// per_unit_mg, best_by, pkpr, ...), ready for LabelPreview. Throws PhoneLabelError with the reason when there can
-/// be none: the shared library isn't in this build (iOS today), the package or its lot can't be found, the lot has
-/// no lab report on file, the report doesn't name the lot, or coa_core blocks the label (every reason, joined).
+/// be none: the package or its lot can't be found, the lot has no lab report on file, the report doesn't name the
+/// lot, or the core blocks the label (every reason, joined). [core] defaults to this app's ([MazamaCore.instance]).
 /// [strain] is the strain the server already knows for the package (its COA data), used before the name's.
 /// [enrichment] is where the phone's reading is kept (see this file's comment; CartPage passes its own store); null
 /// keeps nothing. [labelInput] is the server's (README R64): when given, the label comes from it alone, with no state
@@ -65,7 +65,7 @@ Future<Map<String, Object?>> drawPhoneLabelSpec(
   required String accessToken,
   String strain = '',
   DateTime Function()? now,
-  CoaCore? Function() loadCore = CoaCore.tryLoad,
+  CoreFunctions? core,
   Future<List<Object?>> Function(int stateId, {required String accessToken}) fetchRawPackages =
       state_packages_client.fetchRawPackagesFromState,
   Future<Object?> Function(int packageId, {required String accessToken})? fetchProductInfo,
@@ -75,11 +75,9 @@ Future<Map<String, Object?>> drawPhoneLabelSpec(
   EnrichmentStore? enrichment,
   Map<String, Object?>? labelInput,
 }) async {
-  // first, so a build without the library answers at once, without fetching anything
-  final core = loadCore();
-  if (core == null) throw PhoneLabelError(coaCoreMissingMessage);
+  final lib = core ?? MazamaCore.instance;
   final today = (now ?? DateTime.now)();
-  if (labelInput != null) return _specOf(core.labelSpec({...labelInput, 'today': _isoDay(today)}));
+  if (labelInput != null) return _specOf(lib.labelSpec({...labelInput, 'today': _isoDay(today)}));
   final productInfo = fetchProductInfo ??
       ((id, {required accessToken}) => fetchStateFlow('packaged_product_info', {'package_id': id}, accessToken: accessToken));
 
@@ -104,20 +102,20 @@ Future<Map<String, Object?>> drawPhoneLabelSpec(
   if (lot == null) throw PhoneLabelError('$pkpr names no batch or lot to find its lab report by');
   final analyteWeight = (record['analyteWeight'] as num?)?.toDouble() ?? 0;
 
-  final docs = selectPotencyDocuments(await productInfo(packageId, accessToken: accessToken));
+  final docs = selectPotencyDocuments(await productInfo(packageId, accessToken: accessToken), core: lib);
   if (docs.isEmpty) throw PhoneLabelError('lot $lot has no accepted lab report on file at the state yet');
   final doc = docs.first;
   final pdf = await downloadDocument(doc.docId, accessToken: accessToken);
   final text = await extractText(pdf);
 
   // AD-19: the lot's own UID, else the batch its report's request pairs it with, else the state's psilocybin
-  final reply = core.findLot(text, lot, statePsilocybin: analyteWeight > 0 ? analyteWeight : null);
+  final reply = lib.findLot(text, lot, statePsilocybin: analyteWeight > 0 ? analyteWeight : null);
   final sections = (((reply['result'] as Map?) ?? const {})['sections'] as List? ?? const []);
   final found = reply['found'];
   final at = found is Map ? found['section'] : null;
   if (at is! int || at < 0 || at >= sections.length) throw PhoneLabelError("lot $lot's lab report doesn't name it");
 
-  Map<String, Object?> labelFor(Map<String, Object?> r) => core.labelSpec({
+  Map<String, Object?> labelFor(Map<String, Object?> r) => lib.labelSpec({
         'package': {
           'pkpr': recordPkpr ?? pkpr, // as the state writes it
           'description': '${r['description'] ?? ''}',
@@ -153,7 +151,7 @@ Future<Map<String, Object?>> drawPhoneLabelSpec(
   return result;
 }
 
-/// coa_core's label answer [out] as the spec, or PhoneLabelError with every reason it gives none.
+/// mazama_core's label answer [out] as the spec, or PhoneLabelError with every reason it gives none.
 Map<String, Object?> _specOf(Map<String, Object?> out) {
   final blocked = out['blocked'];
   if (blocked is List) throw PhoneLabelError(blocked.join('; '));
@@ -164,8 +162,8 @@ Map<String, Object?> _specOf(Map<String, Object?> out) {
   return spec.cast<String, Object?>();
 }
 
-/// What the phone keeps (SM-D31) from coa_core's label [spec] for the state [record] whose record id is [id], read at
-/// [at]; null when coa_core gave no TPE or the record has no unit weight. The TPE is coa_core's own (tpe_mg_per_g);
+/// What the phone keeps (SM-D31) from mazama_core's label [spec] for the state [record] whose record id is [id], read at
+/// [at]; null when mazama_core gave no TPE or the record has no unit weight. The TPE is mazama_core's own (tpe_mg_per_g);
 /// tpeMg is the unit's mg TPE as the server works it out (weight x TPE, rounded up: dose.dart, SM-D16/SM-D17).
 PackageEnrichment? phoneReading(Map<String, Object?> record, int id, Map<String, Object?> spec, DateTime at) {
   final key = packagedProductKey(record);

@@ -128,6 +128,11 @@ search for them; line numbers are left out on purpose because they change.
     check: scheme, port, no `@` or backslash, host shape).
   - `lib/flow/flow_runner.dart`: `runFlow`, `_runRequest`, `_blocked`. Every `http.Request` is made with
     `followRedirects = false`, and each hop is checked before it is sent.
+- **GitHub is never a sign-in host.** When Mazama's server can't answer after a failed sign-in, the app reads the
+  owner's signed sign-in files from GitHub (claim 4) through `lib/github_files.dart`'s fixed addresses
+  (`https://raw.githubusercontent.com/apotheharry-web/mazama_mobile/main/`, no redirect followed); that host is not in
+  the allowlist, no flow runs against it, and a signed host list can't name any of the GitHub hosts that code uses
+  (`githubHostsNeverListed` in `lib/login_hosts_store.dart`; the server refuses the same list).
 - **Not covered by this claim:** lab-report downloads (`downloadStateDocument`, claim 2) start on an allowed host but
   follow a redirect to any `https` host; the token is dropped there, the `Referer`, `Origin` and `User-Agent` headers
   are sent. The in-app browser's own traffic is claim 5's.
@@ -146,7 +151,17 @@ search for them; line numbers are left out on purpose because they change.
     those rules, Mazama's server, or anyone able to answer as it, chooses its steps, the words of its questions to the
     worker (claim 1), and where at the sign-in hosts the email and tokens go;
   - a fetched host list is used only if it carries a valid Ed25519 signature made with the key whose public half is
-    built into the app, in `assets/signing/signing.pub`.
+    built into the app, in `assets/signing/signing.pub`;
+  - **when Mazama's server can't be reached** (the request got no answer at all, no connection or none in time, or
+    the app counts the server offline), the app reads the
+    same files the server would serve, `login.yaml` or `login_browser.yaml` and `hosts.json`, each with its `.sig`, from
+    the public repository on GitHub (`lib/github_signin_files.dart`, fixed addresses, no redirect, at most 64 KiB,
+    Dart's default headers only). A spec read there counts only if its signature verifies against the same built-in
+    key (unlike a spec through the server), and then it is held to every rule above, must be newer than the one that
+    failed, and is tried once; a host list read there is held to the same rules as one through the server. While the
+    built-in key is `none` nothing is read from GitHub. When the server answers, even with its own error reply,
+    GitHub is not asked (a proxy's error page in front of it counts as no answer). So whoever holds the signing key and can push to the public repository can reach phones whose server is
+    unreachable, without the server seeing it.
 - **A sign-in never sends anything to the state's API.** A fetched sign-in spec that signs in is saved; a password
   sign-in spec's `renew` then renews the session at start-up and before sales, with nobody watching, until a newer
   bundled spec replaces it. So two checks keep every sign-in and renewal away from `psilocybin.oregon.gov`, where the
@@ -187,7 +202,9 @@ search for them; line numbers are left out on purpose because they change.
     made by `verifiedHostList`).
   - `lib/signing.dart` (`verifySigned`, `bundledPublicKey`: `none` means no key, so every check fails).
 - **Tests:** `test/signing_test.dart` (shared signature vectors, including tampered and malleated signatures),
-  `test/login_hosts_store_test.dart`, `test/sign_in_hosts_test.dart`, `test/login_spec_store_test.dart`.
+  `test/login_hosts_store_test.dart`, `test/sign_in_hosts_test.dart`, `test/login_spec_store_test.dart`,
+  `test/github_signin_files_test.dart`, `test/sign_in_github_fallback_test.dart` (GitHub asked only while the server
+  can't answer; a bad `.sig` never runs).
 
 ### 5. Signing in on the state's own page: the app does not read what the worker types
 
@@ -246,6 +263,9 @@ search for them; line numbers are left out on purpose because they change.
   `workerEmail` in `lib/*_client.dart` and `lib/configured_coa_submit.dart`.
 - **A random install id** (`lib/device_id.dart`: a random token made the first time the app needs it, not a hardware
   id).
+- **The installed build number, with the install id**, when the app checks for an update (Android only; the
+  `build` and `device` of `GET /p/app/latest`, `lib/app_update_client.dart`), so Mazama can see which phones need
+  updating by hand. GitHub's copy of the release file is asked for with neither (claim 10).
 - **Business data:** sale records and the state's reply to them (`lib/sale_log_client.dart`), the state's raw
   inventory records (`lib/inventory_upload_client.dart`), orders (`lib/order_client.dart`), par levels
   (`lib/par_client.dart`), the text read from a scanned label (`lib/scan_match_client.dart`), lab-report PDFs with
@@ -328,9 +348,10 @@ search for them; line numbers are left out on purpose because they change.
   `ios/Runner/AppDelegate.swift`; best effort). Builds made before that change did include the session file in
   backups. (Keychain items themselves are `ThisDeviceOnly`, so an encrypted backup can't carry them to another phone.)
 - **The email is also kept elsewhere**, in `mazama.db` in the same private, backup-excluded folder: in its
-  `server_outbox.json` document (`lib/server_outbox.dart`: sale logs and failed-sale reports waiting to reach Mazama's
-  server, which carry it, claim 7) and its `server_catch_up.json` document (`lib/catch_up_store.dart`: work waiting to
-  be redone), and, until the clean-up release, in the `server_outbox.json.migrated` and
+  `sync_queue` table (`lib/sync/sync_queue.dart`: sale logs and failed-sale reports waiting to reach Mazama's server,
+  which carry it, claim 7, and work waiting to be redone; an older build's `server_outbox.json` and
+  `server_catch_up.json` documents until the first start moves them there, `lib/sync/sync_migration.dart`), and, until
+  the clean-up release, in the `server_outbox.json.migrated` and
   `server_catch_up.json.migrated` files an older build left. Signing out deletes the session from secure storage
   (and any `session.json` left) only: those keep what still has to be sent. The reconciliation report image, which shows the
   email, is written to the app's temporary folder when the worker shares it, and on Android label photos stay in its
@@ -352,6 +373,52 @@ search for them; line numbers are left out on purpose because they change.
   the expiry and whether tokens are present, not the tokens). It is reachable only in
   debug builds (`kDebugMode`, `lib/debug_tools_page.dart`) and sends nothing.
 
+### 10. Updates (Android)
+
+- **Statement:** the app offers a newer release of itself only when the owner's signed release file says so and the
+  file verifies against the bundled `signing.pub`, and it installs only an APK whose SHA-256 and size are the ones that
+  file names, whose package, version and signing certificates are the installed app's, and only after the worker
+  confirms in Android's own installer every time.
+- **What is fetched, and from where:** the release file `latest.json` and its `.sig` from Mazama's server
+  (`GET /p/app/latest`, through the server link, with the app key, the build and the install id, claim 7), or, when the
+  server can't be reached, from exactly `https://raw.githubusercontent.com/apotheharry-web/mazama_mobile/main/`
+  (`lib/github_files.dart`: no redirect followed, at most 64 KiB, the `.sig` at most 1 KiB). The phone verifies the
+  signature itself whichever answered, and by its own clock refuses a file dated after tomorrow. The APK only after the
+  worker taps Install: from the GitHub release named in the file (exactly
+  `https://github.com/apotheharry-web/mazama_mobile/releases/download/...`; the phone follows at most 3 redirects
+  itself, each only to `github.com`, `release-assets.githubusercontent.com` or `objects.githubusercontent.com` over
+  https), and, only when that download fails, Mazama's server's copy (`GET /p/app/apk/{build}`, through the server link
+  with the app key). Either way the bytes must be exactly the signed size with the signed SHA-256: the server adds
+  availability, not trust. Each attempt downloads to a file of its own, and Android's side hashes the bytes again as
+  it copies them into the installer session, abandoning it unless they are the signed size and SHA-256, so the bytes
+  installed are the bytes checked. GitHub's requests carry nothing but Dart's default headers: no app key, token, cookie or
+  email. These GitHub hosts are never sign-in hosts (claim 3) and a signed host list never adds to them.
+- **Before the installer:** Android reads the downloaded file (`PackageManager.getPackageArchiveInfo`,
+  `android/app/src/main/kotlin/com/example/mazama_mobile/AppInstaller.kt`): its package must be the installed app's,
+  its version code and name the file's, and its set of signing certificates the installed app's; otherwise it is
+  deleted and that build is never offered again. A file Android can't read (or whose certificates it can't read) is
+  deleted and counts as a failed attempt, not a refusal. Android itself also refuses an APK not signed by the installed app's
+  key and a lower version.
+- **The worker confirms every install:** the PackageInstaller session never sets `USER_ACTION_NOT_REQUIRED`; with
+  "install unknown apps" off, the app opens Android's setting and installs nothing. The card is shown, and the file
+  handed over, only while no cart the phone has saved holds a line: on the center home, the cart showing and every
+  saved cart of that center; on the license picker, every saved cart of every listed center. A second tap on Install
+  starts nothing more, and leaving the page or Cancel hands nothing over. The carts are checked again after Android
+  has copied the bytes into its installer session and before the session is committed. Nothing in demo mode; never on iPhone
+  (TestFlight and the App Store update it). Android's own refusal after the hand-over is shown in its words. Android's confirmation is started only when it is
+  the installer's own (Android 9 and older name it differently) and opens a system app.
+- **Quiet:** a failed check shows nothing and reports nothing; the app logs only the kind of failure. While the
+  bundled `signing.pub` holds no key, nothing is asked for.
+- **Not covered:** whoever answers as Mazama's server can withhold updates (answer "nothing", and GitHub isn't then
+  asked) or offer an older genuine signed release that is still above the installed build; it can never offer an
+  unsigned or lower one.
+- **Where to look:** `lib/app_release.dart`, `lib/app_update_client.dart`, `lib/app_update_check.dart`,
+  `lib/app_update_download.dart`, `lib/app_installer.dart`, `lib/app_update_card.dart`, `lib/github_files.dart`, and
+  their tests (`test/app_release_test.dart` with the shared vectors `assets/shared/flows/contracts/app_release_vectors.json`,
+  `test/github_files_test.dart`, `test/app_update_check_test.dart` "invariant: only a verified, newer, unrefused file is
+  offered", `test/app_update_download_test.dart`). No new dependency (claim 8's list is unchanged): `crypto` hashes the
+  APK, `cryptography` verifies the signature.
+
 ## What these claims do not cover
 
 - **That the app on your phone was built from this source.** Release builds are not reproducible, so these claims
@@ -364,8 +431,11 @@ search for them; line numbers are left out on purpose because they change.
 - **The Mazama server's code** (not published here). It receives the data in claim 7. By design it never receives the
   password or tokens, which this source lets you check from the phone's side.
 - **Who holds the signing key** behind `assets/signing/signing.pub`. The key's holder (the owner, who keeps it in the
-  server's encrypted secrets) can sign a list adding a sign-in host (claim 4), so whoever can read that key, including
-  anyone who takes over the server, could too.
+  server's encrypted secrets) can sign a list adding a sign-in host (claim 4) and the release file `latest.json`
+  (claim 10), so whoever can read that key, including anyone who takes over the server, could too. A signed release
+  file alone installs nothing: the APK must also be signed by the installed app's key, and the worker confirms. The
+  key is rotated by one procedure for every signed file (specs/app-updates AU-D12, in Mazama's private repository):
+  a new key ships in a release whose release file is signed by the old one.
 - **Interception by a trusted certificate authority.** The app doesn't pin certificates, so a certificate authority
   the phone trusts (installed by an employer's device management, say) could read its traffic.
 - **The developer-only "Sign-in files" page** (`lib/debug_signin_files_page.dart`, reachable only in debug builds:

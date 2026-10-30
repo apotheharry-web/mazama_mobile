@@ -21,7 +21,12 @@ const loginSpecTimeout = Duration(seconds: 10);
 
 class LoginSpecError implements Exception {
   final String message;
-  LoginSpecError(this.message);
+
+  /// True when no answer came at all (no connection, no reply within the timeout), as opposed to an error reply or one
+  /// this app can't use: SignInPage then reads the signed spec from GitHub (specs/app-updates AU-R17).
+  final bool unreachable;
+
+  LoginSpecError(this.message, {this.unreachable = false});
   @override
   String toString() => message;
 }
@@ -75,7 +80,7 @@ Future<FetchedSpec> _requestSpec(
     try {
       resp = await c.get(uri, headers: appApiKeyHeaders).timeout(timeout);
     } catch (ex) {
-      throw LoginSpecError('cannot reach ${uri.host}: ${ex.runtimeType}');
+      throw LoginSpecError('cannot reach ${uri.host}: ${ex.runtimeType}', unreachable: true);
     }
     if (resp.statusCode != 200) throw LoginSpecError(describeServerError(resp.statusCode, resp.body));
     Object? body;

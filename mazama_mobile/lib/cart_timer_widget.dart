@@ -73,7 +73,7 @@ class CartTimerWidget {
     try {
       await channel.invokeMethod<void>(method, arg);
     } on MissingPluginException {
-      // No native widget here (a widget test, or a platform the widget isn't built for).
+      // No native widget here (a widget test, or a platform without the widget).
     } on PlatformException catch (e) {
       debugPrint('could not update the cart timers widget (nothing the worker is doing is affected): $e');
     }

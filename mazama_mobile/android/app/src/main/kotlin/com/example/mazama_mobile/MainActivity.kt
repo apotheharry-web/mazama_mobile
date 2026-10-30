@@ -16,6 +16,9 @@ class MainActivity : FlutterActivity() {
         // The cart timers home-screen widget (CartTimersWidget.kt): the app sends it every cart's running timer.
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "mazama/cart_timer_widget")
             .setMethodCallHandler(CartTimersChannel(this))
+        // specs/app-updates AU-R12/AU-R13: inspect a downloaded update and hand it to Android's installer (AppInstaller.kt).
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "mazama/app_installer")
+            .setMethodCallHandler(AppInstaller(this))
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

@@ -2530,5 +2530,356 @@
    "strains": [],
    "total": 0
   }
+ },
+ {
+  "mg_mode": "tpe",
+  "name": "float quantities among ints",
+  "rows": [
+   {
+    "analyteWeight": null,
+    "description": "Avery 25 mg TPE",
+    "expired": false,
+    "id": 1,
+    "mazama": true,
+    "productGuid": "PKPR-0001",
+    "quantity": 900,
+    "strain": "Avery",
+    "unitMgTpe": 24.71,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Bluey 25 mg TPE",
+    "expired": false,
+    "id": 2,
+    "mazama": true,
+    "productGuid": "PKPR-0002",
+    "quantity": 800.5,
+    "strain": "Bluey",
+    "unitMgTpe": 24.71,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Ecuador 25 mg TPE",
+    "expired": false,
+    "id": 3,
+    "mazama": true,
+    "productGuid": "PKPR-0003",
+    "quantity": 700,
+    "strain": "Ecuador",
+    "unitMgTpe": 24.71,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Golden Teacher 25 mg TPE",
+    "expired": false,
+    "id": 4,
+    "mazama": true,
+    "productGuid": "PKPR-0004",
+    "quantity": 600.7,
+    "strain": "Golden Teacher",
+    "unitMgTpe": 24.71,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Huautla 25 mg TPE",
+    "expired": false,
+    "id": 5,
+    "mazama": true,
+    "productGuid": "PKPR-0005",
+    "quantity": 500,
+    "strain": "Huautla",
+    "unitMgTpe": 24.71,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Mazatec 25 mg TPE",
+    "expired": false,
+    "id": 6,
+    "mazama": true,
+    "productGuid": "PKPR-0006",
+    "quantity": 400.3,
+    "strain": "Mazatec",
+    "unitMgTpe": 24.71,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Penis Envy 25 mg TPE",
+    "expired": false,
+    "id": 7,
+    "mazama": true,
+    "productGuid": "PKPR-0007",
+    "quantity": 300,
+    "strain": "Penis Envy",
+    "unitMgTpe": 24.71,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Tidal Wave 25 mg TPE",
+    "expired": false,
+    "id": 8,
+    "mazama": true,
+    "productGuid": "PKPR-0008",
+    "quantity": 244.71,
+    "strain": "Tidal Wave",
+    "unitMgTpe": 24.71,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Thrasher 25 mg TPE",
+    "expired": false,
+    "id": 9,
+    "mazama": true,
+    "productGuid": "PKPR-0009",
+    "quantity": 179,
+    "strain": "Thrasher",
+    "unitMgTpe": 24.71,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Jedi Mind Fuck 25 mg TPE",
+    "expired": false,
+    "id": 10,
+    "mazama": true,
+    "productGuid": "PKPR-0010",
+    "quantity": 104,
+    "strain": "Jedi Mind Fuck",
+    "unitMgTpe": 24.71,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Cambodian 25 mg TPE",
+    "expired": false,
+    "id": 11,
+    "mazama": true,
+    "productGuid": "PKPR-0011",
+    "quantity": 100,
+    "strain": "Cambodian",
+    "unitMgTpe": 24.71,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Albino A+ 25 mg TPE",
+    "expired": false,
+    "id": 12,
+    "mazama": true,
+    "productGuid": "PKPR-0012",
+    "quantity": 51.58,
+    "strain": "Albino A+",
+    "unitMgTpe": 24.71,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "B+ 25 mg TPE",
+    "expired": false,
+    "id": 13,
+    "mazama": true,
+    "productGuid": "PKPR-0013",
+    "quantity": 4,
+    "strain": "B+",
+    "unitMgTpe": 24.71,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Avery 25 mg TPE",
+    "expired": false,
+    "id": 14,
+    "mazama": true,
+    "productGuid": "PKPR-0014",
+    "quantity": 0.1,
+    "strain": "Avery",
+    "unitMgTpe": 24.71,
+    "weightPerUnit": null,
+    "zeroOut": false
+   },
+   {
+    "analyteWeight": null,
+    "description": "Avery 25 mg TPE",
+    "expired": false,
+    "id": 15,
+    "mazama": true,
+    "productGuid": "PKPR-0015",
+    "quantity": 0.2,
+    "strain": "Avery",
+    "unitMgTpe": 24.71,
+    "weightPerUnit": null,
+    "zeroOut": false
+   }
+  ],
+  "summary": {
+   "mg_mode": "tpe",
+   "mg_total": 120710.56,
+   "strains": [
+    {
+     "mg": 22246.41,
+     "mg_sizes": {
+      "25": 22246.41
+     },
+     "name": "Avery",
+     "sizes": {
+      "25": 900.3000000000001
+     },
+     "units": 900.3000000000001
+    },
+    {
+     "mg": 19780.35,
+     "mg_sizes": {
+      "25": 19780.35
+     },
+     "name": "Bluey",
+     "sizes": {
+      "25": 800.5
+     },
+     "units": 800.5
+    },
+    {
+     "mg": 17297.0,
+     "mg_sizes": {
+      "25": 17297.0
+     },
+     "name": "Ecuador",
+     "sizes": {
+      "25": 700
+     },
+     "units": 700
+    },
+    {
+     "mg": 14843.3,
+     "mg_sizes": {
+      "25": 14843.3
+     },
+     "name": "Golden Teacher",
+     "sizes": {
+      "25": 600.7
+     },
+     "units": 600.7
+    },
+    {
+     "mg": 12355.0,
+     "mg_sizes": {
+      "25": 12355.0
+     },
+     "name": "Huautla",
+     "sizes": {
+      "25": 500
+     },
+     "units": 500
+    },
+    {
+     "mg": 9891.41,
+     "mg_sizes": {
+      "25": 9891.41
+     },
+     "name": "Mazatec",
+     "sizes": {
+      "25": 400.3
+     },
+     "units": 400.3
+    },
+    {
+     "mg": 7413.0,
+     "mg_sizes": {
+      "25": 7413.0
+     },
+     "name": "Penis Envy",
+     "sizes": {
+      "25": 300
+     },
+     "units": 300
+    },
+    {
+     "mg": 6046.78,
+     "mg_sizes": {
+      "25": 6046.78
+     },
+     "name": "Tidal Wave",
+     "sizes": {
+      "25": 244.71
+     },
+     "units": 244.71
+    },
+    {
+     "mg": 4423.09,
+     "mg_sizes": {
+      "25": 4423.09
+     },
+     "name": "Thrasher",
+     "sizes": {
+      "25": 179
+     },
+     "units": 179
+    },
+    {
+     "mg": 2569.84,
+     "mg_sizes": {
+      "25": 2569.84
+     },
+     "name": "Jedi Mind Fuck",
+     "sizes": {
+      "25": 104
+     },
+     "units": 104
+    },
+    {
+     "mg": 2471.0,
+     "mg_sizes": {
+      "25": 2471.0
+     },
+     "name": "Cambodian",
+     "sizes": {
+      "25": 100
+     },
+     "units": 100
+    },
+    {
+     "mg": 1274.54,
+     "mg_sizes": {
+      "25": 1274.54
+     },
+     "name": "Albino A+",
+     "sizes": {
+      "25": 51.58
+     },
+     "units": 51.58
+    },
+    {
+     "mg": 98.84,
+     "mg_sizes": {
+      "25": 98.84
+     },
+     "name": "B+",
+     "sizes": {
+      "25": 4
+     },
+     "units": 4
+    }
+   ],
+   "total": 4885.09
+  }
  }
 ]

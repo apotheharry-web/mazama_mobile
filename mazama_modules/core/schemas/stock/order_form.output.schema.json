@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "stock.order_form output",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [
+      "strain",
+      "size",
+      "par"
+    ],
+    "properties": {
+      "strain": {
+        "type": "string"
+      },
+      "size": {
+        "type": "integer"
+      },
+      "par": {
+        "type": "integer"
+      }
+    }
+  }
+}

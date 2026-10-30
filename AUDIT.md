@@ -1,6 +1,6 @@
 # Audit the sign-in yourself
 
-[`mazama_mobile/SIGN-IN-SECURITY.md`](mazama_mobile/SIGN-IN-SECURITY.md) makes nine claims about what this app does
+[`mazama_mobile/SIGN-IN-SECURITY.md`](mazama_mobile/SIGN-IN-SECURITY.md) makes ten claims about what this app does
 with a worker's state email, password and tokens. You don't need to trust them, or us: give this repository and the
 prompt below to an AI assistant (or a person who reads Dart), and it checks every claim against the code itself.
 

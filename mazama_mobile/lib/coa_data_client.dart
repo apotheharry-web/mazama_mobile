@@ -1,6 +1,6 @@
 // The app-side half of the adhoc-COA flow: for a service center mazama_sales has never heard of (see
 // center_status below), the app reads a center's inventory straight from the state system
-// (state_packages_client.dart's fetchPackagesFromState, already used as resilient_inventory.dart's tier 2) and
+// (state_packages_client.dart's fetchPackagesFromState, already used as lib/sync/center_stock.dart's step 2) and
 // then resolves each package's strain/potency itself, directly from its own lab report PDF, instead of relying
 // on Mazama's own sync + certificate-folder matching (which never ran for a center that was never configured).
 //
@@ -56,7 +56,7 @@ class CoaData {
   /// Null when the report's value isn't known (ND / below LOQ come as 0).
   final double? psilocybin;
   final double? psilocin;
-  // SM-08: analyte names as the shared rules file (mazama_modules/coa/rules/coa_rules.yaml) and coa_core spell them,
+  // SM-08: analyte names as the shared rules file (mazama_modules/coa/rules/coa_rules.yaml) and mazama_core spell them,
   // the same keys /p/coa-data sends.
   final double baeocystin;
   final double norbaeocystin;
@@ -89,6 +89,19 @@ class CoaData {
         aeruginascin: (j['aeruginascin'] as num?)?.toDouble(),
         tpe: (j['tpe'] as num?)?.toDouble(),
       );
+
+  /// The figures as /p/coa-data sends them ([CoaData.fromJson] reads them back; the guid is the caller's key): the
+  /// sync engine's coa_data body.
+  Map<String, Object?> toJson() => {
+        'strain': strain,
+        'psilocybin': psilocybin,
+        'psilocin': psilocin,
+        'baeocystin': baeocystin,
+        'norbaeocystin': norbaeocystin,
+        'norpsilocin': norpsilocin,
+        'aeruginascin': aeruginascin,
+        'tpe': tpe,
+      };
 }
 
 
@@ -205,7 +218,7 @@ Future<CoaData> uploadCoaParse({
   required String workerEmail,
   required String deviceId,
   /// The state's psilocybin figure for this lot (a package's analyteWeight, mg/g), sent when above 0: the server
-  /// uses it to pick the lot's section when the lab printed another id as the UID (AD-19, coa_core's find_lot).
+  /// uses it to pick the lot's section when the lab printed another id as the UID (AD-19, mazama_core's find_lot).
   double? statePsilocybin,
   String baseUrl = apiBaseUrl,
   http.Client? client,

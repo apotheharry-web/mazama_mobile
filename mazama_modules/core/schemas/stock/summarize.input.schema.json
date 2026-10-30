@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "stock.summarize input",
+  "type": "object",
+  "required": [
+    "rows",
+    "mg_mode"
+  ],
+  "properties": {
+    "rows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "description": "A stock row (stockdata.Stock.chart_rows / the phone's StockRow): productGuid, id, quantity, zeroOut, expired, mazama, strain, description, unitMgTpe, weightPerUnit, analyteWeight, type; only those the rules read matter."
+      }
+    },
+    "mg_mode": {
+      "enum": [
+        "tpe",
+        "psilocybin"
+      ]
+    }
+  }
+}

@@ -11,18 +11,21 @@
 // Whenever the state answered, the records it won't sell come back as [StockLoad.heldBack] for "Other stock", with the
 // server's words for why (held_back_reason). Mazama's licenses (/p/center-status) are fetched every time, best effort, and kept for 2. Par comes from the
 // server, else, while the server can't be reached (server_error.dart's rule; a 4xx is still an error), from the copy
-// last fetched with when it was (read-only: nothing can be saved without the server, server_offline.dart), kept in the
-// app's reply store (reply_store.dart). Every successful stock read is kept in stock_cache_store.dart for the next time.
+// last fetched with when it was (read-only: nothing can be saved without the server, sync/server_read.dart), kept in the
+// sync engine's par dataset (lib/sync/sync_datasets.dart). Every successful stock read is kept for the next time as the
+// center's stock_rows dataset, and Mazama's licenses as its mazama_licenses dataset (specs/phone-sync Task 10: before,
+// stock_cache_store.dart's document, moved there by sync_migration.dart).
+import 'dart:convert';
+
 import 'merged_inventory.dart';
 import 'package_ids.dart';
 import 'packages_client.dart';
-import 'reply_store.dart';
 import 'sellability.dart';
-import 'server_offline.dart';
+import 'sync/server_read.dart';
 import 'session.dart' show SessionExpired;
 import 'state_records.dart';
-import 'stock_cache_store.dart';
 import 'stock_summary.dart';
+import 'sync/sync_datasets.dart';
 
 /// What the stock page draws: the rows, the mg mode they are charted in, whether they are only part of the
 /// picture (no server, SP-R13), why (the center isn't set up on the server; the state's sign-in has expired) and,
@@ -124,8 +127,10 @@ List<StockRow> stockRowsFromState(
   String Function(String? name)? strainOf,
 }) {
   final rows = <StockRow>[];
-  for (final r in stateRecords) {
-    final key = packagedProductKey(r);
+  final keys = packagedProductKeys(stateRecords);
+  for (var i = 0; i < stateRecords.length; i++) {
+    final r = stateRecords[i];
+    final key = keys[i];
     // SM-21: a record the server skips; SP-D9: one it won't sell (locked, flagged, pending a transfer, no units)
     if (key == null || !isSellable(r)) continue;
     rows.add(_stateRow(r, key, mazamaLicenses, today, strainOf));
@@ -141,9 +146,10 @@ List<({StockRow row, String reason})> heldBackFromState(
   String Function(String? name)? strainOf,
 }) =>
     [
-      for (final r in stateRecords)
-        if (packagedProductKey(r) case final key?)
-          if (heldBackReason(r) case final why?) (row: _stateRow(r, key, mazamaLicenses, today, strainOf), reason: why),
+      for (final (i, key) in packagedProductKeys(stateRecords).indexed)
+        if (key != null)
+          if (heldBackReason(stateRecords[i]) case final why?)
+            (row: _stateRow(stateRecords[i], key, mazamaLicenses, today, strainOf), reason: why),
     ];
 
 StockRow _stateRow(Map<String, Object?> r, ({int stateId, String pkpr}) key, Set<String>? mazamaLicenses, DateTime today,
@@ -202,7 +208,7 @@ Future<StockLoad> loadCenterStock({
   required Future<List<Package>> Function() fetchServerPackages,
   required Future<List<Object?>> Function() fetchStateRecords,
   required Future<List<String>> Function() fetchMazamaLicenses,
-  required StockCacheStore cache,
+  required Datasets datasets,
   DateTime Function() now = DateTime.now,
   String Function(String? name)? strainOf,
 }) async {
@@ -215,7 +221,7 @@ Future<StockLoad> loadCenterStock({
     }
   }
 
-  final licenses = keep(() async => cache.saveMazamaLicenses(stateId, await fetchMazamaLicenses()));
+  final licenses = keep(() async => keepMazamaLicenses(datasets, stateId, await fetchMazamaLicenses(), now().toUtc()));
   Object? serverError, stateError;
   MergedInventoryResult? merged;
   try {
@@ -245,18 +251,20 @@ Future<StockLoad> loadCenterStock({
   await licenses;
 
   final m = merged;
-  final saved = await cache.load(stateId);
+  final mazamaLicenses = keptMazamaLicenses(datasets, stateId)?.toSet();
   final signInNeeded = stateError is SessionExpired;
   final raw = m?.rawStateRecords;
   final records = raw == null ? null : [for (final r in raw) if (r is Map) Map<String, Object?>.from(r)];
   final heldBack = records == null
       ? const <({StockRow row, String reason})>[]
-      : heldBackFromState(records, saved.mazamaLicenses?.toSet(), now(), strainOf: strainOf);
+      : heldBackFromState(records, mazamaLicenses, now(), strainOf: strainOf);
 
   if (m != null && m.mazamaOk) {
     final served = {for (final p in m.mazamaPackages!) _lotKey(p)};
     final rows = [for (final p in m.packages) if (served.contains(_lotKey(p))) p.toStockRow()];
-    await keep(() => cache.saveRows(stateId, rows, mgMode: 'tpe', at: now().toUtc()));
+    // the server answered; the state too unless it is the one that didn't (m.stateOk)
+    await keep(() async => keepStockRows(datasets, stateId, rows,
+        mgMode: 'tpe', at: now().toUtc(), source: m.stateOk ? sourceMerged : sourceServer));
     // The state didn't answer: the server's own quantities, as of its last sync (and say why when it's the sign-in).
     return StockLoad(rows, heldBack: heldBack, serverQuantities: !m.stateOk, signInNeeded: !m.stateOk && signInNeeded);
   }
@@ -264,28 +272,70 @@ Future<StockLoad> loadCenterStock({
   final e = serverError;
   final notSetUp = e is PackagesError && e.status == 404;
   if (records != null) {
-    final rows = stockRowsFromState(records, saved.mazamaLicenses?.toSet(), now(), strainOf: strainOf);
-    await keep(() => cache.saveRows(stateId, rows, mgMode: 'psilocybin', at: now().toUtc()));
+    final rows = stockRowsFromState(records, mazamaLicenses, now(), strainOf: strainOf);
+    await keep(() async => keepStockRows(datasets, stateId, rows, mgMode: 'psilocybin', at: now().toUtc(), source: sourceState));
     return StockLoad(rows, mgMode: 'psilocybin', partial: true, notSetUp: notSetUp, heldBack: heldBack);
   }
 
-  final rows = saved.rows;
-  if (rows == null) throw signInNeeded ? StockSignInNeeded() : StockUnavailable();
-  return StockLoad(rows,
-      mgMode: saved.rowsMgMode, partial: true, drawnAt: saved.rowsAt, notSetUp: notSetUp, signInNeeded: signInNeeded);
+  final saved = keptStockRows(datasets, stateId);
+  if (saved == null) throw signInNeeded ? StockSignInNeeded() : StockUnavailable();
+  return StockLoad(saved.rows,
+      mgMode: saved.mgMode, partial: true, drawnAt: saved.at, notSetUp: notSetUp, signInNeeded: signInNeeded);
 }
 
-/// The center's par levels from the server, kept for offline with when ([now]) in the app's reply store
-/// (reply_store.dart, README R56); when the server can't be reached, the last copy with its time (the page shows it
-/// read-only then; a copy an older build kept in [legacy] is read once and moved over); else, or with none kept, the
-/// server's error.
+/// The center's Mazama licenses last fetched (the mazama_licenses dataset); null when none are kept (or readable).
+List<String>? keptMazamaLicenses(Datasets datasets, int stateId) {
+  final row = datasets.read(Dataset.mazamaLicenses, '$stateId');
+  if (row == null) return null;
+  try {
+    final j = jsonDecode(row.body);
+    return j is List ? [for (final l in j) if (l is String) l] : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+/// Keeps [licenses] as the center's Mazama licenses, fetched [at].
+void keepMazamaLicenses(Datasets datasets, int stateId, List<String> licenses, DateTime at) =>
+    datasets.put(Dataset.mazamaLicenses, '$stateId', jsonEncode(licenses), source: sourceServer, at: at);
+
+/// The rows last drawn for the center (the stock_rows dataset), their mg mode and when they were drawn (null for a copy
+/// an older build kept without a time: moved in at the epoch); null when none are kept, or they can't be read.
+({List<StockRow> rows, String mgMode, DateTime? at})? keptStockRows(Datasets datasets, int stateId) {
+  final row = datasets.read(Dataset.stockRows, '$stateId');
+  if (row == null) return null;
+  try {
+    final j = jsonDecode(row.body);
+    if (j is! Map || j['rows'] is! List) return null;
+    final rows = [for (final r in j['rows'] as List) StockRow.fromJson(Map<String, Object?>.from(r as Map))];
+    final mode = j['mgMode'];
+    return (
+      rows: rows,
+      mgMode: stockMgModes.contains(mode) ? mode as String : 'tpe',
+      at: row.fetchedAt.millisecondsSinceEpoch == 0 ? null : row.fetchedAt,
+    );
+  } catch (_) {
+    return null; // a damaged copy: as if nothing were kept
+  }
+}
+
+/// Keeps [rows] as the center's drawn rows, with their mg mode and time; [source] is who answered the read they were
+/// drawn from (sync_datasets.dart's sources), `merged` by default as the stock page's own load is.
+void keepStockRows(Datasets datasets, int stateId, List<StockRow> rows,
+        {required String mgMode, required DateTime at, String source = sourceMerged}) =>
+    datasets.put(Dataset.stockRows, '$stateId', jsonEncode({'rows': [for (final r in rows) r.toJson()], 'mgMode': mgMode}),
+        source: source, at: at);
+
+/// The center's par levels from the server, kept for offline with when ([now]) as the sync engine's par dataset
+/// (lib/sync/sync_datasets.dart, specs/phone-sync phase 2; README R56); when the server can't be reached, the last copy with its time (the page shows it
+/// read-only then; a copy an older build kept is moved into the dataset on the folder's first use, sync_migration.dart);
+/// else, or with none kept, the server's error.
 Future<ServerRead<List<ParLevel>>> loadCenterPar({
   required int stateId,
   required Future<List<ParLevel>> Function() fetchPar,
-  required ReplyStore replies,
-  StockCacheStore? legacy,
+  required Datasets datasets,
   DateTime Function() now = DateTime.now,
 }) {
-  final kept = parReplies(replies, stateId, legacy: legacy);
+  final kept = parDataset(datasets, stateId);
   return readWithCache<List<ParLevel>>(fetch: fetchPar, save: kept.save, load: kept.load, now: now);
 }

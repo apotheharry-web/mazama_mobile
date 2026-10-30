@@ -28,6 +28,8 @@ import 'package:mazama_mobile/sale_failure_client.dart';
 import 'package:mazama_mobile/sale_log_client.dart';
 import 'package:mazama_mobile/sales_upload_client.dart';
 import 'package:mazama_mobile/scan_match_client.dart';
+import 'package:mazama_mobile/app_update_client.dart' show requestAppLatest;
+import 'package:mazama_mobile/app_update_download.dart' show requestServerApk;
 import 'package:mazama_mobile/server_error.dart';
 import 'package:mazama_mobile/server_outbox.dart' show uuidV4;
 import 'package:mazama_mobile/sheets_client.dart';
@@ -81,12 +83,14 @@ void main() {
       'login_hosts': loginHostsPath(),
       'login_browser_spec': loginBrowserSpecPath(),
       'ingest': ingestPath('sales', 225),
+      'app_latest': appLatestPath(),
+      'app_apk': appApkPath(26103001),
     };
     expect(generated.keys.toSet(), apiRoutes.keys.toSet());
     for (final e in generated.entries) {
       final path = apiRoutes[e.key]!['path'] as String;
       expect(e.value,
-          path.replaceAll('{state_id}', '225').replaceAll('{guid}', 'PKPR-aaaa0001').replaceAll('{dataset}', 'sales'),
+          path.replaceAll('{state_id}', '225').replaceAll('{guid}', 'PKPR-aaaa0001').replaceAll('{dataset}', 'sales').replaceAll('{build}', '26103001'),
           reason: e.key);
     }
     expect(labelPath(225, 'a/b'), '/p/label/225/a%2Fb');
@@ -419,6 +423,8 @@ void main() {
       'login_spec': (c) => requestLoginSpec(client: c),
       'login_hosts': (c) => requestLoginHosts(client: c),
       'login_browser_spec': (c) => requestBrowserLoginSpec(client: c),
+      'app_latest': (c) => requestAppLatest(client: c),
+      'app_apk': (c) => requestServerApk(26103001, client: c),
     };
     test('there is a call for every route', () {
       expect(calls.keys.toSet(), apiRoutes.keys.toSet());

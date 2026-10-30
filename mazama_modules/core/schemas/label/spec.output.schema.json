@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "label.spec output",
+  "description": "LabelOutcome: a label spec and its warnings, or why no label can be printed.",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "spec",
+        "warnings"
+      ],
+      "properties": {
+        "spec": {
+          "type": "object",
+          "required": [
+            "spec_version",
+            "pkpr",
+            "strain",
+            "dose_mg_tpe",
+            "net_wt_g",
+            "tpe_mg_per_g",
+            "per_unit_mg",
+            "psilocybin_from",
+            "best_by",
+            "best_by_from",
+            "type_code",
+            "source",
+            "description"
+          ],
+          "properties": {
+            "spec_version": {
+              "type": "integer"
+            },
+            "pkpr": {
+              "type": "string"
+            },
+            "strain": {
+              "type": "string"
+            },
+            "dose_mg_tpe": {
+              "type": "integer"
+            },
+            "net_wt_g": {
+              "type": "number"
+            },
+            "tpe_mg_per_g": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "per_unit_mg": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "number"
+              }
+            },
+            "psilocybin_from": {
+              "type": "string"
+            },
+            "best_by": {
+              "type": "string"
+            },
+            "best_by_from": {
+              "type": "string"
+            },
+            "type_code": {
+              "type": "string"
+            },
+            "source": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "description": {
+              "type": "string"
+            }
+          }
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "blocked",
+        "warnings"
+      ],
+      "properties": {
+        "blocked": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  ]
+}

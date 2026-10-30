@@ -275,9 +275,9 @@ void main() {
     expect(LocalStore.forDir(tempDir).read('a')!.body, '1');
   });
 
-  test('the schema version is 1 and the journal is WAL', () {
+  test('the schema version is 2 (the sync tables) and the journal is WAL', () {
     final store = LocalStore.forDir(tempDir);
-    expect(localStoreSchemaVersion, 1);
+    expect(localStoreSchemaVersion, 2);
     expect(store.debugQuery('PRAGMA user_version').single.values.single, localStoreSchemaVersion);
     expect(store.debugQuery('PRAGMA journal_mode').single.values.single, 'wal');
     final columns = store.debugQuery('PRAGMA table_info(documents)').map((r) => r['name']).toList();

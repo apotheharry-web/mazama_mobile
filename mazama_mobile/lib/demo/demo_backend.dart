@@ -35,8 +35,9 @@ import '../sheets_client.dart';
 import '../session.dart';
 import '../session_timer_store.dart';
 import '../state_packages_client.dart';
-import '../stock_cache_store.dart';
 import '../stock_summary.dart';
+import '../sync/sync_engine.dart';
+import 'demo_engine.dart';
 
 /// The demo center's state id: far outside the state's real license ids.
 const int demoStateId = 999999;
@@ -67,7 +68,10 @@ class DemoBackend {
   InventoryCacheStore get inventoryCacheStore => InventoryCacheStore(dataDir: () => dataDir);
   EnrichmentStore get enrichmentStore => EnrichmentStore(dataDir: () => dataDir);
   DeviceIdStore get deviceIdStore => DeviceIdStore(dataDir: () => dataDir);
-  StockCacheStore get stockCacheStore => StockCacheStore(dataDir: () => dataDir);
+
+  /// The demo's sync engine (demo_engine.dart, specs/phone-sync PS-R8): its datasets in this folder's own database,
+  /// nothing ever sent. Made on first use.
+  late final SyncEngine engine = demoEngine(this);
 
   /// The demo sign-in's session: never saved, never renewed (DM-D6, DM-R4).
   Session get session => Session.demo();

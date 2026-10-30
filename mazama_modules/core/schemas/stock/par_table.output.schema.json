@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "stock.par_table output",
+  "type": "object",
+  "required": [
+    "heads",
+    "rows",
+    "short_total",
+    "summary",
+    "all"
+  ],
+  "properties": {
+    "heads": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      }
+    },
+    "rows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "cells",
+          "short"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "cells": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "size",
+                "have",
+                "par",
+                "short"
+              ],
+              "properties": {
+                "size": {
+                  "type": "integer"
+                },
+                "have": {
+                  "type": "number"
+                },
+                "par": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "short": {
+                  "type": "number"
+                },
+                "extra": {
+                  "type": "number"
+                }
+              }
+            }
+          },
+          "short": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "short_total": {
+      "type": "number"
+    },
+    "summary": {
+      "type": "string"
+    },
+    "all": {
+      "type": "object",
+      "required": [
+        "name",
+        "cells",
+        "short",
+        "extra"
+      ]
+    }
+  }
+}

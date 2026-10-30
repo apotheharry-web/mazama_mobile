@@ -1,8 +1,10 @@
 // What Mazama's server last said about each package it sent (strain, tpeMg, expires), kept on the device so that a
-// later read straight from the state system (resilient_inventory.dart's tier 2: Mazama's server unreachable) can show
+// later read straight from the state system (lib/sync/center_stock.dart: Mazama's server unreachable) can show
 // the server's figures again instead of the state-only degraded ones (state_packages_client.dart) - but only for a
-// package whose inputs have not changed since. One JSON document (enrichment.json) in the data folder's LocalStore, as
-// inventory_cache_store.dart keeps its own, under session_store.dart's defaultSessionDataDir.
+// package whose inputs have not changed since. Since specs/phone-sync phase 3 it is the sync engine's enrichment
+// dataset (one copy, key '', the same JSON the document held) in the data folder's database, under
+// session_store.dart's defaultSessionDataDir; the document an older build kept (enrichment.json) is moved there
+// (sync_migration.dart's migrateStockCaches).
 //
 // What is kept, per package, and why only this:
 //   - strain: the server's canonical name (its certificate folder and Strains page spellings), which the state alone
@@ -20,8 +22,8 @@
 // stock_rows.dart).
 //
 // The phone's own reading of a lab report (SM-D31, amending SM-D15): whenever phone_label.dart draws a label from
-// coa_core's reading of the state's accepted potency report for a package's lot, the TPE coa_core gave (LabelSpec
-// tpe_mg_per_g: coa_core::tpe to 2 places, the server's coa.tpe figure), the psilocin per unit, and the per-unit mg
+// mazama_core's reading of the state's accepted potency report for a package's lot, the TPE mazama_core gave (LabelSpec
+// tpe_mg_per_g: mazama_core::tpe to 2 places, the server's coa.tpe figure), the psilocin per unit, and the per-unit mg
 // TPE = unit weight x that TPE rounded up (dose.dart's unitTpeMg, SM-D16/SM-D17 - the number /p/packages sends as
 // tpeMg, never the label's printed dose, which prefers the name's) are kept here too, marked
 // [EnrichmentSource.phone], with the weightPerUnit and analyteWeight they apply to ([EnrichmentStore.rememberPhone]).
@@ -40,6 +42,7 @@ import 'dart:io';
 import 'local_store.dart';
 import 'packages_client.dart';
 import 'session_store.dart' show defaultSessionDataDir;
+import 'sync/sync_datasets.dart' show Dataset, Datasets, sourceServer;
 
 /// What the server last sent for one package, or what the phone read from its lab report, and the inputs it applies to.
 class PackageEnrichment {
@@ -55,10 +58,10 @@ class PackageEnrichment {
   final DateTime seenAt;
 
   /// Who these figures are from: Mazama's server ([EnrichmentSource.server], every entry written before SM-D31) or the
-  /// phone's coa_core reading of the lab report ([EnrichmentSource.phone]).
+  /// phone's mazama_core reading of the lab report ([EnrichmentSource.phone]).
   final EnrichmentSource source;
 
-  /// The phone's reading only (null from the server): coa_core's TPE in mg/g, and its psilocin in mg per unit.
+  /// The phone's reading only (null from the server): mazama_core's TPE in mg/g, and its psilocin in mg per unit.
   final double? tpeMgPerG;
   final double? psilocinMg;
 
@@ -180,7 +183,7 @@ class EnrichmentStore {
     _write(kept, at);
   }
 
-  /// Records [readings] - the phone's own coa_core readings of lab reports ([EnrichmentSource.phone], phone_label.dart),
+  /// Records [readings] - the phone's own mazama_core readings of lab reports ([EnrichmentSource.phone], phone_label.dart),
   /// made at [at] (SM-D31). A reading replaces what was kept for the same package unless that is the server's and was
   /// worked out from the same weightPerUnit and analyteWeight: the server's figures win while they still apply. A
   /// reading with no mg TPE (tpeMg 0) is not kept. Synchronous I/O, as [remember].
@@ -204,10 +207,15 @@ class EnrichmentStore {
     final fresh = [for (final e in kept.values) if (!_tooOld(e, at)) e]
       ..sort((a, b) => b.seenAt.compareTo(a.seenAt));
     final bounded = fresh.length > maxEntries ? fresh.sublist(0, maxEntries) : fresh;
-    LocalStore.forDir(dataDir()).write(_name, jsonEncode({
-      'version': 1,
-      'entries': [for (final e in bounded) e.toJson()],
-    }));
+    Datasets.forDir(dataDir).put(
+        Dataset.enrichment,
+        '',
+        jsonEncode({
+          'version': 1,
+          'entries': [for (final e in bounded) e.toJson()],
+        }),
+        source: sourceServer,
+        at: at);
   }
 
   /// Every package kept and not older than [maxAge] as of [now], by [enrichmentKey]. Empty when nothing is stored or
@@ -219,14 +227,16 @@ class EnrichmentStore {
   }
 
   Future<void> clear() async {
-    LocalStore.forDir(dataDir()).delete(_name); // nothing kept is exactly the state this call is meant to produce
+    // nothing kept is exactly the state this call is meant to produce; an older build's document goes too
+    Datasets.forDir(dataDir).remove(Dataset.enrichment, key: '');
+    LocalStore.forDir(dataDir()).delete(_name);
   }
 
   bool _tooOld(PackageEnrichment e, DateTime now) => now.difference(e.seenAt) > maxAge;
 
   Map<String, PackageEnrichment> _read() {
     try {
-      final text = LocalStore.forDir(dataDir()).read(_name)?.body;
+      final text = Datasets.forDir(dataDir).read(Dataset.enrichment, '')?.body;
       if (text == null) return {};
       final decoded = jsonDecode(text);
       if (decoded is! Map || decoded['version'] != 1) return {};
@@ -247,7 +257,7 @@ class EnrichmentStore {
 }
 
 /// [statePackages] - read straight from the state system, Mazama's server unreachable - with the figures kept on the
-/// phone (the server's last strain, tpeMg and expires, or the phone's own coa_core reading of the lab report, SM-D31)
+/// phone (the server's last strain, tpeMg and expires, or the phone's own mazama_core reading of the lab report, SM-D31)
 /// filled in where that is safe, every package marked:
 ///   - filled ([Package.enrichedAt] set to when the figures were received or read, [Package.enrichedBy] who from,
 ///     [Package.stateEstimate] false) only when [known] holds an entry for the same package (productGuid + id) whose
@@ -344,6 +354,7 @@ Package copyPackage(
       enrichedAt: enrichedAt,
       enrichedBy: enrichedBy,
       stateEstimate: stateEstimate,
+      stateOnly: p.stateOnly,
       labelInput: labelInput ?? p.labelInput,
     );
 

@@ -3,16 +3,19 @@
 // test/order_par_page_test.dart). Data comes through the
 // injected loaders, as the other pages' tests inject their clients.
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mazama_mobile/center_stock_page.dart';
 import 'package:mazama_mobile/licenses_client.dart';
 import 'package:mazama_mobile/server_health.dart';
-import 'package:mazama_mobile/server_offline.dart';
+import 'package:mazama_mobile/sync/server_read.dart';
 import 'package:mazama_mobile/sheets_client.dart';
 import 'package:mazama_mobile/stock_pie.dart';
 import 'package:mazama_mobile/stock_rows.dart';
 import 'package:mazama_mobile/stock_summary.dart';
+import 'package:mazama_mobile/sync/sync_datasets.dart';
 
 import 'fake_timers.dart';
 
@@ -607,6 +610,29 @@ void main() {
     expect(find.textContaining('Lots did not load'), findsNothing);
     await _openLots(tester);
     expect(_lotRows(tester), contains('Golden Teacher|HB-gt01'));
+  });
+
+  // specs/phone-sync phase 2: the copy is the sync engine's sheets dataset.
+  testWidgets("the sheets are kept as the dataset, and fill the lot table from it while the server can't be reached",
+      (tester) async {
+    final dir = Directory.systemTemp.createTempSync('mazama_center_stock_page_test_');
+    addTearDown(() => dir.deleteSync(recursive: true));
+    final at = DateTime.utc(2026, 10, 23, 8);
+    final keeper = sheetsDataset(Datasets.forDir(() => dir), 231);
+    await tester.pumpWidget(_page(loadSheets: () async => _sheets, keepSheets: keeper.save, keptSheets: keeper.load, now: () => at));
+    await tester.pumpAndSettle();
+    expect(Datasets.forDir(() => dir).read(Dataset.sheets, '231')!.fetchedAt, at);
+
+    await tester.pumpWidget(const SizedBox());
+    await tester.pumpWidget(_page(
+      loadSheets: () async => throw SheetsError('cannot reach sales.mazamamushrooms.com: SocketException', unreachable: true),
+      keepSheets: keeper.save,
+      keptSheets: keeper.load,
+    ));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Lots did not load'), findsNothing);
+    await _openLots(tester);
+    expect(_lotRows(tester), containsAll(['Golden Teacher|HB-gt01', 'Penis Envy|PL-pe02']));
   });
 
   group('reloads once the server tracker is online again', () {

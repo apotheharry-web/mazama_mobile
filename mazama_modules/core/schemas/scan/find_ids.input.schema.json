@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "scan.find_ids input",
+  "description": "Scan matching, step one: a label's text lines, the package ids to look for, and whether the text was typed rather than scanned.",
+  "type": "object",
+  "required": [
+    "texts",
+    "guids"
+  ],
+  "properties": {
+    "texts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "guids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "typed": {
+      "type": "boolean"
+    }
+  }
+}

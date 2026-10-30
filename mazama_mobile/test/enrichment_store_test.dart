@@ -7,6 +7,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mazama_mobile/enrichment_store.dart';
 import 'package:mazama_mobile/local_store.dart';
 import 'package:mazama_mobile/packages_client.dart';
+import 'package:mazama_mobile/sync/sync_datasets.dart';
+
+/// What is kept in [dir]: the enrichment dataset's body (specs/phone-sync phase 3), null when none.
+String? _kept(Directory dir) => Datasets.forDir(() => dir).read(Dataset.enrichment, '')?.body;
 
 void main() {
   late Directory tempDir;
@@ -68,7 +72,7 @@ void main() {
       final known = await s.load(seenAt.add(const Duration(hours: 1)));
       expect(known.keys.toSet(), {enrichmentKey('PKPR-ab12c', 202), enrichmentKey('PKPR-ab12c', 203), enrichmentKey('PKPR-ab12c', 204)});
       expect(File('${tempDir.path}/nested/enrichment.json').existsSync(), isFalse, reason: 'kept in the database');
-      final kept = jsonDecode(LocalStore.forDir(Directory('${tempDir.path}/nested')).read('enrichment.json')!.body) as Map;
+      final kept = jsonDecode(_kept(Directory('${tempDir.path}/nested'))!) as Map;
       expect((kept['entries'] as List).length, 3);
     });
 
@@ -77,7 +81,7 @@ void main() {
       await s.remember([served(id: 101)], seenAt);
       expect(await s.load(seenAt.add(const Duration(days: 31))), isEmpty);
       await s.remember([served(id: 102)], seenAt.add(const Duration(days: 31)));
-      final kept = jsonDecode(LocalStore.forDir(Directory('${tempDir.path}/nested')).read('enrichment.json')!.body) as Map;
+      final kept = jsonDecode(_kept(Directory('${tempDir.path}/nested'))!) as Map;
       expect([for (final e in kept['entries'] as List) (e as Map)['id']], [102]);
     });
 
@@ -92,6 +96,7 @@ void main() {
         await s.clear();
         expect(await s.load(seenAt), isEmpty);
         expect(LocalStore.forDir(dir).read('enrichment.json'), isNull);
+        expect(_kept(dir), isNull);
         await s.clear(); // nothing there: still fine
       }
     });
@@ -184,9 +189,9 @@ void main() {
     });
   });
 
-  // SM-D31: the phone's own coa_core reading of a lab report, kept beside the server's figures.
+  // SM-D31: the phone's own mazama_core reading of a lab report, kept beside the server's figures.
   group("the phone's reading of a lab report", () {
-    // coa_core's TPE 1.75 mg/g for the record (state psilocybin 1.0 + factor x psilocin), so 5 g x 1.75 = 8.75 -> 9 mg.
+    // mazama_core's TPE 1.75 mg/g for the record (state psilocybin 1.0 + factor x psilocin), so 5 g x 1.75 = 8.75 -> 9 mg.
     PackageEnrichment reading({int id = 101, double wpu = 5.0, double aw = 1.0, int tpe = 9, DateTime? at}) => PackageEnrichment(
         productGuid: 'PKPR-ab12c', id: id, weightPerUnit: wpu, analyteWeight: aw, strain: 'Golden Teacher', tpeMg: tpe,
         expires: null, seenAt: at ?? seenAt, source: EnrichmentSource.phone, tpeMgPerG: 1.75, psilocinMg: 2.69);

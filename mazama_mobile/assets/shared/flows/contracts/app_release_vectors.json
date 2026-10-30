@@ -1,0 +1,510 @@
+{
+ "about": "specs/app-updates AU-R1/AU-R2: the signed Android release file latest.json. cases: the text rule, the checker's date being `today` (a build may be dated at most one day after it); signed: the signature over the exact bytes with public_key (the TEST key of signing_vectors.json, never a real key), `as` naming the reader that must give `ok`. Written by tools/gen_app_release_vectors.py; never edit by hand.",
+ "today": "2026-10-30",
+ "public_key": "YcNzjqtNhrAj3aZNQIt+PmgCBxYnIA/gr+IAZnutYj0=",
+ "max_bytes": 4096,
+ "cases": [
+  {
+   "name": "valid",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/mazama-mobile-0.2.4+26103001.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": true,
+   "version": "0.2.4",
+   "build": 26103001,
+   "apk": "https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/mazama-mobile-0.2.4+26103001.apk",
+   "sha256": "3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9",
+   "size": 41234567,
+   "minSdk": 24
+  },
+  {
+   "name": "plus_escaped_in_tag_and_asset",
+   "why": "GitHub's browser_download_url writes + as %2B",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4%2B26103001/mazama-mobile-0.2.4%2B26103001.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": true,
+   "version": "0.2.4",
+   "build": 26103001,
+   "apk": "https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4%2B26103001/mazama-mobile-0.2.4%2B26103001.apk",
+   "sha256": "3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9",
+   "size": 41234567,
+   "minSdk": 24
+  },
+  {
+   "name": "plain_asset_name",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/app-release.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": true,
+   "version": "0.2.4",
+   "build": 26103001,
+   "apk": "https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/app-release.apk",
+   "sha256": "3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9",
+   "size": 41234567,
+   "minSdk": 24
+  },
+  {
+   "name": "build_dated_tomorrow",
+   "why": "a build dated the day after the checker's date is allowed (time zones)",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103101, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103101/a.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": true,
+   "version": "0.2.4",
+   "build": 26103101,
+   "apk": "https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103101/a.apk",
+   "sha256": "3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9",
+   "size": 41234567,
+   "minSdk": 24
+  },
+  {
+   "name": "version_zeros",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.0.0\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.0.0+26103001/a.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": true,
+   "version": "0.0.0",
+   "build": 26103001,
+   "apk": "https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.0.0+26103001/a.apk",
+   "sha256": "3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9",
+   "size": 41234567,
+   "minSdk": 24
+  },
+  {
+   "name": "version_three_digits",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"999.10.100\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v999.10.100+26103001/a.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": true,
+   "version": "999.10.100",
+   "build": 26103001,
+   "apk": "https://github.com/apotheharry-web/mazama_mobile/releases/download/v999.10.100+26103001/a.apk",
+   "sha256": "3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9",
+   "size": 41234567,
+   "minSdk": 24
+  },
+  {
+   "name": "bounds_low",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/mazama-mobile-0.2.4+26103001.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 1, \"minSdk\": 21}\n",
+   "valid": true,
+   "version": "0.2.4",
+   "build": 26103001,
+   "apk": "https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/mazama-mobile-0.2.4+26103001.apk",
+   "sha256": "3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9",
+   "size": 1,
+   "minSdk": 21
+  },
+  {
+   "name": "bounds_high",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/mazama-mobile-0.2.4+26103001.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 314572800, \"minSdk\": 99}\n",
+   "valid": true,
+   "version": "0.2.4",
+   "build": 26103001,
+   "apk": "https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/mazama-mobile-0.2.4+26103001.apk",
+   "sha256": "3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9",
+   "size": 314572800,
+   "minSdk": 99
+  },
+  {
+   "name": "asset_of_100_characters",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": true,
+   "version": "0.2.4",
+   "build": 26103001,
+   "apk": "https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.apk",
+   "sha256": "3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9",
+   "size": 41234567,
+   "minSdk": 24
+  },
+  {
+   "name": "duplicate_key_last_wins",
+   "why": "the text repeats version (9.9.9, then 0.2.4): both apps' JSON readers keep the last value of a repeated key, and the case pins that they agree",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"9.9.9\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/mazama-mobile-0.2.4+26103001.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": true,
+   "version": "0.2.4",
+   "build": 26103001,
+   "apk": "https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/mazama-mobile-0.2.4+26103001.apk",
+   "sha256": "3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9",
+   "size": 41234567,
+   "minSdk": 24
+  },
+  {
+   "name": "missing_kind",
+   "why": "",
+   "text": "{\"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/mazama-mobile-0.2.4+26103001.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": false
+  },
+  {
+   "name": "missing_version",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/mazama-mobile-0.2.4+26103001.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": false
+  },
+  {
+   "name": "missing_build",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/mazama-mobile-0.2.4+26103001.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": false
+  },
+  {
+   "name": "missing_apk",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": false
+  },
+  {
+   "name": "missing_sha256",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/mazama-mobile-0.2.4+26103001.apk\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": false
+  },
+  {
+   "name": "missing_size",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/mazama-mobile-0.2.4+26103001.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"minSdk\": 24}\n",
+   "valid": false
+  },
+  {
+   "name": "missing_minSdk",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/mazama-mobile-0.2.4+26103001.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567}\n",
+   "valid": false
+  },
+  {
+   "name": "extra_key",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/mazama-mobile-0.2.4+26103001.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24, \"notes\": \"x\"}\n",
+   "valid": false
+  },
+  {
+   "name": "kind_wrong",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-hosts\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/mazama-mobile-0.2.4+26103001.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": false
+  },
+  {
+   "name": "version_leading_zero",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"01.2.3\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v01.2.3+26103001/a.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": false
+  },
+  {
+   "name": "version_two_parts",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"1.2\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v1.2+26103001/a.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": false
+  },
+  {
+   "name": "version_four_parts",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"1.2.3.4\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v1.2.3.4+26103001/a.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": false
+  },
+  {
+   "name": "version_four_digits",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"1000.0.0\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v1000.0.0+26103001/a.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": false
+  },
+  {
+   "name": "version_a_number",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": 1, \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/mazama-mobile-0.2.4+26103001.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": false
+  },
+  {
+   "name": "build_7_digits",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 2610300, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+2610300/a.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": false
+  },
+  {
+   "name": "build_9_digits",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 261030011, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+261030011/a.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": false
+  },
+  {
+   "name": "build_as_text",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": \"26103001\", \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/mazama-mobile-0.2.4+26103001.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": false
+  },
+  {
+   "name": "build_true",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": true, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/mazama-mobile-0.2.4+26103001.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": false
+  },
+  {
+   "name": "build_a_float",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001.0, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/mazama-mobile-0.2.4+26103001.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": false
+  },
+  {
+   "name": "build_not_a_date",
+   "why": "there is no February 30",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26023001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26023001/a.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": false
+  },
+  {
+   "name": "build_month_13",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26133001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26133001/a.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": false
+  },
+  {
+   "name": "build_dated_after_tomorrow",
+   "why": "two days after the checker's date: refused, so a signed file can't name a far-future build",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26110101, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26110101/a.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": false
+  },
+  {
+   "name": "build_99123199",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 99123199, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+99123199/a.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": false
+  },
+  {
+   "name": "apk_http",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"http://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/a.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": false
+  },
+  {
+   "name": "apk_other_owner",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com/someone-else/mazama_mobile/releases/download/v0.2.4+26103001/a.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": false
+  },
+  {
+   "name": "apk_other_repo",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/other/releases/download/v0.2.4+26103001/a.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": false
+  },
+  {
+   "name": "apk_latest_download",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/latest/download/a.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": false
+  },
+  {
+   "name": "apk_tag_not_version_and_build",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.5+26103001/a.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": false
+  },
+  {
+   "name": "apk_tag_without_v",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/0.2.4+26103001/a.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": false
+  },
+  {
+   "name": "apk_query",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/a.apk?x=1\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": false
+  },
+  {
+   "name": "apk_fragment",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/a.apk#f\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": false
+  },
+  {
+   "name": "apk_user_info",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://user@github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/a.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": false
+  },
+  {
+   "name": "apk_port",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com:443/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/a.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": false
+  },
+  {
+   "name": "apk_escaped_slash",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001%2Fa.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": false
+  },
+  {
+   "name": "apk_other_escape",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/a%41.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": false
+  },
+  {
+   "name": "apk_lower_case_escape",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4%2b26103001/a.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": false
+  },
+  {
+   "name": "apk_dot_dot",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/../a.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": false
+  },
+  {
+   "name": "apk_not_an_apk",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/a.zip\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": false
+  },
+  {
+   "name": "apk_asset_of_101_characters",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": false
+  },
+  {
+   "name": "apk_upper_case_host",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://GitHub.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/a.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": false
+  },
+  {
+   "name": "sha256_upper_case",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/mazama-mobile-0.2.4+26103001.apk\", \"sha256\": \"3B5D5C3712955042212316173CCF37BE800F6A7E9AD4A3D0C2A2F1E1E0B4C8A9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": false
+  },
+  {
+   "name": "sha256_63_digits",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/mazama-mobile-0.2.4+26103001.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": false
+  },
+  {
+   "name": "size_0",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/mazama-mobile-0.2.4+26103001.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 0, \"minSdk\": 24}\n",
+   "valid": false
+  },
+  {
+   "name": "size_over_300_mib",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/mazama-mobile-0.2.4+26103001.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 314572801, \"minSdk\": 24}\n",
+   "valid": false
+  },
+  {
+   "name": "size_a_float",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/mazama-mobile-0.2.4+26103001.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567.0, \"minSdk\": 24}\n",
+   "valid": false
+  },
+  {
+   "name": "min_sdk_20",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/mazama-mobile-0.2.4+26103001.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 20}\n",
+   "valid": false
+  },
+  {
+   "name": "min_sdk_100",
+   "why": "",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/mazama-mobile-0.2.4+26103001.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 100}\n",
+   "valid": false
+  },
+  {
+   "name": "over_4096_bytes",
+   "why": "otherwise valid, padded with spaces",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/mazama-mobile-0.2.4+26103001.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                }\n",
+   "valid": false
+  },
+  {
+   "name": "not_json",
+   "why": "",
+   "text": "kind: mazama-mobile-release\n",
+   "valid": false
+  },
+  {
+   "name": "a_json_list",
+   "why": "",
+   "text": "[{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/mazama-mobile-0.2.4+26103001.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}]\n",
+   "valid": false
+  },
+  {
+   "name": "a_bom",
+   "why": "a byte order mark before the object",
+   "text": "﻿{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/mazama-mobile-0.2.4+26103001.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "valid": false
+  }
+ ],
+ "signed": [
+  {
+   "name": "good",
+   "as": "release",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/mazama-mobile-0.2.4+26103001.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "signature": "nZcNsp4zRBcNBk6YFKng2iw73Qd9rKaXQG9uyIanJQrTnDAUEhQ9qiaCINnXk8FQfCDktKJCxvX13jU14GDSAQ==",
+   "ok": true
+  },
+  {
+   "name": "good_sig_with_newline",
+   "as": "release",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/mazama-mobile-0.2.4+26103001.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "signature": "nZcNsp4zRBcNBk6YFKng2iw73Qd9rKaXQG9uyIanJQrTnDAUEhQ9qiaCINnXk8FQfCDktKJCxvX13jU14GDSAQ==\n",
+   "ok": true,
+   "why": "a .sig file's one line may end with a newline (SL-D13)"
+  },
+  {
+   "name": "one_byte_of_text_changed",
+   "as": "release",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/mazama-mobile-0.2.4+26103001.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234568, \"minSdk\": 24}\n",
+   "signature": "nZcNsp4zRBcNBk6YFKng2iw73Qd9rKaXQG9uyIanJQrTnDAUEhQ9qiaCINnXk8FQfCDktKJCxvX13jU14GDSAQ==",
+   "ok": false
+  },
+  {
+   "name": "crlf_added",
+   "as": "release",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/mazama-mobile-0.2.4+26103001.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\r\n",
+   "signature": "nZcNsp4zRBcNBk6YFKng2iw73Qd9rKaXQG9uyIanJQrTnDAUEhQ9qiaCINnXk8FQfCDktKJCxvX13jU14GDSAQ==",
+   "ok": false
+  },
+  {
+   "name": "signature_of_another_text",
+   "as": "release",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/mazama-mobile-0.2.4+26103001.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "signature": "c9JVXIh7t4RIw7njh867l/kP98b5CPXfB/L96pLJkByqGlYrp1d+e7d944hOPbPIxZKOKBy97Te7DMmQ00OVCQ==",
+   "ok": false
+  },
+  {
+   "name": "s_plus_l_malleated",
+   "as": "release",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/mazama-mobile-0.2.4+26103001.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "signature": "nZcNsp4zRBcNBk6YFKng2iw73Qd9rKaXQG9uyIanJQrAcCZxLHdPAv0eGHy2jaBlfCDktKJCxvX13jU14GDSEQ==",
+   "ok": false
+  },
+  {
+   "name": "signature_with_trailing_space",
+   "as": "release",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/mazama-mobile-0.2.4+26103001.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "signature": "nZcNsp4zRBcNBk6YFKng2iw73Qd9rKaXQG9uyIanJQrTnDAUEhQ9qiaCINnXk8FQfCDktKJCxvX13jU14GDSAQ== ",
+   "ok": false
+  },
+  {
+   "name": "cross_kind_host_list_as_release",
+   "as": "release",
+   "text": "{\"version\": \"2026-10-30.1\", \"hosts\": [\"login.example.gov\"]}\n",
+   "signature": "7VY1wXmHVZWKYdAMP8Z1X2CxGWdLR/EDPpsqZTQaZ/J6YlA9W/5Lwln6lWarWrEjDNnfar+pYYPZ7gRqZfjDAg==",
+   "ok": false,
+   "why": "a validly signed host list is not a release file"
+  },
+  {
+   "name": "cross_kind_release_as_host_list",
+   "as": "host_list",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/mazama-mobile-0.2.4+26103001.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "signature": "nZcNsp4zRBcNBk6YFKng2iw73Qd9rKaXQG9uyIanJQrTnDAUEhQ9qiaCINnXk8FQfCDktKJCxvX13jU14GDSAQ==",
+   "ok": false,
+   "why": "a validly signed release file is not a host list (each app's host-list reader refuses it)"
+  },
+  {
+   "name": "cross_kind_release_as_login_spec",
+   "as": "login_spec",
+   "text": "{\"kind\": \"mazama-mobile-release\", \"version\": \"0.2.4\", \"build\": 26103001, \"apk\": \"https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.2.4+26103001/mazama-mobile-0.2.4+26103001.apk\", \"sha256\": \"3b5d5c3712955042212316173ccf37be800f6a7e9ad4a3d0c2a2f1e1e0b4c8a9\", \"size\": 41234567, \"minSdk\": 24}\n",
+   "signature": "nZcNsp4zRBcNBk6YFKng2iw73Qd9rKaXQG9uyIanJQrTnDAUEhQ9qiaCINnXk8FQfCDktKJCxvX13jU14GDSAQ==",
+   "ok": false,
+   "why": "a validly signed release file is not a usable sign-in spec"
+  }
+ ]
+}

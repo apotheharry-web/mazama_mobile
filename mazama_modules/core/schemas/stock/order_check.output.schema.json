@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "stock.order_check output",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": [
+        "lines",
+        "note"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "lines": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "strain",
+              "size",
+              "type",
+              "quantity"
+            ],
+            "properties": {
+              "strain": {
+                "type": "string"
+              },
+              "size": {
+                "type": "integer"
+              },
+              "type": {
+                "type": "string"
+              },
+              "quantity": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 99999
+              }
+            }
+          },
+          "minItems": 1
+        },
+        "note": {
+          "type": "string",
+          "maxLength": 1000
+        }
+      }
+    },
+    {
+      "type": "object",
+      "required": [
+        "refused"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "refused": {
+          "type": "string"
+        }
+      }
+    }
+  ]
+}

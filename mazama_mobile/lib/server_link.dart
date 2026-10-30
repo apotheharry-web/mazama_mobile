@@ -11,11 +11,15 @@
 //     clientId until the server takes them. Par saves and orders are never queued: they say "try again later".
 //   - [ServerLink.catchUp] (catch_up_store.dart): lab reports that couldn't be submitted and the newest inventory and
 //     sales snapshots per center, sent again once the server answers, with what is current then.
-//   - [ServerLink.replies] (reply_store.dart): the last good reply of each read, shown while the server can't be reached.
+//   - The reads the pages show while their source can't be reached (par levels, sheets, Mazama's stock, the Sales tab's
+//     state read, a center's stock) are the engine's datasets (lib/sync/sync_datasets.dart, specs/phone-sync), each
+//     kept with when it was read; what an older build kept elsewhere is moved there on start (sync_migration.dart).
 //   - [ServerLink.coaUploads] (coa_uploader.dart): every lab report the server is missing, sent in the background at the
 //     server's pace (specs/coa-upload); a lot whose report couldn't reach the server goes on the catch-up list.
+//   - [ServerLink.engine] (lib/sync/sync_engine.dart, specs/phone-sync): the outbox, the catch-up work and the uploader
+//     are facades over its one queue; it wakes them when the tracker comes back online.
 //   - [ServerLinkBanner]: one line above every page while the server can't be reached, saying since when, that selling
-//     still works, and how many reports are waiting. Never in the demo (which has no server at all). It is the only
+//     still works, and how many reports are waiting (the engine's count). Never in the demo (which has no server at all). It is the only
 //     notice of the outage: the pages say nothing of their own about it (README R87), and its close button hides it
 //     for the rest of that outage ([ServerHealth.dismissBanner]); the next outage shows it again.
 // When the tracker comes back online (and at start-up, and when the app returns to the foreground while online), the
@@ -28,22 +32,35 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 import 'catch_up_store.dart';
-import 'coa_data_client.dart' show CoaData;
+import 'center_status_client.dart' as center_status_client;
+import 'coa_data_client.dart' show CoaData, fetchCoaDataBatch;
 import 'coa_uploader.dart';
 import 'configured_coa_submit.dart' as configured_coa_submit;
 import 'demo/demo_banner.dart' show demoModeOn;
 import 'device_id.dart';
 import 'inventory_upload_client.dart' as inventory_upload_client;
 import 'local_store.dart';
+import 'mazama_inventory_client.dart' as mazama_inventory_client;
+import 'par_client.dart' as par_client;
 import 'ping_client.dart';
-import 'reply_store.dart';
 import 'sales_upload_client.dart' as sales_upload_client;
 import 'server_error.dart';
 import 'server_health.dart';
-import 'server_offline.dart';
+import 'sync/server_read.dart' show serverUnreachable;
+import 'sync/updated_line.dart' show formatAsOf;
 import 'server_outbox.dart';
 import 'session.dart';
 import 'session_store.dart' show SessionStore, defaultSessionDataDir;
+import 'sheets_client.dart' as sheets_client;
+import 'enrichment_store.dart';
+import 'inventory_cache_store.dart';
+import 'packages_client.dart' as packages_client;
+import 'state_packages_client.dart' as state_packages_client;
+import 'sync/center_stock.dart' show CenterStock, centerStockRefresher;
+import 'sync/sync_datasets.dart' show Dataset, serverReadRefreshers;
+import 'sync/sync_engine.dart';
+import 'sync/sync_queue.dart' show QueueKind;
+import 'sync/sync_tables.dart' show DatasetRow;
 
 /// Keeps when the server went offline across app restarts (the server_health.json document of the folder's
 /// LocalStore), so the banner says since when even after the phone restarted the app mid-outage.
@@ -80,22 +97,23 @@ class ServerHealthStore {
 }
 
 class ServerLink {
-  /// [coaUploads] defaults to an uploader over [health] and [catchUp], remembering what it sent beside the catch-up file.
+  /// [coaUploads] defaults to an uploader over [health] and [catchUp], remembering what it sent beside the catch-up
+  /// work; [engine] to one over the parts' own queues (a link made from its parts, as tests do).
   ServerLink(
-      {required this.health, required this.outbox, required this.catchUp, required this.replies, CoaUploader? coaUploads})
-      : coaUploads = coaUploads ??
-            CoaUploader(
-                health: health,
-                catchUp: catchUp,
-                auth: catchUp.auth,
-                sent: CoaSentMemory(store: CoaSentStore(dataDir: catchUp.store.dataDir))) {
-    health.addListener(_onHealth);
-    _wasOnline = health.online;
+      {required this.health,
+      required this.outbox,
+      required this.catchUp,
+      CoaUploader? coaUploads,
+      SyncEngine? engine})
+      : coaUploads = coaUploads ?? CoaUploader(health: health, catchUp: catchUp, auth: catchUp.auth) {
+    this.engine = engine ?? SyncEngine.over(health: health, queues: [outbox.queue, catchUp.queue, this.coaUploads.queue]);
   }
 
-  /// The app's real link, its files in [dataDir] (the app's data folder by default). [rememberOffline]: when the server
-  /// went offline is kept across restarts (MazamaApp's link); the fallback [serverLink] doesn't, so nothing reaching it
-  /// before MazamaApp (a test calling a client without a client of its own) can leave a later run starting offline.
+  /// The app's real link, its files in [dataDir] (the app's data folder by default): one sync engine
+  /// (lib/sync/sync_engine.dart) with the real senders, and the outbox, catch-up work and uploader over its queue.
+  /// [rememberOffline]: when the server went offline is kept across restarts (MazamaApp's link); the fallback
+  /// [serverLink] doesn't, so nothing reaching it before MazamaApp (a test calling a client without a client of its
+  /// own) can leave a later run starting offline.
   factory ServerLink.standard({Directory Function()? dataDir, SessionStore? sessionStore, bool rememberOffline = true}) {
     final dir = dataDir ?? defaultSessionDataDir;
     final healthStore = ServerHealthStore(dataDir: dir);
@@ -106,6 +124,34 @@ class ServerLink {
     );
     final sessions = sessionStore ?? SessionStore(dataDir: dir);
     final devices = DeviceIdStore(dataDir: dir);
+    Future<CatchUpAuth?> auth() => savedSessionAuth(sessions, devices);
+    final senders = {
+      QueueKind.saleLog: outboxQueueSender(sendOutboxEntry),
+      QueueKind.saleFailure: outboxQueueSender(sendOutboxEntry),
+      QueueKind.inventorySnapshot: snapshotQueueSender(uploadPendingSnapshot),
+      QueueKind.salesSnapshot: snapshotQueueSender(uploadPendingSnapshot),
+      // one sender for the kept lab reports and the paced ones: the same chain, with the session current at send time
+      QueueKind.labReport: labReportQueueSender(sendCoaLot, auth),
+    };
+    SyncEngine engine;
+    try {
+      engine = SyncEngine(store: LocalStore.forDir(dir()), health: health, senders: senders);
+    } catch (e) {
+      // The local database can't be opened (busy, read-only, disk full during its upgrade): the app still starts and
+      // selling goes on; the queue then lives in memory for this run only.
+      debugPrint('the local store could not be opened, the sync queue is kept in memory: $e');
+      // The datasets are then this in-memory database's too, while the pages' own handles (Datasets.forDir) keep
+      // trying the file: both best effort, as the reply store was in this case.
+      engine = SyncEngine(store: LocalStore.inMemory(), health: health, senders: senders);
+    }
+    // specs/phone-sync phase 2: the server's reads as datasets, each read with today's client through the link
+    serverReadRefreshers(
+      fetchPar: (id) => par_client.fetchParLevels(id),
+      fetchSheets: (id) => sheets_client.fetchProductSheets(id),
+      fetchMazamaInventory: () => mazama_inventory_client.fetchMazamaInventory(),
+      fetchCenterStatus: (id) => center_status_client.fetchCenterStatus(id),
+      fetchCoaData: (lots) => fetchCoaDataBatch(lots),
+    ).forEach(engine.register);
     // One memory of the lab reports sent, whichever way they went (the uploader, the catch-up work, a cart add).
     final sent = CoaSentMemory(store: CoaSentStore(dataDir: dir));
     final catchUp = CatchUpWork(
@@ -113,45 +159,57 @@ class ServerLink {
       store: CatchUpStore(dataDir: dir),
       submitCoa: (lot, auth) => submitPendingCoaLot(lot, auth, sent: sent),
       uploadSnapshot: uploadPendingSnapshot,
-      auth: () => savedSessionAuth(sessions, devices),
+      auth: auth,
+      queue: engine.queue,
     );
+    // specs/phone-sync phase 4: a center's stock, read as the cart reads it, with the saved session (none while it
+    // needs renewing, or in the demo); every state read is kept as the center's snapshot for the server.
+    engine.register(
+        Dataset.centerStock,
+        centerStockRefresher(() async {
+          if (demoModeOn.value) return null; // the demo has its own engine (demo_engine.dart): nothing of it comes here
+          final session = Session.fromJson(await sessions.load());
+          if (session == null || session.isDemo || session.needsRenewal()) return null;
+          final deviceId = await devices.idOrCreate();
+          return CenterStock(
+            fetchServer: (id) => packages_client.fetchPackages(id),
+            fetchRawState: (id, {required accessToken}) =>
+                state_packages_client.fetchRawPackagesFromState(id, accessToken: accessToken),
+            fetchFromState: (id, {required accessToken}) =>
+                state_packages_client.fetchPackagesFromState(id, accessToken: accessToken),
+            cache: InventoryCacheStore(dataDir: dir),
+            enrichment: EnrichmentStore(dataDir: dir),
+            session: () => session,
+            onStateRead: (id, raw) => catchUp.keepSnapshot(id, raw, workerEmail: session.email, deviceId: deviceId),
+          );
+        }));
     return ServerLink(
       health: health,
-      outbox: ServerOutbox(health: health, store: OutboxStore(dataDir: dir)),
+      outbox: ServerOutbox(health: health, store: OutboxStore(dataDir: dir), queue: engine.queue),
       catchUp: catchUp,
-      replies: ReplyStore(dataDir: dir),
-      coaUploads: CoaUploader(health: health, catchUp: catchUp, auth: catchUp.auth, sent: sent),
+      coaUploads: CoaUploader(health: health, catchUp: catchUp, auth: auth, sent: sent, queue: engine.queue),
+      engine: engine,
     );
   }
 
   final ServerHealth health;
   final ServerOutbox outbox;
   final CatchUpWork catchUp;
-  final ReplyStore replies;
   final CoaUploader coaUploads;
 
-  bool _wasOnline = true;
+  /// The phone's sync engine (specs/phone-sync): everything the link still has to send waits in its queue.
+  late final SyncEngine engine;
 
-  void _onHealth() {
-    final online = health.online;
-    if (online && !_wasOnline) wake();
-    _wasOnline = online;
-  }
+  /// Sends what is waiting (the reports, then the snapshots and kept lab reports) while the server answers. The engine
+  /// also does this by itself whenever the tracker comes back online.
+  void wake() => engine.wake();
 
-  /// Sends what is waiting (the outbox, then the catch-up work) while the server answers.
-  void wake() {
-    if (health.offline) return;
-    unawaited(outbox.flush().then((_) => catchUp.flush()));
-  }
+  /// The app came back to the foreground: offline, probe now; online, send anything still waiting; what pages watch
+  /// is refreshed when it is older than five minutes (specs/phone-sync PS-D6).
+  void onForeground() => engine.onForeground();
 
-  /// The app came back to the foreground: offline, probe now; online, send anything still waiting.
-  void onForeground() {
-    if (health.offline) {
-      health.onForeground();
-    } else {
-      wake();
-    }
-  }
+  /// The app went to the background: the engine refreshes nothing until it is back.
+  void onBackground() => engine.onBackground();
 
   /// [CartPage.uploadInventorySnapshot]'s default: uploads [records] (inventory_upload_client.dart). While the server
   /// can't be reached the snapshot is kept instead (only the newest per center) and sent once it answers; one that
@@ -230,10 +288,10 @@ class ServerLink {
   }
 
   void dispose() {
-    health.removeListener(_onHealth);
     coaUploads.dispose();
     outbox.dispose();
     catchUp.dispose();
+    engine.dispose(); // after the facades, which stop listening to its queue first
     health.dispose();
   }
 }
@@ -242,6 +300,14 @@ class ServerLink {
 /// gets one in the app's data folder.
 ServerLink get serverLink => _serverLink ??= ServerLink.standard(rememberOffline: false);
 ServerLink? _serverLink;
+
+/// [CartPage.requestStockRefresh]'s default (specs/phone-sync PS-R6): asks the app's sync engine to refresh [stateId]'s
+/// center_stock dataset after a confirmed sale, never awaited; nothing happens while no refresher is registered for it.
+void linkRequestStockRefresh(int stateId) => unawaited(serverLink.engine.refresh(Dataset.centerStock, '$stateId'));
+
+/// [CartPage.watchStock]'s default (specs/phone-sync Task 8b): the app's engine's copy of [stateId]'s stock; null
+/// while no link has been made the app's (a page built before MazamaApp, a test): never builds one for it.
+Stream<DatasetRow?>? linkWatchStock(int stateId) => _serverLink?.engine.watch(Dataset.centerStock, '$stateId');
 
 /// Makes [link] the app's link (MazamaApp, and tests that want their own).
 void useServerLink(ServerLink link) => _serverLink = link;
@@ -367,7 +433,7 @@ class ServerLinkBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: Listenable.merge([link.health, link.outbox, _demoMode ?? demoModeOn]),
+      listenable: Listenable.merge([link.health, link.engine.changes, _demoMode ?? demoModeOn]),
       builder: (context, app) {
         final visible = link.health.offline && !link.health.bannerDismissed && !(_demoMode ?? demoModeOn).value;
         final scheme = Theme.of(context).colorScheme;
@@ -391,8 +457,8 @@ class ServerLinkBanner extends StatelessWidget {
                             child: Text(
                               serverLinkBannerText(
                                   since: link.health.offlineSince,
-                                  waiting: link.outbox.pendingCount,
-                                  dropped: link.outbox.droppedLogs),
+                                  waiting: link.engine.queue.waitingReports,
+                                  dropped: link.engine.queue.droppedSaleLogs),
                               style: TextStyle(color: scheme.onTertiaryContainer),
                             ),
                           ),

@@ -6,7 +6,9 @@
 // app could parse without breaking on the next CSS change), whereas the one thing a worker actually wants
 // here - what's in stock right now, by name and quantity - is already served, field for field, by the same
 // plain JSON endpoint this app already calls. No sale happens from this screen; it's read-only start to finish.
-// It is the one page in the app where pulling down re-downloads the inventory (the owner's rule).
+// It is the one page in the app where pulling down re-downloads the inventory (the owner's rule). Above the list, its
+// age (specs/phone-sync PS-R7, PS-D5): when the stock it shows was read, asked of [StockPage.readAt] after each
+// download (the cart passes the center_stock dataset's time, which every load it runs keeps).
 import 'package:flutter/material.dart';
 
 import 'enrichment_store.dart';
@@ -17,6 +19,7 @@ import 'packages_client.dart' as packages_client; // see StockPage.fetchPackages
 import 'product_type_icon.dart';
 import 'reconcile_page.dart';
 import 'responsive.dart';
+import 'sync/updated_line.dart';
 
 class StockPage extends StatefulWidget {
   final License center;
@@ -35,12 +38,21 @@ class StockPage extends StatefulWidget {
   /// center's license type. The generated one in the app; tests pass a copy with features off.
   final Map<String, Feature> featureTable;
 
+  /// When the stock [fetchPackages] last handed back was read, asked after each download, for the age line (PS-R7);
+  /// null (none known, or no [readAt]) shows none. Its failure only leaves the line out.
+  final Future<DateTime?> Function(int stateId)? readAt;
+
+  /// The clock the age is counted against; overridable for tests.
+  final DateTime Function() now;
+
   const StockPage(
       {super.key,
       required this.center,
       this.fetchPackages = packages_client.fetchPackages,
       this.workerEmail = '',
-      this.featureTable = features});
+      this.featureTable = features,
+      this.readAt,
+      this.now = DateTime.now});
 
   @override
   State<StockPage> createState() => _StockPageState();
@@ -49,6 +61,9 @@ class StockPage extends StatefulWidget {
 class _StockPageState extends State<StockPage> {
   List<Package>? _inventory;
   String? _error;
+
+  /// When the stock on screen was read ([StockPage.readAt]); null when not known.
+  DateTime? _readAt;
   final _searchController = TextEditingController();
   String _query = '';
 
@@ -79,9 +94,13 @@ class _StockPageState extends State<StockPage> {
       _inventory = null;
       _error = null;
     });
-    widget.fetchPackages(widget.center.id).then((pkgs) {
+    widget.fetchPackages(widget.center.id).then((pkgs) async {
+      final at = await _readTime();
       if (!mounted) return;
-      setState(() => _inventory = pkgs);
+      setState(() {
+        _inventory = pkgs;
+        _readAt = at;
+      });
     }).catchError((e) {
       if (!mounted) return;
       setState(() => _error = e.toString());
@@ -94,10 +113,12 @@ class _StockPageState extends State<StockPage> {
   Future<void> _refresh() async {
     try {
       final pkgs = await widget.fetchPackages(widget.center.id);
+      final at = await _readTime();
       if (!mounted) return;
       final guids = {for (final p in pkgs) p.productGuid};
       setState(() {
         _inventory = pkgs;
+        _readAt = at;
         _error = null;
         _selectedGuids.retainAll(guids);
       });
@@ -108,6 +129,17 @@ class _StockPageState extends State<StockPage> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Stock did not refresh: $e')));
       }
+    }
+  }
+
+  /// When the stock just downloaded was read ([StockPage.readAt]); null when it can't be told.
+  Future<DateTime?> _readTime() async {
+    final readAt = widget.readAt;
+    if (readAt == null) return null;
+    try {
+      return await readAt(widget.center.id);
+    } catch (_) {
+      return null; // only the age line is left out
     }
   }
 
@@ -177,6 +209,7 @@ class _StockPageState extends State<StockPage> {
                 decoration: const InputDecoration(labelText: 'Search by product type or PKPR', prefixIcon: Icon(Icons.search)),
               ),
             ),
+            if (_inventory != null) Align(alignment: Alignment.centerLeft, child: UpdatedLine.at(_readAt, now: widget.now)),
             Expanded(child: _body()),
             // Shown while reconcile is on for this license's type (specs/features FR-3); not gated on
             // _selectedGuids or search state - reconciling is a separate activity from picking PKPRs to add to a

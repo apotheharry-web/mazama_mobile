@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "stock.filter output",
+  "type": "object",
+  "required": [
+    "counted",
+    "other"
+  ],
+  "properties": {
+    "counted": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "description": "A stock row (stockdata.Stock.chart_rows / the phone's StockRow): productGuid, id, quantity, zeroOut, expired, mazama, strain, description, unitMgTpe, weightPerUnit, analyteWeight, type; only those the rules read matter."
+      }
+    },
+    "other": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "row",
+          "reason"
+        ],
+        "properties": {
+          "row": {
+            "type": "object",
+            "description": "A stock row (stockdata.Stock.chart_rows / the phone's StockRow): productGuid, id, quantity, zeroOut, expired, mazama, strain, description, unitMgTpe, weightPerUnit, analyteWeight, type; only those the rules read matter."
+          },
+          "reason": {
+            "enum": [
+              "expired",
+              "other_maker"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

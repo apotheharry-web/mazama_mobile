@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "scan.find_ids output",
+  "description": "The ids found, best first.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "matches"
+  ],
+  "properties": {
+    "matches": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "guid",
+          "hex",
+          "dist",
+          "line"
+        ],
+        "properties": {
+          "guid": {
+            "type": "string"
+          },
+          "hex": {
+            "type": "string"
+          },
+          "dist": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2
+          },
+          "line": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

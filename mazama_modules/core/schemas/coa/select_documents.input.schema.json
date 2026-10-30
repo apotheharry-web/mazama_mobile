@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "coa.select_documents input",
+  "description": "SM-06: a GetPackagedProductInfo reply (any JSON; what isn't an accepted potency test is ignored) and the ids of the documents already fetched.",
+  "type": "object",
+  "required": [
+    "info",
+    "already_have"
+  ],
+  "properties": {
+    "info": {},
+    "already_have": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      }
+    }
+  }
+}

@@ -97,7 +97,7 @@ const Map<String, Feature> features = {
     pages: <String>[],
     uses: <String>['POST /p/scan-match/{state_id}'],
     shared: 'complete',
-    logic: <String>['mazama_modules/coa/coa_core/src/scan.rs'],
+    logic: <String>['mazama_modules/core/mazama_core/src/scan.rs'],
   ),
   'labels': Feature(
     name: 'labels',
@@ -109,7 +109,7 @@ const Map<String, Feature> features = {
     pages: <String>[],
     uses: <String>['GET /p/label/{state_id}/{guid}'],
     shared: 'partial',
-    logic: <String>['mazama_modules/coa/coa_core/src/label.rs'],
+    logic: <String>['mazama_modules/core/mazama_core/src/label.rs'],
     item: 'FM-19',
   ),
   'info_sheets': Feature(
@@ -522,6 +522,18 @@ const Map<String, Feature> features = {
     shared: 'partial',
     logic: <String>['mazama_modules/ids/'],
     item: 'FM-08',
+  ),
+  'app_updates': Feature(
+    name: 'app_updates',
+    id: 'F-40',
+    what: 'Android app updates: the offer of a newer signed release (specs/app-updates)',
+    built: <String>['phone'],
+    onWeb: <String>[],
+    onPhone: <String>['ServiceCenter'],
+    pages: <String>[],
+    uses: <String>['GET /p/app/latest', 'GET /p/app/apk/{build}'],
+    shared: 'complete',
+    logic: <String>['mazama_modules/flows/contracts/app_release_vectors.json'],
   ),
 };
 

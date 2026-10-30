@@ -1,13 +1,15 @@
 // Debug-only (reached from DebugToolsPage): what the phone's link to Mazama's server is doing (server_link.dart, README
 // R56) - whether the tracker counts the server as reachable and since when, the next probe, the reports waiting in the
 // outbox, the dead letters (reports the server refused: kept, never sent again, never deleted), how many sale logs were
-// dropped for room, the lab reports and inventory snapshots waiting to catch up, and which replies are kept for
-// offline. "Check now" probes the server; "Send now" sends what is waiting.
+// dropped for room, the lab reports and inventory snapshots waiting to catch up, the sync engine's datasets (what the
+// phone knows, from where, when, and the last refresh's error; specs/phone-sync). A document an older build kept and
+// this one couldn't read stays where it was (sync_migration.dart). "Check now" probes the server; "Send now" sends what is waiting.
 import 'package:flutter/material.dart';
 
 import 'server_link.dart';
-import 'server_offline.dart' show formatAsOf;
+import 'sync/updated_line.dart' show formatAsOf;
 import 'server_outbox.dart';
+import 'sync/sync_tables.dart' show DatasetRow;
 
 class DebugServerLinkPage extends StatelessWidget {
   const DebugServerLinkPage({super.key, this.link});
@@ -60,8 +62,8 @@ class DebugServerLinkPage extends StatelessWidget {
               for (final s in l.catchUp.snapshots.values)
                 Text('  ${s.kind}, center ${s.stateId}: ${s.records.length} records read ${formatAsOf(s.readAt)}'),
               const Divider(),
-              const Text('Replies kept for offline:'),
-              for (final key in l.replies.keys()) Text('  $key${_keptAt(l, key)}'),
+              const Text('Datasets kept:'),
+              for (final d in l.engine.datasets.list()) Text('  ${_dataset(d)}', key: ValueKey('dataset-${d.name}/${d.key}')),
             ]),
           );
         },
@@ -69,9 +71,12 @@ class DebugServerLinkPage extends StatelessWidget {
     );
   }
 
-  static String _keptAt(ServerLink l, String key) {
-    final kept = l.replies.load(key);
-    return kept == null ? '' : ' (${formatAsOf(kept.at)})';
+  /// A dataset as listed: a copy an older build kept with no time is moved in at the epoch (sync_migration.dart), and
+  /// reads "no time", as the keepers treat it.
+  static String _dataset(DatasetRow d) {
+    final failed = d.lastError == null ? '' : ' - the last refresh failed: ${d.lastError}';
+    final when = d.fetchedAt.millisecondsSinceEpoch == 0 ? 'no time' : formatAsOf(d.fetchedAt);
+    return '${d.name}${d.key.isEmpty ? '' : '/${d.key}'} from the ${d.source}, $when$failed';
   }
 
   Widget _entry(OutboxEntry e, {bool dead = false}) {

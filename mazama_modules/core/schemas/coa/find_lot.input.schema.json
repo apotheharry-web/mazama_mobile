@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "coa.find_lot input",
+  "description": "AD-19: a lab report's words, the lot id the state links it to and the state's psilocybin for that lot (mg/g; null when it has none).",
+  "type": "object",
+  "required": [
+    "coa_text",
+    "lot"
+  ],
+  "properties": {
+    "coa_text": {
+      "$ref": "https://mazamamushrooms.com/schema/coa_text/1"
+    },
+    "lot": {
+      "type": "string"
+    },
+    "state_psilocybin": {
+      "type": [
+        "number",
+        "null"
+      ]
+    }
+  }
+}

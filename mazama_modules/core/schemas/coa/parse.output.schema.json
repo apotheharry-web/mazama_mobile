@@ -1,0 +1,6 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "coa.parse output",
+  "description": "What the report says (CoaParseResult).",
+  "$ref": "https://mazamamushrooms.com/schema/coa_parse_result/1"
+}

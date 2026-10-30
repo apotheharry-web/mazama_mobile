@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "scan.closest output",
+  "description": "The packages the label fits, best first (record: the index of the record the score is for).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "guesses"
+  ],
+  "properties": {
+    "guesses": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "guid",
+          "score",
+          "why",
+          "weight",
+          "mg",
+          "record",
+          "stock"
+        ],
+        "properties": {
+          "guid": {
+            "type": "string"
+          },
+          "score": {
+            "type": "integer"
+          },
+          "why": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "weight": {
+            "type": "number"
+          },
+          "mg": {
+            "type": "number"
+          },
+          "record": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "stock": {
+            "type": "number"
+          }
+        }
+      }
+    }
+  }
+}

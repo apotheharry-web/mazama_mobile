@@ -1,9 +1,13 @@
 import 'dart:io';
+import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mazama_mobile/reply_store.dart';
+import 'package:mazama_mobile/app_installer.dart';
+import 'package:mazama_mobile/app_update_check.dart';
+import 'package:mazama_mobile/app_update_store.dart';
 import 'package:mazama_mobile/cart_page.dart';
 import 'package:mazama_mobile/center_home_page.dart';
 import 'package:mazama_mobile/center_stock_page.dart';
@@ -23,10 +27,13 @@ import 'package:mazama_mobile/session.dart';
 import 'package:mazama_mobile/session_store.dart';
 import 'package:mazama_mobile/sheets_client.dart';
 import 'package:mazama_mobile/state_packages_client.dart';
-import 'package:mazama_mobile/stock_cache_store.dart';
 import 'package:mazama_mobile/stock_mix.dart';
 import 'package:mazama_mobile/stock_summary.dart';
+import 'package:mazama_mobile/local_store.dart';
+import 'package:mazama_mobile/sync/sync_datasets.dart';
+import 'package:mazama_mobile/sync/updated_line.dart';
 
+import 'app_release_signing.dart';
 import 'features_off.dart';
 import 'temp_app_data_dir.dart';
 
@@ -74,7 +81,10 @@ void main() {
   tearDown(() => rootBundle.clear());
 
   setUp(() => _tempDir = Directory.systemTemp.createTempSync('mazama_select_center_test_'));
-  tearDown(() => _tempDir.deleteSync(recursive: true));
+  tearDown(() {
+    LocalStore.debugCloseAll();
+    _tempDir.deleteSync(recursive: true);
+  });
 
   SessionStore sessionStore() => SessionStore(dataDir: () => _tempDir);
 
@@ -87,7 +97,6 @@ void main() {
         sessionStore: sessionStore(),
         fetchMazamaInventory: _mazamaMix,
         fetchProductSheets: _sheets,
-        stockCacheStore: StockCacheStore(dataDir: () => _tempDir),
         fetchMazamaLicenses: (id) async => const [],
         fetchLicenses: (token) async {
           expect(token, 'TOKEN');
@@ -120,7 +129,6 @@ void main() {
         sessionStore: sessionStore(),
         fetchMazamaInventory: _mazamaMix,
         fetchProductSheets: _sheets,
-        stockCacheStore: StockCacheStore(dataDir: () => _tempDir),
         fetchMazamaLicenses: (id) async => const [],
         fetchLicenses: (token) async => [_license(231, 'Bendable Service Center', 'ServiceCenter')],
         fetchCenterPackages: _noPackages,
@@ -143,7 +151,6 @@ void main() {
         sessionStore: sessionStore(),
         fetchMazamaInventory: _mazamaMix,
         fetchProductSheets: _sheets,
-        stockCacheStore: StockCacheStore(dataDir: () => _tempDir),
         fetchMazamaLicenses: (id) async => const [],
         fetchLicenses: (token) async => [
           _license(225, 'Unstuck Psilocybin Treatment Center', 'ServiceCenter'),
@@ -179,7 +186,6 @@ void main() {
         sessionStore: sessionStore(),
         fetchMazamaInventory: _mazamaMix,
         fetchProductSheets: _sheets,
-        stockCacheStore: StockCacheStore(dataDir: () => _tempDir),
         fetchMazamaLicenses: (id) async => const [],
         fetchLicenses: (token) async => [_license(231, 'Bendable Service Center', 'ServiceCenter')],
         fetchCenterPackages: (id) async => [
@@ -236,15 +242,19 @@ void main() {
     // The order form, starting from the levels just saved; they are kept on the phone for offline too.
     expect(find.byType(OrderFormPage), findsOneWidget);
     expect(tester.widget<TextField>(find.byKey(const ValueKey('qty-Golden Teacher|25'))).controller!.text, '15');
-    final kept = (await parReplies(ReplyStore(dataDir: () => _tempDir), 231).load())!; // the reply store (README R56)
+    final kept = (await parDataset(Datasets.forDir(() => _tempDir), 231).load())!; // the par dataset (specs/phone-sync)
     expect(kept.value.single.par, 15);
   });
 
   testWidgets('with the server unreachable the stock page draws the state\'s records, partial, with the kept licenses',
       (tester) async {
-    final cache = StockCacheStore(dataDir: () => _tempDir);
-    await cache.saveMazamaLicenses(231, ['mf-1e72fc8f']);
-    await cache.savePar(231, const [ParLevel(strain: 'Unknown', size: 25, par: 12)]);
+    // kept by an older build (stock_cache_store.dart, removed in Task 10): moved into the datasets on the first open
+    LocalStore.forDir(_tempDir).write(
+        'stock_cache_231.json',
+        jsonEncode({
+          'mazamaLicenses': ['mf-1e72fc8f'],
+          'par': [const ParLevel(strain: 'Unknown', size: 25, par: 12).toJson()],
+        }));
     final tokens = <String>[];
     // The session as last saved (the cart renews and saves it): its token is the one the state read uses.
     await sessionStore().save(Session(
@@ -257,7 +267,6 @@ void main() {
         sessionStore: sessionStore(),
         fetchMazamaInventory: _mazamaMix,
         fetchProductSheets: _sheets,
-        stockCacheStore: cache,
         fetchMazamaLicenses: (id) async => throw Exception('the server is down'),
         fetchLicenses: (token) async => [_license(231, 'Bendable Service Center', 'ServiceCenter')],
         fetchCenterPackages: (id) async => throw PackagesError('cannot reach sales.mazamamushrooms.com'),
@@ -320,7 +329,6 @@ void main() {
         sessionStore: sessionStore(),
         fetchMazamaInventory: _mazamaMix,
         fetchProductSheets: _sheets,
-        stockCacheStore: StockCacheStore(dataDir: () => _tempDir),
         fetchMazamaLicenses: (id) async => const [],
         fetchLicenses: (token) async => [
           _license(225, 'Unstuck Psilocybin Treatment Center', 'ServiceCenter'),
@@ -391,7 +399,6 @@ void main() {
         sessionStore: sessionStore(),
         fetchMazamaInventory: _mazamaMix,
         fetchProductSheets: _sheets,
-        stockCacheStore: StockCacheStore(dataDir: () => _tempDir),
         fetchMazamaLicenses: (id) async => const [],
         fetchLicenses: (token) async => [
           _license(225, 'Unstuck Psilocybin Treatment Center', 'ServiceCenter'),
@@ -424,7 +431,6 @@ void main() {
         sessionStore: sessionStore(),
         fetchMazamaInventory: _mazamaMix,
         fetchProductSheets: _sheets,
-        stockCacheStore: StockCacheStore(dataDir: () => _tempDir),
         fetchMazamaLicenses: (id) async => const [],
         fetchLicenses: (token) async => [
           _license(225, 'Unstuck Psilocybin Treatment Center', 'ServiceCenter'),
@@ -455,7 +461,6 @@ void main() {
         sessionStore: sessionStore(),
         fetchMazamaInventory: _mazamaMix,
         fetchProductSheets: _sheets,
-        stockCacheStore: StockCacheStore(dataDir: () => _tempDir),
         fetchMazamaLicenses: (id) async => const [],
         fetchLicenses: (token) async {
           attempts += 1;
@@ -474,6 +479,109 @@ void main() {
     expect(attempts, 2);
   });
 
+  // specs/phone-sync PS-R3: the licenses dataset.
+  group("the worker's licenses kept on the phone (specs/phone-sync PS-R3, PS-R7)", () {
+    late Object? failWith;
+    late int attempts;
+    late Completer<void>? gate;
+    setUp(() {
+      failWith = null;
+      attempts = 0;
+      gate = null;
+    });
+    Widget page({String email = 'worker@example.com'}) => MaterialApp(
+          home: SelectCenterPage(
+            session: Session(
+                accessToken: 'TOKEN',
+                refreshToken: 'REFRESH',
+                email: email,
+                expiresAtMs: DateTime.now().millisecondsSinceEpoch + 3600 * 1000),
+            spec: _dummySpec,
+            sessionStore: sessionStore(),
+            fetchMazamaInventory: _mazamaMix,
+            fetchProductSheets: _sheets,
+            fetchMazamaLicenses: (id) async => const [],
+            fetchLicenses: (token) async {
+              attempts += 1;
+              final g = gate;
+              if (g != null) await g.future;
+              final f = failWith;
+              if (f != null) throw f;
+              return [
+                _license(231, 'Bendable Service Center', 'ServiceCenter'),
+                _license(183, 'Second Service Center', 'ServiceCenter'),
+              ];
+            },
+            fetchCenterPackages: _noPackages,
+          ),
+        );
+
+    testWidgets('shown at once, with their age, while the state is asked', (tester) async {
+      await tester.pumpWidget(page());
+      await tester.pumpAndSettle();
+      expect(find.byKey(updatedLineKey), findsNothing); // the state's answer just now: no age to show
+      gate = Completer<void>(); // the next read waits
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpWidget(page());
+      await tester.pump();
+      expect(find.text('Second Service Center'), findsOneWidget); // before the state answers
+      expect(find.text('Updated just now'), findsOneWidget);
+      gate!.complete();
+      await tester.pumpAndSettle();
+      expect(find.byKey(updatedLineKey), findsNothing); // the fresh answer now
+    });
+
+    testWidgets("the state can't be reached: they stay, with their age, and Try again reads again", (tester) async {
+      await tester.pumpWidget(page());
+      await tester.pumpAndSettle();
+      failWith = LicensesError('cannot reach oregonpsilocybinprodb2c.b2clogin.com: SocketException', unreachable: true);
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpWidget(page());
+      await tester.pumpAndSettle();
+      expect(find.text('Bendable Service Center'), findsOneWidget);
+      expect(find.text('Updated just now'), findsOneWidget);
+      expect(find.textContaining('cannot reach'), findsNothing);
+      await tester.tap(find.byKey(const ValueKey('licenses-retry')));
+      await tester.pumpAndSettle();
+      expect(attempts, 3);
+    });
+
+    testWidgets("the state's refusal is the error, not the kept list", (tester) async {
+      await tester.pumpWidget(page());
+      await tester.pumpAndSettle();
+      failWith = LicensesError('GET licenses failed: HTTP 403');
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpWidget(page());
+      await tester.pumpAndSettle();
+      expect(find.textContaining('HTTP 403'), findsOneWidget);
+      expect(find.text('Bendable Service Center'), findsNothing);
+    });
+
+    testWidgets('pulling the list down reads the licenses again (PS-R7)', (tester) async {
+      await tester.pumpWidget(page());
+      await tester.pumpAndSettle();
+      expect(attempts, 1);
+      final refresh = tester.widget<RefreshIndicator>(find.byKey(const ValueKey('licenses-refresh'))).onRefresh;
+      await refresh();
+      await tester.pumpAndSettle();
+      expect(attempts, 2);
+      expect(find.text('Second Service Center'), findsOneWidget);
+    });
+
+    testWidgets("another worker on this phone never sees the previous worker's centers", (tester) async {
+      await tester.pumpWidget(page());
+      await tester.pumpAndSettle();
+      failWith = LicensesError('cannot reach the state system: SocketException', unreachable: true);
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpWidget(page(email: 'someone.else@example.com'));
+      await tester.pump();
+      expect(find.text('Bendable Service Center'), findsNothing);
+      await tester.pumpAndSettle();
+      expect(find.text('Bendable Service Center'), findsNothing);
+      expect(find.textContaining('cannot reach the state system'), findsOneWidget);
+    });
+  });
+
   testWidgets('no service-center license at all shows a clear message, not an empty picker', (tester) async {
     await tester.pumpWidget(MaterialApp(
       home: SelectCenterPage(
@@ -482,7 +590,6 @@ void main() {
         sessionStore: sessionStore(),
         fetchMazamaInventory: _mazamaMix,
         fetchProductSheets: _sheets,
-        stockCacheStore: StockCacheStore(dataDir: () => _tempDir),
         fetchMazamaLicenses: (id) async => const [],
         fetchLicenses: (token) async => [_license(294, 'Mazama Mushrooms LLC', 'Manufacturer')],
         fetchCenterPackages: _noPackages,
@@ -501,7 +608,6 @@ void main() {
           sessionStore: sessionStore(),
           fetchMazamaInventory: _mazamaMix,
           fetchProductSheets: _sheets,
-          stockCacheStore: StockCacheStore(dataDir: () => _tempDir),
           fetchMazamaLicenses: (id) async => const [],
           fetchLicenses: (token) async => licenses,
           fetchCenterPackages: _noPackages,
@@ -579,4 +685,57 @@ void main() {
     expect(find.byType(CenterStockPage), findsOneWidget);
     expect(tester.widget<CenterHomePage>(find.byType(CenterHomePage)).featureTable['mazama_tab']!.onPhone, isEmpty);
   });
+
+  // specs/app-updates AU-D10: the update card on the license picker (no center open, so no cart holds it back).
+  testWidgets('the update card shows on the picker when there is an offer, and not without one', (tester) async {
+    Widget picker(AppUpdateChecker checker) => MaterialApp(
+          home: SelectCenterPage(
+            session: _freshSession(),
+            spec: _dummySpec,
+            sessionStore: sessionStore(),
+            fetchMazamaInventory: _mazamaMix,
+            fetchProductSheets: _sheets,
+            fetchMazamaLicenses: (id) async => const [],
+            fetchLicenses: (token) async => [
+              _license(225, 'Unstuck Psilocybin Treatment Center', 'ServiceCenter'),
+              _license(183, 'EPIC Healing Eugene', 'ServiceCenter'),
+            ],
+            fetchCenterPackages: _noPackages,
+            fetchRawPackagesFromState: _noRawState,
+            updateChecker: checker,
+          ),
+        );
+    AppUpdateChecker checker({required bool android}) => AppUpdateChecker(
+          store: AppUpdateStore(dataDir: () => _tempDir, publicKey: testPublicKey),
+          installer: _UpdateInstaller(),
+          fetchLatest: (_) => signedRelease(build: 26103001),
+          isAndroid: android,
+          isDemo: () => false,
+          featureOn: () => true,
+        );
+
+    final offering = checker(android: true);
+    await tester.runAsync(() => offering.check());
+    await tester.pumpWidget(picker(offering));
+    await tester.pumpAndSettle();
+    expect(find.text('Version 0.2.4 is ready to install'), findsOneWidget);
+    expect(find.text('EPIC Healing Eugene'), findsOneWidget);
+
+    final ios = checker(android: false);
+    await tester.runAsync(() => ios.check());
+    await tester.pumpWidget(const SizedBox());
+    await tester.pumpWidget(picker(ios));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('app-update-card')), findsNothing);
+  });
+}
+
+class _UpdateInstaller extends AppInstaller {
+  @override
+  Future<InstalledApp> installed() async => const InstalledApp(
+      versionName: '0.2.3',
+      versionCode: 26102901,
+      sdkInt: 30,
+      signers: {'aa11aa11aa11aa11aa11aa11aa11aa11aa11aa11aa11aa11aa11aa11aa11aa11'},
+      canInstall: true);
 }

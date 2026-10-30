@@ -8,8 +8,8 @@ import 'package:mazama_mobile/licenses_client.dart';
 import 'package:mazama_mobile/order_par_page.dart';
 import 'package:mazama_mobile/par_client.dart';
 import 'package:mazama_mobile/server_health.dart';
-import 'package:mazama_mobile/server_offline.dart';
-import 'package:mazama_mobile/stock_cache_store.dart';
+import 'package:mazama_mobile/sync/server_read.dart';
+import 'package:mazama_mobile/par_columns.dart';
 import 'package:mazama_mobile/stock_rows.dart';
 import 'package:mazama_mobile/stock_summary.dart';
 

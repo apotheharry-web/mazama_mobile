@@ -15,11 +15,10 @@ import 'package:mazama_mobile/coa_uploader.dart';
 import 'package:mazama_mobile/configured_coa_submit.dart';
 import 'package:mazama_mobile/device_id.dart';
 import 'package:mazama_mobile/inventory_upload_client.dart';
-import 'package:mazama_mobile/reply_store.dart';
 import 'package:mazama_mobile/sales_upload_client.dart';
 import 'package:mazama_mobile/server_health.dart';
 import 'package:mazama_mobile/server_link.dart';
-import 'package:mazama_mobile/server_offline.dart' show formatAsOf;
+import 'package:mazama_mobile/sync/updated_line.dart' show formatAsOf;
 import 'package:mazama_mobile/server_outbox.dart';
 import 'package:mazama_mobile/session.dart';
 import 'package:mazama_mobile/session_store.dart';
@@ -56,7 +55,6 @@ void main() {
         uploadSnapshot: (s) async => uploaded.add(s.stateId),
         auth: () async => const CatchUpAuth(accessToken: 'T', workerEmail: 'w', deviceId: 'd'),
       ),
-      replies: ReplyStore(dataDir: () => _dir),
     );
   }
 
@@ -71,6 +69,19 @@ void main() {
       expect(serverLinkBannerText(since: null, waiting: 2, dropped: 1),
           "Mazama's server can't be reached. Selling still works. 2 reports are waiting to be sent. "
           '1 older sale log was dropped for room.');
+    });
+  });
+
+  group('the standard link', () {
+    test('still builds when the local store cannot be opened, and a report is taken', () async {
+      final blocker = File('${_dir.path}${Platform.pathSeparator}not_a_folder')..writeAsStringSync('x');
+      final broken = Directory('${blocker.path}${Platform.pathSeparator}data'); // a folder under a file: never openable
+      final l = ServerLink.standard(dataDir: () => broken, rememberOffline: false);
+      addTearDown(l.dispose);
+      l.health.markUnreachable();
+      final id = await l.outbox.addSaleLog(231, workerEmail: 'w', deviceId: 'd', request: const [{'n': 1}], response: null);
+      expect(id, isNotEmpty);
+      expect(l.engine.queue.waitingReports, 1);
     });
   });
 

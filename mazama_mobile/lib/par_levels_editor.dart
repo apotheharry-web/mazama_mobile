@@ -1,7 +1,7 @@
 // The par table with Edit / Save (SP-R9, SP-R14, SP-D13..D15), as the order's first step (MI-D21: Order opens it,
 // order_par_page.dart; it was on the stock page until SP-D19). The strains' rows in the serving-size columns this
 // center uses (the sizes it has stock or a par in, plus the ones added on this phone, less the ones deleted here:
-// stock_cache_store.dart ParColumns), then the combined All strains row, then the edibles' rows below with just
+// par_columns.dart's ParColumns), then the combined All strains row, then the edibles' rows below with just
 // Booster and Microdose. While editing, a column can be deleted (its pars go with it) or added back, and a strain with
 // no stock deleted. Every number comes from stock_summary.dart (the shared rules, held to the server's vectors); this
 // file only lays them out and formats texts as the server's templates do (formatG for Python's {x:g}).
@@ -10,13 +10,13 @@
 // are ("Continue to order") or edits them and saves ("Save and continue"); either way [ParLevelsEditor.onContinue]
 // gets the levels the order is to start from. Read-only (the server unreachable, SP-R13) it can't save, but the
 // levels shown can still be confirmed. A save that can't reach Mazama's server is never queued: it says to try again
-// later and leaves the edits on screen (server_offline.dart).
+// later and leaves the edits on screen (sync/server_read.dart).
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'server_error.dart';
-import 'server_offline.dart';
-import 'stock_cache_store.dart';
+import 'sync/server_read.dart';
+import 'par_columns.dart';
 import 'stock_summary.dart';
 
 const _cantSave = '$serverUnreachable, so par levels can\'t be saved now - try again later';

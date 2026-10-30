@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "manufacturing.coa_number output",
+  "description": "The figure rounded to 4 places, or null when it is not a sensible mg/g figure (ND and a permitted blank are 0).",
+  "type": "object",
+  "required": [
+    "value"
+  ],
+  "properties": {
+    "value": {
+      "type": [
+        "number",
+        "null"
+      ]
+    }
+  }
+}

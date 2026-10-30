@@ -1,9 +1,9 @@
 // A lab report PDF's text layer as CoaText (mazama_modules/coa/schema/coa_text.schema.json), read with pdfium
-// through pdfrx: what the shared reader (lib/coa_core_ffi.dart) parses on the phone. Plan 08 Task 7
+// through pdfrx: what the shared reader (lib/mazama_core.dart) parses on the phone. Plan 08 Task 7
 // (specs/coa/08-phone-label-debug.md, "Phone text extraction").
 //
 // pdfium hands over characters with boxes; [groupWords] joins them into words the way the server's poppler words
-// look, close enough for coa_core, whose line and column matching has tolerances. pdfium's boxes are each glyph's
+// look, close enough for mazama_core, whose line and column matching has tolerances. pdfium's boxes are each glyph's
 // ink, not the font's box, so a '.' or '-' is small: a word continues while the next glyph sits on the word's
 // line (its middle inside the word's height, or the word's middle inside the glyph's) and the gap to it is at most
 // half that height. Tried on every corpus case with pdfium, a quarter of the height split "7.12" after its '.'.

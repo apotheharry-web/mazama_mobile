@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "names.product_name output",
+  "description": "The name, or null with the reason there is none.",
+  "type": "object",
+  "required": [
+    "name",
+    "why"
+  ],
+  "properties": {
+    "name": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "why": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}

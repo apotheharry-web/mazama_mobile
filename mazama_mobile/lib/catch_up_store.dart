@@ -13,18 +13,25 @@
 //     server answers. One the phone manages to send meanwhile replaces it outright (it is newer), so a kept one never
 //     goes after a newer one. (Interim: specs/phone-sync's engine takes these over, its migration carrying them.)
 // A run sends the snapshots before the lab reports, so a large sales snapshot can hold kept reports back by one upload.
-// One JSON document in the data folder's LocalStore (server_catch_up.json, synchronous calls as the other stores; the
-// inventory snapshots under `snapshots`, as before sales existed, the sales ones under `salesSnapshots`). Run by server_link.dart when the server tracker
-// comes back online, at start-up and when a cart opens; a run that finds the server unreachable stops and waits.
+// Kept in the sync engine's queue (lib/sync/sync_queue.dart, specs/phone-sync PS-R4: lab_report items kept for later,
+// keyed by lot id, and inventory_snapshot / sales_snapshot items keyed by center); CatchUpWork is the facade the app's
+// callers use. CatchUpStore reads the server_catch_up.json document older builds kept (the inventory snapshots under
+// `snapshots`, as before sales existed, the sales ones under `salesSnapshots`), which the engine moves in
+// (sync_migration.dart). Run by server_link.dart when the server tracker comes back online, at start-up and when a
+// cart opens; a run that finds the server unreachable stops and waits.
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 
+import 'coa_uploader.dart' show coaReplyStatus, countsAsSent;
 import 'local_store.dart';
 import 'server_error.dart';
 import 'server_health.dart';
 import 'session_store.dart' show defaultSessionDataDir;
+import 'sync/sync_migration.dart' show openSyncTables;
+import 'sync/sync_queue.dart';
+import 'sync/sync_tables.dart' show queueDead;
 
 /// How many lots wait for their lab report to be submitted (see the file comment).
 const catchUpMaxLots = 200;
@@ -130,7 +137,9 @@ class CatchUpStore {
   /// Overridable for tests, as the other stores.
   final Directory Function() dataDir;
 
-  static const _name = 'server_catch_up.json';
+  /// The document's name (older builds' only copy of the list).
+  static const documentName = 'server_catch_up.json';
+  static const _name = documentName;
   static const _inventoryKey = 'snapshots';
   static const _salesKey = 'salesSnapshots';
 
@@ -138,27 +147,32 @@ class CatchUpStore {
     try {
       final text = LocalStore.forDir(dataDir()).read(_name)?.body;
       if (text == null) return const CatchUpState();
-      final d = jsonDecode(text);
-      if (d is! Map) return const CatchUpState();
-      final lots = d['lots'];
-      // Each kind under its own key, read only as that kind: inventory where builds before sales snapshots keep it
-      // (`snapshots`), sales under `salesSnapshots`, which those builds never read (one would send a sales snapshot to
-      // /p/inventory, replacing the center's mirror).
-      Iterable<PendingSnapshot> read(Object? list, String kind) => list is List
-          ? [for (final s in list) PendingSnapshot.fromJson(s)].whereType<PendingSnapshot>().where((s) => s.kind == kind)
-          : const [];
-      return CatchUpState(
-        lots: lots is List ? [for (final l in lots) PendingCoaLot.fromJson(l)].whereType<PendingCoaLot>().toList() : const [],
-        snapshots: {
-          for (final s in read(d[_inventoryKey], snapshotKindInventory)) s.key: s,
-          for (final s in read(d[_salesKey], snapshotKindSales)) s.key: s,
-        },
-      );
+      return parse(text);
     } on FileSystemException {
       return const CatchUpState();
     } on FormatException {
       return const CatchUpState();
     }
+  }
+
+  /// The document's [text] read; throws a FormatException when it isn't JSON.
+  static CatchUpState parse(String text) {
+    final d = jsonDecode(text);
+    if (d is! Map) return const CatchUpState();
+    final lots = d['lots'];
+    // Each kind under its own key, read only as that kind: inventory where builds before sales snapshots keep it
+    // (`snapshots`), sales under `salesSnapshots`, which those builds never read (one would send a sales snapshot to
+    // /p/inventory, replacing the center's mirror).
+    Iterable<PendingSnapshot> read(Object? list, String kind) => list is List
+        ? [for (final s in list) PendingSnapshot.fromJson(s)].whereType<PendingSnapshot>().where((s) => s.kind == kind)
+        : const [];
+    return CatchUpState(
+      lots: lots is List ? [for (final l in lots) PendingCoaLot.fromJson(l)].whereType<PendingCoaLot>().toList() : const [],
+      snapshots: {
+        for (final s in read(d[_inventoryKey], snapshotKindInventory)) s.key: s,
+        for (final s in read(d[_salesKey], snapshotKindSales)) s.key: s,
+      },
+    );
   }
 
   void save(CatchUpState state) {
@@ -192,6 +206,62 @@ typedef CoaLotSubmitter = Future<bool> Function(PendingCoaLot lot, CatchUpAuth a
 /// sales_upload_client.dart). Throws on failure.
 typedef SnapshotUploader = Future<void> Function(PendingSnapshot snapshot);
 
+QueueKind? _snapshotQueueKind(String kind) => switch (kind) {
+      snapshotKindInventory => QueueKind.inventorySnapshot,
+      snapshotKindSales => QueueKind.salesSnapshot,
+      _ => null,
+    };
+
+/// The engine's sender for a kept snapshot: [upload] it; unreachable stops the run, a refusal drops it (the next state
+/// read sends a fresher one).
+QueueSender snapshotQueueSender(SnapshotUploader upload) => (item) async {
+      final PendingSnapshot? snap;
+      try {
+        snap = PendingSnapshot.fromJson(jsonDecode(item.body));
+      } on FormatException {
+        return const Skipped();
+      }
+      if (snap == null) return const Skipped();
+      try {
+        await upload(snap);
+        return const Done();
+      } catch (e) {
+        if (isServerUnreachable(e)) return Unreachable(error: '$e');
+        return const Skipped();
+      }
+    };
+
+/// The engine's sender for a kept lab report, through a [CoaLotSubmitter] with the session current at send time ([auth]):
+/// no session, or a 429, waits; unreachable stops the run; submitted or answered, it is sent; refused otherwise (or
+/// nothing on file at the state), dropped.
+QueueSender keptLabReportSender(CoaLotSubmitter submit, Future<CatchUpAuth?> Function() auth) => (item) async {
+      final PendingCoaLot? lot;
+      try {
+        lot = PendingCoaLot.fromJson(jsonDecode(item.body));
+      } on FormatException {
+        return const Skipped();
+      }
+      if (lot == null) return const Skipped();
+      CatchUpAuth? credentials;
+      try {
+        credentials = await auth();
+      } catch (_) {
+        credentials = null;
+      }
+      if (credentials == null) return const Busy();
+      try {
+        return await submit(lot, credentials) ? const Done() : const Skipped();
+      } catch (e) {
+        if (isServerUnreachable(e)) return Unreachable(error: '$e');
+        if (coaReplyStatus(e) == 429) return const Busy();
+        if (countsAsSent(e)) return const Done();
+        return const Skipped();
+      }
+    };
+
+/// The catch-up work as the app's callers know it, over the sync engine's queue ([queue]: the engine's, from
+/// ServerLink.standard; otherwise one of its own over [store]'s folder, with [submitCoa], [uploadSnapshot], [auth],
+/// [now] and [maxLots]).
 class CatchUpWork extends ChangeNotifier {
   CatchUpWork({
     required this.health,
@@ -201,12 +271,21 @@ class CatchUpWork extends ChangeNotifier {
     this.store = const CatchUpStore(),
     this.now = DateTime.now,
     this.maxLots = catchUpMaxLots,
-  }) {
-    try {
-      _state = store.load();
-    } catch (_) {
-      _state = const CatchUpState();
-    }
+    SyncQueue? queue,
+  })  : _ownsQueue = queue == null,
+        queue = queue ??
+            SyncQueue(
+              tables: openSyncTables(LocalStore.forDir(store.dataDir())),
+              health: health,
+              senders: {
+                QueueKind.inventorySnapshot: snapshotQueueSender(uploadSnapshot),
+                QueueKind.salesSnapshot: snapshotQueueSender(uploadSnapshot),
+                QueueKind.labReport: keptLabReportSender(submitCoa, auth),
+              },
+              now: now,
+              labReportCap: maxLots,
+            ) {
+    this.queue.addListener(_changed);
   }
 
   final ServerHealth health;
@@ -216,111 +295,96 @@ class CatchUpWork extends ChangeNotifier {
   /// The worker's current session (the one last saved, if still fresh) and this install's id; null when there is no
   /// usable session right now (the lab reports then wait for the next run).
   final Future<CatchUpAuth?> Function() auth;
+
+  /// The document older builds kept the list in (moved into [queue] when it is opened).
   final CatchUpStore store;
   final DateTime Function() now;
   final int maxLots;
 
-  late CatchUpState _state;
-  bool _running = false;
-  bool _runAgain = false;
+  /// Where the work waits (lib/sync/sync_queue.dart).
+  final SyncQueue queue;
+  final bool _ownsQueue;
   bool _disposed = false;
 
-  List<PendingCoaLot> get lots => List.unmodifiable(_state.lots);
-  Map<String, PendingSnapshot> get snapshots => Map.unmodifiable(_state.snapshots);
-
-  void _set(CatchUpState next) {
-    _state = next;
-    try {
-      store.save(next);
-    } catch (e) {
-      debugPrint('catch-up work could not be saved (kept in memory until the next write): $e');
-    }
+  void _changed() {
     if (!_disposed) notifyListeners();
   }
 
+  List<T> _read<T>(QueueKind kind, T? Function(Object?) parse) {
+    try {
+      return [
+        for (final i in queue.tables.items(kind.stored))
+          if (i.state != queueDead)
+            if (parse(jsonDecode(i.body)) case final T v) v,
+      ];
+    } catch (e) {
+      debugPrint('the catch-up work could not be read: $e');
+      return const [];
+    }
+  }
+
+  List<PendingCoaLot> get lots => List.unmodifiable(_read(QueueKind.labReport, PendingCoaLot.fromJson));
+  Map<String, PendingSnapshot> get snapshots => Map.unmodifiable({
+        for (final s in [
+          ..._read(QueueKind.inventorySnapshot, PendingSnapshot.fromJson),
+          ..._read(QueueKind.salesSnapshot, PendingSnapshot.fromJson),
+        ])
+          s.key: s,
+      });
+
   /// Remembers [lotGuid] for a submission once the server answers (replacing an earlier entry for it).
   void addCoaLot({required String lotGuid, required int packageId, required int stateId, double? statePsilocybin}) {
-    final lots = [..._state.lots]..removeWhere((l) => l.lotGuid.toLowerCase() == lotGuid.toLowerCase());
-    lots.add(PendingCoaLot(
-        lotGuid: lotGuid, packageId: packageId, stateId: stateId, statePsilocybin: statePsilocybin, addedAt: now().toUtc()));
-    while (lots.length > maxLots) {
-      lots.removeAt(0);
+    try {
+      queue.add(
+          QueueKind.labReport,
+          lotGuid,
+          PendingCoaLot(
+                  lotGuid: lotGuid, packageId: packageId, stateId: stateId, statePsilocybin: statePsilocybin, addedAt: now().toUtc())
+              .toJson());
+    } catch (e) {
+      debugPrint('a lab report could not be kept for later: $e');
     }
-    _set(CatchUpState(lots: lots, snapshots: _state.snapshots));
   }
 
   /// Keeps [records] as [stateId]'s newest state read of [kind] to upload once the server answers (replacing an older
-  /// one of the same kind).
+  /// one of the same kind). A kind this build has no upload for is never kept.
   void keepSnapshot(int stateId, List<Object?> records,
       {required String workerEmail, required String deviceId, String kind = snapshotKindInventory}) {
+    final queueKind = _snapshotQueueKind(kind);
+    if (queueKind == null) return;
     final snap = PendingSnapshot(
         stateId: stateId, kind: kind, records: records, workerEmail: workerEmail, deviceId: deviceId, readAt: now().toUtc());
-    _set(CatchUpState(lots: _state.lots, snapshots: {..._state.snapshots, snap.key: snap}));
+    try {
+      queue.add(queueKind, '$stateId', snap.toJson());
+    } catch (e) {
+      debugPrint('a snapshot could not be kept for later: $e');
+    }
   }
 
   /// A newer snapshot of [stateId] of [kind] reached the server: the kept one is older, never to be sent.
   void snapshotSent(int stateId, {String kind = snapshotKindInventory}) {
-    final key = snapshotKey(kind, stateId);
-    if (!_state.snapshots.containsKey(key)) return;
-    _set(CatchUpState(lots: _state.lots, snapshots: {..._state.snapshots}..remove(key)));
+    final queueKind = _snapshotQueueKind(kind);
+    if (queueKind == null) return;
+    try {
+      queue.remove(queueKind, '$stateId');
+    } catch (e) {
+      debugPrint('a kept snapshot could not be dropped: $e');
+    }
   }
 
   /// Sends what is waiting while the server answers: the snapshots, then the lab reports, oldest first. Stops at the
-  /// first failure that means the server couldn't be reached. One run at a time; a call during one goes round once more.
+  /// first failure that means the server couldn't be reached.
   Future<void> flush() async {
     if (_disposed) return;
-    if (_running) {
-      _runAgain = true;
-      return;
-    }
-    _running = true;
-    try {
-      do {
-        _runAgain = false;
-        await _run();
-      } while (_runAgain && !_disposed);
-    } finally {
-      _running = false;
-    }
-  }
-
-  Future<void> _run() async {
-    for (final snap in [..._state.snapshots.values]) {
-      if (_disposed || health.offline) return;
-      try {
-        await uploadSnapshot(snap);
-      } catch (e) {
-        if (isServerUnreachable(e)) return;
-        // refused (a sync already running, too many records, ...): the next state read sends a fresher one anyway
-      }
-      final current = _state.snapshots[snap.key];
-      if (identical(current, snap)) {
-        _set(CatchUpState(lots: _state.lots, snapshots: {..._state.snapshots}..remove(snap.key)));
-      }
-    }
-    if (_state.lots.isEmpty || _disposed || health.offline) return;
-    CatchUpAuth? credentials;
-    try {
-      credentials = await auth();
-    } catch (_) {
-      credentials = null;
-    }
-    if (credentials == null) return; // no usable session now: the lots wait for the next run
-    for (final lot in [..._state.lots]) {
-      if (_disposed || health.offline) return;
-      try {
-        await submitCoa(lot, credentials);
-      } catch (e) {
-        if (isServerUnreachable(e)) return;
-        // the server (or the state) refused it: dropped, as the cart's own submission would be
-      }
-      _set(CatchUpState(lots: [..._state.lots]..remove(lot), snapshots: _state.snapshots));
-    }
+    await queue.flush();
   }
 
   @override
   void dispose() {
+    if (_disposed) return;
     _disposed = true;
+    queue.removeListener(_changed);
+    if (_ownsQueue) queue.dispose();
     super.dispose();
   }
 }

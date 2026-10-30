@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "records.can_transfer output",
+  "description": "Per record, in order: whether it can go on the transfer.",
+  "type": "array",
+  "items": {
+    "anyOf": [
+      {
+        "type": "boolean"
+      },
+      {
+        "$ref": "#/$defs/raise"
+      }
+    ]
+  },
+  "$defs": {
+    "raise": {
+      "type": "object",
+      "required": [
+        "raises"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "raises": {
+          "enum": [
+            "TypeError",
+            "ValueError"
+          ]
+        }
+      },
+      "description": "The Python exception today's rule raises for this record (RD-2: a number given as text): the server raises the same class when it reads this answer."
+    }
+  }
+}

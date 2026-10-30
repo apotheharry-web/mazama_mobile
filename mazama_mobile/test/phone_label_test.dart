@@ -4,8 +4,8 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mazama_mobile/coa_core_ffi.dart';
 import 'package:mazama_mobile/enrichment_store.dart';
+import 'package:mazama_mobile/mazama_core.dart';
 import 'package:mazama_mobile/packages_client.dart';
 import 'package:mazama_mobile/phone_label.dart';
 
@@ -37,20 +37,24 @@ Object _productInfo({List<Object?>? results}) => {
 final Map<String, Object?> _section = {'uid': 'PL-de20657a', 'sample': 'Huautla'};
 final Map<String, Object?> _spec = {'pkpr': 'PKPR-71c5e6ad', 'strain': 'Huautla', 'dose_mg_tpe': 25};
 
-class _FakeCore implements CoaCore {
+class _FakeCore implements CoreFunctions {
   final Map<String, Object?>? found;
   final Map<String, Object?> outcome;
 
-  /// When set, the label answer for each input instead of [outcome] (as coa_core answers per record).
+  /// When set, the label answer for each input instead of [outcome] (as the core answers per record).
   final Map<String, Object?> Function(Map<String, Object?> input)? answer;
   final labelInputs = <Map<String, Object?>>[];
   final findLotCalls = <(String, double?)>[];
   _FakeCore({this.found = const {'section': 0, 'uid': 'PL-de20657a', 'via': 'own'}, Map<String, Object?>? outcome, this.answer})
       : outcome = outcome ?? {'spec': _spec, 'warnings': <Object?>[]};
 
+  /// The document choice is the real core's (coa.select_documents, test/flutter_test_config.dart loads it).
   @override
-  Map<String, Object?> findLot(Map<String, Object?> coaText, String lot, {double? statePsilocybin}) {
-    findLotCalls.add((lot, statePsilocybin));
+  List<Object?> coaSelectDocuments(Map<String, Object?> input) => MazamaCore.instance.coaSelectDocuments(input);
+
+  @override
+  Map<String, Object?> coaFindLot(Map<String, Object?> input) {
+    findLotCalls.add((input['lot'] as String, (input['state_psilocybin'] as num?)?.toDouble()));
     return {'result': {'sections': [_section]}, 'found': found};
   }
 
@@ -67,7 +71,6 @@ class _FakeCore implements CoaCore {
 Future<Map<String, Object?>> _draw(
   List<String> calls, {
   _FakeCore? core,
-  bool noCore = false,
   List<Object?>? records,
   Object? info,
   String strain = '',
@@ -80,7 +83,7 @@ Future<Map<String, Object?>> _draw(
       accessToken: 'TOKEN',
       strain: strain,
       now: () => DateTime(2026, 10, 21, 9, 30),
-      loadCore: () => noCore ? null : (core ?? _FakeCore()),
+      core: core ?? _FakeCore(),
       fetchRawPackages: (stateId, {required accessToken}) async {
         calls.add('inventory:$stateId:$accessToken');
         return records ?? [_record(pkpr: 'PKPR-00000001'), _record()];
@@ -101,7 +104,7 @@ Future<Map<String, Object?>> _draw(
       labelInput: labelInput,
     );
 
-/// /p/packages' labelInput for the package (README R64): coa_core's LabelInput as the server builds it, without today.
+/// /p/packages' labelInput for the package (README R64): the core's LabelInput as the server builds it, without today.
 final Map<String, Object?> _serverInput = {
   'package': {
     'pkpr': 'PKPR-71c5e6ad', 'description': 'Huautla 25 mg TPE DH (2027-08-31)', 'weight_per_unit': 2.62,
@@ -125,18 +128,11 @@ void main() {
       expect(core.labelInputs.single, {..._serverInput, 'today': '2026-10-21'});
     });
 
-    test("a label coa_core blocks says why, still without calling the state system", () async {
+    test("a label the core blocks says why, still without calling the state system", () async {
       final calls = <String>[];
       final core = _FakeCore(outcome: {'blocked': ['no psilocybin result', 'no weight']});
       await expectLater(_draw(calls, core: core, labelInput: _serverInput),
           throwsA(isA<PhoneLabelError>().having((e) => e.message, 'message', 'no psilocybin result; no weight')));
-      expect(calls, isEmpty);
-    });
-
-    test('a build without coa_core says so, still without calling the state system', () async {
-      final calls = <String>[];
-      await expectLater(_draw(calls, noCore: true, labelInput: _serverInput),
-          throwsA(isA<PhoneLabelError>().having((e) => e.message, 'message', coaCoreMissingMessage)));
       expect(calls, isEmpty);
     });
 
@@ -149,7 +145,7 @@ void main() {
     });
   });
 
-  test("runs the whole chain and returns coa_core's spec", () async {
+  test("runs the whole chain and returns the core's spec", () async {
     final calls = <String>[];
     final core = _FakeCore();
     final spec = await _draw(calls, core: core, strain: ' Huautla ');
@@ -176,12 +172,6 @@ void main() {
     expect((core.labelInputs.single['package'] as Map)['analyte_weight'], 5.25);
   });
 
-  test('a build without coa_core says so without fetching anything', () async {
-    final calls = <String>[];
-    await expectLater(_draw(calls, noCore: true), throwsA(isA<PhoneLabelError>().having((e) => e.message, 'message', coaCoreMissingMessage)));
-    expect(calls, isEmpty);
-  });
-
   test('a package missing from the inventory, or with no lot, says so', () async {
     await expectLater(_draw([], records: [_record(pkpr: 'PKPR-00000001')]),
         throwsA(isA<PhoneLabelError>().having((e) => e.message, 'message', contains("isn't in this center's inventory"))));
@@ -201,13 +191,13 @@ void main() {
         throwsA(isA<PhoneLabelError>().having((e) => e.message, 'message', contains("doesn't name it"))));
   });
 
-  test("a blocked label gives every one of coa_core's reasons", () async {
+  test("a blocked label gives every one of mazama_core's reasons", () async {
     final core = _FakeCore(outcome: {'blocked': ['the package has no unit weight', 'there is no strain name'], 'warnings': <Object?>[]});
     await expectLater(_draw([], core: core),
         throwsA(isA<PhoneLabelError>().having((e) => e.message, 'message', 'the package has no unit weight; there is no strain name')));
   });
 
-  // SM-D31: what the phone keeps from coa_core's reading, for a later read from the state system alone.
+  // SM-D31: what the phone keeps from mazama_core's reading, for a later read from the state system alone.
   group("keeping the phone's reading", () {
     late Directory tempDir;
     setUp(() => tempDir = Directory.systemTemp.createTempSync('mazama_phone_label_test_'));
@@ -215,7 +205,7 @@ void main() {
     EnrichmentStore store() => EnrichmentStore(dataDir: () => tempDir);
     final readAt = DateTime(2026, 10, 21, 9, 30);
 
-    // coa_core's answer for each record: its TPE for the record's own state figure (state + factor x psilocin, to 2
+    // mazama_core's answer for each record: its TPE for the record's own state figure (state + factor x psilocin, to 2
     // places; the fake just echoes a figure per state psilocybin) and the record's psilocin per unit.
     Map<String, Object?> perRecord(Map<String, Object?> input) {
       final pkg = input['package'] as Map;
@@ -233,7 +223,7 @@ void main() {
       };
     }
 
-    test("a drawn label keeps coa_core's TPE, psilocin and the unit's mg TPE for every record of the product on the lot",
+    test("a drawn label keeps mazama_core's TPE, psilocin and the unit's mg TPE for every record of the product on the lot",
         () async {
       final es = store();
       final core = _FakeCore(answer: perRecord);
@@ -251,7 +241,7 @@ void main() {
           [EnrichmentSource.phone, 9.54, 25, closeTo(2.62 * 3.08, 1e-9), 2.62, 5.25, 'Huautla']);
       expect(a.expires, DateTime(2027, 8, 31));
       expect(a.seenAt, readAt.toUtc());
-      // the other record: coa_core asked again for its own weight and state figure; 1.31 x 8.11 = 10.62 -> 11
+      // the other record: mazama_core asked again for its own weight and state figure; 1.31 x 8.11 = 10.62 -> 11
       final b = known[enrichmentKey('PKPR-71c5e6ad', 6668)]!;
       expect([b.tpeMgPerG, b.tpeMg, b.weightPerUnit, b.analyteWeight], [8.11, 11, 1.31, 4.8]);
       expect([for (final i in core.labelInputs) (i['package'] as Map)['analyte_weight']], [5.25, 4.8]);
@@ -292,11 +282,11 @@ void main() {
       expect([e.source, e.tpeMg], [EnrichmentSource.server, 26]);
     });
 
-    test('phoneReading: the per-unit mg TPE is the weight x coa_core\'s TPE rounded up, never the label\'s dose', () {
+    test('phoneReading: the per-unit mg TPE is the weight x mazama_core\'s TPE rounded up, never the label\'s dose', () {
       final r = phoneReading(_record(analyteWeight: 5.25), 6667,
           {'strain': 'Huautla', 'dose_mg_tpe': 25, 'tpe_mg_per_g': 10.0, 'per_unit_mg': {'psilocin': 1.2}}, readAt)!;
       expect([r.tpeMg, r.tpeMgPerG, r.psilocinMg], [27, 10.0, 1.2]); // 2.62 x 10.0 = 26.2 -> 27, not the name's 25
-      expect(phoneReading(_record(), 6667, {'strain': 'Huautla'}, readAt), isNull); // no TPE from coa_core
+      expect(phoneReading(_record(), 6667, {'strain': 'Huautla'}, readAt), isNull); // no TPE from mazama_core
       expect(phoneReading(_record(weightPerUnit: 0), 6667, {'tpe_mg_per_g': 10.0}, readAt), isNull);
     });
   });

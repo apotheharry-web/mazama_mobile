@@ -4,7 +4,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mazama_mobile/coa_core_ffi.dart';
+import 'package:mazama_mobile/mazama_core.dart';
 import 'package:mazama_mobile/debug_coa_label_page.dart';
 import 'package:mazama_mobile/pdf_text.dart';
 import 'package:mazama_mobile/session.dart';
@@ -71,7 +71,7 @@ Map<String, Object?> _section({String uid = 'PL-de20657a'}) => {
 
 Map<String, Object?> _parsed(List<Map<String, Object?>> sections, Map<String, int> ofRecord) => {
       'version': 1,
-      'parser_version': 'coa_core 0.1.0 / rules test',
+      'parser_version': 'mazama_core 0.1.0 / rules test',
       'source_sha256': '0' * 64,
       'report': {'lab': 'Rose City Laboratories', 'licensee': 'Uptown Fungus', 'reported_date': '2025-05-27'},
       'sections': sections,
@@ -91,7 +91,7 @@ final Map<String, Object?> _canonicalOutcome = {
 };
 
 /// Stands in for the shared reader, so the page's tests need neither the library nor its answers.
-class _FakeCore implements CoaCore {
+class _FakeCore implements CoreFunctions {
   final Map<String, Object?> parsed;
   final Map<String, Object?> outcome;
 
@@ -106,14 +106,12 @@ class _FakeCore implements CoaCore {
         found = found;
 
   @override
-  String get version => 'coa_core 0.1.0 / rules test';
+  Map<String, Object?> coaParse(Map<String, Object?> coaText) => parsed;
 
   @override
-  Map<String, Object?> parse(String coaTextJson) => parsed;
-
-  @override
-  Map<String, Object?> findLot(Map<String, Object?> coaText, String lot, {double? statePsilocybin}) {
-    findLotCalls.add((lot, statePsilocybin));
+  Map<String, Object?> coaFindLot(Map<String, Object?> input) {
+    final lot = input['lot'] as String;
+    findLotCalls.add((lot, (input['state_psilocybin'] as num?)?.toDouble()));
     Map<String, Object?>? hit = found;
     if (!fixedFound) {
       final at = (parsed['of_record'] as Map)[lot.toLowerCase()];
@@ -146,7 +144,7 @@ Widget _pageWidget(
   Object? productInfo,
   Uint8List? pdf,
   Map<String, Object?>? coaText,
-  CoaCore? Function()? loadCore,
+  CoreFunctions? core,
 }) =>
     MaterialApp(
       home: DebugCoaLabelPage(
@@ -169,7 +167,7 @@ Widget _pageWidget(
           h.calls.add('text:${bytes.length}');
           return coaText ?? _coaText([_page(0), _page(1)]);
         },
-        loadCore: loadCore ?? () => _FakeCore(),
+        core: core ?? _FakeCore(),
         sharePdf: (bytes, name) async {
           h.shared = bytes;
           h.sharedName = name;
@@ -193,7 +191,7 @@ void main() {
   testWidgets('runs every step and draws the preview', (tester) async {
     final h = _Harness();
     final core = _FakeCore();
-    await tester.pumpWidget(_pageWidget(h, loadCore: () => core));
+    await tester.pumpWidget(_pageWidget(h, core: core));
 
     expect((tester.widget(find.widgetWithText(TextField, 'Service center state id')) as TextField).controller!.text, '229');
     await _testPkpr(tester, 'PKPR-71c5e6ad');
@@ -233,7 +231,7 @@ void main() {
   testWidgets("a lot that isn't in the report names the UIDs that are", (tester) async {
     final h = _Harness();
     final core = _FakeCore(parsed: _parsed([_section(uid: 'HB-11112222'), _section(uid: 'HB-33334444')], {'hb-11112222': 0, 'hb-33334444': 1}));
-    await tester.pumpWidget(_pageWidget(h, records: [_record(lot: 'PL-DE20657A')], loadCore: () => core));
+    await tester.pumpWidget(_pageWidget(h, records: [_record(lot: 'PL-DE20657A')], core: core));
     await _testPkpr(tester, 'PKPR-71c5e6ad');
 
     expect(find.byIcon(Icons.check_circle), findsNWidgets(4));
@@ -250,7 +248,7 @@ void main() {
       found: {'section': 0, 'uid': 'HB-597a95ef', 'via': 'request'},
       fixedFound: true,
     );
-    await tester.pumpWidget(_pageWidget(h, loadCore: () => core));
+    await tester.pumpWidget(_pageWidget(h, core: core));
     await _testPkpr(tester, 'PKPR-71c5e6ad');
 
     expect(find.byIcon(Icons.check_circle), findsNWidgets(7));
@@ -266,7 +264,7 @@ void main() {
   testWidgets("the state's psilocybin goes to findLot when the package has one", (tester) async {
     final h = _Harness();
     final core = _FakeCore();
-    await tester.pumpWidget(_pageWidget(h, records: [_record(analyteWeight: 5.25)], loadCore: () => core));
+    await tester.pumpWidget(_pageWidget(h, records: [_record(analyteWeight: 5.25)], core: core));
     await _testPkpr(tester, 'PKPR-71c5e6ad');
     expect(core.findLotCalls, [('PL-de20657a', 5.25)]);
     expect(find.textContaining('PL-de20657a is of record: section 1'), findsOneWidget);
@@ -275,24 +273,12 @@ void main() {
   testWidgets('no text layer pages are listed and parsing still runs', (tester) async {
     final h = _Harness();
     final core = _FakeCore(parsed: _parsed([], {}));
-    await tester.pumpWidget(_pageWidget(h, coaText: _coaText([_page(0), _page(1, text: false), _page(2, text: false)]), loadCore: () => core));
+    await tester.pumpWidget(_pageWidget(h, coaText: _coaText([_page(0), _page(1, text: false), _page(2, text: false)]), core: core));
     await _testPkpr(tester, 'PKPR-71c5e6ad');
 
     expect(find.textContaining('no text layer: pages 2, 3'), findsOneWidget);
     expect(find.byIcon(Icons.check_circle), findsNWidgets(4)); // the text step passes: a page without text is reported, not read
     expect(find.textContaining('PL-de20657a is not in this report; it has: no UID lines'), findsOneWidget);
-  });
-
-  testWidgets('missing core stops at step 5 with the build message', (tester) async {
-    final h = _Harness();
-    await tester.pumpWidget(_pageWidget(h, loadCore: () => null));
-    await _testPkpr(tester, 'PKPR-71c5e6ad');
-
-    expect(tester.takeException(), isNull);
-    expect(find.byIcon(Icons.check_circle), findsNWidgets(4));
-    expect(find.byIcon(Icons.error), findsOneWidget);
-    expect(find.textContaining(coaCoreMissingMessage), findsOneWidget);
-    expect(find.byIcon(Icons.remove_circle_outline), findsNWidgets(2)); // label spec and preview: skipped
   });
 
   testWidgets('blocked spec lists every reason', (tester) async {
@@ -301,7 +287,7 @@ void main() {
       'blocked': ['the package has no unit weight', 'there is no strain name'],
       'warnings': ['no certificate date: best-by counted from today'],
     });
-    await tester.pumpWidget(_pageWidget(h, loadCore: () => core));
+    await tester.pumpWidget(_pageWidget(h, core: core));
     await _testPkpr(tester, 'PKPR-71c5e6ad');
 
     expect(find.byIcon(Icons.check_circle), findsNWidgets(5));
@@ -369,7 +355,7 @@ void main() {
 
   testWidgets('share sends the downloaded PDF', (tester) async {
     final h = _Harness();
-    await tester.pumpWidget(_pageWidget(h, loadCore: () => null));
+    await tester.pumpWidget(_pageWidget(h));
     expect(find.text('Share the lab report PDF'), findsNothing);
     await _testPkpr(tester, 'PKPR-71c5e6ad');
     await _tap(tester, 'Share the lab report PDF');

@@ -184,13 +184,17 @@ void main() {
   });
 
   // Review I-2: a build from before sales snapshots reads `snapshots` as inventory and would send a sales one to
-  // /p/inventory (which replaces the mirror): sales snapshots live under their own key, which it never reads.
-  test("an older build's reader finds no sales snapshot in this build's file; inventory stays where it was", () {
+  // /p/inventory (which replaces the mirror). The work now waits in the sync queue (specs/phone-sync), so there is no
+  // document for such a build to read at all; the old document's writer still keeps sales snapshots out of `snapshots`.
+  test("an older build's reader finds no sales snapshot: no document is kept, and the old one keeps them apart", () {
     health.markUnreachable();
     final w = work();
     w.keepSnapshot(231, [9], workerEmail: 'w', deviceId: 'd', kind: 'sales');
-    final doc = jsonDecode(LocalStore.forDir(_dir).read('server_catch_up.json')!.body) as Map;
-    // the reader at main: d['snapshots'], each entry an inventory snapshot keyed by stateId
+    expect(LocalStore.forDir(_dir).read('server_catch_up.json'), isNull);
+    w.keepSnapshot(231, [1, 2], workerEmail: 'w', deviceId: 'd');
+    expect(work().snapshots.keys.toSet(), {'inventory:231', 'sales:231'});
+    expect(work().snapshots['sales:231']!.records, [9]);
+    // the reader at main before sales: d['snapshots'], each entry an inventory snapshot keyed by stateId
     List<int> oldReader(Map d) => [
           if (d['snapshots'] is List)
             for (final s in d['snapshots'] as List)
@@ -198,13 +202,10 @@ void main() {
                   s['deviceId'] is String && s['readAtMs'] is int)
                 s['stateId'] as int,
         ];
-    expect(oldReader(doc), isEmpty);
-    w.keepSnapshot(231, [1, 2], workerEmail: 'w', deviceId: 'd');
+    CatchUpStore(dataDir: () => _dir).save(CatchUpState(snapshots: w.snapshots));
     final both = jsonDecode(LocalStore.forDir(_dir).read('server_catch_up.json')!.body) as Map;
     expect(oldReader(both), [231]);
     expect((both['snapshots'] as List).single['records'], [1, 2]);
-    expect(work().snapshots.keys.toSet(), {'inventory:231', 'sales:231'});
-    expect(work().snapshots['sales:231']!.records, [9]);
   });
 
   test('a snapshot saved before kinds existed reads as inventory', () {

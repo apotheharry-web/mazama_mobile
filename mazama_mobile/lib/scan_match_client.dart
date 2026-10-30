@@ -1,10 +1,10 @@
 // Sends the lines of text this phone's own native OCR (text_scanner.dart - Apple's Vision framework on iOS,
 // Google ML Kit's text recognition on Android) recognized off a label straight to Mazama's own server, so the
 // matcher runs against the center's live inventory as the server's mirror has it (src/mazama_sales/web/
-// stock_pages.py's public_scan_match route). The matcher itself is coa_core's (mazama_modules/coa/coa_core/src/
+// stock_pages.py's public_scan_match route). The matcher itself is mazama_core's (mazama_modules/core/mazama_core/src/
 // scan.rs), which the server runs through its Python binding. The cart already holds its own copy of the center's
 // stock, so when this call can't get an answer from the server (ScanMatchError.serverUnavailable) CartPage runs the
-// same coa_core matcher on the phone through the FFI against that copy instead (local_scan_match.dart); it is never
+// same mazama_core matcher on the phone through the FFI against that copy instead (local_scan_match.dart); it is never
 // re-implemented in Dart. See the route's own docstring for the matching rules (an exact lot number, a couple of
 // misread characters trusted only on a "Lot:" line or on typed text, and a best-effort guess from
 // weight/potency/strain/date when no lot number is found at all).
@@ -41,7 +41,7 @@ class ScanMatchError implements Exception {
   String toString() => message;
 }
 
-/// One hit from the matcher's find_ids (coa_core's scan::find_ids) - an actual lot number found in the recognized
+/// One hit from the matcher's find_ids (mazama_core's scan::find_ids) - an actual lot number found in the recognized
 /// text, best first.
 class ScanMatch {
   final String guid;
@@ -65,7 +65,7 @@ class ScanMatch {
   }
 }
 
-/// One best-effort suggestion from the matcher's closest (coa_core's scan::closest) - offered only when nothing
+/// One best-effort suggestion from the matcher's closest (mazama_core's scan::closest) - offered only when nothing
 /// matched an actual lot number.
 class ScanGuess {
   final String guid;

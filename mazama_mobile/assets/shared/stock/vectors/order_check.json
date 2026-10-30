@@ -1,0 +1,836 @@
+[
+ {
+  "aliases": [],
+  "lines": [
+   {
+    "quantity": 3,
+    "size": 25,
+    "strain": "golden teacher",
+    "type": "FD"
+   }
+  ],
+  "name": "one strain line",
+  "note": "",
+  "result": {
+   "lines": [
+    {
+     "quantity": 3,
+     "size": 25,
+     "strain": "Golden Teacher",
+     "type": "FD"
+    }
+   ],
+   "note": ""
+  }
+ },
+ {
+  "aliases": [
+   [
+    "bobs",
+    "Huautla"
+   ],
+   [
+    "",
+    "Ignored"
+   ]
+  ],
+  "lines": [
+   {
+    "quantity": 3,
+    "size": 25,
+    "strain": "golden teacher",
+    "type": "FD"
+   },
+   {
+    "quantity": 1,
+    "size": 10,
+    "strain": "hua",
+    "type": "DH"
+   },
+   {
+    "quantity": 2,
+    "size": 5,
+    "strain": "Bob's",
+    "type": "HG"
+   }
+  ],
+  "name": "canonical spelling and an alias from the Strains page",
+  "note": "  call first  ",
+  "result": {
+   "lines": [
+    {
+     "quantity": 3,
+     "size": 25,
+     "strain": "Golden Teacher",
+     "type": "FD"
+    },
+    {
+     "quantity": 1,
+     "size": 10,
+     "strain": "Huautla",
+     "type": "DH"
+    },
+    {
+     "quantity": 2,
+     "size": 5,
+     "strain": "Bobs",
+     "type": "HG"
+    }
+   ],
+   "note": "call first"
+  }
+ },
+ {
+  "aliases": [
+   [
+    "blu",
+    "gt"
+   ]
+  ],
+  "lines": [
+   {
+    "quantity": 4,
+    "size": 15,
+    "strain": "Blu",
+    "type": "FD"
+   }
+  ],
+  "name": "an alias pointing at another builtin spelling",
+  "note": null,
+  "result": {
+   "lines": [
+    {
+     "quantity": 4,
+     "size": 15,
+     "strain": "Golden Teacher",
+     "type": "FD"
+    }
+   ],
+   "note": ""
+  }
+ },
+ {
+  "aliases": [],
+  "lines": [
+   {
+    "quantity": 1,
+    "size": 25,
+    "strain": "Avery",
+    "type": "FD"
+   },
+   {
+    "quantity": 1,
+    "size": 20,
+    "strain": "Avery",
+    "type": "FD"
+   },
+   {
+    "quantity": 1,
+    "size": 15,
+    "strain": "Avery",
+    "type": "FD"
+   },
+   {
+    "quantity": 1,
+    "size": 10,
+    "strain": "Avery",
+    "type": "FD"
+   },
+   {
+    "quantity": 1,
+    "size": 5,
+    "strain": "Avery",
+    "type": "FD"
+   },
+   {
+    "quantity": 1,
+    "size": 0,
+    "strain": "Avery",
+    "type": "FD"
+   }
+  ],
+  "name": "every strain size, other included",
+  "note": "",
+  "result": {
+   "lines": [
+    {
+     "quantity": 1,
+     "size": 25,
+     "strain": "Avery",
+     "type": "FD"
+    },
+    {
+     "quantity": 1,
+     "size": 20,
+     "strain": "Avery",
+     "type": "FD"
+    },
+    {
+     "quantity": 1,
+     "size": 15,
+     "strain": "Avery",
+     "type": "FD"
+    },
+    {
+     "quantity": 1,
+     "size": 10,
+     "strain": "Avery",
+     "type": "FD"
+    },
+    {
+     "quantity": 1,
+     "size": 5,
+     "strain": "Avery",
+     "type": "FD"
+    },
+    {
+     "quantity": 1,
+     "size": 0,
+     "strain": "Avery",
+     "type": "FD"
+    }
+   ],
+   "note": ""
+  }
+ },
+ {
+  "aliases": [],
+  "lines": [
+   {
+    "quantity": 2,
+    "size": -1,
+    "strain": "chocolate",
+    "type": "CH"
+   },
+   {
+    "quantity": 1,
+    "size": -2,
+    "strain": " Gummy ",
+    "type": "GM"
+   },
+   {
+    "quantity": 5,
+    "size": 0,
+    "strain": "HONEY",
+    "type": "HN"
+   }
+  ],
+  "name": "edibles: Booster, Microdose and other, own type",
+  "note": "",
+  "result": {
+   "lines": [
+    {
+     "quantity": 2,
+     "size": -1,
+     "strain": "Chocolate",
+     "type": "CH"
+    },
+    {
+     "quantity": 1,
+     "size": -2,
+     "strain": "Gummy",
+     "type": "GM"
+    },
+    {
+     "quantity": 5,
+     "size": 0,
+     "strain": "Honey",
+     "type": "HN"
+    }
+   ],
+   "note": ""
+  }
+ },
+ {
+  "aliases": [],
+  "lines": [
+   {
+    "quantity": 9,
+    "size": 25,
+    "strain": "all  STRAINS",
+    "type": "DH"
+   }
+  ],
+  "name": "the combined row in any spelling",
+  "note": "",
+  "result": {
+   "lines": [
+    {
+     "quantity": 9,
+     "size": 25,
+     "strain": "All strains",
+     "type": "DH"
+    }
+   ],
+   "note": ""
+  }
+ },
+ {
+  "aliases": [],
+  "lines": [
+   {
+    "quantity": 1,
+    "size": -1,
+    "strain": "Avery",
+    "type": "FD"
+   }
+  ],
+  "name": "a strain with an edible size",
+  "note": "",
+  "result": {
+   "refused": "These lines are not a strain with a size of 25, 20, 15, 10, 5 or 0 (other) and FD, DH or HG, or Chocolate, Gummy or Honey with a size of -1 (Booster), -2 (Microdose) or 0 and its own type (CH, GM, HN), and a whole number from 1 to 99999: Avery -1 FD 1"
+  }
+ },
+ {
+  "aliases": [],
+  "lines": [
+   {
+    "quantity": 1,
+    "size": 25,
+    "strain": "Chocolate",
+    "type": "CH"
+   }
+  ],
+  "name": "an edible with a strain size",
+  "note": "",
+  "result": {
+   "refused": "These lines are not a strain with a size of 25, 20, 15, 10, 5 or 0 (other) and FD, DH or HG, or Chocolate, Gummy or Honey with a size of -1 (Booster), -2 (Microdose) or 0 and its own type (CH, GM, HN), and a whole number from 1 to 99999: Chocolate 25 CH 1"
+  }
+ },
+ {
+  "aliases": [],
+  "lines": [
+   {
+    "quantity": 1,
+    "size": -1,
+    "strain": "Chocolate",
+    "type": "GM"
+   }
+  ],
+  "name": "an edible of another type",
+  "note": "",
+  "result": {
+   "refused": "These lines are not a strain with a size of 25, 20, 15, 10, 5 or 0 (other) and FD, DH or HG, or Chocolate, Gummy or Honey with a size of -1 (Booster), -2 (Microdose) or 0 and its own type (CH, GM, HN), and a whole number from 1 to 99999: Chocolate -1 GM 1"
+  }
+ },
+ {
+  "aliases": [],
+  "lines": [
+   {
+    "quantity": 1,
+    "size": 25,
+    "strain": "Avery",
+    "type": "CH"
+   }
+  ],
+  "name": "a strain of an edible type",
+  "note": "",
+  "result": {
+   "refused": "These lines are not a strain with a size of 25, 20, 15, 10, 5 or 0 (other) and FD, DH or HG, or Chocolate, Gummy or Honey with a size of -1 (Booster), -2 (Microdose) or 0 and its own type (CH, GM, HN), and a whole number from 1 to 99999: Avery 25 CH 1"
+  }
+ },
+ {
+  "aliases": [],
+  "lines": [
+   {
+    "quantity": 1,
+    "size": 25,
+    "strain": "golden teacher",
+    "type": "FD"
+   },
+   {
+    "quantity": 99999,
+    "size": 25,
+    "strain": "golden teacher",
+    "type": "FD"
+   }
+  ],
+  "name": "quantity at the bounds",
+  "note": "",
+  "result": {
+   "lines": [
+    {
+     "quantity": 1,
+     "size": 25,
+     "strain": "Golden Teacher",
+     "type": "FD"
+    },
+    {
+     "quantity": 99999,
+     "size": 25,
+     "strain": "Golden Teacher",
+     "type": "FD"
+    }
+   ],
+   "note": ""
+  }
+ },
+ {
+  "aliases": [],
+  "lines": [
+   {
+    "quantity": 0,
+    "size": 25,
+    "strain": "golden teacher",
+    "type": "FD"
+   },
+   {
+    "quantity": 100000,
+    "size": 25,
+    "strain": "golden teacher",
+    "type": "FD"
+   },
+   {
+    "quantity": -3,
+    "size": 25,
+    "strain": "golden teacher",
+    "type": "FD"
+   }
+  ],
+  "name": "quantity out of bounds",
+  "note": "",
+  "result": {
+   "refused": "These lines are not a strain with a size of 25, 20, 15, 10, 5 or 0 (other) and FD, DH or HG, or Chocolate, Gummy or Honey with a size of -1 (Booster), -2 (Microdose) or 0 and its own type (CH, GM, HN), and a whole number from 1 to 99999: golden teacher 25 FD 0, golden teacher 25 FD 100000, golden teacher 25 FD -3"
+  }
+ },
+ {
+  "aliases": [],
+  "lines": [
+   {
+    "quantity": 3.0,
+    "size": 25,
+    "strain": "golden teacher",
+    "type": "FD"
+   },
+   {
+    "quantity": 3,
+    "size": 25.0,
+    "strain": "golden teacher",
+    "type": "FD"
+   },
+   {
+    "quantity": true,
+    "size": 25,
+    "strain": "golden teacher",
+    "type": "FD"
+   },
+   {
+    "quantity": 3,
+    "size": true,
+    "strain": "golden teacher",
+    "type": "FD"
+   },
+   {
+    "quantity": "3",
+    "size": 25,
+    "strain": "golden teacher",
+    "type": "FD"
+   },
+   {
+    "quantity": 2.5,
+    "size": 25,
+    "strain": "golden teacher",
+    "type": "FD"
+   },
+   {
+    "quantity": 1e+20,
+    "size": 25,
+    "strain": "golden teacher",
+    "type": "FD"
+   }
+  ],
+  "name": "numbers that aren't ints",
+  "note": "",
+  "result": {
+   "refused": "These lines are not a strain with a size of 25, 20, 15, 10, 5 or 0 (other) and FD, DH or HG, or Chocolate, Gummy or Honey with a size of -1 (Booster), -2 (Microdose) or 0 and its own type (CH, GM, HN), and a whole number from 1 to 99999: golden teacher 25 FD 3.0, golden teacher 25.0 FD 3, golden teacher 25 FD True, golden teacher True FD 3, golden teacher 25 FD 3, golden teacher 25 FD 2.5"
+  }
+ },
+ {
+  "aliases": [],
+  "lines": [
+   {},
+   {
+    "quantity": null,
+    "size": null,
+    "strain": null,
+    "type": null
+   },
+   {
+    "strain": "Avery"
+   }
+  ],
+  "name": "missing and null fields",
+  "note": "",
+  "result": {
+   "refused": "These lines are not a strain with a size of 25, 20, 15, 10, 5 or 0 (other) and FD, DH or HG, or Chocolate, Gummy or Honey with a size of -1 (Booster), -2 (Microdose) or 0 and its own type (CH, GM, HN), and a whole number from 1 to 99999: None None None None, None None None None, Avery None None None"
+  }
+ },
+ {
+  "aliases": [],
+  "lines": [
+   5,
+   "Avery",
+   null,
+   true
+  ],
+  "name": "a line that isn't an object",
+  "note": "",
+  "result": {
+   "refused": "These lines are not a strain with a size of 25, 20, 15, 10, 5 or 0 (other) and FD, DH or HG, or Chocolate, Gummy or Honey with a size of -1 (Booster), -2 (Microdose) or 0 and its own type (CH, GM, HN), and a whole number from 1 to 99999: None None None None, None None None None, None None None None, None None None None"
+  }
+ },
+ {
+  "aliases": [],
+  "lines": [
+   {
+    "quantity": 3,
+    "size": 25,
+    "strain": "   ",
+    "type": "FD"
+   },
+   {
+    "quantity": 3,
+    "size": 25,
+    "strain": "@@@",
+    "type": "FD"
+   },
+   {
+    "quantity": 3,
+    "size": 25,
+    "strain": 7,
+    "type": "FD"
+   }
+  ],
+  "name": "an empty or unsafe name",
+  "note": "",
+  "result": {
+   "refused": "These lines are not a strain with a size of 25, 20, 15, 10, 5 or 0 (other) and FD, DH or HG, or Chocolate, Gummy or Honey with a size of -1 (Booster), -2 (Microdose) or 0 and its own type (CH, GM, HN), and a whole number from 1 to 99999:     25 FD 3, @@@ 25 FD 3, 7 25 FD 3"
+  }
+ },
+ {
+  "aliases": [],
+  "lines": [
+   {
+    "quantity": 3,
+    "size": 25,
+    "strain": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    "type": "FD"
+   },
+   {
+    "quantity": 3,
+    "size": 25,
+    "strain": "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+    "type": "FD"
+   },
+   {
+    "quantity": 3,
+    "size": 25,
+    "strain": "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC x",
+    "type": "FD"
+   }
+  ],
+  "name": "a name at and over the length cap",
+  "note": "",
+  "result": {
+   "lines": [
+    {
+     "quantity": 3,
+     "size": 25,
+     "strain": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+     "type": "FD"
+    },
+    {
+     "quantity": 3,
+     "size": 25,
+     "strain": "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+     "type": "FD"
+    },
+    {
+     "quantity": 3,
+     "size": 25,
+     "strain": "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
+     "type": "FD"
+    }
+   ],
+   "note": ""
+  }
+ },
+ {
+  "aliases": [],
+  "lines": [
+   {
+    "quantity": -7,
+    "size": 25,
+    "strain": "golden teacher",
+    "type": "FD"
+   },
+   {
+    "quantity": -6,
+    "size": 25,
+    "strain": "golden teacher",
+    "type": "FD"
+   },
+   {
+    "quantity": -5,
+    "size": 25,
+    "strain": "golden teacher",
+    "type": "FD"
+   },
+   {
+    "quantity": -4,
+    "size": 25,
+    "strain": "golden teacher",
+    "type": "FD"
+   },
+   {
+    "quantity": -3,
+    "size": 25,
+    "strain": "golden teacher",
+    "type": "FD"
+   },
+   {
+    "quantity": -2,
+    "size": 25,
+    "strain": "golden teacher",
+    "type": "FD"
+   },
+   {
+    "quantity": -1,
+    "size": 25,
+    "strain": "golden teacher",
+    "type": "FD"
+   },
+   {
+    "quantity": 0,
+    "size": 25,
+    "strain": "golden teacher",
+    "type": "FD"
+   }
+  ],
+  "name": "more than six bad lines",
+  "note": "",
+  "result": {
+   "refused": "These lines are not a strain with a size of 25, 20, 15, 10, 5 or 0 (other) and FD, DH or HG, or Chocolate, Gummy or Honey with a size of -1 (Booster), -2 (Microdose) or 0 and its own type (CH, GM, HN), and a whole number from 1 to 99999: golden teacher 25 FD -7, golden teacher 25 FD -6, golden teacher 25 FD -5, golden teacher 25 FD -4, golden teacher 25 FD -3, golden teacher 25 FD -2"
+  }
+ },
+ {
+  "aliases": [],
+  "lines": [
+   {
+    "quantity": 12345678901,
+    "size": 123456789012,
+    "strain": "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ",
+    "type": "FREEZEDRIED"
+   }
+  ],
+  "name": "long values are cut in the message",
+  "note": "",
+  "result": {
+   "refused": "These lines are not a strain with a size of 25, 20, 15, 10, 5 or 0 (other) and FD, DH or HG, or Chocolate, Gummy or Honey with a size of -1 (Booster), -2 (Microdose) or 0 and its own type (CH, GM, HN), and a whole number from 1 to 99999: ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ 1234567890 FREEZEDRIE 1234567890"
+  }
+ },
+ {
+  "aliases": [],
+  "lines": [],
+  "name": "no lines",
+  "note": "",
+  "result": {
+   "refused": "The order has no lines."
+  }
+ },
+ {
+  "aliases": [],
+  "lines": [
+   {
+    "quantity": 3,
+    "size": 25,
+    "strain": "golden teacher",
+    "type": "FD"
+   }
+  ],
+  "name": "notes at the cap, trimmed",
+  "note": " \tnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn\n\u001c",
+  "result": {
+   "lines": [
+    {
+     "quantity": 3,
+     "size": 25,
+     "strain": "Golden Teacher",
+     "type": "FD"
+    }
+   ],
+   "note": "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"
+  }
+ },
+ {
+  "aliases": [],
+  "lines": [
+   {
+    "quantity": 3,
+    "size": 25,
+    "strain": "golden teacher",
+    "type": "FD"
+   }
+  ],
+  "name": "notes over the cap",
+  "note": "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn",
+  "result": {
+   "refused": "The notes are longer than 1000 characters."
+  }
+ },
+ {
+  "aliases": [],
+  "lines": [
+   {}
+  ],
+  "name": "notes over the cap beat bad lines",
+  "note": "ééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé",
+  "result": {
+   "refused": "The notes are longer than 1000 characters."
+  }
+ },
+ {
+  "aliases": [],
+  "lines": [
+   {
+    "quantity": 3,
+    "size": 25,
+    "strain": " Señor Blue　",
+    "type": "FD"
+   }
+  ],
+  "name": "unicode spaces and a non-ASCII name",
+  "note": " hello ",
+  "result": {
+   "lines": [
+    {
+     "quantity": 3,
+     "size": 25,
+     "strain": "Seor Blue",
+     "type": "FD"
+    }
+   ],
+   "note": "hello"
+  }
+ },
+ {
+  "aliases": [
+   [
+    "chocolate",
+    "Bar"
+   ]
+  ],
+  "lines": [
+   {
+    "quantity": 1,
+    "size": 25,
+    "strain": "\u001cchocolate",
+    "type": "DH"
+   },
+   {
+    "quantity": 1,
+    "size": 10,
+    "strain": "chocolate\u001f",
+    "type": "FD"
+   }
+  ],
+  "name": "a product word inside U+001C..U+001F, typed as a strain",
+  "note": "",
+  "result": {
+   "refused": "These lines are not a strain with a size of 25, 20, 15, 10, 5 or 0 (other) and FD, DH or HG, or Chocolate, Gummy or Honey with a size of -1 (Booster), -2 (Microdose) or 0 and its own type (CH, GM, HN), and a whole number from 1 to 99999: \u001cchocolate 25 DH 1, chocolate\u001f 10 FD 1"
+  }
+ },
+ {
+  "aliases": [
+   [
+    "chocolate",
+    "Bar"
+   ]
+  ],
+  "lines": [
+   {
+    "quantity": 1,
+    "size": -2,
+    "strain": "chocolate\u001f",
+    "type": "CH"
+   },
+   {
+    "quantity": 2,
+    "size": -1,
+    "strain": "\u001e Gummy\u001d",
+    "type": "GM"
+   }
+  ],
+  "name": "a product word inside U+001C..U+001F, as itself",
+  "note": "",
+  "result": {
+   "lines": [
+    {
+     "quantity": 1,
+     "size": -2,
+     "strain": "Chocolate",
+     "type": "CH"
+    },
+    {
+     "quantity": 2,
+     "size": -1,
+     "strain": "Gummy",
+     "type": "GM"
+    }
+   ],
+   "note": ""
+  }
+ },
+ {
+  "aliases": [],
+  "lines": [
+   {
+    "quantity": 1,
+    "size": 25,
+    "strain": "all\u001cstrains",
+    "type": "FD"
+   },
+   {
+    "quantity": 4,
+    "size": 0,
+    "strain": "\u001fAll \u001d Strains\u001e",
+    "type": "HG"
+   }
+  ],
+  "name": "the combined row split by U+001C",
+  "note": "\u001d note \u001c",
+  "result": {
+   "lines": [
+    {
+     "quantity": 1,
+     "size": 25,
+     "strain": "All strains",
+     "type": "FD"
+    },
+    {
+     "quantity": 4,
+     "size": 0,
+     "strain": "All strains",
+     "type": "HG"
+    }
+   ],
+   "note": "note"
+  }
+ },
+ {
+  "aliases": [],
+  "lines": [
+   {
+    "quantity": 18446744073709551616,
+    "size": 1000000000000000000000000000000,
+    "strain": "golden teacher",
+    "type": 1180591620717411303424
+   }
+  ],
+  "name": "ints beyond 64 bits in a refused line",
+  "note": "",
+  "result": {
+   "refused": "These lines are not a strain with a size of 25, 20, 15, 10, 5 or 0 (other) and FD, DH or HG, or Chocolate, Gummy or Honey with a size of -1 (Booster), -2 (Microdose) or 0 and its own type (CH, GM, HN), and a whole number from 1 to 99999: golden teacher 1000000000 1180591620 1844674407"
+  }
+ }
+]

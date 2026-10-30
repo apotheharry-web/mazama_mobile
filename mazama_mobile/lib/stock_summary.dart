@@ -1,18 +1,16 @@
-// The stock page's shared rules (specs/stock-page/README.md SP-R2, SP-R10): the Dart twin of the server's
-// mazama_sales/src/mazama_sales/stockview.py (the reference). filterRows, summarize, pies and parTable give exactly the
-// server's answers, held to the golden vectors vendored at assets/shared/stock/vectors/ (generated from the Python by
-// ../../mazama_modules/stock/gen.py; see test/stock_summary_test.dart). The algorithm in words, with every detail
-// that decides a number or a string, is mazama_modules/stock/README.md; the constants are its rules.yaml, vendored
-// at assets/shared/stock/rules/rules.yaml.
+// The stock page's shared rules (specs/stock-page/README.md SP-R2, SP-R10): filterRows, summarize, pies and parTable
+// are the shared core's (mazama_core::stock, specs/core row 8), the same functions the server's stockview.py calls;
+// they are held to the golden vectors vendored at assets/shared/stock/vectors/ (test/stock_summary_test.dart). The
+// algorithm in words is mazama_modules/stock/README.md; the constants are its rules.yaml, vendored at
+// assets/shared/stock/rules/rules.yaml. The constants and the small lookups below (size words, par sizes, a row's
+// kind and size, Python's %g for the par page's figures) stay here for the pages.
 //
 // Data only: drawing the pies is the page's job. Results are plain maps in the JSON shapes the vectors hold (rows
-// in filterRows' result are StockRow objects, which jsonEncode writes as their JSON).
-//
-// Where Dart and Python differ, this file copies Python: rounding to 2 decimals and the key's whole percent are
-// half to even on the exact binary value (Dart's round() is half away from zero), and the par summary's number is
-// formatted as Python's f"{x:g}".
+// in filterRows' result are the caller's StockRow objects, which jsonEncode writes as their JSON).
 
 import 'dart:math' as math;
+
+import 'mazama_core.dart';
 
 /// The standard serving sizes, mg per unit, largest first (rules.yaml serving_sizes).
 const List<int> stockServingSizes = [25, 20, 15, 10, 5];
@@ -60,8 +58,6 @@ const List<String> stockFilters = ['all', 'mazama'];
 /// SP-D6: mg TPE (the server's figure) or mg psilocybin (the state's figures), never mixed (rules.yaml mg_modes).
 const List<String> stockMgModes = ['tpe', 'psilocybin'];
 
-const String _unknown = 'Unknown';
-const Map<String, String> _mgTitles = {'tpe': 'Total mg TPE', 'psilocybin': 'Total mg psilocybin'};
 
 /// One package as the stock rules see it (specs/stock-page/stock-page.plan.md "Stock row").
 class StockRow {
@@ -162,30 +158,12 @@ class ParLevel {
 
 // --- Python's rounding and formatting ----------------------------------------------------------------------------
 
-/// Python's round(x, 2): the nearest 2-decimal number to the exact binary value, an exact tie to the even last
-/// digit. An exact tie at the third decimal is only possible when x x 8 is an odd whole number (0.125, 0.375, ...).
-double roundTo2(num value) {
-  final x = value.toDouble();
-  if (!x.isFinite) return x;
-  final eighths = x * 8;
-  if (eighths == eighths.truncateToDouble() && eighths.abs() % 2 == 1) {
-    final hundredths = x * 100;                 // k x 12.5: exact
-    final low = hundredths.floorToDouble();
-    final even = low % 2 == 0 ? low : low + 1;
-    return even / 100;
-  }
-  return double.parse(x.toStringAsFixed(2));
-}
-
 /// Python's int(f"{x:.0f}"): the nearest whole number, an exact .5 to the even one (12.5 -> 12, 13.5 -> 14).
 int roundHalfEven(double x) {
   final low = x.floorToDouble();
   if (x - low == 0.5) return (low % 2 == 0 ? low : low + 1).toInt();
   return x.round();
 }
-
-/// A slice's whole percent: 100 x value / total (multiplied first, as the server does), rounded half to even.
-int stockPercent(num value, num total) => roundHalfEven(100 * value / total);
 
 /// Python's f"{x:.{d}f}" for x >= 0: toStringAsFixed, except that an exact tie goes to the even last digit
 /// (toStringAsFixed takes the larger). x is an exact tie at d decimals only when x x 2^(d+1) is an odd whole number.
@@ -238,23 +216,24 @@ String formatG(num value) {
 
 // --- 1. filter ---------------------------------------------------------------------------------------------------
 
+/// The rows as the core takes them, each with its place in [rows] (`_row`), so answers map back to the caller's rows.
+List<Map<String, Object?>> _sent(List<StockRow> rows) => [
+      for (var i = 0; i < rows.length; i++) {...rows[i].toJson(), '_row': i},
+    ];
+
 /// SP-D2, SP-D3: {"counted": [StockRow], "other": [{"row": StockRow, "reason": "expired" | "other_maker"}]}.
-/// Rows with no units on hand are in neither; expired beats other maker. [makers] is 'all' or 'mazama'.
-Map<String, Object?> filterRows(List<StockRow> rows, String makers) {
+/// Rows with no units on hand are in neither; expired beats other maker. [makers] is 'all' or 'mazama'. The core's
+/// stock.filter; [core] defaults to this app's ([MazamaCore.instance]).
+Map<String, Object?> filterRows(List<StockRow> rows, String makers, {CoreFunctions? core}) {
   if (!stockFilters.contains(makers)) throw ArgumentError.value(makers, 'makers', 'must be one of $stockFilters');
-  final counted = <StockRow>[];
-  final other = <Map<String, Object?>>[];
-  for (final r in rows) {
-    if (!r.onHand) continue;
-    if (r.expired) {
-      other.add({'row': r, 'reason': 'expired'});
-    } else if (makers == 'mazama' && !r.mazama) {
-      other.add({'row': r, 'reason': 'other_maker'});
-    } else {
-      counted.add(r);
-    }
-  }
-  return {'counted': counted, 'other': other};
+  final got = (core ?? MazamaCore.instance).stockFilter({'rows': _sent(rows), 'makers': makers});
+  StockRow back(Object? r) => rows[((r as Map)['_row'] as num).toInt()];
+  return {
+    'counted': [for (final r in got['counted'] as List) back(r)],
+    'other': [
+      for (final o in got['other'] as List) {'row': back((o as Map)['row']), 'reason': o['reason']},
+    ],
+  };
 }
 
 // --- 2. summary --------------------------------------------------------------------------------------------------
@@ -359,238 +338,21 @@ String? stockProductCode(String name) {
   return null;
 }
 
-List<String> get _sizeOrder => stockSizeOrder;
-
-Map<String, Object?> _ordered(Map<String, num> sizes) => {
-      for (final k in _sizeOrder)
-        if (sizes.containsKey(k)) k: sizes[k],
-    };
-
-class _Strain {
-  final Map<String, num> spell = {};
-  num units = 0;
-  final Map<String, num> sizes = {};
-  double mg = 0.0;
-  final Map<String, double> mgSizes = {};
-}
-
 /// Counted rows -> {"total", "mg_total", "mg_mode", "strains": [{"name", "units", "mg", "sizes", "mg_sizes"}]}.
-/// [mgMode] is 'tpe' or 'psilocybin'. Rows not on hand are skipped.
-Map<String, Object?> summarize(List<StockRow> rows, String mgMode) {
+/// [mgMode] is 'tpe' or 'psilocybin'. Rows not on hand are skipped. The core's stock.summarize.
+Map<String, Object?> summarize(List<StockRow> rows, String mgMode, {CoreFunctions? core}) {
   if (!stockMgModes.contains(mgMode)) throw ArgumentError.value(mgMode, 'mgMode', 'must be one of $stockMgModes');
-  final by = <String, _Strain>{};
-  for (final r in rows) {
-    if (!r.onHand) continue;
-    final q = r.quantity!;
-    final s = r.strain;
-    final name = stockEdibleOf(r) ?? ((s == null || s.isEmpty) ? _unknown : s);
-    final slot = by.putIfAbsent(name.toLowerCase(), _Strain.new);
-    slot.spell[name] = (slot.spell[name] ?? 0) + q;
-    final k = stockRowSizeKey(r, mgMode);
-    final mg = q * _mgPerUnit(r, mgMode);
-    slot.units += q;
-    slot.sizes[k] = (slot.sizes[k] ?? 0) + q;
-    slot.mg += mg;
-    slot.mgSizes[k] = (slot.mgSizes[k] ?? 0.0) + mg;
-  }
-  String shown(_Strain v) {
-    String? best;
-    for (final n in v.spell.keys) {
-      if (best == null) {
-        best = n;
-        continue;
-      }
-      final c = v.spell[n]!.compareTo(v.spell[best]!);
-      if (c > 0 || (c == 0 && n.compareTo(best) > 0)) best = n;
-    }
-    return best!;
-  }
-
-  final named = [for (final v in by.values) (shown(v), v)];
-  named.sort((a, b) {
-    final c = b.$2.units.compareTo(a.$2.units);
-    return c != 0 ? c : a.$1.toLowerCase().compareTo(b.$1.toLowerCase());
-  });
-  final strains = <Map<String, Object?>>[
-    for (final (n, v) in named)
-      {
-        'name': n,
-        'units': v.units,
-        'mg': roundTo2(v.mg),
-        'sizes': _ordered(v.sizes),
-        'mg_sizes': _ordered({for (final e in v.mgSizes.entries) e.key: roundTo2(e.value)}),
-      },
-  ];
-  num total = 0;
-  num mgSum = 0;
-  for (final s in strains) {
-    total += s['units'] as num;
-    mgSum += s['mg'] as num;
-  }
-  return {'total': total, 'mg_total': strains.isEmpty ? 0 : roundTo2(mgSum), 'mg_mode': mgMode, 'strains': strains};
+  return (core ?? MazamaCore.instance).stockSummarize({'rows': [for (final r in rows) r.toJson()], 'mg_mode': mgMode});
 }
 
-// --- 3. pies -----------------------------------------------------------------------------------------------------
-
-Map<String, Object?> _slice(String name, num value, String slot, num total) =>
-    {'name': name, 'value': value, 'slot': slot, 'pct': stockPercent(value, total)};
-
-Map<String, Object?> _strainPie(List<(String, num)> pairs, num total) {
-  final slices = <Map<String, Object?>>[];
-  for (var i = 0; i < pairs.length && i < stockStrainSlots; i++) {
-    if (pairs[i].$2 > 0) slices.add(_slice(pairs[i].$1, pairs[i].$2, 's${i + 1}', total));
-  }
-  if (pairs.length > stockStrainSlots) {
-    num other = 0;
-    for (final p in pairs.skip(stockStrainSlots)) {
-      other += p.$2;
-    }
-    if (other > 0) slices.add(_slice('Other (${pairs.length - stockStrainSlots} strains)', other, 'oth', total));
-  }
-  return {'total': total, 'slices': slices};
-}
-
-bool _nonZero(Object? v) => v is num && v != 0;
-
-Map<String, Object?>? _sizePie(Map sizes, String title) {
-  num total = 0;
-  for (final k in _sizeOrder) {
-    total += (sizes[k] as num?) ?? 0;
-  }
-  if (total <= 0) return null;
-  final parts = <(String, num, String)>[
-    for (final d in stockServingSizes)
-      if (_nonZero(sizes['$d'])) ('$d mg', sizes['$d'] as num, 'd$d'),
-    for (final e in stockEdibleSizes.entries)
-      if (_nonZero(sizes[e.key])) (e.value.$2, sizes[e.key] as num, e.value.$3),
-    if (_nonZero(sizes[stockOtherSize])) ('Other size', sizes[stockOtherSize] as num, 'dx'),
-  ];
-  final slices = parts.length == 1
-      ? [_slice(parts[0].$1, parts[0].$2, 'c', total)]
-      : [for (final p in parts) _slice(p.$1, p.$2, p.$3, total)];
-  return {'title': title, 'total': total, 'slices': slices};
-}
-
-/// A summary -> {"units": pie | null, "mg": pie | null, "rows": [...], "more": n} (charts.stock_view's data).
-/// A pie is {"total", "slices": [{"name", "value", "slot", "pct"}]}; a row is {"name", "units", "mg", "slot",
-/// "size_pies": [{"title", "total", "slices"}]}.
-Map<String, Object?> pies(Map<String, Object?> summary) {
-  final strains = [for (final s in summary['strains'] as List) s as Map];
-  final total = summary['total'] as num;
-  final mgTotal = summary['mg_total'] as num;
-  final view = <String, Object?>{'units': null, 'mg': null, 'rows': <Map<String, Object?>>[], 'more': 0};
-  if (total <= 0) return view;
-  final slots = <String, String>{
-    for (var i = 0; i < strains.length && i < stockStrainSlots; i++) strains[i]['name'] as String: 's${i + 1}',
-  };
-  view['units'] = _strainPie([for (final s in strains) (s['name'] as String, s['units'] as num)], total);
-  if (mgTotal > 0) view['mg'] = _strainPie([for (final s in strains) (s['name'] as String, s['mg'] as num)], mgTotal);
-  final mgTitle = _mgTitles[summary['mg_mode']] ?? _mgTitles['tpe']!;
-  final rows = <Map<String, Object?>>[];
-  for (final s in strains.take(stockMaxStrainRows)) {
-    final name = s['name'] as String;
-    final sizePies = [
-      _sizePie(s['sizes'] as Map, 'Quantity'),
-      if (mgTotal > 0) _sizePie(s['mg_sizes'] as Map, mgTitle),
-    ];
-    rows.add({
-      'name': name,
-      'units': s['units'],
-      'mg': s['mg'],
-      'slot': slots[name] ?? 'oth',
-      'size_pies': [for (final p in sizePies) if (p != null) p],
-    });
-  }
-  view['rows'] = rows;
-  view['more'] = strains.length > stockMaxStrainRows ? strains.length - stockMaxStrainRows : 0;
-  return view;
-}
-
-// --- 4. par ------------------------------------------------------------------------------------------------------
+/// A summary -> {"units": pie | null, "mg": pie | null, "rows": [...], "more": n} (charts.stock_view's data); a pie is
+/// {"total", "slices": [{"name", "value", "slot", "pct"}]}. The core's stock.pies.
+Map<String, Object?> pies(Map<String, Object?> summary, {CoreFunctions? core}) =>
+    (core ?? MazamaCore.instance).stockPies({'summary': summary});
 
 /// The summary of ALL counted stock (SP-D4) and the center's par levels ->
 /// {"heads": [25, 20, 15, 10, 5, -1, -2, 0], "rows": [{"name", "cells": [{"size", "have", "par", "short"}], "short"}],
-/// "short_total", "summary", "all"} (charts.par_view's data). "all" is the combined row ([stockAllStrains]), never one
-/// of "rows": {"name", "cells": [{"size", "have", "par", "short", "extra"}] for 25 .. 5 and 0, "short", "extra"}; its
-/// have is every non-edible row's units, extra what it lacks beyond the strain rows' own shortfall of that size
-/// (mazama_modules/stock/README.md section 4), and short_total counts the extras, not its short.
-Map<String, Object?> parTable(Map<String, Object?> summary, List<ParLevel> levels) {
-  final par = <String, Map<int, int>>{};
-  final names = <String, String>{};
-  final combined = <int, int>{};
-  final allSizes = stockSizesFor(stockAllStrains);
-  for (final lv in levels) {
-    final p = lv.par;
-    if (p == null || !stockParColumns.contains(lv.size)) continue;
-    if (stockIsAll(lv.strain)) {
-      if (allSizes.contains(lv.size)) combined[lv.size] = p;
-      continue;
-    }
-    final k = lv.strain.toLowerCase();
-    par.putIfAbsent(k, () => {})[lv.size] = p;
-    names[k] = lv.strain;
-  }
-  final table = <(String, Map<int, num>, Map<int, int>)>[];
-  final seen = <String>{};
-  for (final s in summary['strains'] as List) {
-    final m = s as Map;
-    final name = m['name'] as String;
-    if (stockIsAll(name)) continue;
-    seen.add(name.toLowerCase());
-    final have = <int, num>{
-      for (final e in (m['sizes'] as Map).entries)
-        stockSizeCode(e.key as String): e.value as num,
-    };
-    table.add((name, have, par[name.toLowerCase()] ?? const <int, int>{}));
-  }
-  final parOnly = [for (final k in par.keys) if (!seen.contains(k)) k]
-    ..sort((a, b) => names[a]!.toLowerCase().compareTo(names[b]!.toLowerCase()));
-  for (final k in parOnly) {
-    table.add((names[k]!, const <int, num>{}, par[k]!));
-  }
-  final rows = <Map<String, Object?>>[];
-  num shortTotal = 0;
-  final allHave = <int, num>{};
-  final strainShort = <int, num>{};
-  for (final (name, have, lvl) in table) {
-    final cells = <Map<String, Object?>>[];
-    num short = 0;
-    final product = stockIsProduct(name);
-    for (final d in stockParColumns) {
-      final h = have[d] ?? 0;
-      final p = lvl[d];
-      final num gap = p != null && h < p ? p - h : 0;
-      short += gap;
-      cells.add({'size': d, 'have': h, 'par': p, 'short': gap});
-      if (!product) {
-        allHave[d] = (allHave[d] ?? 0) + h;
-        strainShort[d] = (strainShort[d] ?? 0) + gap;
-      }
-    }
-    shortTotal += short;
-    rows.add({'name': name, 'cells': cells, 'short': short});
-  }
-  final allCells = <Map<String, Object?>>[];
-  num allShort = 0, allExtra = 0;
-  for (final d in allSizes) {
-    final h = allHave[d] ?? 0;
-    final p = combined[d];
-    final num gap = p != null && h < p ? p - h : 0;
-    final num rest = gap - (strainShort[d] ?? 0);
-    final num extra = rest > 0 ? rest : 0;
-    allShort += gap;
-    allExtra += extra;
-    allCells.add({'size': d, 'have': h, 'par': p, 'short': gap, 'extra': extra});
-  }
-  shortTotal += allExtra;
-  final line = shortTotal != 0
-      ? '${formatG(shortTotal)} units below par'
-      : (par.isNotEmpty || combined.isNotEmpty ? 'All strains with a par level are at or above it.' : 'No par levels entered yet.');
-  return {
-    'heads': List<int>.of(stockParColumns),
-    'rows': rows,
-    'short_total': shortTotal,
-    'summary': line,
-    'all': {'name': stockAllStrains, 'cells': allCells, 'short': allShort, 'extra': allExtra},
-  };
-}
+/// "short_total", "summary", "all"} (charts.par_view's data; mazama_modules/stock/README.md section 4). The core's
+/// stock.par_table.
+Map<String, Object?> parTable(Map<String, Object?> summary, List<ParLevel> levels, {CoreFunctions? core}) =>
+    (core ?? MazamaCore.instance).stockParTable({'summary': summary, 'levels': [for (final l in levels) l.toJson()]});

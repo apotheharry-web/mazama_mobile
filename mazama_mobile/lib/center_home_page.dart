@@ -29,6 +29,7 @@ class CenterHomePage extends StatefulWidget {
       required this.buildStock,
       required this.buildCart,
       required this.buildSales,
+      this.buildUpdateCard,
       this.featureTable = features});
 
   final License center;
@@ -47,6 +48,10 @@ class CenterHomePage extends StatefulWidget {
 
   /// The Sales page, right of Cart (a SalesPage in the app; anything in tests), while recent_sales is on (CW-R10).
   final Widget Function() buildSales;
+
+  /// specs/app-updates AU-D10: the update card above the tabs (app_update_card.dart), given the draft cart's line count
+  /// so it hides while a cart holds a line; null (tests, the demo) shows none.
+  final Widget Function(int draftCount)? buildUpdateCard;
 
   @override
   State<CenterHomePage> createState() => _CenterHomePageState();
@@ -130,10 +135,16 @@ class _CenterHomePageState extends State<CenterHomePage> with SingleTickerProvid
             color: Theme.of(context).colorScheme.surface,
             child: SafeArea(
               bottom: false,
-              child: TabBar(
-                controller: _tabs,
-                onTap: _show,
-                tabs: [for (final t in _shown) _label(t)],
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (widget.buildUpdateCard != null && _on('app_updates')) widget.buildUpdateCard!(_draftCount),
+                  TabBar(
+                    controller: _tabs,
+                    onTap: _show,
+                    tabs: [for (final t in _shown) _label(t)],
+                  ),
+                ],
               ),
             ),
           ),

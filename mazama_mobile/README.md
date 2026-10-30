@@ -9,14 +9,32 @@ only on its `/p/` routes (labels, packages, lab-report data, scan matching, sale
   `assets/`; the copies are committed, and builds use them as they are: no build runs the script).
 - Native camera text scanners: `ios/Runner/TextScanner.swift` and
   `android/app/src/main/kotlin/com/example/mazama_mobile/TextScanner.kt` (channel `mazama/text_scanner`). iOS builds: the root `codemagic.yaml`.
-- What the app keeps between launches (carts, timers, the device id, caches, kept replies, the outbox, catch-up) is
-  in one SQLite file, `mazama.db`, in the app's data folder, through `lib/local_store.dart`; the session's tokens are
+- What the app keeps between launches (carts, timers, the device id, the par columns chosen, and the sync engine's
+  tables: its queue of sale logs, failed-sale reports, lab reports and snapshots, and its datasets, everything it has
+  read with when, specs/phone-sync) is in one SQLite file, `mazama.db`, in the app's data folder, through
+  `lib/local_store.dart`; what older builds kept in documents of their own (the outbox, the catch-up list, the reply
+  store, the stock page's and Mazama's stock copies) is moved into the engine's tables on start
+  (`lib/sync/sync_migration.dart`). The session's tokens are
   in the phone's Keychain/Keystore (`lib/secret_store.dart`). The files older builds wrote are imported on the first
   launch and renamed `*.migrated` (`session.json` is deleted once moved). Only the sign-in spec and host list are still
   files. `test/local_store_guard_test.dart` fails on a new file write. (`flutter_secure_storage` registers its Linux
   plugin too, so a Linux desktop build needs `libsecret-1` installed, although the session never uses it off the
   phones.)
 - Tests run in CI (`mobile-analyze`, `mobile-test`); see `AGENTS.md` for reading the results.
+- **The shared core is part of every build** (`lib/mazama_core.dart`, specs/core CR-D2): Android and iOS builds compile
+  `../mazama_modules/core/mazama_core_ffi` and fail without Rust (`rustup target add aarch64-linux-android
+  x86_64-linux-android`, or `aarch64-apple-ios`); an app that still can't load it shows one screen, "This build is
+  missing a part. Reinstall the app." (`lib/missing_core_app.dart`). The tests need it too: build it and point
+  `MAZAMA_CORE_FFI_LIB` at it, or the tests that reach it fail (`test/support/core.dart`):
+
+  ```
+  (cd ../mazama_modules/core/mazama_core_ffi && cargo build --release)
+  MAZAMA_CORE_FFI_LIB=$PWD/../mazama_modules/core/mazama_core_ffi/target/release/libmazama_core_ffi.so flutter test
+  ```
+
+  A machine with Flutter but without Rust can't run them; CI always can (`core-ffi-build` runs first). Only the Android
+  and iOS builds compile the core: a desktop debug run (Linux, macOS) shows the missing-part screen instead of failing to
+  build.
 
 ## Release builds
 
@@ -50,7 +68,8 @@ The Android application id is `com.mazamamushrooms.mobile` (the iOS bundle id). 
 
 ## The public copy
 
-`apotheharry-web/mazama_mobile` holds this folder and the lab-report reader (`mazama_modules/coa/`) for anyone to read,
+`apotheharry-web/mazama_mobile` holds this folder and the shared core (`mazama_modules/core/`, with the lab-report
+rules in `mazama_modules/coa/rules/`) for anyone to read,
 and Codemagic builds the releases there (`specs/public-app/README.md`). To publish a release:
 
 1. Raise `version:` in `pubspec.yaml` (`x.y.z+N`, `N` above every earlier build) and merge to `main`.

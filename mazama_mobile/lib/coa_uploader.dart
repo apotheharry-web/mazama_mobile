@@ -23,8 +23,10 @@
 //       the catch-up list (sent unpaced once the server answers) never fills up from here;
 //       no potency PDF on file at the state, or the state's read failing: skipped, nothing remembered.
 //   - Sent lots are remembered for [coaSentKeepFor] (CU-D2, the server's own SH-D3), at most [coaSentMaxLots], the
-//     oldest dropped first, in coa_sent.json beside the catch-up file ([CoaSentStore]). The waiting queue itself is
-//     only in memory: the next load fills it again.
+//     oldest dropped first, in the sync engine's sync_sent table ([CoaSentStore]; older builds' coa_sent.json document
+//     is moved in by sync_migration.dart). The waiting queue itself is only in memory: the next load fills it again.
+//   - The pacing, the queue and the replies' meaning live in the sync engine's queue (lib/sync/sync_queue.dart, its
+//     paced lab reports, specs/phone-sync PS-R4); CoaUploader is the facade the app's callers use.
 //   - Never in the demo (CU-R6): nothing is enqueued while demo mode is on, and the demo's cart and resolver never call
 //     this at all (demo_backend.dart).
 import 'dart:async';
@@ -42,6 +44,8 @@ import 'local_store.dart';
 import 'server_error.dart';
 import 'server_health.dart';
 import 'session_store.dart' show defaultSessionDataDir;
+import 'sync/sync_queue.dart';
+import 'sync/sync_tables.dart';
 
 /// The least time between two uploads starting: the server's per-minute budget for /p/coa-data/parse spread evenly
 /// (20 a minute: one every 3 s).
@@ -102,50 +106,35 @@ bool countsAsSent(Object? error) {
   return status != null && status < 500 && status != 429;
 }
 
-/// Where the sent lots are kept (the coa_sent.json document, beside the catch-up one in the folder's LocalStore).
+const _labReport = 'lab_report';
+
+SyncTables _tablesOf(Directory Function() dataDir) => SyncTables(LocalStore.forDir(dataDir()));
+
+/// Where the sent lots are kept (the sync engine's sync_sent table, kind lab_report, in the folder's LocalStore).
 class CoaSentStore {
   const CoaSentStore({Directory Function()? dataDir}) : dataDir = dataDir ?? defaultSessionDataDir;
 
   /// Overridable for tests, as the other stores.
   final Directory Function() dataDir;
 
-  static const _name = 'coa_sent.json';
+  /// The document older builds kept the sent lots in (moved into sync_sent by sync_migration.dart).
+  static const documentName = 'coa_sent.json';
 
   /// Lot id (lower case) to when it was sent, oldest first; empty when nothing is kept or it can't be read.
   Map<String, DateTime> load() {
     try {
-      final text = LocalStore.forDir(dataDir()).read(_name)?.body;
-      if (text == null) return <String, DateTime>{};
-      final d = jsonDecode(text);
-      final lots = d is Map ? d['lots'] : null;
-      if (lots is! List) return <String, DateTime>{};
-      final entries = <MapEntry<String, DateTime>>[];
-      for (final l in lots) {
-        if (l is! Map) continue;
-        final guid = l['lotGuid'], at = l['sentAtMs'];
-        if (guid is! String || guid.isEmpty || at is! int) continue;
-        entries.add(MapEntry(guid.toLowerCase(), DateTime.fromMillisecondsSinceEpoch(at, isUtc: true)));
-      }
-      entries.sort((a, b) => a.value.compareTo(b.value));
-      return Map<String, DateTime>.fromEntries(entries);
-    } on FileSystemException {
-      return <String, DateTime>{};
-    } on FormatException {
+      return {for (final s in _tablesOf(dataDir).sentList(_labReport)) s.key: s.at};
+    } catch (_) {
       return <String, DateTime>{};
     }
   }
 
-  void save(Map<String, DateTime> sent) {
-    LocalStore.forDir(dataDir()).write(_name, jsonEncode({
-      'lots': [
-        for (final e in sent.entries) {'lotGuid': e.key, 'sentAtMs': e.value.millisecondsSinceEpoch},
-      ],
-    }));
-  }
+  void save(Map<String, DateTime> sent) => _tablesOf(dataDir).replaceSent(_labReport, sent);
 }
 
 /// The lots this phone sent lately (CU-R3): none is sent again for [keepFor]; at most [maxLots] are kept, the oldest
-/// dropped first. Read from [store] on first use, so making one touches no file.
+/// dropped first. Read from [store]'s table at each call (the engine's queue writes it too), so making one touches no
+/// file.
 class CoaSentMemory {
   CoaSentMemory(
       {this.store = const CoaSentStore(), this.now = DateTime.now, this.keepFor = coaSentKeepFor, this.maxLots = coaSentMaxLots});
@@ -155,43 +144,37 @@ class CoaSentMemory {
   final Duration keepFor;
   final int maxLots;
 
-  Map<String, DateTime>? _sent;
-
-  Map<String, DateTime> get _lots => _sent ??= _load();
-
-  Map<String, DateTime> _load() {
+  /// How many lots are remembered (expired ones included until the next [markSent]).
+  int get length {
     try {
-      return store.load();
+      return _tablesOf(store.dataDir).sentList(_labReport).length;
     } catch (_) {
-      return <String, DateTime>{};
+      return 0;
     }
   }
 
-  /// How many lots are remembered (expired ones included until the next [markSent]).
-  int get length => _lots.length;
-
   /// Whether [lotGuid] (any case) was sent less than [keepFor] ago.
   bool wasSent(String lotGuid) {
-    final at = _lots[lotGuid.toLowerCase()];
-    return at != null && now().toUtc().difference(at) < keepFor;
+    try {
+      return _tablesOf(store.dataDir).wasSent(_labReport, lotGuid.toLowerCase(), now(), keepFor);
+    } catch (_) {
+      return false;
+    }
   }
 
   /// Remembers [lotGuid] as sent now.
   void markSent(String lotGuid) {
     final key = lotGuid.toLowerCase();
     if (key.isEmpty) return;
-    final lots = _lots;
     final at = now().toUtc();
-    lots.remove(key);
-    lots.removeWhere((_, sentAt) => at.difference(sentAt) >= keepFor);
-    lots[key] = at;
-    while (lots.length > maxLots) {
-      lots.remove(lots.keys.first);
-    }
     try {
-      store.save(lots);
+      final tables = _tablesOf(store.dataDir);
+      tables.store.transaction(() {
+        tables.sent(_labReport, key, at);
+        tables.pruneSent(_labReport, at, keepFor, maxLots);
+      });
     } catch (e) {
-      debugPrint('the sent lab reports could not be saved (kept in memory until the next write): $e');
+      debugPrint('the sent lab reports could not be saved: $e');
     }
   }
 }
@@ -200,6 +183,39 @@ Timer _realTimer(Duration delay, void Function() callback) => Timer(delay, callb
 
 bool _demoModeIsOn() => demoModeOn.value;
 
+/// The engine's sender for a lab report, paced or kept: the lot's chain through [send] with the session current at send
+/// time ([auth]). What each reply means is the file comment's.
+QueueSender labReportQueueSender(CoaLotSend send, Future<CatchUpAuth?> Function() auth) => (item) async {
+      final PendingCoaLot? lot;
+      try {
+        lot = PendingCoaLot.fromJson(jsonDecode(item.body));
+      } on FormatException {
+        return const Skipped();
+      }
+      if (lot == null) return const Skipped();
+      CatchUpAuth? credentials;
+      try {
+        credentials = await auth();
+      } catch (_) {
+        credentials = null;
+      }
+      if (credentials == null) return const Busy(); // no usable session now: nothing can be sent
+      try {
+        final data = await send(
+            CoaUploadLot(lotGuid: lot.lotGuid, packageId: lot.packageId, stateId: lot.stateId, statePsilocybin: lot.statePsilocybin),
+            credentials);
+        return data == null ? const Skipped() : Done(data); // null: no potency PDF on file at the state
+      } catch (e) {
+        if (coaReplyStatus(e) == 429) return const Busy();
+        if (isServerUnreachable(e)) return Unreachable(error: '$e');
+        if (countsAsSent(e)) return const Done(); // queued, held or refused: the server has its answer (CU-R3)
+        return const Skipped(); // the state system's read failing: not sent; the next load tries again
+      }
+    };
+
+/// The background uploader as the app's callers know it, over the sync engine's queue ([queue]: the engine's, from
+/// ServerLink.standard; otherwise one of its own over [catchUp]'s tables, with [send], [auth], [now], [startTimer],
+/// [isDemo], [startInterval] and [maxInFlight]).
 class CoaUploader {
   CoaUploader({
     required this.health,
@@ -212,7 +228,23 @@ class CoaUploader {
     this.isDemo = _demoModeIsOn,
     this.startInterval = coaUploadStartInterval,
     this.maxInFlight = coaUploadMaxInFlight,
-  }) : sent = sent ?? CoaSentMemory(now: now);
+    SyncQueue? queue,
+  })  : sent = sent ?? CoaSentMemory(store: CoaSentStore(dataDir: catchUp.store.dataDir), now: now),
+        _ownsQueue = queue == null,
+        queue = queue ??
+            SyncQueue(
+              tables: catchUp.queue.tables,
+              health: health,
+              senders: {QueueKind.labReport: labReportQueueSender(send, auth)},
+              now: now,
+              startTimer: startTimer,
+              isDemo: isDemo,
+              labReportStartEvery: startInterval,
+              labReportMaxInFlight: maxInFlight,
+              labReportCap: catchUp.maxLots,
+              sentKeep: sent?.keepFor ?? coaSentKeepFor,
+              sentMax: sent?.maxLots ?? coaSentMaxLots,
+            );
 
   final ServerHealth health;
 
@@ -232,164 +264,56 @@ class CoaUploader {
   final Duration startInterval;
   final int maxInFlight;
 
-  final _queue = <CoaUploadLot>[];
-
-  /// Who to tell about each lot waiting or being sent, by lot id in lower case.
-  final _listeners = <String, List<CoaLotResolved>>{};
-  final _inFlight = <String>{};
-  DateTime? _lastStart;
-  Timer? _timer;
+  /// Where the lots wait and are paced (lib/sync/sync_queue.dart).
+  final SyncQueue queue;
+  final bool _ownsQueue;
   bool _disposed = false;
 
   /// How many lots wait to start.
-  int get waiting => _queue.length;
+  int get waiting => queue.labReportsWaiting;
 
   /// How many uploads are under way.
-  int get inFlight => _inFlight.length;
+  int get inFlight => queue.labReportsInFlight;
 
   /// Nothing waiting and nothing under way.
-  bool get idle => _queue.isEmpty && _inFlight.isEmpty;
+  bool get idle => queue.labReportsIdle;
 
   /// Whether [lotGuid] (any case) is waiting or being sent: the cart's own submission on a cart add skips it, so the
   /// same report isn't downloaded twice at once.
-  bool isPending(String lotGuid) => _listeners.containsKey(lotGuid.toLowerCase());
+  bool isPending(String lotGuid) => queue.labReportPending(lotGuid);
 
   /// Adds [lots] to the queue, leaving out any already waiting or being sent (whose [onResolved] is added to it), sent
   /// in the last [CoaSentMemory.keepFor], or waiting on the catch-up list. Returns at once; uploads start on a timer.
   void enqueue(List<CoaUploadLot> lots, {CoaLotResolved? onResolved}) {
     if (_disposed || isDemo() || lots.isEmpty) return;
-    final kept = {for (final l in catchUp.lots) l.lotGuid.toLowerCase()};
-    for (final lot in lots) {
-      final key = lot.lotGuid.toLowerCase();
-      if (key.isEmpty) continue;
-      final listeners = _listeners[key];
-      if (listeners != null) {
-        if (onResolved != null) listeners.add(onResolved);
-        continue;
-      }
-      if (kept.contains(key) || sent.wasSent(key)) continue;
-      _queue.add(lot);
-      _listeners[key] = [if (onResolved != null) onResolved];
-    }
-    _schedule();
-  }
-
-  /// Starts the next upload's timer when one may start: the rest of [startInterval] since the last start, or none.
-  void _schedule() {
-    if (_disposed || _timer != null || _queue.isEmpty || _inFlight.length >= maxInFlight) return;
-    final last = _lastStart;
-    var wait = last == null ? Duration.zero : startInterval - now().difference(last);
-    if (wait.isNegative) wait = Duration.zero;
-    _timer = startTimer(wait, () {
-      _timer = null;
-      _startNext();
-    });
-  }
-
-  void _startNext() {
-    if (_disposed) return;
-    if (isDemo()) {
-      _letGo();
-      return;
-    }
-    if (health.offline) {
-      // The server can't be reached: the waiting lots are let go, unmarked; the next load enqueues them again (CU-R4).
-      _letGo();
-      return;
-    }
-    while (_queue.isNotEmpty && _inFlight.length < maxInFlight) {
-      final lot = _queue.removeAt(0);
-      final key = lot.lotGuid.toLowerCase();
-      if (sent.wasSent(key)) {
-        _listeners.remove(key); // sent meanwhile (a cart add): nothing to start
-        continue;
-      }
-      _inFlight.add(key);
-      _lastStart = now();
-      unawaited(_upload(lot, key));
-      break;
-    }
-    _schedule();
-  }
-
-  Future<void> _upload(CoaUploadLot lot, String key) async {
+    final at = now().toUtc();
     try {
-      CatchUpAuth? credentials;
-      try {
-        credentials = await auth();
-      } catch (_) {
-        credentials = null;
-      }
-      if (credentials == null) {
-        _letGo(); // no usable session now: nothing can be sent; the next load enqueues the lots again
-        return;
-      }
-      if (_disposed) return;
-      CoaData? data;
-      try {
-        data = await send(lot, credentials);
-      } catch (e) {
-        _failed(lot, key, e);
-        return;
-      }
-      if (data == null) return; // no potency PDF on file at the state: skipped, as before
-      sent.markSent(key);
-      if (_disposed) return;
-      for (final listener in [...?_listeners[key]]) {
-        try {
-          listener(lot.lotGuid, data);
-        } catch (e) {
-          debugPrint('a lab report listener failed (the upload itself went through): $e');
-        }
-      }
-    } finally {
-      _inFlight.remove(key);
-      _listeners.remove(key);
-      _schedule();
-    }
-  }
-
-  void _failed(CoaUploadLot lot, String key, Object error) {
-    final status = coaReplyStatus(error);
-    if (status == 429) {
-      _letGo(); // busy: this run stops, nothing is marked; the next load enqueues the lots again (CU-R4)
-      return;
-    }
-    if (isServerUnreachable(error)) {
-      // A 5xx or no connection: this lot is sent again once the server answers (CU-R4); the rest wait for a later load.
-      _keepForLater(lot);
-      _letGo();
-      return;
-    }
-    if (countsAsSent(error)) {
-      sent.markSent(key); // queued, held or refused: the server has its answer (CU-R3)
-    }
-    // Anything else (the state system's read failing): not sent; the next load tries again.
-  }
-
-  void _keepForLater(CoaUploadLot lot) {
-    // Never at the cost of a cart add's lot: the list drops its oldest when full, so a lot from here waits only in room.
-    if (catchUp.lots.length >= catchUp.maxLots) return;
-    try {
-      catchUp.addCoaLot(lotGuid: lot.lotGuid, packageId: lot.packageId, stateId: lot.stateId, statePsilocybin: lot.statePsilocybin);
+      queue.offerLabReports(
+        [
+          for (final l in lots)
+            (
+              key: l.lotGuid,
+              body: PendingCoaLot(
+                      lotGuid: l.lotGuid, packageId: l.packageId, stateId: l.stateId, statePsilocybin: l.statePsilocybin, addedAt: at)
+                  .toJson(),
+            ),
+        ],
+        onDone: onResolved == null
+            ? null
+            : (item, value) {
+                final lot = PendingCoaLot.fromJson(jsonDecode(item.body));
+                if (lot != null && value is CoaData) onResolved(lot.lotGuid, value);
+              },
+      );
     } catch (e) {
-      debugPrint('a lab report could not be kept for later: $e');
+      debugPrint('lab reports could not be queued for upload: $e');
     }
-  }
-
-  /// Lets go of every waiting lot (those under way finish).
-  void _letGo() {
-    for (final lot in _queue) {
-      _listeners.remove(lot.lotGuid.toLowerCase());
-    }
-    _queue.clear();
-    _timer?.cancel();
-    _timer = null;
   }
 
   /// The app is closing: nothing more starts. The sent memory and the catch-up list are on disk already.
   void dispose() {
-    _letGo();
+    if (_disposed) return;
     _disposed = true;
+    if (_ownsQueue) queue.dispose();
   }
 }

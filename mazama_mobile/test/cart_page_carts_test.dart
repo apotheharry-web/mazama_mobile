@@ -351,7 +351,7 @@ void main() {
       expect(find.textContaining('Could not read the camera'), findsOneWidget);
     });
 
-    testWidgets('a matching-server failure is shown as a readable snackbar when coa_core is not built in', (tester) async {
+    testWidgets('a matching-server failure is shown as a readable snackbar when the phone cannot match it either', (tester) async {
       await tester.pumpWidget(cartPage(
         fetchPackages: (id) async => inventory,
         scanLabelText: () async => ['Lot: ab12c'],

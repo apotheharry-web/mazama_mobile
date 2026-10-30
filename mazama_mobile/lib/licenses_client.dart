@@ -14,14 +14,20 @@
 // Origin; confirmed against a real captured HAR), now coming from the one spec mazama_sales' state/client.py
 // also runs. See state_client.dart's own file comment for why a 401 here isn't retried the way
 // StateSession.get() retries one.
+import 'dart:convert' show JsonUnsupportedObjectError;
+
 import 'package:http/http.dart' as http;
 
+import 'mazama_core.dart';
 import 'state_client.dart';
 import 'state_records.dart';
 
 class LicensesError implements Exception {
   final String message;
-  LicensesError(this.message);
+
+  /// The state system couldn't be reached (StateReadError.unreachable): the picker may show the licenses it kept.
+  final bool unreachable;
+  LicensesError(this.message, {this.unreachable = false});
   @override
   String toString() => message;
 }
@@ -35,7 +41,11 @@ class License {
   final String licenseName;
   final String licenseType; // "ServiceCenter" or "Manufacturer"
 
-  License({required this.id, required this.licenseId, required this.licenseName, required this.licenseType});
+  /// The entry as the state sent it, which [serviceCenters] gives the core to judge; null for a License made by
+  /// hand, whose four fields are then given instead.
+  final Map<String, Object?>? raw;
+
+  License({required this.id, required this.licenseId, required this.licenseName, required this.licenseType, this.raw});
 
   bool get isServiceCenter => licenseType == _serviceCenter;
   bool get isManufacturer => licenseType == _manufacturer;
@@ -47,6 +57,7 @@ class License {
         licenseId: textOrNull(j['licenseId']) ?? '',
         licenseName: textOrNull(j['licenseName']) ?? '',
         licenseType: j['licenseType'] is String ? j['licenseType'] as String : '',
+        raw: j,
       );
 }
 
@@ -56,18 +67,38 @@ List<License> licensesFromJson(List<Object?> body) => [
         if (e is Map) License.fromJson(Map<String, Object?>.from(e))
     ];
 
-/// The service centers in [licenses], by the server's own rule (directory.service_centers, SM-21): licenseType
-/// exactly ServiceCenter, an id above 0, the first entry for an id, and a blank name shown as "Service center <id>".
-List<License> serviceCenters(Iterable<License> licenses) {
-  final seen = <int>{};
-  final out = <License>[];
-  for (final l in licenses) {
-    if (!l.isServiceCenter || l.id <= 0 || !seen.add(l.id)) continue;
-    out.add(l.licenseName.isEmpty
-        ? License(id: l.id, licenseId: l.licenseId, licenseName: 'Service center ${l.id}', licenseType: l.licenseType)
-        : l);
+/// Only the four fields the rule reads go to the core.
+Map<String, Object?> _ruleFields(Map<String, Object?> e) =>
+    {for (final k in const ['id', 'licenseId', 'licenseName', 'licenseType']) k: e[k]};
+
+/// The service centers in [licenses]: the shared core's rule (records.service_centers,
+/// specs/core row 10, SM-21), the one the server's directory.service_centers asks too -
+/// licenseType exactly ServiceCenter, an id above 0, the first entry for an id, a blank name shown as
+/// "Service center <id>" - judged on the entries as the state sent them, read by [core] (default: this app's,
+/// [MazamaCore.instance]). A core that can't answer lists no center, as the server does.
+List<License> serviceCenters(Iterable<License> licenses, {CoreFunctions? core}) {
+  final reader = core ?? MazamaCore.instance;
+  try {
+    final got = reader.recordsServiceCenters({
+      'licenses': [
+        for (final l in licenses)
+          _ruleFields(l.raw ?? {'id': l.id, 'licenseId': l.licenseId, 'licenseName': l.licenseName, 'licenseType': l.licenseType})
+      ]
+    });
+    return [
+      for (final c in got)
+        if (c is Map && c['state_id'] is int && c['name'] is String)
+          License(
+              id: c['state_id'] as int,
+              licenseId: (c['license'] as String?) ?? '',
+              licenseName: c['name'] as String,
+              licenseType: _serviceCenter)
+    ];
+  } on MazamaCoreError {
+    return const [];
+  } on JsonUnsupportedObjectError {
+    return const [];
   }
-  return out;
 }
 
 /// GETs the real state system's GetApplicableLicenses with [accessToken] (from login.yaml/renew) and returns
@@ -79,7 +110,7 @@ Future<List<License>> fetchApplicableLicenses(String accessToken, {http.Client? 
   try {
     body = await fetchStateFlow('applicable_licenses', const {}, accessToken: accessToken, client: client);
   } on StateReadError catch (ex) {
-    throw LicensesError(ex.message);
+    throw LicensesError(ex.message, unreachable: ex.unreachable);
   }
   if (body is! List) {
     throw LicensesError('the state system did not answer with JSON');

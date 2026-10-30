@@ -1,0 +1,6 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "coa.parse input",
+  "description": "A lab report's words (CoaText), read with the built-in rules.",
+  "$ref": "https://mazamamushrooms.com/schema/coa_text/1"
+}

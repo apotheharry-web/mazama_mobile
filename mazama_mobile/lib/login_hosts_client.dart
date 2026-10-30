@@ -20,7 +20,12 @@ const loginHostsTimeout = Duration(seconds: 10);
 
 class LoginHostsError implements Exception {
   final String message;
-  LoginHostsError(this.message);
+
+  /// True when no answer came at all (no connection, no reply within the timeout), as opposed to an error reply:
+  /// SignInPage then reads the signed list from GitHub (specs/app-updates AU-R17).
+  final bool unreachable;
+
+  LoginHostsError(this.message, {this.unreachable = false});
   @override
   String toString() => message;
 }
@@ -48,7 +53,7 @@ Future<LoginHostsReply> requestLoginHosts({
     try {
       resp = await c.get(uri, headers: appApiKeyHeaders).timeout(timeout);
     } catch (ex) {
-      throw LoginHostsError('cannot reach ${uri.host}: ${ex.runtimeType}');
+      throw LoginHostsError('cannot reach ${uri.host}: ${ex.runtimeType}', unreachable: true);
     }
     if (resp.statusCode != 200) throw LoginHostsError(describeServerError(resp.statusCode, resp.body));
     Object? body;
@@ -82,14 +87,20 @@ Future<HostList?> fetchLoginHosts({
   AssetBundle? bundle,
 }) async {
   try {
-    final reply = await requestLoginHosts(baseUrl: baseUrl, client: client, timeout: timeout);
-    final list = reply.list;
-    final signature = reply.signature;
-    if (list == null || signature == null) return null;
-    final verified = await verifiedHostList(list, signature, publicKey: publicKey, bundle: bundle);
-    if (verified == null || verified.version != reply.version) return null;
-    return verified;
+    return await verifiedLoginHostsReply(await requestLoginHosts(baseUrl: baseUrl, client: client, timeout: timeout),
+        publicKey: publicKey, bundle: bundle);
   } catch (_) {
     return null;
   }
+}
+
+/// [reply]'s host list when it verifies against [publicKey] (the bundled key, from [bundle], when null), is a valid
+/// list, and its version is the reply's own; else null. Never throws.
+Future<HostList?> verifiedLoginHostsReply(LoginHostsReply reply, {String? publicKey, AssetBundle? bundle}) async {
+  final list = reply.list;
+  final signature = reply.signature;
+  if (list == null || signature == null) return null;
+  final verified = await verifiedHostList(list, signature, publicKey: publicKey, bundle: bundle);
+  if (verified == null || verified.version != reply.version) return null;
+  return verified;
 }

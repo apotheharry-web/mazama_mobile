@@ -1,12 +1,11 @@
 // "COA → label (on phone)": a debug-only page that runs a package's whole chain on the phone, step by step, with
 // the same shared code the server uses - the state's inventory, the lot's lab report from the state, its text
-// with pdfium (pdf_text.dart), coa_core's parse and label spec (coa_core_ffi.dart), and a drawn preview
+// with pdfium (pdf_text.dart), the shared core's parse and label spec (mazama_core.dart), and a drawn preview
 // (label_preview.dart). Design: specs/coa/08-phone-label-debug.md; plan 08 Task 8.
 //
 // For finding out, at a center, at which step a lot fails to get lab values or a label, without the server: the
 // page calls only the state system (with the worker's own session) and never the Mazama server. Reachable only
-// from DebugToolsPage, itself kDebugMode-only. Without the shared library (a build without Rust, iOS today) the
-// parse step says it "isn't built" and the steps before it still run.
+// from DebugToolsPage, itself kDebugMode-only.
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -16,10 +15,10 @@ import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
-import 'coa_core_ffi.dart';
 import 'coa_data_resolver.dart' show newestPotencyPdfDocId;
 import 'debug_adhoc_coa_diagnostics_page.dart' show describeTestResults;
 import 'label_preview.dart';
+import 'mazama_core.dart';
 import 'package_ids.dart';
 import 'pdf_text.dart';
 import 'session.dart';
@@ -80,8 +79,8 @@ class DebugCoaLabelPage extends StatefulWidget {
   /// A PDF's CoaText. Defaults to pdf_text.dart's extractCoaText (pdfium).
   final Future<Map<String, Object?>> Function(Uint8List pdf) extractText;
 
-  /// The shared reader, or null when it isn't in this app. Defaults to CoaCore.tryLoad.
-  final CoaCore? Function() loadCore;
+  /// The shared core. Defaults to this app's ([MazamaCore.instance]).
+  final CoreFunctions core;
 
   /// Hands the downloaded lab report to the share sheet.
   final Future<void> Function(Uint8List bytes, String fileName) sharePdf;
@@ -100,7 +99,7 @@ class DebugCoaLabelPage extends StatefulWidget {
     Future<Object?> Function(int, {required String accessToken})? fetchProductInfo,
     Future<Uint8List> Function(int, {required String accessToken})? downloadDocument,
     Future<Map<String, Object?>> Function(Uint8List pdf)? extractText,
-    CoaCore? Function()? loadCore,
+    CoreFunctions? core,
     Future<void> Function(Uint8List bytes, String fileName)? sharePdf,
     Future<void> Function(String text)? copyText,
     DateTime Function()? now,
@@ -110,7 +109,7 @@ class DebugCoaLabelPage extends StatefulWidget {
                 fetchStateFlow('packaged_product_info', {'package_id': packageId}, accessToken: accessToken)),
         downloadDocument = downloadDocument ?? state_document_client.downloadStateDocument,
         extractText = extractText ?? extractCoaText,
-        loadCore = loadCore ?? CoaCore.tryLoad,
+        core = core ?? MazamaCore.instance,
         sharePdf = sharePdf ?? _sharePdf,
         copyText = copyText ?? _copy,
         now = now ?? DateTime.now;
@@ -307,18 +306,17 @@ class _DebugCoaLabelPageState extends State<DebugCoaLabelPage> {
       });
 
       final section = await step(4, () async {
-        final core = widget.loadCore();
-        if (core == null) throw _StepFailed(coaCoreMissingMessage);
+        final core = widget.core;
         final lot = pkg.lot;
         if (lot == null) {
-          final described = _describeParse(core.version, core.parse(jsonEncode(text)));
+          final described = _describeParse(core.parse(jsonEncode(text)));
           throw _StepFailed('The package names no batch/lot (harvestBatchGuid/processLotGuid).\n$described');
         }
         // AD-19, the shared rule: the lot's own UID, else the batch the report's request pairs it with (a process
         // lot reported under its harvest batch), else the state's psilocybin
         final reply = core.findLot(text, lot, statePsilocybin: pkg.analyteWeight > 0 ? pkg.analyteWeight : null);
         final parsed = ((reply['result'] as Map?) ?? const {}).cast<String, Object?>();
-        final described = _describeParse(core.version, parsed);
+        final described = _describeParse(parsed);
         final sections = (parsed['sections'] as List? ?? const []).cast<Map<String, Object?>>();
         final found = reply['found'];
         final at = found is Map ? found['section'] : null;
@@ -418,9 +416,9 @@ class _DebugCoaLabelPageState extends State<DebugCoaLabelPage> {
         '${none.isEmpty ? 'every page has a text layer' : 'no text layer: pages ${none.join(', ')} (not read: no OCR on the phone)'}.';
   }
 
-  static String _describeParse(String version, Map<String, Object?> parsed) {
+  static String _describeParse(Map<String, Object?> parsed) {
     final report = (parsed['report'] as Map?) ?? const {};
-    final out = StringBuffer('$version\nlab ${report['lab'] ?? '?'}, licensee ${report['licensee'] ?? '?'}, '
+    final out = StringBuffer('${parsed['parser_version'] ?? '?'}\nlab ${report['lab'] ?? '?'}, licensee ${report['licensee'] ?? '?'}, '
         'reported ${report['reported_date'] ?? '?'}');
     final sections = (parsed['sections'] as List? ?? const []).cast<Map>();
     if (sections.isEmpty) out.write('\nno sections');

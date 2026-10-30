@@ -15,6 +15,7 @@ import 'package:flutter/services.dart';
 
 import 'licenses_client.dart';
 import 'order_client.dart';
+import 'order_lines.dart';
 import 'order_review_page.dart';
 import 'responsive.dart';
 import 'stock_summary.dart';
@@ -84,35 +85,10 @@ class _OrderFormPageState extends State<OrderFormPage> {
       try {
         final levels = await widget.loadPar();
         if (!mounted) return;
-        // The par table's order: strain ignoring case, then 25 ... 5 mg, other last; a later level for the same
-        // strain and size replaces an earlier one, as on the server. The combined All strains lines follow the
-        // strains'; the edibles come last, Booster and Microdose for every product with a par in either.
-        final byKey = <String, ParLevel>{};
-        for (final l in levels) {
-          // a size the row doesn't take (a product's serving size, a strain's Booster) can't be ordered: ED-A6; nor is
-          // an edible's Other, which the par table no longer shows (MI-D17)
-          if (l.par == null || !stockSizesFor(l.strain).contains(l.size)) continue;
-          if (stockIsProduct(l.strain) && l.size == 0) continue;
-          final name = stockIsAll(l.strain) ? stockAllStrains : l.strain;
-          byKey['${name.toLowerCase()}|${l.size}'] = l;
-        }
-        int bySize(ParLevel a, ParLevel b) => stockParColumns.indexOf(a.size).compareTo(stockParColumns.indexOf(b.size));
-        final strains = [
-          for (final l in byKey.values)
-            if (!stockIsProduct(l.strain) && !stockIsAll(l.strain)) l,
-        ]..sort((a, b) {
-            final c = a.strain.toLowerCase().compareTo(b.strain.toLowerCase());
-            return c != 0 ? c : bySize(a, b);
-          });
-        final combined = [for (final l in byKey.values) if (stockIsAll(l.strain)) l]..sort(bySize);
-        final products = {for (final l in byKey.values) if (stockIsProduct(l.strain)) stockProductWord(l.strain)};
-        setState(() => _lines = [
-              for (final l in strains) _Line(l.strain, l.size, l.par!),
-              for (final l in combined) _Line(stockAllStrains, l.size, l.par!),
-              for (final w in stockEdibles.values)
-                if (products.contains(w))
-                  for (final d in _edibleSizes) _Line(w, d, byKey['${w.toLowerCase()}|$d']?.par ?? 0),
-            ]);
+        // The form's lines (orderFormLines: the shared core's stock.order_form, specs/core row 9): strains by name
+        // ignoring case then size, the combined All strains lines, the edibles last with Booster and Microdose.
+        final lines = orderFormLines(levels);
+        setState(() => _lines = [for (final l in lines) _Line(l.strain, l.size, l.par)]);
       } catch (e) {
         if (mounted) setState(() => _loadError = '$e');
       }

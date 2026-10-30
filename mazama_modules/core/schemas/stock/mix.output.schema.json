@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "stock.mix output",
+  "type": "object",
+  "required": [
+    "total"
+  ],
+  "properties": {
+    "total": {
+      "type": "number"
+    },
+    "by_strain": {
+      "type": "object",
+      "required": [
+        "total",
+        "slices"
+      ],
+      "properties": {
+        "total": {
+          "type": "number"
+        },
+        "title": {
+          "type": "string"
+        },
+        "slices": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "value",
+              "slot",
+              "pct"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "value": {
+                "type": "number"
+              },
+              "slot": {
+                "type": "string"
+              },
+              "pct": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    },
+    "by_type": {
+      "type": "object",
+      "required": [
+        "total",
+        "slices"
+      ],
+      "properties": {
+        "total": {
+          "type": "number"
+        },
+        "title": {
+          "type": "string"
+        },
+        "slices": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "value",
+              "slot",
+              "pct"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "value": {
+                "type": "number"
+              },
+              "slot": {
+                "type": "string"
+              },
+              "pct": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    },
+    "strain_cards": {
+      "type": "array"
+    },
+    "type_cards": {
+      "type": "array"
+    },
+    "types": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "table": {
+      "type": "array"
+    },
+    "type_totals": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    }
+  }
+}

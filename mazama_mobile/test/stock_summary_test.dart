@@ -87,22 +87,15 @@ void main() {
     }
   });
 
-  test('percent rounds half to even', () {
+  test('whole numbers round half to even (formatMixMg\'s)', () {
     expect(roundHalfEven(12.5), 12);
     expect(roundHalfEven(13.5), 14);
     expect(roundHalfEven(87.5), 88);
     expect(roundHalfEven(86.5), 86);
     expect(roundHalfEven(2.4999), 2);
-    expect(stockPercent(1, 8), 12);
-    expect(stockPercent(27, 200), 14);
   });
 
-  test('2-decimal rounding and %g formatting are Python\'s', () {
-    expect(roundTo2(0.125), 0.12);
-    expect(roundTo2(0.375), 0.38);
-    expect(roundTo2(2.675), 2.67);           // 2.67499999... in binary
-    expect(roundTo2(1.005), 1.0);
-    expect(roundTo2(0.005), 0.01);
+  test('%g formatting is Python\'s (the par page\'s figures; the rules\' own rounding is the core\'s)', () {
     expect(formatG(25), '25');
     expect(formatG(1.5), '1.5');
     expect(formatG(8117.125), '8117.12');

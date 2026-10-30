@@ -37,7 +37,7 @@ void main() {
     test('the limits are the shared ones', () {
       expect(_vectors['max_bytes'], maxHostListBytes);
       expect(_vectors['max_hosts'], maxListedHosts);
-      expect(_cases, hasLength(45));
+      expect(_cases, hasLength(50));
       expect(_cases.map((c) => c['name']).toSet(), hasLength(_cases.length));
     });
 

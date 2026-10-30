@@ -1,0 +1,472 @@
+{
+ "about": "The phone's order form lines (specs/core row 9; MI-D7, MI-D16, MI-D17, ED-A6): which par levels become lines and in what order. Held to today's Dart block (mazama_mobile/test/support/old_order_form.dart, a verbatim copy) on CI, and reproduced by mazama_core's stock.order_form.",
+ "cases": [
+  {
+   "name": "nothing",
+   "levels": [],
+   "lines": []
+  },
+  {
+   "name": "one strain, sizes in par order",
+   "levels": [
+    {
+     "strain": "Avery",
+     "size": 5,
+     "par": 2
+    },
+    {
+     "strain": "Avery",
+     "size": 25,
+     "par": 4
+    },
+    {
+     "strain": "Avery",
+     "size": 0,
+     "par": 1
+    },
+    {
+     "strain": "Avery",
+     "size": 15,
+     "par": 3
+    }
+   ],
+   "lines": [
+    {
+     "strain": "Avery",
+     "size": 25,
+     "par": 4
+    },
+    {
+     "strain": "Avery",
+     "size": 15,
+     "par": 3
+    },
+    {
+     "strain": "Avery",
+     "size": 5,
+     "par": 2
+    },
+    {
+     "strain": "Avery",
+     "size": 0,
+     "par": 1
+    }
+   ]
+  },
+  {
+   "name": "strains by name ignoring case",
+   "levels": [
+    {
+     "strain": "bluey",
+     "size": 25,
+     "par": 1
+    },
+    {
+     "strain": "Avery",
+     "size": 25,
+     "par": 2
+    },
+    {
+     "strain": "Zeta",
+     "size": 10,
+     "par": 1
+    },
+    {
+     "strain": "avery b",
+     "size": 5,
+     "par": 1
+    }
+   ],
+   "lines": [
+    {
+     "strain": "Avery",
+     "size": 25,
+     "par": 2
+    },
+    {
+     "strain": "avery b",
+     "size": 5,
+     "par": 1
+    },
+    {
+     "strain": "bluey",
+     "size": 25,
+     "par": 1
+    },
+    {
+     "strain": "Zeta",
+     "size": 10,
+     "par": 1
+    }
+   ]
+  },
+  {
+   "name": "a later level replaces an earlier one, keeping its place",
+   "levels": [
+    {
+     "strain": "Avery",
+     "size": 25,
+     "par": 1
+    },
+    {
+     "strain": "Bluey",
+     "size": 25,
+     "par": 2
+    },
+    {
+     "strain": "avery",
+     "size": 25,
+     "par": 9
+    }
+   ],
+   "lines": [
+    {
+     "strain": "avery",
+     "size": 25,
+     "par": 9
+    },
+    {
+     "strain": "Bluey",
+     "size": 25,
+     "par": 2
+    }
+   ]
+  },
+  {
+   "name": "a null par is no line",
+   "levels": [
+    {
+     "strain": "Avery",
+     "size": 25,
+     "par": null
+    },
+    {
+     "strain": "Bluey",
+     "size": 20,
+     "par": 3
+    }
+   ],
+   "lines": [
+    {
+     "strain": "Bluey",
+     "size": 20,
+     "par": 3
+    }
+   ]
+  },
+  {
+   "name": "sizes a row doesn't take",
+   "levels": [
+    {
+     "strain": "Avery",
+     "size": -1,
+     "par": 3
+    },
+    {
+     "strain": "Chocolate",
+     "size": 25,
+     "par": 2
+    },
+    {
+     "strain": "Avery",
+     "size": 7,
+     "par": 1
+    }
+   ],
+   "lines": []
+  },
+  {
+   "name": "an edible's other size is never a line",
+   "levels": [
+    {
+     "strain": "Chocolate",
+     "size": 0,
+     "par": 5
+    }
+   ],
+   "lines": []
+  },
+  {
+   "name": "the combined row after the strains, by size",
+   "levels": [
+    {
+     "strain": "all strains",
+     "size": 10,
+     "par": 4
+    },
+    {
+     "strain": "Avery",
+     "size": 25,
+     "par": 1
+    },
+    {
+     "strain": "All  Strains",
+     "size": 25,
+     "par": 2
+    },
+    {
+     "strain": "ALL STRAINS",
+     "size": 0,
+     "par": 1
+    }
+   ],
+   "lines": [
+    {
+     "strain": "Avery",
+     "size": 25,
+     "par": 1
+    },
+    {
+     "strain": "All strains",
+     "size": 25,
+     "par": 2
+    },
+    {
+     "strain": "All strains",
+     "size": 10,
+     "par": 4
+    },
+    {
+     "strain": "All strains",
+     "size": 0,
+     "par": 1
+    }
+   ]
+  },
+  {
+   "name": "edibles last, Booster and Microdose, 0 when missing",
+   "levels": [
+    {
+     "strain": "gummy",
+     "size": -2,
+     "par": 6
+    },
+    {
+     "strain": "Avery",
+     "size": 25,
+     "par": 1
+    },
+    {
+     "strain": "Chocolate",
+     "size": -1,
+     "par": 3
+    }
+   ],
+   "lines": [
+    {
+     "strain": "Avery",
+     "size": 25,
+     "par": 1
+    },
+    {
+     "strain": "Chocolate",
+     "size": -1,
+     "par": 3
+    },
+    {
+     "strain": "Chocolate",
+     "size": -2,
+     "par": 0
+    },
+    {
+     "strain": "Gummy",
+     "size": -1,
+     "par": 0
+    },
+    {
+     "strain": "Gummy",
+     "size": -2,
+     "par": 6
+    }
+   ]
+  },
+  {
+   "name": "edibles in their fixed order",
+   "levels": [
+    {
+     "strain": "Honey",
+     "size": -1,
+     "par": 1
+    },
+    {
+     "strain": "Gummy",
+     "size": -1,
+     "par": 1
+    },
+    {
+     "strain": "chocolate",
+     "size": -2,
+     "par": 2
+    }
+   ],
+   "lines": [
+    {
+     "strain": "Chocolate",
+     "size": -1,
+     "par": 0
+    },
+    {
+     "strain": "Chocolate",
+     "size": -2,
+     "par": 2
+    },
+    {
+     "strain": "Gummy",
+     "size": -1,
+     "par": 1
+    },
+    {
+     "strain": "Gummy",
+     "size": -2,
+     "par": 0
+    },
+    {
+     "strain": "Honey",
+     "size": -1,
+     "par": 1
+    },
+    {
+     "strain": "Honey",
+     "size": -2,
+     "par": 0
+    }
+   ]
+  },
+  {
+   "name": "a par of 0 is still a line",
+   "levels": [
+    {
+     "strain": "Avery",
+     "size": 25,
+     "par": 0
+    }
+   ],
+   "lines": [
+    {
+     "strain": "Avery",
+     "size": 25,
+     "par": 0
+    }
+   ]
+  },
+  {
+   "name": "non-ASCII names sort by UTF-16 code units",
+   "levels": [
+    {
+     "strain": "Éclair",
+     "size": 25,
+     "par": 1
+    },
+    {
+     "strain": "Zeta",
+     "size": 25,
+     "par": 1
+    },
+    {
+     "strain": "ábc",
+     "size": 25,
+     "par": 1
+    },
+    {
+     "strain": "abc",
+     "size": 25,
+     "par": 1
+    }
+   ],
+   "lines": [
+    {
+     "strain": "abc",
+     "size": 25,
+     "par": 1
+    },
+    {
+     "strain": "Zeta",
+     "size": 25,
+     "par": 1
+    },
+    {
+     "strain": "ábc",
+     "size": 25,
+     "par": 1
+    },
+    {
+     "strain": "Éclair",
+     "size": 25,
+     "par": 1
+    }
+   ]
+  },
+  {
+   "name": "everything together",
+   "levels": [
+    {
+     "strain": "Avery",
+     "size": 25,
+     "par": 3
+    },
+    {
+     "strain": "honey",
+     "size": -2,
+     "par": 1
+    },
+    {
+     "strain": "All strains",
+     "size": 5,
+     "par": 2
+    },
+    {
+     "strain": "bluey",
+     "size": 10,
+     "par": 1
+    },
+    {
+     "strain": "Bluey",
+     "size": 10,
+     "par": 4
+    },
+    {
+     "strain": "Chocolate",
+     "size": -1,
+     "par": 0
+    }
+   ],
+   "lines": [
+    {
+     "strain": "Avery",
+     "size": 25,
+     "par": 3
+    },
+    {
+     "strain": "Bluey",
+     "size": 10,
+     "par": 4
+    },
+    {
+     "strain": "All strains",
+     "size": 5,
+     "par": 2
+    },
+    {
+     "strain": "Chocolate",
+     "size": -1,
+     "par": 0
+    },
+    {
+     "strain": "Chocolate",
+     "size": -2,
+     "par": 0
+    },
+    {
+     "strain": "Honey",
+     "size": -1,
+     "par": 0
+    },
+    {
+     "strain": "Honey",
+     "size": -2,
+     "par": 1
+    }
+   ]
+  }
+ ]
+}

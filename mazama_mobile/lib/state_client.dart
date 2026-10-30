@@ -27,7 +27,10 @@ import 'login_hosts_store.dart' show currentAllowedHosts;
 
 class StateReadError implements Exception {
   final String message;
-  StateReadError(this.message);
+
+  /// The state system couldn't be reached: no connection, or no answer in time (the flow failed connecting or sending).
+  final bool unreachable;
+  StateReadError(this.message, {this.unreachable = false});
   @override
   String toString() => message;
 }
@@ -79,7 +82,7 @@ Future<Object?> fetchStateFlow(String flow, Map<String, Object?> inputs,
       ctx = await runFlow(s, flow, {...inputs, 'access_token': accessToken},
           client: c, allowedHosts: allowedHosts ?? currentAllowedHosts());
     } on FlowError catch (ex) {
-      throw StateReadError(ex.message);
+      throw StateReadError(ex.message, unreachable: ex.stage == FlowStage.connect || ex.stage == FlowStage.send);
     }
     if (ctx['status'] == 401) {
       throw StateReadError('the state system no longer accepts this session - sign in again');

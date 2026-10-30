@@ -1,0 +1,17 @@
+[package]
+name = "mazama_core_ffi"
+version = "0.1.0"
+edition = "2024"
+description = "C interface over JSON to mazama_core, for the phone app (dart:ffi). specs/core"
+
+[lib]
+# cdylib: Android's libmazama_core_ffi.so (and Linux, for the Dart tests); staticlib: iOS, linked into the app itself
+# (mazama_mobile/ios/build_mazama_core_ffi.sh); rlib: the crate's own tests
+crate-type = ["cdylib", "staticlib", "rlib"]
+
+[dependencies]
+mazama_core = { path = "../mazama_core" }
+serde_json = "1.0.154"
+
+[profile.release]
+panic = "unwind"

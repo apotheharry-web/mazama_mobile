@@ -9,7 +9,7 @@
 // where rows come from (center_home_page.dart). Rows come as a StockLoad (stock_rows.dart): partial ones (SP-R13, the
 // server unreachable) get the mg pie in mg psilocybin when they say so (SP-D6); the last rows drawn on this phone
 // (the state system unreachable too) say how old they are. The lot table's product information sheets, while
-// Mazama's server can't be reached, are the copy kept on the phone (server_offline.dart). Neither has a notice of its
+// Mazama's server can't be reached, are the copy kept on the phone (sync/server_read.dart). Neither has a notice of its
 // own that the server can't be reached: the app-wide banner says so (server_link.dart, README R87), and the page
 // reloads by itself once the server answers again.
 //
@@ -27,7 +27,7 @@ import 'licenses_client.dart';
 import 'mazama_lot_table.dart';
 import 'responsive.dart';
 import 'server_health.dart';
-import 'server_offline.dart';
+import 'sync/server_read.dart';
 import 'sheets_client.dart';
 import 'stock_mix.dart';
 import 'stock_pie.dart';
@@ -80,7 +80,7 @@ class CenterStockPage extends StatefulWidget {
   final Future<void> Function(ProductSheet sheet)? openSheet;
 
   /// The sheets kept on the phone, shown while the server can't be reached; none kept when null
-  /// (stock_cache_store.dart in the app).
+  /// (the sheets dataset in the app, sync_datasets.dart).
   final Future<ServerRead<List<ProductSheet>>?> Function()? keptSheets;
 
   /// Keeps each list of sheets the server sends, with when ([now]); nothing kept when null.

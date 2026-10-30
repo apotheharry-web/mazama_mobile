@@ -30,6 +30,7 @@ import 'package:mazama_mobile/server_health.dart';
 import 'package:mazama_mobile/session.dart';
 import 'package:mazama_mobile/session_store.dart';
 import 'package:mazama_mobile/session_timer_store.dart';
+import 'package:mazama_mobile/sync/sync_tables.dart';
 import 'package:mazama_mobile/text_scanner.dart';
 
 
@@ -51,7 +52,7 @@ Session freshSession({String accessToken = 'TOKEN', String email = 'worker@examp
 
 final dummySpec = FlowSpec(const {}, const {});
 
-/// A label spec as coa_core gives it (its LabelSpec), for the phone-drawn label.
+/// A label spec as mazama_core gives it (its LabelSpec), for the phone-drawn label.
 const Map<String, Object?> drawnSpec = {
   'pkpr': 'PKPR-ab12c', 'strain': 'Golden Teacher', 'dose_mg_tpe': 25, 'net_wt_g': 2.89, 'best_by': '2027-08-31',
   'per_unit_mg': {'psilocybin': 22.98, 'psilocin': 1.43},
@@ -137,10 +138,40 @@ Widget cartPage({
   FlowSpec? spec,
   ServerHealth? health,
   Map<String, Feature>? featureTable,
-}) =>
-    MaterialApp(
+  void Function(int stateId)? requestStockRefresh,
+  Stream<DatasetRow?>? Function(int stateId)? watchStock,
+}) {
+  // The default state read (specs/phone-sync phase 3): it fails at the page's load, as it always did here (so a load
+  // is Mazama's server's rows alone, or the tier-2 fixture's), and afterwards answers with the packages the test's own
+  // fetchPackages last gave, as sellable state records: the read a sale makes first (SM-25) now that a load the state
+  // didn't answer, and every confirmed sale, leave the stock unconfirmed.
+  List<Package>? served;
+  var stateReads = 0;
+  Future<List<Package>> fetchServed(int id) async => served = await fetchPackages(id);
+  Future<List<Object?>> defaultStateRead(int id, {required String accessToken}) async {
+    final known = served;
+    if (stateReads++ == 0 || known == null) throw StatePackagesError('no raw-state fixture wired for this test');
+    return [
+      for (final p in known)
+        {
+          ...p.toSaleItem(),
+          'quantity': p.exactQuantity,
+          'serviceCenterId': id,
+          'zeroOut': false,
+          'locked': false,
+          'flagged': false,
+          'pendingTransfer': false,
+        },
+    ];
+  }
+
+  return MaterialApp(
       home: CartPage(
         featureTable: featureTable ?? features,
+        // PS-R6: the refresh a confirmed sale asks for; never the app's own engine in a test.
+        requestStockRefresh: requestStockRefresh ?? (stateId) {},
+        // Task 8b: the engine's copy of the stock; none unless a test gives one (never the app's link)
+        watchStock: watchStock ?? (stateId) => null,
         session: session ?? freshSession(),
         now: now ?? DateTime.now,
         center: center,
@@ -182,8 +213,7 @@ Widget cartPage({
         // cheapest fixture - merged_inventory.dart's own fetchMergedInventory already treats "the state side
         // failed" as a non-fatal, mazama-only result exactly as long as fetchPackages itself succeeded, so this
         // default keeps every existing test's tier-1-only expectations unchanged.
-        fetchRawPackagesFromState: fetchRawPackagesFromState ??
-            (stateId, {required accessToken}) async => throw StatePackagesError('no raw-state fixture wired for this test'),
+        fetchRawPackagesFromState: fetchRawPackagesFromState ?? defaultStateRead,
         // A test that doesn't care about item 3a's push-after-every-state-read (every test above this field was
         // added, since fetchRawPackagesFromState above throws by default) never reaches this at all - succeeding
         // with an empty map, rather than throwing, is the safer default in case a test ever wires a succeeding
@@ -204,7 +234,7 @@ Widget cartPage({
         // never the app's own background uploader (server_link.dart) in a test
         queueCoaUploads: queueCoaUploads ?? (lots, {onResolved}) {},
         coaUploadPending: coaUploadPending ?? (lotGuid) => false,
-        fetchPackages: fetchPackages,
+        fetchPackages: fetchServed,
         // The real default here is also a live network call (to Mazama's own server, not the state system -
         // see coa_data_client.dart's own centerIsConfigured) - never safe to fall through to in a test either.
         // Defaulting to "true" (rather than letting it fail and rely on _loadInventoryAsync's own catch-and-
@@ -244,7 +274,7 @@ Widget cartPage({
         // scan button's own tooltip/snackbar already treats a cancelled scan as.
         scanLabelText: scanLabelText ?? () async => throw ScanCancelled(),
         scanMatch: scanMatch ?? (stateId, lines, {typed = false}) async => ScanMatchResult(matches: const [], guesses: const []),
-        // never the real one, which would load whatever coa_core library the test machine has: "not built" (null)
+        // never the real one (the core's matcher over the test's stock): no local match unless a test gives one
         localScanMatch: localScanMatch ?? (inventory, lines, {typed = false}) => null,
         // The real app now defaults to CartPricingMode.total (most sales are priced as a whole-cart total),
         // but almost every test in this file is specifically exercising "each" mode's own per-line price entry
@@ -256,6 +286,7 @@ Widget cartPage({
         health: health,
       ),
     );
+}
 
 /// Drives the same UI path a worker uses to add a line - enter the PKPR, tap Add, fill in the dialog, confirm
 /// it - stopping right as the label-compare dialog (cart_page.dart's _showLabelDialog) pops up, so a caller

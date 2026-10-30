@@ -50,8 +50,8 @@ if (buildingRelease) {
     }
 }
 
-// where buildCoaCoreFfi (below) puts the compiled library, one folder per ABI
-val coaJniLibs: File = layout.buildDirectory.dir("coaJniLibs").get().asFile
+// where buildMazamaCoreFfi (below) puts the compiled library, one folder per ABI
+val coreJniLibs: File = layout.buildDirectory.dir("coreJniLibs").get().asFile
 
 android {
     // The Kotlin package of MainActivity, TextScanner and CartTimersWidget (src/main/kotlin/com/example/mazama_mobile/);
@@ -103,36 +103,28 @@ android {
          implementation("com.google.mlkit:text-recognition:16.0.0")
      }
 
-    // The shared lab-report reader, compiled by buildCoaCoreFfi below (SM-02; specs/coa/08-phone-label-debug.md)
+    // The shared core, compiled by buildMazamaCoreFfi below (SM-02; specs/core CR-R3)
     sourceSets {
         getByName("main") {
-            jniLibs.srcDir(coaJniLibs)
+            jniLibs.srcDir(coreJniLibs)
         }
     }
 }
 
-// --- coa_core_ffi: the Rust lab-report reader, built for the phone during the normal Flutter build -----------------
-// For each ABI below, `cargo build --release --target <triple>` of ../../mazama_modules/coa/coa_core_ffi with the NDK's
-// clang as linker, copied to build/coaJniLibs/<abi>/libcoa_core_ffi.so, which the app packs (sourceSets above).
-// Nothing is written to the source tree. When cargo or a Rust Android target is missing, or the build fails, the
-// BUILD FAILS with the fix: an app without coa_core can't draw labels on the phone, and the warning this used to print
-// instead went unseen (flutter hides Gradle warnings). To build without it on purpose (a machine without Rust), set
-// COA_CORE_OPTIONAL=1 (or -PcoaCoreOptional=true): it then warns, and lib/coa_core_ffi.dart says "isn't built".
-// Install once: rustup target add aarch64-linux-android x86_64-linux-android. ios/build_coa_core_ffi.sh is the iOS twin.
-val coaFfiManifest: File = rootProject.file("../../mazama_modules/coa/coa_core_ffi/Cargo.toml")
-val coaTargets = mapOf("aarch64-linux-android" to "arm64-v8a", "x86_64-linux-android" to "x86_64")
+// --- mazama_core_ffi: the shared Rust core, built for the phone during the normal Flutter build -------------------
+// For each ABI below, `cargo build --release --target <triple>` of ../../mazama_modules/core/mazama_core_ffi with the
+// NDK's clang as linker, copied to build/coreJniLibs/<abi>/libmazama_core_ffi.so, which the app packs (sourceSets
+// above). Nothing is written to the source tree. When cargo or a Rust Android target is missing, or the build fails,
+// the BUILD FAILS with the fix: the core is part of every build (specs/core CR-D2), and an app without it can't start.
+// Install once: rustup target add aarch64-linux-android x86_64-linux-android. ios/build_mazama_core_ffi.sh is the iOS
+// twin.
+val coreFfiManifest: File = rootProject.file("../../mazama_modules/core/mazama_core_ffi/Cargo.toml")
+val coreTargets = mapOf("aarch64-linux-android" to "arm64-v8a", "x86_64-linux-android" to "x86_64")
 
-val buildCoaCoreFfi by tasks.registering {
-    description = "Compiles coa_core_ffi (Rust) for the app's ABIs; fails when Rust isn't set up, unless COA_CORE_OPTIONAL=1."
-    val optional = System.getenv("COA_CORE_OPTIONAL") == "1" || (project.findProperty("coaCoreOptional")?.toString() == "true")
+val buildMazamaCoreFfi by tasks.registering {
+    description = "Compiles mazama_core_ffi (Rust) for the app's ABIs; fails when Rust isn't set up."
     doLast {
-        fun warn(msg: String) {
-            if (!optional) {
-                throw GradleException("coa_core_ffi: $msg. To build without it on purpose, set COA_CORE_OPTIONAL=1 " +
-                    "(the phone then can't draw labels)")
-            }
-            logger.warn("coa_core_ffi: $msg; COA_CORE_OPTIONAL=1, so the app is built without it (\"isn't built\" on the phone)")
-        }
+        fun fail(msg: String): Nothing = throw GradleException("mazama_core_ffi: $msg. The app can't be built without it (specs/core CR-D2)")
         // rustup's folder, which a Gradle daemon started before Rust was installed (or from an IDE) doesn't have on its PATH
         val cargoBin = File(System.getProperty("user.home"), ".cargo/bin")
         fun tool(name: String): String = File(cargoBin, name).takeIf { it.canExecute() }?.path ?: name
@@ -147,50 +139,48 @@ val buildCoaCoreFfi by tasks.registering {
             Pair(-1, e.message ?: e.toString())
         }
 
-        if (!coaFfiManifest.isFile) return@doLast warn("${coaFfiManifest.path} not found (build from the monorepo)")
+        if (!coreFfiManifest.isFile) fail("${coreFfiManifest.path} not found (build from the monorepo)")
         if (sh(listOf("cargo", "--version")).first != 0) {
-            return@doLast warn("cargo not found (looked in ${cargoBin.path} and the Gradle daemon's PATH); install Rust " +
-                "(rustup.rs, or nix-shell -p rustup), then rustup target add ${coaTargets.keys.joinToString(" ")}. A daemon keeps " +
+            fail("cargo not found (looked in ${cargoBin.path} and the Gradle daemon's PATH); install Rust " +
+                "(rustup.rs, or nix-shell -p rustup), then rustup target add ${coreTargets.keys.joinToString(" ")}. A daemon keeps " +
                 "the PATH it started with: if cargo is elsewhere on your shell's PATH, stop it (./gradlew --stop) and build again")
         }
         val (rustupOk, installed) = sh(listOf("rustup", "target", "list", "--installed"))
         if (rustupOk == 0) {
-            val missing = coaTargets.keys.filter { it !in installed.lines().map(String::trim) }
-            if (missing.isNotEmpty()) return@doLast warn("Rust targets missing: rustup target add ${missing.joinToString(" ")}")
+            val missing = coreTargets.keys.filter { it !in installed.lines().map(String::trim) }
+            if (missing.isNotEmpty()) fail("Rust targets missing: rustup target add ${missing.joinToString(" ")}")
         }
         val ndk = try {
             project.extensions.getByType(com.android.build.gradle.BaseExtension::class.java).ndkDirectory
         } catch (e: Exception) {
-            return@doLast warn("the Android NDK was not found (${e.message})")
+            fail("the Android NDK was not found (${e.message})")
         }
         val host = if (System.getProperty("os.name").lowercase().contains("mac")) "darwin-x86_64" else "linux-x86_64"
         val minSdk = android.defaultConfig.minSdk ?: 21
-        val targetDir = layout.buildDirectory.dir("coa_core_ffi").get().asFile
-        for ((triple, abi) in coaTargets) {
+        val targetDir = layout.buildDirectory.dir("mazama_core_ffi").get().asFile
+        for ((triple, abi) in coreTargets) {
             val linker = File(ndk, "toolchains/llvm/prebuilt/$host/bin/$triple$minSdk-clang")
             if (!linker.isFile) {
-                warn("no NDK linker at ${linker.path}")
-                continue
+                fail("no NDK linker at ${linker.path}")
             }
             val linkerVar = "CARGO_TARGET_${triple.uppercase().replace('-', '_')}_LINKER"
             val (rc, out) = sh(
-                listOf("cargo", "build", "--release", "--target", triple, "--manifest-path", coaFfiManifest.path, "--target-dir", targetDir.path),
+                listOf("cargo", "build", "--release", "--target", triple, "--manifest-path", coreFfiManifest.path, "--target-dir", targetDir.path),
                 mapOf(linkerVar to linker.path),
             )
             if (rc != 0) {
-                warn("cargo build for $triple failed:\n${out.takeLast(4000)}")
-                continue
+                fail("cargo build for $triple failed:\n${out.takeLast(4000)}")
             }
-            val built = File(targetDir, "$triple/release/libcoa_core_ffi.so")
-            val dest = File(coaJniLibs, "$abi/libcoa_core_ffi.so")
+            val built = File(targetDir, "$triple/release/libmazama_core_ffi.so")
+            val dest = File(coreJniLibs, "$abi/libmazama_core_ffi.so")
             dest.parentFile.mkdirs()
             built.copyTo(dest, overwrite = true)
-            logger.lifecycle("coa_core_ffi: built for $abi")
+            logger.lifecycle("mazama_core_ffi: built for $abi")
         }
     }
 }
 
-tasks.named("preBuild") { dependsOn(buildCoaCoreFfi) }
+tasks.named("preBuild") { dependsOn(buildMazamaCoreFfi) }
 
 flutter {
     source = "../.."

@@ -1,0 +1,35 @@
+# Every function of the shared core that an app calls (specs/core CR-R2), one line each. gen.py writes, from this
+# list, the Rust dispatch table (mazama_core/src/api_table.rs), the Python exports (mazama_core_py/src/exports.rs:
+# mazama_core.<area>_<name>), the C exports (mazama_core_ffi/src/exports.rs: mz_<area>_<name>_json), the phone's
+# Dart wrapper (mazama_mobile/lib/mazama_core.g.dart: CoreFunctions.<areaName>) and the iOS linker list
+# (ios_symbols.txt). Each function is `fn(&str) -> Result<String, mazama_core::api::Error>` at `rust` (a path in
+# the mazama_core crate); its input and output are JSON Schemas in schemas/<area>/<name>.{input,output}.schema.json.
+# To add one: write the Rust function, add its line and its two schemas here, run `python3 mazama_modules/core/gen.py`
+# from the repository root and commit what it writes.
+format: 1
+functions:
+  - {area: coa,   name: parse,             rust: "coa::parse_default_json",   what: "CoaText -> CoaParseResult (built-in rules)"}
+  - {area: coa,   name: parse_with_rules,  rust: "coa::parse_with_rules_json", what: "{coa_text, rules_yaml} -> CoaParseResult"}
+  - {area: coa,   name: find_lot,          rust: "coa::find_lot_json",        what: "{coa_text, lot, state_psilocybin} -> {result, found}"}
+  - {area: coa,   name: select_documents,  rust: "coa::select_documents_one_json", what: "{info, already_have} -> [{doc_id, date}]"}
+  - {area: label, name: spec,              rust: "label_spec_json",           what: "LabelInput -> LabelOutcome"}
+  - {area: names, name: name,              rust: "name_json",                 what: "{name} -> {strain_raw, strain, code, expiry}"}
+  - {area: scan,  name: find_ids,          rust: "scan_find_ids_json",        what: "{texts, guids, typed} -> {matches}"}
+  - {area: scan,  name: closest,           rust: "scan_closest_json",         what: "{texts, packages} -> {guesses}"}
+  - {area: records, name: judge,          rust: "records::judge_json",       what: "{records} -> [Judgement] (every record rule, per record)"}
+  - {area: records, name: can_transfer,   rust: "records::can_transfer_json", what: "{records, holder_state_id, mode} -> [bool | Raise]"}
+  - {area: records, name: package_keys,  rust: "contracts::package_keys_json", what: "{records} -> [{state_id, pkpr} | {problem}] (SM-21, row 10)"}
+  - {area: records, name: service_centers, rust: "contracts::service_centers_json", what: "{licenses} -> [{state_id, name, license}] (SM-21, row 10)"}
+  - {area: stock, name: filter, rust: "stock::filter_json", what: "{rows, makers} -> {counted, other} (SP-D2, SP-D3)"}
+  - {area: stock, name: summarize, rust: "stock::summarize_json", what: "{rows, mg_mode} -> summary (SP-R2)"}
+  - {area: stock, name: pies, rust: "stock::pies_json", what: "{summary} -> {units, mg, rows, more} (charts.stock_view)"}
+  - {area: stock, name: par_table, rust: "stock::par_table_json", what: "{summary, levels} -> par table (charts.par_view)"}
+  - {area: stock, name: mix, rust: "stock::mix_json", what: "{rows: [{strain, type, mg}]} -> stock mix (MI-R1)"}
+  - {area: stock, name: mix_cells, rust: "stock::mix_cells_json", what: "{rows} -> [{strain, type, mg}] per strain and type (MI-A2)"}
+  - {area: stock, name: by_type, rust: "stock::by_type_json", what: "{rows, mg_mode} -> {pie: By type pie | null} (WC-D1)"}
+  - {area: stock, name: order_check, rust: "stock_order::check_json", what: "{lines, note, aliases} -> {lines, note} | {refused} (row 9)"}
+  - {area: stock, name: order_form, rust: "stock_order::form_json", what: "{levels} -> [{strain, size, par}] the order form's lines (MI-D7)"}
+  - {area: manufacturing, name: coa_edit, rust: "manufacturing::coa_edit_json", what: "{raw, uid, psilocybin, form, kind} -> {errors, drop, set} a certificate correction (FM-09, row 12)"}
+  - {area: manufacturing, name: coa_number, rust: "manufacturing::coa_number_json", what: "{text, required} -> {value: a mg/g figure | null} (row 12)"}
+  - {area: manufacturing, name: clean_text, rust: "manufacturing::clean_text_json", what: "{text, limit} -> {text} ingredient and allergen text (FM-10, row 12)"}
+  - {area: names, name: product_name, rust: "names::product_name_json", what: "{strain, subtype, kind, product_type} -> {name, why} (FM-11, row 12)"}

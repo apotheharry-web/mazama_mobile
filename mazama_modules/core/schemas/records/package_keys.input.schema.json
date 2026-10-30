@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "records.package_keys input",
+  "description": "specs/core row 10 (SM-21): the GetPackagedProducts records to read keys from, all of a list in one call (CR-D5).",
+  "type": "object",
+  "required": [
+    "records"
+  ],
+  "properties": {
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "description": "Records as the state system sends them (the mirror's raw, or a phone's answer); only id and productGuid are read."
+    }
+  }
+}

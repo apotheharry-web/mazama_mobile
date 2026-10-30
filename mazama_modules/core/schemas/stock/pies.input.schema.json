@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "stock.pies input",
+  "type": "object",
+  "required": [
+    "summary"
+  ],
+  "properties": {
+    "summary": {
+      "type": "object",
+      "required": [
+        "total",
+        "mg_total",
+        "mg_mode",
+        "strains"
+      ],
+      "properties": {
+        "total": {
+          "type": "number"
+        },
+        "mg_total": {
+          "type": "number"
+        },
+        "mg_mode": {
+          "enum": [
+            "tpe",
+            "psilocybin"
+          ]
+        },
+        "strains": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "units",
+              "mg",
+              "sizes",
+              "mg_sizes"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "units": {
+                "type": "number"
+              },
+              "mg": {
+                "type": "number"
+              },
+              "sizes": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "number"
+                }
+              },
+              "mg_sizes": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

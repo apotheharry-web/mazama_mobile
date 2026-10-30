@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- TextScanner.kt's photos only, under cache/scans/: never the rest of the cache (the app's downloaded updates are in
+     cache/updates/, specs/app-updates review M9). -->
 <paths>
-    <cache-path name="scans" path="." />
+    <cache-path name="scans" path="scans/" />
 </paths>

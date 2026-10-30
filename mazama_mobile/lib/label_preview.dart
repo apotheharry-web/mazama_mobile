@@ -1,4 +1,4 @@
-// The compact label drawn on the phone from a LabelSpec (coa_core's build_label_spec through lib/coa_core_ffi.dart),
+// The compact label drawn on the phone from a LabelSpec (mazama_core's build_label_spec through lib/mazama_core.dart),
 // for the COA → label debug page (plan 08 Task 8) and the cart's label compare when the server has no label on file
 // (phone_label.dart). The layout follows specs/labels/04-label-spec.md "Printed
 // layout (compact variant)" and the server's labeler.py: strain and "<dose> mg Equiv" turned a quarter turn on the

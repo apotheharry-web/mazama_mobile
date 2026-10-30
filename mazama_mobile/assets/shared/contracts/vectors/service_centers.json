@@ -365,5 +365,179 @@
    }
   ],
   "name": "an entry that is not an object"
+ },
+ {
+  "centers": [
+   {
+    "license": "SC-1",
+    "name": "Center",
+    "state_id": 225
+   }
+  ],
+  "licenses": [
+   {
+    "id": " 2_25 ",
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "id with an underscore and spaces"
+ },
+ {
+  "centers": [
+   {
+    "license": "SC-1",
+    "name": "Center",
+    "state_id": 225
+   }
+  ],
+  "licenses": [
+   {
+    "id": "2.25e2",
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "id in exponent form"
+ },
+ {
+  "centers": [],
+  "licenses": [
+   {
+    "id": false,
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "id false"
+ },
+ {
+  "centers": [
+   {
+    "license": "SC-1",
+    "name": "True",
+    "state_id": 225
+   }
+  ],
+  "licenses": [
+   {
+    "id": 225,
+    "licenseId": "SC-1",
+    "licenseName": true,
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "name true"
+ },
+ {
+  "centers": [
+   {
+    "license": "SC-1",
+    "name": "12.5",
+    "state_id": 225
+   }
+  ],
+  "licenses": [
+   {
+    "id": 225,
+    "licenseId": "SC-1",
+    "licenseName": 12.5,
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "name a number"
+ },
+ {
+  "centers": [
+   {
+    "license": "SC-1",
+    "name": "Unstuck",
+    "state_id": 225
+   }
+  ],
+  "licenses": [
+   {
+    "id": 225,
+    "licenseId": "SC-1",
+    "licenseName": "\u001d Unstuck \u001e",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "name inside U+001C..U+001F"
+ },
+ {
+  "centers": [
+   {
+    "license": "SC-1",
+    "name": "Service center 225",
+    "state_id": 225
+   }
+  ],
+  "licenses": [
+   {
+    "id": 225,
+    "licenseId": "SC-1",
+    "licenseName": "\u001f",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "name only U+001F"
+ },
+ {
+  "centers": [
+   {
+    "license": "12.0",
+    "name": "Center",
+    "state_id": 225
+   }
+  ],
+  "licenses": [
+   {
+    "id": 225,
+    "licenseId": 12.0,
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "license id a whole float"
+ },
+ {
+  "centers": [
+   {
+    "license": null,
+    "name": "Center",
+    "state_id": 225
+   }
+  ],
+  "licenses": [
+   {
+    "id": 225,
+    "licenseId": "\u001c",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "license id only U+001C"
+ },
+ {
+  "centers": [
+   {
+    "license": "SC-1",
+    "name": "Center",
+    "state_id": 225
+   }
+  ],
+  "licenses": [
+   {
+    "id": "00000000000000000000000000000000000000000000000000225",
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "id with fifty leading zeros"
  }
 ]

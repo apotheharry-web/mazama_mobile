@@ -7,10 +7,16 @@
 // Also re-checks the session is fresh (ensureFreshSession) before calling GetApplicableLicenses, same as
 // CartPage does on its own periodic timer - this page can sit on screen for a while too (the picker, if there's
 // more than one center) before the worker picks anything.
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
+import 'app_update_card.dart';
+import 'app_update_check.dart';
 import 'cart_page.dart';
 import 'center_home_page.dart';
 import 'center_status_client.dart' as center_status_client;
@@ -26,15 +32,14 @@ import 'licenses_client.dart';
 import 'main.dart' show goToSignIn;
 import 'packages_client.dart';
 import 'product_names.dart';
-import 'mazama_inventory_cache_store.dart';
 import 'mazama_inventory_client.dart' as mazama_inventory_client;
 import 'mazama_inventory_page.dart';
 import 'order_client.dart' as order_client;
 import 'order_form_page.dart';
 import 'order_par_page.dart';
 import 'par_client.dart' as par_client;
+import 'par_columns.dart';
 import 'sheets_client.dart' as sheets_client;
-import 'reply_store.dart';
 import 'resilience_options.dart';
 import 'sales_page.dart';
 import 'server_health.dart';
@@ -42,9 +47,10 @@ import 'server_link.dart' as server_link;
 import 'session.dart';
 import 'session_store.dart';
 import 'state_packages_client.dart' as state_packages_client;
-import 'stock_cache_store.dart';
 import 'stock_rows.dart';
 import 'stock_summary.dart';
+import 'sync/sync_datasets.dart';
+import 'sync/updated_line.dart';
 
 class SelectCenterPage extends StatefulWidget {
   /// The signed-in worker's current session. May be replaced with a renewed one (see _ensureFreshThenFetch)
@@ -131,22 +137,22 @@ class SelectCenterPage extends StatefulWidget {
   /// Overridable for tests.
   final Future<List<String>> Function(int stateId) fetchMazamaLicenses;
 
-  /// What the stock page keeps for when it can't reach everything (stock_cache_store.dart). Overridable for tests;
-  /// by default in the session store's folder (so a page opened after "Switch center" keeps it there too).
-  final StockCacheStore stockCacheStore;
+  /// The par table's columns chosen on this phone (par_columns.dart, SP-D14). Overridable for tests; by default in the
+  /// session store's folder (so a page opened after "Switch center" keeps them there too).
+  final ParColumnsStore parColumnsStore;
 
-  /// Where an older build kept the last Mazama stock the server sent: read once, when [replyStore] has none yet, and
-  /// moved there. Overridable for tests; by default in the session store's folder.
-  final MazamaInventoryCacheStore mazamaInventoryCacheStore;
-
-  /// The last good reply of each read (reply_store.dart, README R56): par levels, the stock page's sheets and Mazama's
-  /// stock, shown while the server can't be reached. Overridable for tests; by default in the session store's folder
-  /// (the app's own folder, as the server link's).
-  final ReplyStore replyStore;
+  /// What the phone knows (the sync engine's datasets, specs/phone-sync): par levels, the stock page's sheets, drawn
+  /// rows and Mazama licenses, Mazama's stock and the Sales tab's read, shown while their source can't be reached. Overridable for tests; by default in
+  /// the session store's folder (the app's own folder, the engine's database), the demo's in its own folder.
+  final Datasets datasets;
 
   /// The feature registry (specs/features FR-3) the picker, the center home's tabs and their pages follow: the
   /// generated one in the app (fixed per release, FT-D2); tests pass a copy with features off.
   final Map<String, Feature> featureTable;
+
+  /// specs/app-updates AU-D10: the checker whose offer the picker and the center home show (the app's, from
+  /// app_update_check.dart's appUpdateChecker, when null); never in the demo.
+  final AppUpdateChecker? updateChecker;
 
   SelectCenterPage({
     super.key,
@@ -168,15 +174,14 @@ class SelectCenterPage extends StatefulWidget {
     this.submitOrder = _submitOrder,
     DeviceIdStore? deviceIdStore,
     this.fetchMazamaLicenses = _mazamaLicenses,
-    StockCacheStore? stockCacheStore,
-    MazamaInventoryCacheStore? mazamaInventoryCacheStore,
-    ReplyStore? replyStore,
+    ParColumnsStore? parColumnsStore,
+    Datasets? datasets,
     this.demo,
     this.featureTable = features,
+    this.updateChecker,
   })  : deviceIdStore = deviceIdStore ?? DeviceIdStore(dataDir: sessionStore.dataDir),
-        replyStore = replyStore ?? ReplyStore(dataDir: sessionStore.dataDir),
-        stockCacheStore = stockCacheStore ?? StockCacheStore(dataDir: sessionStore.dataDir),
-        mazamaInventoryCacheStore = mazamaInventoryCacheStore ?? MazamaInventoryCacheStore(dataDir: sessionStore.dataDir),
+        datasets = datasets ?? Datasets.forDir(sessionStore.dataDir),
+        parColumnsStore = parColumnsStore ?? ParColumnsStore(dataDir: sessionStore.dataDir),
         fetchLicenses = fetchLicenses ?? fetchApplicableLicenses,
         fetchCenterPackages = fetchCenterPackages ?? fetchPackages;
 
@@ -211,9 +216,8 @@ class SelectCenterPage extends StatefulWidget {
           submitOrder: demo.submitOrder,
           deviceIdStore: demo.deviceIdStore,
           fetchMazamaLicenses: demo.fetchMazamaLicenses,
-          stockCacheStore: demo.stockCacheStore,
-          mazamaInventoryCacheStore: MazamaInventoryCacheStore(dataDir: () => demo.dataDir),
-          replyStore: ReplyStore(dataDir: () => demo.dataDir),
+          parColumnsStore: ParColumnsStore(dataDir: () => demo.dataDir),
+          datasets: demo.engine.datasets, // the demo's own database (PS-R8)
           demo: demo,
         );
 
@@ -240,6 +244,11 @@ class _SelectCenterPageState extends State<SelectCenterPage> {
   String? _error;
   bool _autoOpening = false;
 
+  /// specs/phone-sync PS-R3, PS-R7: the licenses shown are this worker's copy kept from the last good read (shown at
+  /// once while the state is asked, and kept on screen when it can't be reached), read then; null when they are the
+  /// state's answer just now.
+  DateTime? _keptAt;
+
   /// Starts as widget.session but may be swapped for a renewed one - _open() always hands CartPage this copy,
   /// never widget.session directly, so CartPage never starts out with a session that's already stale.
   late Session _session;
@@ -252,13 +261,27 @@ class _SelectCenterPageState extends State<SelectCenterPage> {
     _load();
   }
 
-  void _load() {
+  Future<void> _load() {
+    final kept = _keptLicenses();
     setState(() {
-      _centers = null;
+      _centers = kept?.$1;
       _error = null;
       _autoOpening = false;
+      _keptAt = kept?.$2;
     });
-    _ensureFreshThenFetch();
+    return _ensureFreshThenFetch();
+  }
+
+  /// The state couldn't be reached: this worker's kept licenses stay on screen (with their age) if there are any, and
+  /// true; else false, for the error as before.
+  bool _keepShowingKept() {
+    final kept = _keptLicenses();
+    if (kept == null) return false;
+    setState(() {
+      _centers = kept.$1;
+      _keptAt = kept.$2;
+    });
+    return true;
   }
 
   Future<void> _ensureFreshThenFetch() async {
@@ -272,10 +295,14 @@ class _SelectCenterPageState extends State<SelectCenterPage> {
       _session = fresh;
 
       final all = await widget.fetchLicenses(_session.accessToken);
+      _keepLicenses(all);
       if (!mounted) return;
       // SM-21: the server's own rule; FR-3: and only license types with a feature on for them (Q3)
       final centers = serviceCenters(all).where((l) => licenseTypeListed(l.licenseType, table: widget.featureTable)).toList();
-      setState(() => _centers = centers);
+      setState(() {
+        _centers = centers;
+        _keptAt = null;
+      });
       if (centers.length == 1) {
         // Only one license to act for at all - skip the picker, but only after this frame finishes building,
         // since navigating straight out of a Future callback mid-build is the kind of thing that produces
@@ -292,17 +319,67 @@ class _SelectCenterPageState extends State<SelectCenterPage> {
       // on disk), rather than forcing a sign-in over a problem that has nothing to do with this account's
       // credentials.
       if (!mounted) return;
+      if (_keepShowingKept()) return; // PS-R3: unreachable, this worker's kept licenses
       setState(() => _error = e.message);
     } catch (e) {
       if (!mounted) return;
+      // PS-R3: only when the state couldn't be reached; any other failure (a refusal, a bug) is the error, as before
+      final unreachable = (e is LicensesError && e.unreachable) || e is SocketException || e is TimeoutException;
+      if (unreachable && _keepShowingKept()) return;
       setState(() => _error = e.toString());
     } finally {
       client.close();
     }
   }
 
+  /// The licenses dataset's key: the signed-in worker's (another worker on this phone never sees them).
+  String get _licensesKey => _session.email.trim().toLowerCase();
+
+  /// Keeps [all], the state's answer, as this worker's licenses dataset (best effort).
+  void _keepLicenses(List<License> all) {
+    try {
+      widget.datasets.put(
+          Dataset.licenses,
+          _licensesKey,
+          jsonEncode([
+            for (final l in all)
+              {'id': l.id, 'licenseId': l.licenseId, 'licenseName': l.licenseName, 'licenseType': l.licenseType}
+          ]),
+          source: widget.demo != null ? sourceDemo : sourceState); // PS-R8: the demo's rows say demo
+    } catch (_) {
+      // nothing kept this time
+    }
+  }
+
+  /// The service centers of the licenses kept, with when they were read; null when none (or none readable).
+  (List<License>, DateTime)? _keptLicenses() {
+    try {
+      final row = widget.datasets.read(Dataset.licenses, _licensesKey);
+      if (row == null) return null;
+      final body = jsonDecode(row.body);
+      if (body is! List) return null;
+      final centers = serviceCenters(licensesFromJson(List<Object?>.from(body)))
+          .where((l) => licenseTypeListed(l.licenseType, table: widget.featureTable))
+          .toList();
+      return centers.isEmpty ? null : (centers, row.fetchedAt);
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// FR-3: whether [feature] is on for [center]'s license type.
   bool _on(String feature, License center) => featureOnForLicense(feature, center.licenseType, table: widget.featureTable);
+
+  /// Whether no saved cart (draft) of any of [centers] holds a line.
+  Future<bool> _allCartsEmpty(List<License> centers) async {
+    for (final c in centers) {
+      if (!await centerCartsEmpty(c.id, dataDir: widget.sessionStore.dataDir)) return false;
+    }
+    return true;
+  }
+
+  /// The update checker whose offer this picker and its center homes show; none in the demo (DM-D1).
+  AppUpdateChecker? get _updates => widget.demo != null ? null : (widget.updateChecker ?? appUpdateChecker);
 
   /// Debug-build-only entry point to DebugToolsPage, the hub for every kDebugMode-only diagnostic screen this
   /// app has (that file's own header comment has the full reasoning) - kDebugMode is a compile-time constant,
@@ -348,14 +425,14 @@ class _SelectCenterPageState extends State<SelectCenterPage> {
         fetchServerPackages: () => widget.fetchCenterPackages(center.id),
         fetchStateRecords: () async => widget.fetchRawPackagesFromState(center.id, accessToken: await _freshStateToken()),
         fetchMazamaLicenses: () => widget.fetchMazamaLicenses(center.id),
-        cache: widget.stockCacheStore,
-        strainOf: (name) => strainFromName(name, sharedCoaCore()),
+        datasets: widget.datasets,
+        strainOf: strainFromName,
       );
 
   /// The chosen center's stock page (SP-R12, SP-R13): its par levels are set before an order (SP-D19, MI-D21). The
   /// lot table's sheets are kept with when, and shown from that copy while the server can't be reached.
   CenterStockPage _stockPage(License center) {
-    final kept = sheetsReplies(widget.replyStore, center.id, legacy: widget.stockCacheStore);
+    final kept = sheetsDataset(widget.datasets, center.id);
     return CenterStockPage(
       center: center,
       loadRows: () => _loadStock(center),
@@ -372,20 +449,20 @@ class _SelectCenterPageState extends State<SelectCenterPage> {
   /// for offline, and saved as the session's worker on this install's device id (SP-D5); then the order form (MI-D6),
   /// starting from the levels confirmed.
   OrderParPage _orderPage(License center) {
-    final cache = widget.stockCacheStore;
+    final columns = widget.parColumnsStore;
     return OrderParPage(
       center: center,
       loadRows: () => _loadStock(center),
       loadPar: () => loadCenterPar(
-          stateId: center.id, fetchPar: () => widget.fetchParLevels(center.id), replies: widget.replyStore, legacy: cache),
-      loadParColumns: () => cache.loadParColumns(center.id),
+          stateId: center.id, fetchPar: () => widget.fetchParLevels(center.id), datasets: widget.datasets),
+      loadParColumns: () => columns.load(center.id),
       health: _health,
-      saveParColumns: (columns) => cache.saveParColumns(center.id, columns),
+      saveParColumns: (chosen) => columns.save(center.id, chosen),
       savePar: (levels) async {
         final stored = await widget.saveParLevels(center.id,
             workerEmail: _session.email, deviceId: await widget.deviceIdStore.idOrCreate(), levels: levels);
         try {
-          await parReplies(widget.replyStore, center.id).save(stored, DateTime.now().toUtc());
+          await parDataset(widget.datasets, center.id).save(stored, DateTime.now().toUtc());
         } catch (_) {
           // the copy for offline is best effort; the server has the levels
         }
@@ -432,6 +509,7 @@ class _SelectCenterPageState extends State<SelectCenterPage> {
         deviceIdStore: d.deviceIdStore,
         httpClientFactory: d.saleClient,
         onDraftCountChanged: onDraftCountChanged,
+        requestStockRefresh: (_) {}, // the demo's stock stays as it was (DM-R1)
         demo: d,
         featureTable: widget.featureTable,
       );
@@ -445,7 +523,7 @@ class _SelectCenterPageState extends State<SelectCenterPage> {
           await widget.uploadSalesSnapshot(center.id, records,
               workerEmail: _session.email, deviceId: await widget.deviceIdStore.idOrCreate());
         },
-        replies: widget.replyStore,
+        datasets: widget.datasets,
         demo: widget.demo != null,
       );
 
@@ -459,13 +537,20 @@ class _SelectCenterPageState extends State<SelectCenterPage> {
           featureTable: widget.featureTable,
           buildMazama: () => MazamaInventoryPage(
             load: widget.fetchMazamaInventory,
-            kept: mazamaInventoryReplies(widget.replyStore, legacy: widget.mazamaInventoryCacheStore).load,
-            keep: mazamaInventoryReplies(widget.replyStore).save,
+            kept: mazamaInventoryDataset(widget.datasets).load,
+            keep: mazamaInventoryDataset(widget.datasets).save,
             health: _health,
             orderForm: _on('ordering', center) ? () => _orderPage(center) : null,
           ),
           buildStock: () => _stockPage(center),
           buildSales: () => _salesPage(center),
+          buildUpdateCard: _updates == null
+              ? null
+              : (draftCount) => AppUpdateCard(
+                    checker: _updates!,
+                    cartsEmpty: () async =>
+                        draftCount == 0 && await centerCartsEmpty(center.id, dataDir: widget.sessionStore.dataDir),
+                  ),
           buildCart: (onDraftCountChanged) => widget.demo != null
               ? _demoCart(widget.demo!, center, onDraftCountChanged)
               : CartPage(
@@ -532,12 +617,21 @@ class _SelectCenterPageState extends State<SelectCenterPage> {
         textAlign: TextAlign.center,
       );
     }
-    return ConstrainedBox(
+    final updates = _updates;
+    final list = ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 420),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // AU-D10: on the picker, no saved cart of any listed center may hold a line (review I2)
+          if (updates != null && _centers!.any((c) => _on('app_updates', c)))
+            AppUpdateCard(checker: updates, cartsEmpty: () => _allCartsEmpty(_centers!)),
+          // this worker's licenses as kept (at once, and while the state can't be reached), their age, and Try again
+          if (_keptAt != null) ...[
+            UpdatedLine.at(_keptAt),
+            TextButton(key: const ValueKey('licenses-retry'), onPressed: _load, child: const Text('Try again')),
+          ],
           for (final c in _centers!) ...[
             Card(
               child: ListTile(
@@ -549,6 +643,16 @@ class _SelectCenterPageState extends State<SelectCenterPage> {
             const SizedBox(height: 8),
           ],
         ],
+      ),
+    );
+    // PS-R7: pulling the list down reads the licenses again (the picker is one of MI-D5's three pull-downs)
+    return RefreshIndicator(
+      key: const ValueKey('licenses-refresh'),
+      onRefresh: _load,
+      child: ListView(
+        shrinkWrap: true,
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: [Center(child: list)],
       ),
     );
   }

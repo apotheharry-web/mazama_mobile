@@ -45,6 +45,7 @@ The app sends Mazama's server only what it needs to run the service your center 
 | **Lab-report PDFs** with the state's document id and potency figure | when the app reads a product's lab report | to produce product labels |
 | **Text read from a product label** (not the photo) | when you scan a label | to find the matching product |
 | **Sign-in failure reports**: only fixed words for the step and reason, the state's HTTP status and the install id; never your email, password or any message | when signing in fails for a reason other than a wrong password | to learn quickly when the state's sign-in has changed |
+| **Your app's build number, with the install id** | when the app checks for an update (Android) | to find phones that need updating by hand |
 
 **Until Mazama approves your phone.** Mazama approves each email and phone (install id) together before what they
 send is used; Mazama's server also approves them for one center by itself when a sale the app reported from that
@@ -57,6 +58,19 @@ sees what is kept.
 
 Like any web server, ours also sees your phone's internet address and the time of each request; we don't use them to
 identify you. The server's own operating logs may also note your email address, for example when an upload is slow.
+
+## GitHub
+
+On Android the app checks for a newer version of itself, and downloads one only when you tap Install. It reads the
+release from Mazama's server or from **GitHub** (the app's public repository and its releases), and the update itself
+from GitHub, or from Mazama's server when GitHub can't be reached.
+
+On Android and iPhone, when the app can't reach Mazama's server after a failed sign-in, it may also read Mazama's
+signed sign-in files from GitHub.
+
+Either way GitHub sees your phone's internet address and the time; the app sends GitHub nothing else beyond the
+standard headers of its web requests (no email, install id, build number or session). GitHub's own privacy
+policy covers what it does with that.
 
 The app **never** sends Mazama your password or your state session, your contacts, your location, your photos, or
 any advertising or tracking identifier. The app contains no analytics, advertising or crash-reporting code.

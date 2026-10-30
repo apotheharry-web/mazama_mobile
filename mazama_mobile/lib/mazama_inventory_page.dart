@@ -10,7 +10,7 @@
 // id opens its product information sheet in the browser (MI-D18), and a strain or type picked on a pie narrows the
 // table to it (MI-D20). "Contact" at the top left, across from Order, offers
 // Mazama's website, Signal and email (MI-D19, mazama_contact.dart).
-// While Mazama's server can't be reached, the page shows the last stock it sent (kept on the phone, server_offline.dart)
+// While Mazama's server can't be reached, the page shows the last stock it sent (kept on the phone, sync/server_read.dart)
 // with no notice of its own: the app-wide banner says the server can't be reached (server_link.dart, README R87), and
 // the page reloads by itself once it answers again. With none kept, the error and Retry as before.
 import 'dart:async';
@@ -23,10 +23,11 @@ import 'mazama_inventory_client.dart';
 import 'mazama_lot_table.dart';
 import 'responsive.dart';
 import 'server_health.dart';
-import 'server_offline.dart';
+import 'sync/server_read.dart';
 import 'stock_mix.dart';
 import 'stock_pie.dart';
 import 'swipe_pies.dart';
+import 'sync/updated_line.dart';
 
 class MazamaInventoryPage extends StatefulWidget {
   const MazamaInventoryPage(
@@ -44,7 +45,7 @@ class MazamaInventoryPage extends StatefulWidget {
   final Future<MazamaInventory> Function() load;
 
   /// The copy of the mix kept on the phone, shown while the server can't be reached; none kept when null
-  /// (mazama_inventory_cache_store.dart in the app).
+  /// (the mazama_inventory dataset in the app, sync_datasets.dart).
   final Future<ServerRead<MazamaInventory>?> Function()? kept;
 
   /// Keeps each mix the server sends, with when; nothing kept when null.
@@ -88,6 +89,9 @@ class _MazamaInventoryPageState extends State<MazamaInventoryPage> {
 
   /// The mix on screen is the copy kept on the phone (the server can't be reached).
   bool _fromCache = false;
+
+  /// When the mix on screen was read (the age line, specs/phone-sync PS-R7); null while none is shown.
+  DateTime? _readAt;
 
   /// The breakdown that shows, if any: the pie it was picked on (0 By strain, 1 By type) and the strain or type. One
   /// for the page, not one per pie, so an open breakdown stays open, and a closed one closed, across a swipe.
@@ -145,11 +149,28 @@ class _MazamaInventoryPageState extends State<MazamaInventoryPage> {
       _mix = null;
       _error = null;
       _fromCache = false;
+      _readAt = null;
     });
     unawaited(() async {
+      final kept = widget.kept;
+      // Local first (PS-R7): the copy kept on the phone shows at once, with its age, while the server is asked.
+      if (kept != null) {
+        try {
+          final early = await kept();
+          if (mounted && early != null && _inventory == null) {
+            setState(() {
+              _inventory = early.value;
+              _mix = stockMix(early.value.cells);
+              _fromCache = true;
+              _readAt = early.cachedAt;
+            });
+          }
+        } catch (_) {
+          // nothing readable kept: the spinner until the server answers
+        }
+      }
       try {
         final keep = widget.keep;
-        final kept = widget.kept;
         final read = await readWithCache<MazamaInventory>(
           fetch: widget.load,
           save: (inv, at) async {
@@ -164,10 +185,19 @@ class _MazamaInventoryPageState extends State<MazamaInventoryPage> {
           _inventory = inv;
           _mix = stockMix(inv.cells);
           _fromCache = read.fromCache;
+          _readAt = read.fromCache ? read.cachedAt : widget.now();
         });
       } catch (e) {
         if (!mounted) return;
-        setState(() => _error = '$e');
+        // readWithCache answers with the kept copy when the server can't be reached; what is thrown here is the
+        // server's own answer (a 4xx), or unreachable with nothing kept: the error and Retry, never the copy shown at once
+        setState(() {
+          _inventory = null;
+          _mix = null;
+          _fromCache = false;
+          _readAt = null;
+          _error = '$e';
+        });
       }
     }());
   }
@@ -196,6 +226,7 @@ class _MazamaInventoryPageState extends State<MazamaInventoryPage> {
               ],
             ),
           ),
+          if (_inventory != null) UpdatedLine.at(_readAt, now: widget.now),
           Expanded(child: ResponsiveBody(child: _body())),
         ],
       ),

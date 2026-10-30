@@ -1,0 +1,149 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "records.judge output",
+  "description": "One judgement per record, in order: every record rule's answer for it.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "flags",
+      "has_units",
+      "units_counted",
+      "has_material",
+      "has_material_strict",
+      "has_material_or_units",
+      "holds",
+      "is_held",
+      "source_problem"
+    ],
+    "properties": {
+      "flags": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "zero_out",
+          "locked",
+          "flagged",
+          "pending_transfer",
+          "failed_test"
+        ],
+        "properties": {
+          "zero_out": {
+            "type": "boolean"
+          },
+          "locked": {
+            "type": "boolean"
+          },
+          "flagged": {
+            "type": "boolean"
+          },
+          "pending_transfer": {
+            "type": "boolean"
+          },
+          "failed_test": {
+            "type": "boolean"
+          }
+        },
+        "description": "The state's five status flags, each false when absent, null or falsy."
+      },
+      "has_units": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "$ref": "#/$defs/raise"
+          }
+        ]
+      },
+      "units_counted": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "$ref": "#/$defs/raise"
+          }
+        ]
+      },
+      "has_material": {
+        "type": "boolean"
+      },
+      "has_material_strict": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "$ref": "#/$defs/raise"
+          }
+        ]
+      },
+      "has_material_or_units": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "$ref": "#/$defs/raise"
+          }
+        ]
+      },
+      "holds": {
+        "type": "array",
+        "items": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "enum": [
+                "locked",
+                "flagged",
+                "pending transfer",
+                "failed test"
+              ]
+            },
+            {}
+          ],
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "description": "[name, why] in a fixed order; why is the record's reason (any JSON value) or \"\"."
+      },
+      "is_held": {
+        "type": "boolean"
+      },
+      "source_problem": {
+        "anyOf": [
+          {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          {
+            "$ref": "#/$defs/raise"
+          }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "raise": {
+      "type": "object",
+      "required": [
+        "raises"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "raises": {
+          "enum": [
+            "TypeError",
+            "ValueError"
+          ]
+        }
+      },
+      "description": "The Python exception today's rule raises for this record (RD-2: a number given as text): the server raises the same class when it reads this answer."
+    }
+  }
+}

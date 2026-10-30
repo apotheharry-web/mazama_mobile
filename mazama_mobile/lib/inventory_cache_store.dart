@@ -1,24 +1,21 @@
 // Persists the last successfully fetched inventory for a service center, so a worker who opens the app with
 // no signal at all - not even enough to reach the state system directly (state_packages_client.dart), let
 // alone Mazama's own server (packages_client.dart) - still sees SOMETHING rather than a blank "Stock did not
-// load" screen. One JSON document (inventory_cache.json) in the data folder's LocalStore, as cart_store.dart keeps
-// its draft, in session_store.dart's own defaultSessionDataDir.
-//
-// Deliberately scoped to exactly one center at a time, the same way cart_store.dart is: a worker who switches
-// centers overwrites whatever was cached for the one before it. A center's inventory refreshes constantly in
-// normal use (CartPage/StockPage both fetch on load), so remembering more than the one most recent center adds
-// nothing worth the extra bookkeeping. See resilient_inventory.dart for the 3-day staleness rule this file
-// itself has no opinion on - it only ever hands back what's kept, with its own timestamp, and lets the
-// caller decide whether that's still good enough to show.
+// load" screen. Since specs/phone-sync phase 3 it is the sync engine's center_stock dataset (lib/sync/sync_datasets.dart),
+// one per center ({"packages": [...], "source": ...}, with when it was read), in the data folder's database; the
+// document an older build kept (inventory_cache.json, one center) is moved there (sync_migration.dart's
+// migrateStockCaches). It has no staleness rule of its own: it hands back what's kept, with its time, and the caller
+// decides (lib/sync/center_stock.dart shows it at any age; the cart refuses to sell from stock older than 3 days, Q3).
 import 'dart:convert';
 import 'dart:io';
 
 import 'local_store.dart';
 import 'packages_client.dart';
 import 'session_store.dart' show defaultSessionDataDir;
+import 'sync/sync_datasets.dart' show Dataset, Datasets, sourceMerged;
 
 /// What InventoryCacheStore.load hands back: the packages as last successfully saved (whichever source -
-/// resilient_inventory.dart saves a result from Mazama's own server or a direct state fetch the same way), and
+/// lib/sync/center_stock.dart keeps a result from Mazama's own server or a direct state fetch the same way), and
 /// when that happened.
 class CachedInventory {
   final List<Package> packages;
@@ -33,57 +30,50 @@ class InventoryCacheStore {
 
   const InventoryCacheStore({Directory Function()? dataDir}) : dataDir = dataDir ?? defaultSessionDataDir;
 
-  static const _name = 'inventory_cache.json';
+  Datasets get _datasets => Datasets.forDir(dataDir);
 
-  /// Overwrites whatever was cached before (for any center) - see this file's own comment for why remembering
-  /// only the one most recent center is enough.
-  Future<void> save(int centerId, List<Package> packages, DateTime fetchedAt) async {
-    LocalStore.forDir(dataDir()).write(_name, jsonEncode({
-      'centerId': centerId,
-      'fetchedAtMs': fetchedAt.millisecondsSinceEpoch,
-      'packages': packages.map((p) => p.toJson()).toList(),
-    }));
+  /// Replaces what was kept for [centerId]; [source] is where the packages came from (sync_datasets.dart's sources).
+  Future<void> save(int centerId, List<Package> packages, DateTime fetchedAt, {String source = sourceMerged}) async {
+    _datasets.put(Dataset.centerStock, '$centerId',
+        jsonEncode({'packages': packages.map((p) => p.toJson()).toList(), 'source': source}),
+        source: source, at: fetchedAt);
   }
 
-  /// Null if nothing is stored, what's there can't be read back (no file, a partial write from a crash mid-
-  /// save, a future/older format), or - same rule as cart_store.dart's own load - what's stored belongs to a
-  /// different center than [centerId]: a stale center's cache has no business reappearing at another one, even
-  /// on the same device. This method has no staleness rule of its own - it hands back exactly what's on disk
-  /// plus its timestamp, and the caller (resilient_inventory.dart's own 3-day window) decides whether that's
-  /// still worth showing.
+  /// Null if nothing is kept for [centerId], or what is kept can't be read back. No staleness rule: what is kept and
+  /// when it was read (UTC, so it equals the time it was saved with).
   Future<CachedInventory?> load(int centerId) async {
+    final row = _datasets.read(Dataset.centerStock, '$centerId');
+    if (row == null) return null;
+    final packages = packagesFromBody(row.body);
+    return packages == null ? null : CachedInventory(packages: packages, fetchedAt: row.fetchedAt.toUtc());
+  }
+
+  /// The packages of a center_stock body ({"packages": [...], "source": ...}); null when it isn't one (an older or
+  /// damaged copy: as if none were kept).
+  static List<Package>? packagesFromBody(String body) {
     try {
-      final text = LocalStore.forDir(dataDir()).read(_name)?.body;
-      if (text == null) return null;
-      final decoded = jsonDecode(text);
+      final decoded = jsonDecode(body);
       if (decoded is! Map) return null;
-      if ((decoded['centerId'] as num?)?.toInt() != centerId) return null;
-      final fetchedAtMs = decoded['fetchedAtMs'];
       final rawPackages = decoded['packages'];
-      if (fetchedAtMs is! num || rawPackages is! List) return null;
+      if (rawPackages is! List) return null;
       final packages = <Package>[];
       for (final rp in rawPackages) {
         if (rp is! Map) return null;
         packages.add(Package.fromJson(Map<String, Object?>.from(rp)));
       }
-      // isUtc: true matters here, not just for display: DateTime's own == checks it alongside the instant, so
-      // a caller comparing this against the UTC DateTime it originally saved (every call site in this app uses
-      // DateTime.now()/DateTime.utc(...), never a local one, for fetchedAt) would otherwise see two unequal
-      // objects for the exact same moment - exactly what inventory_cache_store_test.dart's own round-trip test
-      // caught.
-      return CachedInventory(
-        packages: packages,
-        fetchedAt: DateTime.fromMillisecondsSinceEpoch(fetchedAtMs.toInt(), isUtc: true),
-      );
-    } on FileSystemException {
-      return null;
-    } on FormatException {
+      return packages;
+    } catch (_) {
       return null;
     }
   }
 
+  /// Forgets every center's kept stock (the debug page's reset), and an older build's document.
   Future<void> clear() async {
-    // Already gone (or never saved) is exactly the state this call is meant to produce.
-    LocalStore.forDir(dataDir()).delete(_name);
+    _datasets.remove(Dataset.centerStock);
+    try {
+      LocalStore.forDir(dataDir()).delete('inventory_cache.json');
+    } catch (_) {
+      // nothing there, or the database can't be opened: nothing kept either way
+    }
   }
 }
