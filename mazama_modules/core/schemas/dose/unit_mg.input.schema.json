@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "dose.unit_mg input",
+  "description": "The units to answer, in order (CR-D5: a whole list in one call): each a package record and its lot's TPE.",
+  "type": "object",
+  "required": [
+    "units"
+  ],
+  "properties": {
+    "units": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "record"
+        ],
+        "properties": {
+          "record": {
+            "type": "object",
+            "description": "The state's package record; only weightPerUnit (g) and analyteWeight (the state's psilocybin, mg/g; 0 or null = none) are read. Any JSON value has an answer: one that isn't a number or null makes the unit's mg unknown (DOSE-9)."
+          },
+          "tpe": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "The lot's TPE (mg/g, coa.tpe), null or absent when not known."
+          }
+        }
+      }
+    }
+  }
+}

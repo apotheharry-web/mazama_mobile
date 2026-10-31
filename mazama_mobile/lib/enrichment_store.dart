@@ -97,7 +97,7 @@ class PackageEnrichment {
         'analyteWeight': analyteWeight,
         'strain': strain,
         'tpeMg': tpeMg,
-        if (expires != null) 'expires': _isoDate(expires!),
+        if (expires != null) 'expires': _dayText(expires!),
         'seenAtMs': seenAt.millisecondsSinceEpoch,
         if (source == EnrichmentSource.phone) 'source': 'phone',
         if (tpeMgPerG != null) 'tpeMgPerG': tpeMgPerG,
@@ -135,7 +135,7 @@ class PackageEnrichment {
 /// productGuid + record id, the key merged_inventory.dart joins the server's and the state's rows on.
 String enrichmentKey(String productGuid, int id) => '$productGuid#$id';
 
-String _isoDate(DateTime d) =>
+String _dayText(DateTime d) =>
     '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
 class EnrichmentStore {
@@ -338,6 +338,7 @@ Package copyPackage(
       id: p.id,
       weightPerUnit: p.weightPerUnit,
       analyteWeight: p.analyteWeight,
+      saleValues: p.saleValues,
       strain: strain ?? p.strain,
       tpeMg: tpeMg ?? p.tpeMg,
       quantity: p.quantity,
@@ -356,6 +357,7 @@ Package copyPackage(
       stateEstimate: stateEstimate,
       stateOnly: p.stateOnly,
       labelInput: labelInput ?? p.labelInput,
+      confirmed: p.confirmed,
     );
 
 const _months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];

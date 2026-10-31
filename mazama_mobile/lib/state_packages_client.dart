@@ -49,7 +49,7 @@ class StatePackagesError implements Exception {
 /// GETs GetPackagedProducts/{stateId}/ServiceCenter directly against the real state system and returns the
 /// RAW records exactly as the state answered them - no mapping into [Package] at all. This is what
 /// inventory_upload_client.dart's uploadInventorySnapshot posts straight back to mazama_sales' own
-/// POST /p/inventory/{stateId} (item 3a): that endpoint's own mapper (mazama_sales' state/mapping.py,
+/// POST /p/ingest/packaged/{stateId} (item 3a; C3's /p/inventory before phone-sync 8b Step 6): that endpoint's own mapper (mazama_sales' state/mapping.py,
 /// reused via sync.run_sync) expects exactly this shape, the same one fetchPackagesFromState below already
 /// reads fields out of - sending the SAME records, unreshaped, means this app never has to keep its own
 /// re-encoding of the state's wire format in sync with the server's.
@@ -76,14 +76,14 @@ Future<List<Object?>> fetchRawPackagesFromState(int stateId, {required String ac
 List<Package> mapRawPackagesFromState(List<Object?> body, {CoreFunctions? core}) {
   final reader = core ?? MazamaCore.instance;
   final out = <Package>[];
-  for (final e in body) {
-    if (e is! Map) continue;
-    final r = Map<String, Object?>.from(e);
+  final records = [for (final e in body) if (e is Map) Map<String, Object?>.from(e)];
+  final why = unsellableReasons(records, core: reader); // one core call for the list (CR-D5)
+  for (final (i, r) in records.indexed) {
     // SM-21: a record the server's own mapping skips (no whole-number id, no PKPR) is skipped here too.
     final key = packagedProductKey(r);
     // SM-10: the server's own sale rule (sellability.dart), the same one /p/packages applies on the normal path -
     // not just "in stock": a locked, flagged or pending-transfer package is left out too.
-    if (key == null || !isSellable(r)) continue;
+    if (key == null || why[i] != null) continue;
     final weightPerUnit = (r['weightPerUnit'] as num?)?.toDouble() ?? 0;
     final analyteWeight = (r['analyteWeight'] as num?)?.toDouble() ?? 0;
     // The state's own wire shape carries the batch/lot id this package was made from - free with this response,
@@ -98,6 +98,7 @@ List<Package> mapRawPackagesFromState(List<Object?> body, {CoreFunctions? core})
       strain: strainFromName(r['description'] as String?, reader),
       weightPerUnit: weightPerUnit,
       analyteWeight: analyteWeight,
+      saleValues: saleValuesOf(r), // SALE-12: the state's own values, as a sale record copies them
       tpeMg: unitTpeMg(weightPerUnit, analyteWeight, null) ?? 0, // SM-04: the state's figure, rounded up (dose.dart)
       quantity: (r['quantity'] as num?)?.toInt() ?? 0,
       exactQuantity: r['quantity'] is num ? r['quantity'] as num : null,

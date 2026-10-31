@@ -29,11 +29,12 @@ import 'local_store_import.dart';
 const localStoreFileName = 'mazama.db';
 
 /// `PRAGMA user_version` once every migration in [_migrations] has run.
-const localStoreSchemaVersion = 2;
+const localStoreSchemaVersion = 3;
 
 /// Index i moves `user_version` from i to i + 1, in its own transaction. Append only: a phone may be at any version.
-final List<void Function(Database)> _migrations = [
-  (db) {
+/// Each gets the database's folder too (null for [LocalStore.inMemory]), for the files beside it.
+final List<void Function(Database db, Directory? dir)> _migrations = [
+  (db, _) {
     db.execute('CREATE TABLE documents (name TEXT PRIMARY KEY, body TEXT NOT NULL, saved_at_ms INTEGER NOT NULL)');
     // The legacy files already imported (local_store_import.dart), so one whose rename failed is never imported again
     // after its document is deleted (a sold cart coming back).
@@ -42,7 +43,7 @@ final List<void Function(Database)> _migrations = [
   // specs/phone-sync PS-R2: the sync engine's tables (lib/sync/sync_tables.dart), beside the documents (PS-D4). The
   // queue's ids are AUTOINCREMENT, never reused: an item replaced while it was being sent must never share its id with
   // the newer one, which the sender's "done" would then delete.
-  (db) {
+  (db, _) {
     db.execute('CREATE TABLE sync_dataset ('
         'name TEXT NOT NULL, key TEXT NOT NULL, body TEXT NOT NULL, source TEXT NOT NULL, '
         'fetched_at_ms INTEGER NOT NULL, last_try_ms INTEGER, last_error TEXT, PRIMARY KEY (name, key))');
@@ -53,6 +54,12 @@ final List<void Function(Database)> _migrations = [
     db.execute("CREATE UNIQUE INDEX sync_queue_kind_key ON sync_queue (kind, key) WHERE state <> 'dead'");
     db.execute('CREATE TABLE sync_sent ('
         'kind TEXT NOT NULL, key TEXT NOT NULL, sent_at_ms INTEGER NOT NULL, PRIMARY KEY (kind, key))');
+  },
+  // specs/foundations LS-R5, plan Task 8: one release after the move (0.2.2's builds; 0.2.3 and 0.2.4 have shipped
+  // since), the `*.migrated` files the import left are deleted. No table changes; it never throws, so a file that
+  // can't be deleted never stops the app from starting.
+  (_, dir) {
+    if (dir != null) deleteMigratedLegacyFiles(dir);
   },
 ];
 
@@ -139,6 +146,7 @@ class LocalStore {
   }
 
   static Database _openDatabase(String path) {
+    final dir = path == ':memory:' ? null : File(path).parent;
     final db = sqlite3.open(path);
     try {
       db.select('PRAGMA journal_mode=WAL');
@@ -146,7 +154,7 @@ class LocalStore {
       for (var v = db.userVersion; v < _migrations.length; v++) {
         db.execute('BEGIN IMMEDIATE');
         try {
-          _migrations[v](db);
+          _migrations[v](db, dir);
           db.userVersion = v + 1;
           db.execute('COMMIT');
         } catch (_) {

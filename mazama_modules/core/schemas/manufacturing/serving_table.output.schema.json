@@ -1,0 +1,151 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "manufacturing.serving_table output",
+  "description": "A sheet's amounts: the per-dose table (or one unit's), the lot summary, the note under it, and each package's mg TPE per unit (null: not known, the id is shown alone). A mg is never below what the unit holds (DOSE-15, DOSE-16, DOSE-22). The server adds each package's center.",
+  "type": "object",
+  "required": [
+    "serv",
+    "summary",
+    "notes",
+    "packages"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "item": {
+      "type": "object",
+      "required": [
+        "guid",
+        "mg"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "guid": {},
+        "mg": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  "properties": {
+    "serv": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "required": [
+            "one",
+            "rows"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "one": {},
+            "rows": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "prefixItems": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ],
+                "minItems": 2,
+                "maxItems": 2
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "doses",
+            "rows",
+            "lots",
+            "other"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "doses": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            },
+            "rows": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "prefixItems": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "minItems": 2,
+                "maxItems": 2
+              }
+            },
+            "lots": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/item"
+                }
+              }
+            },
+            "other": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/item"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "summary": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "array",
+        "prefixItems": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "string"
+          }
+        ],
+        "minItems": 2,
+        "maxItems": 2
+      }
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "packages": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/item"
+      }
+    }
+  }
+}

@@ -54,4 +54,45 @@ void main() {
       throwsA(isA<SaleFailureError>()),
     );
   });
+
+  // SALE-15: the report says, as a field of its own, whether the sale was surely not sent. The cart builds every
+  // reason with its SaleOutcome as a leading tag ('[notSent] ...', '[bulk 2 of 3] [uncertain] ...'); only a leading
+  // notSent tag counts, anything else (no tag, a tag later in the text) is uncertain, as the server reads a report
+  // without one.
+  group('the outcome field', () {
+    Future<Object?> sentOutcome(String reason) async {
+      Object? outcome;
+      final client = http_testing.MockClient((req) async {
+        outcome = (jsonDecode(req.body) as Map<String, Object?>)['outcome'];
+        return http.Response('', 201);
+      });
+      await postSaleFailure(225, workerEmail: 'w@x.com', deviceId: 'D', reason: reason, request: const [{}], client: client);
+      return outcome;
+    }
+
+    test('a leading notSent tag, alone or after the bulk tag, is sent as not_sent', () async {
+      expect(await sentOutcome("[notSent] the state's sign-in could not be renewed"), 'not_sent');
+      expect(await sentOutcome('[bulk 2 of 3] [notSent] HTTP 400 from the state'), 'not_sent');
+    });
+
+    test('everything else is sent as uncertain', () async {
+      for (final reason in [
+        '[uncertain] HTTP 504 from the state',
+        '[bulk 1 of 2] [uncertain] the state answered 200 but the response did not look like a confirmed sale: x',
+        "the state's sign-in session expired",
+        '[uncertain] the reply said [notSent] somewhere',
+        ' [notSent] a space first',
+        '[notSent]no space after',
+        '[bulk x of 2] [notSent] not a bulk tag',
+      ]) {
+        expect(await sentOutcome(reason), 'uncertain', reason: reason);
+      }
+    });
+
+    test('saleFailureOutcome is the rule the report uses', () {
+      expect(saleFailureOutcome('[notSent] x'), 'not_sent');
+      expect(saleFailureOutcome('[uncertain] x'), 'uncertain');
+      expect(saleFailureOutcome(''), 'uncertain');
+    });
+  });
 }

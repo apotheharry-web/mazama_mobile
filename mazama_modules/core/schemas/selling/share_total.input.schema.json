@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "selling.share_total input",
+  "description": "A total shared in proportion to weights (a weight of 0 or less anywhere: shared equally).",
+  "type": "object",
+  "required": [
+    "total_cents",
+    "weights"
+  ],
+  "properties": {
+    "total_cents": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "weights": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      }
+    }
+  }
+}

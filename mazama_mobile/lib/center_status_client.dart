@@ -2,8 +2,9 @@
 // the cart's live settings - the tax a cart can add, the manufacturer agreement split, how many units one line may
 // hold and how long a cart lives - which the server's nix sets (/p/center-status/{state_id}, C4 in
 // mazama_modules/api/routes.yaml). The defaults both sides start from are mazama_modules/selling/rules.yaml ("cart");
-// [CartSettings.fallback] is this app's copy of them, held to the vendored rules by test/center_status_client_test.dart,
-// and is what the cart uses whenever the server can't be asked or is too old to send them.
+// [CartSettings.fallback] is this app's copy of them, held to the vendored rules by test/center_status_client_test.dart:
+// what the cart shows when neither the server nor a kept answer can say, without adding tax or splitting a total on
+// them (PRICE-9, [fetchCartSettings]); an older server that sends no cart object gets them too.
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
@@ -12,6 +13,7 @@ import 'api_contract.g.dart';
 import 'app_api_key.dart';
 import 'server_error.dart';
 import 'server_link_client.dart' show serverClient;
+import 'sync/sync_datasets.dart' show Dataset, Datasets, centerStatusFromBody, sourceServer;
 
 class CenterStatusError implements Exception {
   final String message;
@@ -135,11 +137,24 @@ Future<CenterStatus> fetchCenterStatus(int stateId, {String baseUrl = apiBaseUrl
   }
 }
 
-/// The cart settings for [stateId], or [CartSettings.fallback] when the server can't say - what CartPage uses.
-Future<CartSettings> fetchCartSettings(int stateId) async {
+/// The cart settings for [stateId] - what CartPage uses (PRICE-9, specs/core row 6): the server's, kept in [datasets]
+/// as the sync engine's center_status (the same body its refresher keeps); when the server can't say, the last answer
+/// kept. With none kept (or no [datasets]) it throws [CenterStatusError]: the cart then shows the built-in
+/// [CartSettings.fallback] but adds no tax and splits no total on them.
+Future<CartSettings> fetchCartSettings(int stateId,
+    {Datasets? datasets, Future<CenterStatus> Function(int stateId) fetch = fetchCenterStatus}) async {
   try {
-    return (await fetchCenterStatus(stateId)).cart;
+    final status = await fetch(stateId);
+    try {
+      datasets?.put(Dataset.centerStatus, '$stateId', jsonEncode(status.toJson()), source: sourceServer);
+    } catch (_) {
+      // the copy for later is best effort; the reply itself is good
+    }
+    return status.cart;
   } on CenterStatusError {
-    return CartSettings.fallback;
+    final row = datasets?.read(Dataset.centerStatus, '$stateId');
+    final kept = row == null ? null : centerStatusFromBody(row.body);
+    if (kept != null) return kept.cart;
+    rethrow;
   }
 }

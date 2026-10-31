@@ -19,64 +19,43 @@ import 'dart:io';
 
 import 'package:flutter/services.dart' show AssetBundle;
 
-import 'flow/flow_spec.dart' show compareSpecVersions, defaultAllowedHosts, isSpecVersion;
+import 'flow/flow_spec.dart' show compareSpecVersions, defaultAllowedHosts;
+import 'mazama_core.dart' show MazamaCore;
 import 'session_store.dart' show defaultSessionDataDir;
 import 'signing.dart';
 
 /// The longest host list text, in UTF-8 bytes (login_hosts.py's MAX_BYTES; host_list_vectors.json's max_bytes).
 const maxHostListBytes = 65536;
 
-/// The most hosts one list may name (login_hosts.py's MAX_HOSTS; host_list_vectors.json's max_hosts).
-const maxListedHosts = 10;
-
-final _hostRe = RegExp(r'^[a-z0-9-]+(\.[a-z0-9-]+)+$');
-final _numberLabelRe = RegExp(r'^([0-9]+|0x[0-9a-f]*)$');
-
-/// specs/app-updates AU-R16 (review I2): the hosts the app reads the owner's signed files and its updates from
-/// (github_files.dart) are never sign-in hosts, so no signed list may name one (login_hosts.py's GITHUB_HOSTS).
-const githubHostsNeverListed = {
-  'raw.githubusercontent.com',
-  'github.com',
-  'release-assets.githubusercontent.com',
-  'objects.githubusercontent.com',
-};
-
 /// One exact host as a list may name it: lower-case ASCII letters, digits and hyphens in two or more dot-separated
 /// labels of 1-63 characters, none starting or ending with a hyphen, at most 253 characters, and a last label that is
-/// not a number (so no IP address literal). No dot at either end, no `*`, port, scheme or path, and never one of
-/// [githubHostsNeverListed] (login_hosts.py's valid_host is the twin).
+/// not a number (so no IP address literal). No dot at either end, no `*`, port, scheme or path, and never one of the
+/// GitHub hosts the app reads the owner's signed files and its updates from (specs/app-updates AU-R16). The shared
+/// core's rule (`flows.parse_host_list`, specs/core row 13; login_hosts.py's valid_host asks the same function).
 bool validListedHost(Object? host) {
-  if (host is! String || host.length > 253 || !_hostRe.hasMatch(host)) return false;
-  if (githubHostsNeverListed.contains(host)) return false;
-  final labels = host.split('.');
-  if (labels.any((l) => l.length > 63 || l.startsWith('-') || l.endsWith('-'))) return false;
-  return !_numberLabelRe.hasMatch(labels.last);
+  if (host is! String) return false;
+  try {
+    parseHostList(jsonEncode({'version': '2026-01-01.1', 'hosts': [host]}));
+    return true;
+  } on FormatException {
+    return false;
+  }
 }
 
 /// (version, hosts in the file's order) of a host list's [text]; throws [FormatException], naming no part of the
 /// text, when it isn't a valid one: at most 64 KiB of UTF-8 JSON, an object with exactly "version" (a spec_version)
-/// and "hosts" (at most 10 different valid hosts). login_hosts.py's parse is the twin.
+/// and "hosts" (at most 10 different valid hosts), no key written twice. The shared core's rule
+/// (`flows.parse_host_list`); login_hosts.py's parse asks the same function.
 (String, List<String>) parseHostList(String text) {
   if (utf8.encode(text).length > maxHostListBytes) throw const FormatException('the host list is over the size limit');
-  final Object? data;
+  final Map<String, Object?> answer;
   try {
-    data = jsonDecode(text);
-  } on FormatException {
-    throw const FormatException('the host list is not JSON');
+    answer = MazamaCore.instance.flowsParseHostList({'text': text});
+  } catch (_) {
+    throw const FormatException('the host list could not be read');
   }
-  if (data is! Map || data.length != 2 || !data.containsKey('version') || !data.containsKey('hosts')) {
-    throw const FormatException('the host list is not an object with exactly version and hosts');
-  }
-  final Object? version = data['version'];
-  final Object? hosts = data['hosts'];
-  if (version is! String || !isSpecVersion(version)) throw const FormatException("the host list's version is bad");
-  if (hosts is! List || hosts.length > maxListedHosts) {
-    throw const FormatException('hosts is not a list of at most $maxListedHosts');
-  }
-  if (!hosts.every(validListedHost)) throw const FormatException('a host is not an exact lower-case host name');
-  final listed = hosts.cast<String>().toList(growable: false);
-  if (listed.toSet().length != listed.length) throw const FormatException('a host is listed twice');
-  return (version, listed);
+  if (answer['valid'] != true) throw const FormatException('the host list is not a valid one');
+  return (answer['version'] as String, (answer['hosts'] as List).cast<String>().toList(growable: false));
 }
 
 /// A host list whose signature verified: its [version], [hosts] (in the file's order), the signed file's exact

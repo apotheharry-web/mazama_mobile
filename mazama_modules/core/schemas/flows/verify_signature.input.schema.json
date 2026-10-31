@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "flows.verify_signature input",
+  "description": "specs/core row 13 (SL-D13): the signed bytes (standard base64), a .sig file's text and a signing.pub file's text.",
+  "type": "object",
+  "required": [
+    "payload_b64",
+    "signature",
+    "public_key"
+  ],
+  "properties": {
+    "payload_b64": {
+      "type": "string"
+    },
+    "signature": {
+      "type": "string"
+    },
+    "public_key": {
+      "type": "string"
+    }
+  }
+}

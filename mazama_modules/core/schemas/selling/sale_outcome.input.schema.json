@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "selling.sale_outcome input",
+  "description": "What happened to a CreateSalesRecords request (write_outcomes.json).",
+  "type": "object",
+  "required": [
+    "event",
+    "sent"
+  ],
+  "properties": {
+    "event": {
+      "type": "object",
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "status": {
+          "type": "integer"
+        },
+        "body": {
+          "type": "string"
+        }
+      }
+    },
+    "sent": {
+      "type": "integer"
+    }
+  }
+}

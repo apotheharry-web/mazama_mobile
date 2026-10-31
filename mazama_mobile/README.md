@@ -36,6 +36,12 @@ only on its `/p/` routes (labels, packages, lab-report data, scan matching, sale
   and iOS builds compile the core: a desktop debug run (Linux, macOS) shows the missing-part screen instead of failing to
   build.
 
+- **The 50 mg cap per sale is the shared core's** (`lib/dose.dart`'s `saleLimits`, specs/core row 5): the cart shows and
+  gates Sell on its own figure (each product's first lot), and a sale is held to the lots it actually draws, each lot its
+  own figures; a bulk sell checks every copy's own draw and refuses all of them when one is refused (DOSE-17). Before a
+  sale the stock is read again when it is old or a drawn lot is only a phone's upload (`/p/packages`' `confirmed`), and
+  the cap is checked again on the state's figures (DOSE-8). When the core can't answer, the sale is refused (DOSE-7).
+
 ## Release builds
 
 A release build needs two things kept outside the repository, and fails without them (`android/app/build.gradle.kts`,

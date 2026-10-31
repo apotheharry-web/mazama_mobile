@@ -34,7 +34,41 @@ const coreFunctionSymbols = [
   'mz_manufacturing_coa_edit_json',
   'mz_manufacturing_coa_number_json',
   'mz_manufacturing_clean_text_json',
+  'mz_manufacturing_plan_json',
+  'mz_manufacturing_serving_table_json',
   'mz_names_product_name_json',
+  'mz_flows_host_allowed_json',
+  'mz_flows_compare_spec_versions_json',
+  'mz_flows_parse_host_list_json',
+  'mz_flows_verify_signature_json',
+  'mz_flows_public_key_json',
+  'mz_flows_usable_login_spec_json',
+  'mz_selling_sellable_json',
+  'mz_selling_parse_price_json',
+  'mz_selling_price_cart_json',
+  'mz_selling_line_price_json',
+  'mz_selling_group_of_json',
+  'mz_selling_share_total_json',
+  'mz_selling_per_mg_price_json',
+  'mz_selling_with_tax_json',
+  'mz_selling_money_json',
+  'mz_selling_allocate_json',
+  'mz_selling_build_sale_json',
+  'mz_selling_allocate_sale_json',
+  'mz_selling_check_sale_json',
+  'mz_selling_parse_sale_date_json',
+  'mz_selling_check_sale_date_json',
+  'mz_selling_today_json',
+  'mz_selling_pacific_midnight_json',
+  'mz_selling_review_sale_date_json',
+  'mz_selling_sale_outcome_json',
+  'mz_selling_sale_proof_json',
+  'mz_selling_review_each_json',
+  'mz_selling_expiry_json',
+  'mz_selling_parse_state_date_json',
+  'mz_dose_unit_mg_json',
+  'mz_dose_ceil_mg_json',
+  'mz_dose_sale_limits_json',
 ];
 
 /// The shared core's functions.
@@ -87,8 +121,76 @@ abstract interface class CoreFunctions {
   Map<String, Object?> manufacturingCoaNumber(Map<String, Object?> input);
   /// manufacturing.clean_text: {text, limit} -> {text} ingredient and allergen text (FM-10, row 12).
   Map<String, Object?> manufacturingCleanText(Map<String, Object?> input);
+  /// manufacturing.plan: {plans: [{source, dose, qty, coa_tpe}]} -> [Plan] grams per unit for a dose, rounded down (FM-07, row 11).
+  List<Object?> manufacturingPlan(Map<String, Object?> input);
+  /// manufacturing.serving_table: {kind, guid, source, meta, made, package, doses} -> {serv, summary, notes, packages} a sheet's amounts (FM-08, row 11).
+  Map<String, Object?> manufacturingServingTable(Map<String, Object?> input);
   /// names.product_name: {strain, subtype, kind, product_type} -> {name, why} (FM-11, row 12).
   Map<String, Object?> namesProductName(Map<String, Object?> input);
+  /// flows.host_allowed: {url, allowed} -> {allowed} the strict host allowlist (SL-R7, SL-R17, row 13).
+  Map<String, Object?> flowsHostAllowed(Map<String, Object?> input);
+  /// flows.compare_spec_versions: {a, b} -> {order, a_valid, b_valid} YYYY-MM-DD.N ordering (row 13).
+  Map<String, Object?> flowsCompareSpecVersions(Map<String, Object?> input);
+  /// flows.parse_host_list: {text} -> {valid, version, hosts} a signed host list's text (SL-R18, row 13).
+  Map<String, Object?> flowsParseHostList(Map<String, Object?> input);
+  /// flows.verify_signature: {payload_b64, signature, public_key} -> {valid} the owner's Ed25519 signature (SL-D13, row 13).
+  Map<String, Object?> flowsVerifySignature(Map<String, Object?> input);
+  /// flows.public_key: {text} -> {key_b64 | null} a signing.pub text (SL-D13, row 13).
+  Map<String, Object?> flowsPublicKey(Map<String, Object?> input);
+  /// flows.usable_login_spec: {format, reader_format, vars, flows, allowed_hosts, served} -> {usable, spec_version} (SPEC.md 'A usable sign-in spec', row 13).
+  Map<String, Object?> flowsUsableLoginSpec(Map<String, Object?> input);
+  /// selling.sellable: {checks: [{record, qty}]} -> [{reason, sellable_record}] what may be sold (SM-10, row 4).
+  List<Object?> sellingSellable(Map<String, Object?> input);
+  /// selling.parse_price: {text, max} -> {cents | null} a typed price, total or rate per mg (SM-13, row 6).
+  Map<String, Object?> sellingParsePrice(Map<String, Object?> input);
+  /// selling.price_cart: {mode, lines, total, per_mg, tax, tax_percent, agreement} -> {each, line_errors, error} a cart priced as a whole (SM-14, row 6).
+  Map<String, Object?> sellingPriceCart(Map<String, Object?> input);
+  /// selling.line_price: {mode, text, mg} -> {cents, error} one line priced on its own (PRICE-3, row 6).
+  Map<String, Object?> sellingLinePrice(Map<String, Object?> input);
+  /// selling.group_of: {product_type} -> {group} A or B (SM-14, row 6).
+  Map<String, Object?> sellingGroupOf(Map<String, Object?> input);
+  /// selling.share_total: {total_cents, weights} -> {parts} largest remainder (PRICE-4, row 6).
+  Map<String, Object?> sellingShareTotal(Map<String, Object?> input);
+  /// selling.per_mg_price: {rate_cents, mg} -> {cents} (SM-D10, row 6).
+  Map<String, Object?> sellingPerMgPrice(Map<String, Object?> input);
+  /// selling.with_tax: {cents, percent} -> {cents} (row 6).
+  Map<String, Object?> sellingWithTax(Map<String, Object?> input);
+  /// selling.money: {cents} -> {text} '$1,234.56' (row 6).
+  Map<String, Object?> sellingMoney(Map<String, Object?> input);
+  /// selling.allocate: {lots, qty} -> {order, positions, takes, take_positions} which lot a unit is drawn from (SM-17, PRICE-6, row 6).
+  Map<String, Object?> sellingAllocate(Map<String, Object?> input);
+  /// selling.build_sale: {item, price_cents, sale_date, dose, qty} -> {record, refusal} the record CreateSalesRecords is sent (SM-11, SALE-10/12/13, row 7).
+  Map<String, Object?> sellingBuildSale(Map<String, Object?> input);
+  /// selling.allocate_sale: {lines, lots} -> {draws, short} one draw across a sale's lines (SALE-4, row 7).
+  Map<String, Object?> sellingAllocateSale(Map<String, Object?> input);
+  /// selling.check_sale: {lines, fresh, center, sent?, cap?} -> {refusal} the check on the state's records just before sending (SM-25, SALE-17, row 7).
+  Map<String, Object?> sellingCheckSale(Map<String, Object?> input);
+  /// selling.parse_sale_date: {text, today} -> {date, error} a typed sale date (SM-D6, row 7).
+  Map<String, Object?> sellingParseSaleDate(Map<String, Object?> input);
+  /// selling.check_sale_date: {date, today} -> {date, error} future or more than 365 days back (SALE-1, SALE-18, row 7).
+  Map<String, Object?> sellingCheckSaleDate(Map<String, Object?> input);
+  /// selling.today: {now} -> {date} the Pacific date of now (SALE-2, row 7).
+  Map<String, Object?> sellingToday(Map<String, Object?> input);
+  /// selling.pacific_midnight: {date} -> {utc} Pacific midnight as UTC, the 2007 rule (SALE-1, row 7).
+  Map<String, Object?> sellingPacificMidnight(Map<String, Object?> input);
+  /// selling.review_sale_date: {text} -> {date} a failed sale's own date of sale (row 7).
+  Map<String, Object?> sellingReviewSaleDate(Map<String, Object?> input);
+  /// selling.sale_outcome: {event, sent} -> {outcome, sale_number} how a sale's reply ends (SM-12, SALE-5/6/16, row 7).
+  Map<String, Object?> sellingSaleOutcome(Map<String, Object?> input);
+  /// selling.sale_proof: {reply, sent} -> {sale_number} what a reply already read proves (SM-D2, SALE-5/6, row 7).
+  Map<String, Object?> sellingSaleProof(Map<String, Object?> input);
+  /// selling.review_each: {cost, qty} -> {cents} a reviewed sale's price each (SALE-9, row 7).
+  Map<String, Object?> sellingReviewEach(Map<String, Object?> input);
+  /// selling.expiry: {expires, today, fresh_months} -> {expired, words, hue} (SM-18, SALE-11, row 7).
+  Map<String, Object?> sellingExpiry(Map<String, Object?> input);
+  /// selling.parse_state_date: {text} -> {date} a state-site date as ISO (row 7).
+  Map<String, Object?> sellingParseStateDate(Map<String, Object?> input);
+  /// dose.unit_mg: {units: [{record, tpe}]} -> [{tpe_per_g, tpe_mg}] a unit's mg TPE (SM-04, row 5).
+  List<Object?> doseUnitMg(Map<String, Object?> input);
+  /// dose.ceil_mg: {xs} -> [int | null] an mg figure rounded up to a whole mg, forgiving only float noise of a billionth of a mg (SM-D17, row 5).
+  List<Object?> doseCeilMg(Map<String, Object?> input);
+  /// dose.sale_limits: {sales: [{lines}]} -> [{psilocybin_mg, allowed, error, session_minutes, session_minutes_initial}] the 50 mg cap and session length (SM-15, row 5).
+  List<Object?> doseSaleLimits(Map<String, Object?> input);
 }
 
 /// A C function of the table: a UTF-8 JSON string in, one the library owns out.
@@ -127,7 +229,41 @@ class CoreFunctionsFfi implements CoreFunctions {
   final CoreJsonFn _manufacturingCoaEdit;
   final CoreJsonFn _manufacturingCoaNumber;
   final CoreJsonFn _manufacturingCleanText;
+  final CoreJsonFn _manufacturingPlan;
+  final CoreJsonFn _manufacturingServingTable;
   final CoreJsonFn _namesProductName;
+  final CoreJsonFn _flowsHostAllowed;
+  final CoreJsonFn _flowsCompareSpecVersions;
+  final CoreJsonFn _flowsParseHostList;
+  final CoreJsonFn _flowsVerifySignature;
+  final CoreJsonFn _flowsPublicKey;
+  final CoreJsonFn _flowsUsableLoginSpec;
+  final CoreJsonFn _sellingSellable;
+  final CoreJsonFn _sellingParsePrice;
+  final CoreJsonFn _sellingPriceCart;
+  final CoreJsonFn _sellingLinePrice;
+  final CoreJsonFn _sellingGroupOf;
+  final CoreJsonFn _sellingShareTotal;
+  final CoreJsonFn _sellingPerMgPrice;
+  final CoreJsonFn _sellingWithTax;
+  final CoreJsonFn _sellingMoney;
+  final CoreJsonFn _sellingAllocate;
+  final CoreJsonFn _sellingBuildSale;
+  final CoreJsonFn _sellingAllocateSale;
+  final CoreJsonFn _sellingCheckSale;
+  final CoreJsonFn _sellingParseSaleDate;
+  final CoreJsonFn _sellingCheckSaleDate;
+  final CoreJsonFn _sellingToday;
+  final CoreJsonFn _sellingPacificMidnight;
+  final CoreJsonFn _sellingReviewSaleDate;
+  final CoreJsonFn _sellingSaleOutcome;
+  final CoreJsonFn _sellingSaleProof;
+  final CoreJsonFn _sellingReviewEach;
+  final CoreJsonFn _sellingExpiry;
+  final CoreJsonFn _sellingParseStateDate;
+  final CoreJsonFn _doseUnitMg;
+  final CoreJsonFn _doseCeilMg;
+  final CoreJsonFn _doseSaleLimits;
 
   CoreFunctionsFfi(DynamicLibrary lib, this._call, this._fail)
       : _coaParse = lib.lookupFunction<CoreJsonFn, CoreJsonFn>('mz_coa_parse_json'),
@@ -154,7 +290,41 @@ class CoreFunctionsFfi implements CoreFunctions {
         _manufacturingCoaEdit = lib.lookupFunction<CoreJsonFn, CoreJsonFn>('mz_manufacturing_coa_edit_json'),
         _manufacturingCoaNumber = lib.lookupFunction<CoreJsonFn, CoreJsonFn>('mz_manufacturing_coa_number_json'),
         _manufacturingCleanText = lib.lookupFunction<CoreJsonFn, CoreJsonFn>('mz_manufacturing_clean_text_json'),
-        _namesProductName = lib.lookupFunction<CoreJsonFn, CoreJsonFn>('mz_names_product_name_json');
+        _manufacturingPlan = lib.lookupFunction<CoreJsonFn, CoreJsonFn>('mz_manufacturing_plan_json'),
+        _manufacturingServingTable = lib.lookupFunction<CoreJsonFn, CoreJsonFn>('mz_manufacturing_serving_table_json'),
+        _namesProductName = lib.lookupFunction<CoreJsonFn, CoreJsonFn>('mz_names_product_name_json'),
+        _flowsHostAllowed = lib.lookupFunction<CoreJsonFn, CoreJsonFn>('mz_flows_host_allowed_json'),
+        _flowsCompareSpecVersions = lib.lookupFunction<CoreJsonFn, CoreJsonFn>('mz_flows_compare_spec_versions_json'),
+        _flowsParseHostList = lib.lookupFunction<CoreJsonFn, CoreJsonFn>('mz_flows_parse_host_list_json'),
+        _flowsVerifySignature = lib.lookupFunction<CoreJsonFn, CoreJsonFn>('mz_flows_verify_signature_json'),
+        _flowsPublicKey = lib.lookupFunction<CoreJsonFn, CoreJsonFn>('mz_flows_public_key_json'),
+        _flowsUsableLoginSpec = lib.lookupFunction<CoreJsonFn, CoreJsonFn>('mz_flows_usable_login_spec_json'),
+        _sellingSellable = lib.lookupFunction<CoreJsonFn, CoreJsonFn>('mz_selling_sellable_json'),
+        _sellingParsePrice = lib.lookupFunction<CoreJsonFn, CoreJsonFn>('mz_selling_parse_price_json'),
+        _sellingPriceCart = lib.lookupFunction<CoreJsonFn, CoreJsonFn>('mz_selling_price_cart_json'),
+        _sellingLinePrice = lib.lookupFunction<CoreJsonFn, CoreJsonFn>('mz_selling_line_price_json'),
+        _sellingGroupOf = lib.lookupFunction<CoreJsonFn, CoreJsonFn>('mz_selling_group_of_json'),
+        _sellingShareTotal = lib.lookupFunction<CoreJsonFn, CoreJsonFn>('mz_selling_share_total_json'),
+        _sellingPerMgPrice = lib.lookupFunction<CoreJsonFn, CoreJsonFn>('mz_selling_per_mg_price_json'),
+        _sellingWithTax = lib.lookupFunction<CoreJsonFn, CoreJsonFn>('mz_selling_with_tax_json'),
+        _sellingMoney = lib.lookupFunction<CoreJsonFn, CoreJsonFn>('mz_selling_money_json'),
+        _sellingAllocate = lib.lookupFunction<CoreJsonFn, CoreJsonFn>('mz_selling_allocate_json'),
+        _sellingBuildSale = lib.lookupFunction<CoreJsonFn, CoreJsonFn>('mz_selling_build_sale_json'),
+        _sellingAllocateSale = lib.lookupFunction<CoreJsonFn, CoreJsonFn>('mz_selling_allocate_sale_json'),
+        _sellingCheckSale = lib.lookupFunction<CoreJsonFn, CoreJsonFn>('mz_selling_check_sale_json'),
+        _sellingParseSaleDate = lib.lookupFunction<CoreJsonFn, CoreJsonFn>('mz_selling_parse_sale_date_json'),
+        _sellingCheckSaleDate = lib.lookupFunction<CoreJsonFn, CoreJsonFn>('mz_selling_check_sale_date_json'),
+        _sellingToday = lib.lookupFunction<CoreJsonFn, CoreJsonFn>('mz_selling_today_json'),
+        _sellingPacificMidnight = lib.lookupFunction<CoreJsonFn, CoreJsonFn>('mz_selling_pacific_midnight_json'),
+        _sellingReviewSaleDate = lib.lookupFunction<CoreJsonFn, CoreJsonFn>('mz_selling_review_sale_date_json'),
+        _sellingSaleOutcome = lib.lookupFunction<CoreJsonFn, CoreJsonFn>('mz_selling_sale_outcome_json'),
+        _sellingSaleProof = lib.lookupFunction<CoreJsonFn, CoreJsonFn>('mz_selling_sale_proof_json'),
+        _sellingReviewEach = lib.lookupFunction<CoreJsonFn, CoreJsonFn>('mz_selling_review_each_json'),
+        _sellingExpiry = lib.lookupFunction<CoreJsonFn, CoreJsonFn>('mz_selling_expiry_json'),
+        _sellingParseStateDate = lib.lookupFunction<CoreJsonFn, CoreJsonFn>('mz_selling_parse_state_date_json'),
+        _doseUnitMg = lib.lookupFunction<CoreJsonFn, CoreJsonFn>('mz_dose_unit_mg_json'),
+        _doseCeilMg = lib.lookupFunction<CoreJsonFn, CoreJsonFn>('mz_dose_ceil_mg_json'),
+        _doseSaleLimits = lib.lookupFunction<CoreJsonFn, CoreJsonFn>('mz_dose_sale_limits_json');
 
   @override
   Map<String, Object?> coaParse(Map<String, Object?> input) => _object('coa.parse', _call(_coaParse, jsonEncode(input)));
@@ -229,7 +399,109 @@ class CoreFunctionsFfi implements CoreFunctions {
   Map<String, Object?> manufacturingCleanText(Map<String, Object?> input) => _object('manufacturing.clean_text', _call(_manufacturingCleanText, jsonEncode(input)));
 
   @override
+  List<Object?> manufacturingPlan(Map<String, Object?> input) => _list('manufacturing.plan', _call(_manufacturingPlan, jsonEncode(input)));
+
+  @override
+  Map<String, Object?> manufacturingServingTable(Map<String, Object?> input) => _object('manufacturing.serving_table', _call(_manufacturingServingTable, jsonEncode(input)));
+
+  @override
   Map<String, Object?> namesProductName(Map<String, Object?> input) => _object('names.product_name', _call(_namesProductName, jsonEncode(input)));
+
+  @override
+  Map<String, Object?> flowsHostAllowed(Map<String, Object?> input) => _object('flows.host_allowed', _call(_flowsHostAllowed, jsonEncode(input)));
+
+  @override
+  Map<String, Object?> flowsCompareSpecVersions(Map<String, Object?> input) => _object('flows.compare_spec_versions', _call(_flowsCompareSpecVersions, jsonEncode(input)));
+
+  @override
+  Map<String, Object?> flowsParseHostList(Map<String, Object?> input) => _object('flows.parse_host_list', _call(_flowsParseHostList, jsonEncode(input)));
+
+  @override
+  Map<String, Object?> flowsVerifySignature(Map<String, Object?> input) => _object('flows.verify_signature', _call(_flowsVerifySignature, jsonEncode(input)));
+
+  @override
+  Map<String, Object?> flowsPublicKey(Map<String, Object?> input) => _object('flows.public_key', _call(_flowsPublicKey, jsonEncode(input)));
+
+  @override
+  Map<String, Object?> flowsUsableLoginSpec(Map<String, Object?> input) => _object('flows.usable_login_spec', _call(_flowsUsableLoginSpec, jsonEncode(input)));
+
+  @override
+  List<Object?> sellingSellable(Map<String, Object?> input) => _list('selling.sellable', _call(_sellingSellable, jsonEncode(input)));
+
+  @override
+  Map<String, Object?> sellingParsePrice(Map<String, Object?> input) => _object('selling.parse_price', _call(_sellingParsePrice, jsonEncode(input)));
+
+  @override
+  Map<String, Object?> sellingPriceCart(Map<String, Object?> input) => _object('selling.price_cart', _call(_sellingPriceCart, jsonEncode(input)));
+
+  @override
+  Map<String, Object?> sellingLinePrice(Map<String, Object?> input) => _object('selling.line_price', _call(_sellingLinePrice, jsonEncode(input)));
+
+  @override
+  Map<String, Object?> sellingGroupOf(Map<String, Object?> input) => _object('selling.group_of', _call(_sellingGroupOf, jsonEncode(input)));
+
+  @override
+  Map<String, Object?> sellingShareTotal(Map<String, Object?> input) => _object('selling.share_total', _call(_sellingShareTotal, jsonEncode(input)));
+
+  @override
+  Map<String, Object?> sellingPerMgPrice(Map<String, Object?> input) => _object('selling.per_mg_price', _call(_sellingPerMgPrice, jsonEncode(input)));
+
+  @override
+  Map<String, Object?> sellingWithTax(Map<String, Object?> input) => _object('selling.with_tax', _call(_sellingWithTax, jsonEncode(input)));
+
+  @override
+  Map<String, Object?> sellingMoney(Map<String, Object?> input) => _object('selling.money', _call(_sellingMoney, jsonEncode(input)));
+
+  @override
+  Map<String, Object?> sellingAllocate(Map<String, Object?> input) => _object('selling.allocate', _call(_sellingAllocate, jsonEncode(input)));
+
+  @override
+  Map<String, Object?> sellingBuildSale(Map<String, Object?> input) => _object('selling.build_sale', _call(_sellingBuildSale, jsonEncode(input)));
+
+  @override
+  Map<String, Object?> sellingAllocateSale(Map<String, Object?> input) => _object('selling.allocate_sale', _call(_sellingAllocateSale, jsonEncode(input)));
+
+  @override
+  Map<String, Object?> sellingCheckSale(Map<String, Object?> input) => _object('selling.check_sale', _call(_sellingCheckSale, jsonEncode(input)));
+
+  @override
+  Map<String, Object?> sellingParseSaleDate(Map<String, Object?> input) => _object('selling.parse_sale_date', _call(_sellingParseSaleDate, jsonEncode(input)));
+
+  @override
+  Map<String, Object?> sellingCheckSaleDate(Map<String, Object?> input) => _object('selling.check_sale_date', _call(_sellingCheckSaleDate, jsonEncode(input)));
+
+  @override
+  Map<String, Object?> sellingToday(Map<String, Object?> input) => _object('selling.today', _call(_sellingToday, jsonEncode(input)));
+
+  @override
+  Map<String, Object?> sellingPacificMidnight(Map<String, Object?> input) => _object('selling.pacific_midnight', _call(_sellingPacificMidnight, jsonEncode(input)));
+
+  @override
+  Map<String, Object?> sellingReviewSaleDate(Map<String, Object?> input) => _object('selling.review_sale_date', _call(_sellingReviewSaleDate, jsonEncode(input)));
+
+  @override
+  Map<String, Object?> sellingSaleOutcome(Map<String, Object?> input) => _object('selling.sale_outcome', _call(_sellingSaleOutcome, jsonEncode(input)));
+
+  @override
+  Map<String, Object?> sellingSaleProof(Map<String, Object?> input) => _object('selling.sale_proof', _call(_sellingSaleProof, jsonEncode(input)));
+
+  @override
+  Map<String, Object?> sellingReviewEach(Map<String, Object?> input) => _object('selling.review_each', _call(_sellingReviewEach, jsonEncode(input)));
+
+  @override
+  Map<String, Object?> sellingExpiry(Map<String, Object?> input) => _object('selling.expiry', _call(_sellingExpiry, jsonEncode(input)));
+
+  @override
+  Map<String, Object?> sellingParseStateDate(Map<String, Object?> input) => _object('selling.parse_state_date', _call(_sellingParseStateDate, jsonEncode(input)));
+
+  @override
+  List<Object?> doseUnitMg(Map<String, Object?> input) => _list('dose.unit_mg', _call(_doseUnitMg, jsonEncode(input)));
+
+  @override
+  List<Object?> doseCeilMg(Map<String, Object?> input) => _list('dose.ceil_mg', _call(_doseCeilMg, jsonEncode(input)));
+
+  @override
+  List<Object?> doseSaleLimits(Map<String, Object?> input) => _list('dose.sale_limits', _call(_doseSaleLimits, jsonEncode(input)));
 
   Map<String, Object?> _object(String fn, Object? reply) =>
       reply is Map<String, Object?> ? reply : _fail('$fn answered with something that is not an object');

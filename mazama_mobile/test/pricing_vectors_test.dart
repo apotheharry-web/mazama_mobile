@@ -1,21 +1,34 @@
 // SM-13: the phone's price maths (pricing.dart, cart_pricing.dart shareTotal), held to the cases the server's own Python
 // computed (../mazama_modules/selling/gen.py -> pricing.py), vendored here at assets/shared/selling/vectors/pricing.json,
 // and the ceilings in ../mazama_modules/selling/rules.yaml (vendored at assets/shared/selling/rules/rules.yaml).
-// SM-D9: a typed price is a plain decimal; SM-D10: a per-mg rate is whole cents.
+// SM-D9: a typed price is a plain decimal; SM-D10: a per-mg rate is whole cents. The rule is the shared core's (specs/core
+// row 6), loaded here from MAZAMA_CORE_FFI_LIB; pricing_cases.json adds the PRICE rows the owner decided (CR-D6,
+// 2026-10-31): long figures refused without overflow (PRICE-1), only what both apps trim trimmed (PRICE-2), ties to the
+// earlier weight (PRICE-4), an mg of more than two decimals an input error (PRICE-7).
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mazama_mobile/cart_pricing.dart';
+import 'package:mazama_mobile/mazama_core.dart';
 import 'package:mazama_mobile/pricing.dart';
 import 'package:yaml/yaml.dart';
 
+import 'support/core.dart';
+
 final _cases = jsonDecode(File('assets/shared/selling/vectors/pricing.json').readAsStringSync()) as Map<String, Object?>;
+final _priceCases =
+    jsonDecode(File('assets/shared/selling/vectors/pricing_cases.json').readAsStringSync()) as Map<String, Object?>;
 final _rules = (loadYaml(File('assets/shared/selling/rules/rules.yaml').readAsStringSync()) as YamlMap)['pricing'] as YamlMap;
 
 List<Map<String, Object?>> _list(String name) => (_cases[name] as List).cast<Map<String, Object?>>();
 
+const _caps = {'unit': maxUnitCents, 'total': maxTotalCents, 'per_mg': maxPerMgCents};
+
 void main() {
+  late MazamaCore core;
+  setUpAll(() => core = loadTestCore());
+
   test('the ceilings are the shared rules', () {
     expect(maxUnitCents, _rules['max_unit_cents']);
     expect(maxPerMgCents, _rules['max_per_mg_cents']);
@@ -48,5 +61,37 @@ void main() {
   }
   for (final c in _list('money')) {
     test('money(${c['cents']}) is ${c['text']}', () => expect(money(c['cents'] as int), c['text']));
+  }
+
+  for (final c in (_priceCases['parse_price'] as List).cast<Map<String, Object?>>()) {
+    test('${c['price']}: ${c['name']} (${c['max']})', () {
+      expect(toCents(c['text'] as String, maxCents: _caps[c['max']]!, core: core), c['cents']);
+    });
+  }
+  for (final c in (_priceCases['share_total'] as List).cast<Map<String, Object?>>()) {
+    test('${c['price']}: ${c['name']}', () {
+      expect(shareTotal(c['total_cents'] as int, (c['weights'] as List).cast<int>(), core: core), c['parts']);
+    });
+  }
+  for (final c in (_priceCases['per_mg_price'] as List).cast<Map<String, Object?>>()) {
+    test('${c['price']}: ${c['name']}', () {
+      final input = {'rate_cents': c['rate_cents'], 'mg': c['mg']};
+      if (c['rejects'] == true) {
+        expect(() => core.sellingPerMgPrice(input), throwsA(isA<MazamaCoreError>()));
+      } else {
+        expect(core.sellingPerMgPrice(input)['cents'], c['cents']);
+      }
+    });
+  }
+  for (final c in (_priceCases['with_tax'] as List).cast<Map<String, Object?>>()) {
+    test('${c['cents']}c plus ${c['percent']}% is ${c['result']}c (pricing_cases.json)', () {
+      expect(withTax(c['cents'] as int, c['percent'] as int, core: core), c['result']);
+    });
+  }
+  for (final c in (_priceCases['money'] as List).cast<Map<String, Object?>>()) {
+    test('money(${c['cents']}) is ${c['text']}, as the core shows it', () {
+      expect(money(c['cents'] as int), c['text']);
+      expect(core.sellingMoney({'cents': c['cents']})['text'], c['text']);
+    });
   }
 }

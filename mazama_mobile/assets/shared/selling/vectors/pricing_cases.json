@@ -1,0 +1,2439 @@
+{
+ "allocate": [
+  {
+   "lots": [
+    {
+     "expires": "2027-03-01",
+     "id": 2,
+     "quantity": 2.5
+    },
+    {
+     "expires": "2027-03-01",
+     "id": 1,
+     "quantity": 2.7
+    }
+   ],
+   "name": "same expiry, 2.5 and 2.7 units: whole units decide (2 = 2), then the lower id",
+   "order": [
+    1,
+    2
+   ],
+   "price": "PRICE-6",
+   "qty": 2,
+   "takes": [
+    [
+     1,
+     2
+    ]
+   ]
+  },
+  {
+   "lots": [
+    {
+     "expires": "2027-03-01",
+     "id": 1,
+     "quantity": 2.7
+    },
+    {
+     "expires": "2027-03-01",
+     "id": 2,
+     "quantity": 2.5
+    }
+   ],
+   "name": "same expiry, 2.7 and 2.5 units, the lower id first",
+   "order": [
+    1,
+    2
+   ],
+   "price": "PRICE-6",
+   "qty": 2,
+   "takes": [
+    [
+     1,
+     2
+    ]
+   ]
+  },
+  {
+   "lots": [
+    {
+     "expires": "2027-03-01",
+     "id": 1,
+     "quantity": 2.7
+    },
+    {
+     "expires": "2027-06-01",
+     "id": 2,
+     "quantity": 5
+    }
+   ],
+   "name": "a fractional lot gives its whole units only",
+   "order": [
+    1,
+    2
+   ],
+   "price": "PRICE-6",
+   "qty": 4,
+   "takes": [
+    [
+     1,
+     2
+    ],
+    [
+     2,
+     2
+    ]
+   ]
+  },
+  {
+   "lots": [
+    {
+     "expires": "2027-03-01",
+     "id": 1,
+     "quantity": 0.5
+    }
+   ],
+   "name": "half a unit gives nothing",
+   "order": [
+    1
+   ],
+   "price": "PRICE-6",
+   "qty": 1,
+   "takes": null
+  },
+  {
+   "lots": [
+    {
+     "expires": "2027-03-01",
+     "id": 1,
+     "quantity": null
+    },
+    {
+     "expires": "2027-03-01",
+     "id": 2,
+     "quantity": 3
+    }
+   ],
+   "name": "a quantity missing counts as 0",
+   "order": [
+    1,
+    2
+   ],
+   "price": "PRICE-6",
+   "qty": 2,
+   "takes": [
+    [
+     2,
+     2
+    ]
+   ]
+  },
+  {
+   "lots": [
+    {
+     "expires": "2027-03-01",
+     "id": 1,
+     "quantity": -1
+    },
+    {
+     "expires": "2027-06-01",
+     "id": 2,
+     "quantity": 3
+    }
+   ],
+   "name": "a negative quantity gives nothing",
+   "order": [
+    1,
+    2
+   ],
+   "price": "PRICE-6",
+   "qty": 3,
+   "takes": [
+    [
+     2,
+     3
+    ]
+   ]
+  },
+  {
+   "lots": [
+    {
+     "expires": null,
+     "id": 1,
+     "quantity": -0.5
+    },
+    {
+     "expires": null,
+     "id": 2,
+     "quantity": 0.9
+    }
+   ],
+   "name": "fractions toward zero, negative too",
+   "order": [
+    1,
+    2
+   ],
+   "price": "PRICE-6",
+   "qty": 0,
+   "takes": []
+  },
+  {
+   "lots": [
+    {
+     "expires": "2027-03-01",
+     "id": 1,
+     "quantity": 2.0
+    },
+    {
+     "expires": "2027-03-01",
+     "id": 2,
+     "quantity": 2
+    }
+   ],
+   "name": "2.0 is 2",
+   "order": [
+    1,
+    2
+   ],
+   "price": "PRICE-6",
+   "qty": 3,
+   "takes": [
+    [
+     1,
+     2
+    ],
+    [
+     2,
+     1
+    ]
+   ]
+  },
+  {
+   "lots": [
+    {
+     "expires": "2026-11-01",
+     "id": 1,
+     "quantity": 5,
+     "state_only": true
+    },
+    {
+     "expires": "2027-03-01",
+     "id": 2,
+     "quantity": 5,
+     "state_only": false
+    }
+   ],
+   "name": "a lot only the state lists comes after a lab lot, whatever its expiry",
+   "order": [
+    2,
+    1
+   ],
+   "price": "lab lot first",
+   "qty": 6,
+   "takes": [
+    [
+     2,
+     5
+    ],
+    [
+     1,
+     1
+    ]
+   ]
+  },
+  {
+   "lots": [
+    {
+     "expires": "2027-03-01",
+     "id": 1,
+     "quantity": 5,
+     "state_only": true
+    },
+    {
+     "expires": "2026-11-01",
+     "id": 2,
+     "quantity": 5,
+     "state_only": true
+    }
+   ],
+   "name": "two state-only lots: the earlier expiry first",
+   "order": [
+    2,
+    1
+   ],
+   "price": "lab lot first",
+   "qty": 6,
+   "takes": [
+    [
+     2,
+     5
+    ],
+    [
+     1,
+     1
+    ]
+   ]
+  },
+  {
+   "lots": [
+    {
+     "expires": "2026-11-01",
+     "id": 1,
+     "quantity": 5,
+     "state_only": true
+    },
+    {
+     "expires": "2027-03-01",
+     "id": 2,
+     "quantity": 5
+    }
+   ],
+   "name": "state_only absent counts as a lab lot",
+   "order": [
+    2,
+    1
+   ],
+   "price": "lab lot first",
+   "qty": 1,
+   "takes": [
+    [
+     2,
+     1
+    ]
+   ]
+  },
+  {
+   "lots": [
+    {
+     "expires": "2026-11-01",
+     "id": 1,
+     "quantity": 5,
+     "state_only": true
+    },
+    {
+     "expires": null,
+     "id": 2,
+     "quantity": 5,
+     "state_only": false
+    }
+   ],
+   "name": "an undated lab lot before a dated state-only lot",
+   "order": [
+    2,
+    1
+   ],
+   "price": "lab lot first",
+   "qty": 1,
+   "takes": [
+    [
+     2,
+     1
+    ]
+   ]
+  },
+  {
+   "lots": [
+    {
+     "expires": "2026-11-01",
+     "id": 1,
+     "quantity": 1,
+     "state_only": true
+    },
+    {
+     "expires": null,
+     "id": 2,
+     "quantity": 1,
+     "state_only": false
+    }
+   ],
+   "name": "state-only lots refused past their units",
+   "order": [
+    2,
+    1
+   ],
+   "price": "lab lot first",
+   "qty": 3,
+   "takes": null
+  },
+  {
+   "lots": [
+    {
+     "expires": "2027-03-01",
+     "id": 1,
+     "quantity": 3
+    }
+   ],
+   "name": "nothing wanted gives nothing",
+   "order": [
+    1
+   ],
+   "price": "draws",
+   "qty": 0,
+   "takes": []
+  },
+  {
+   "lots": [
+    {
+     "expires": "2027-03-01",
+     "id": 1,
+     "quantity": 3
+    }
+   ],
+   "name": "a negative quantity wanted gives nothing",
+   "order": [
+    1
+   ],
+   "price": "draws",
+   "qty": -2,
+   "takes": []
+  },
+  {
+   "lots": [],
+   "name": "no lots, none wanted",
+   "order": [],
+   "price": "draws",
+   "qty": 0,
+   "takes": []
+  }
+ ],
+ "group_of": [
+  {
+   "group": "A",
+   "product_type": "Edible Psilocybin Product"
+  },
+  {
+   "group": "A",
+   "product_type": "EXTRACT"
+  },
+  {
+   "group": "B",
+   "product_type": "Whole Fungi"
+  },
+  {
+   "group": "B",
+   "product_type": null
+  },
+  {
+   "group": "B",
+   "product_type": ""
+  },
+  {
+   "group": "A",
+   "product_type": "edibles"
+  },
+  {
+   "group": "A",
+   "product_type": "Dried Fungi (extracted)"
+  }
+ ],
+ "line_price": [
+  {
+   "cents": null,
+   "error": "unit_cap",
+   "mg": 11,
+   "mode": "per_mg",
+   "name": "a rate that puts one unit over $10,000 ($1,000/mg x 11 mg)",
+   "price": "PRICE-3",
+   "text": "1000"
+  },
+  {
+   "cents": 1000000,
+   "error": null,
+   "mg": 10,
+   "mode": "per_mg",
+   "name": "a rate that comes to exactly $10,000",
+   "price": "PRICE-3",
+   "text": "1000"
+  },
+  {
+   "cents": null,
+   "error": "unit_cap",
+   "mg": 11,
+   "mode": "per_mg",
+   "name": "a cent over $10,000",
+   "price": "PRICE-3",
+   "text": "909.10"
+  },
+  {
+   "cents": 999999,
+   "error": null,
+   "mg": 11,
+   "mode": "per_mg",
+   "name": "just under $10,000",
+   "price": "PRICE-3",
+   "text": "909.09"
+  },
+  {
+   "cents": null,
+   "error": "unit_cap",
+   "mg": 100,
+   "mode": "per_mg",
+   "name": "a rate on 100 mg over the cap",
+   "price": "PRICE-3",
+   "text": "100.01"
+  },
+  {
+   "cents": 1000000,
+   "error": null,
+   "mg": 100,
+   "mode": "per_mg",
+   "name": "a rate on 100 mg at the cap",
+   "price": "PRICE-3",
+   "text": "100"
+  },
+  {
+   "cents": null,
+   "error": "no_mg",
+   "mg": 0,
+   "mode": "per_mg",
+   "name": "a rate per mg on a unit with no mg",
+   "price": "PRICE-3",
+   "text": "1"
+  },
+  {
+   "cents": null,
+   "error": "no_mg",
+   "mg": 0,
+   "mode": "per_mg",
+   "name": "no mg comes before an unreadable rate",
+   "price": "PRICE-3",
+   "text": "x"
+  },
+  {
+   "cents": null,
+   "error": "rate",
+   "mg": 5,
+   "mode": "per_mg",
+   "name": "a rate that isn't a price",
+   "price": "PRICE-3",
+   "text": "x"
+  },
+  {
+   "cents": null,
+   "error": "rate",
+   "mg": 1,
+   "mode": "per_mg",
+   "name": "a rate over $1,000 per mg",
+   "price": "PRICE-3",
+   "text": "1001"
+  },
+  {
+   "cents": 39,
+   "error": null,
+   "mg": 3,
+   "mode": "per_mg",
+   "name": "a rate a fraction of a cent",
+   "price": "PRICE-3",
+   "text": "0.125"
+  },
+  {
+   "cents": null,
+   "error": "no_mg",
+   "mg": -1,
+   "mode": "per_mg",
+   "name": "a negative mg is no mg",
+   "price": "PRICE-3",
+   "text": "1"
+  },
+  {
+   "cents": 1250,
+   "error": null,
+   "mg": 0,
+   "mode": "each",
+   "name": "a price each",
+   "price": "PRICE-1",
+   "text": "12.50"
+  },
+  {
+   "cents": 1000000,
+   "error": null,
+   "mg": 5,
+   "mode": "each",
+   "name": "a price each at the cap",
+   "price": "PRICE-1",
+   "text": "10000"
+  },
+  {
+   "cents": null,
+   "error": "price",
+   "mg": 5,
+   "mode": "each",
+   "name": "a price each over the cap",
+   "price": "PRICE-1",
+   "text": "10000.01"
+  },
+  {
+   "cents": null,
+   "error": "price",
+   "mg": 5,
+   "mode": "each",
+   "name": "a price each of 18 digits",
+   "price": "PRICE-1",
+   "text": "184467440737095517"
+  },
+  {
+   "cents": null,
+   "error": "price",
+   "mg": 5,
+   "mode": "each",
+   "name": "a price each after U+001C",
+   "price": "PRICE-2",
+   "text": "\u001c5"
+  },
+  {
+   "cents": null,
+   "error": "price",
+   "mg": 5,
+   "mode": "each",
+   "name": "a price each after a byte order mark",
+   "price": "PRICE-2",
+   "text": "﻿5"
+  },
+  {
+   "cents": 500,
+   "error": null,
+   "mg": 5,
+   "mode": "each",
+   "name": "a price each after a no-break space",
+   "price": "PRICE-2",
+   "text": " 5"
+  },
+  {
+   "cents": null,
+   "error": "price",
+   "mg": 5,
+   "mode": "each",
+   "name": "a blank price each",
+   "price": "PRICE-1",
+   "text": ""
+  }
+ ],
+ "money": [
+  {
+   "cents": 0,
+   "text": "$0.00"
+  },
+  {
+   "cents": 1,
+   "text": "$0.01"
+  },
+  {
+   "cents": 99,
+   "text": "$0.99"
+  },
+  {
+   "cents": 100,
+   "text": "$1.00"
+  },
+  {
+   "cents": 100000,
+   "text": "$1,000.00"
+  },
+  {
+   "cents": 999999999,
+   "text": "$9,999,999.99"
+  },
+  {
+   "cents": 1000000000,
+   "text": "$10,000,000.00"
+  },
+  {
+   "cents": 12345678901,
+   "text": "$123,456,789.01"
+  },
+  {
+   "cents": -1,
+   "text": "$-0.01"
+  },
+  {
+   "cents": -1250,
+   "text": "$-12.50"
+  }
+ ],
+ "parse_price": [
+  {
+   "cents": null,
+   "max": "unit",
+   "name": "18 digits that wrapped Dart's int to 84 cents",
+   "price": "PRICE-1",
+   "text": "184467440737095517"
+  },
+  {
+   "cents": null,
+   "max": "unit",
+   "name": "17 nines",
+   "price": "PRICE-1",
+   "text": "99999999999999999"
+  },
+  {
+   "cents": null,
+   "max": "unit",
+   "name": "2**63",
+   "price": "PRICE-1",
+   "text": "9223372036854775808"
+  },
+  {
+   "cents": null,
+   "max": "total",
+   "name": "2**63 as a total",
+   "price": "PRICE-1",
+   "text": "9223372036854775808"
+  },
+  {
+   "cents": null,
+   "max": "per_mg",
+   "name": "2**63 as a rate",
+   "price": "PRICE-1",
+   "text": "9223372036854775808"
+  },
+  {
+   "cents": null,
+   "max": "total",
+   "name": "the largest 64-bit integer as a total",
+   "price": "PRICE-1",
+   "text": "9223372036854775807"
+  },
+  {
+   "cents": null,
+   "max": "total",
+   "name": "30 ones as a total",
+   "price": "PRICE-1",
+   "text": "111111111111111111111111111111"
+  },
+  {
+   "cents": 13000,
+   "max": "unit",
+   "name": "leading zeros don't count",
+   "price": "PRICE-1",
+   "text": "000000000000130"
+  },
+  {
+   "cents": 100,
+   "max": "unit",
+   "name": "28 zeros then a one",
+   "price": "PRICE-1",
+   "text": "00000000000000000000000000001"
+  },
+  {
+   "cents": null,
+   "max": "total",
+   "name": "nine dollar digits as a total",
+   "price": "PRICE-1",
+   "text": "100000000"
+  },
+  {
+   "cents": 1000000000,
+   "max": "total",
+   "name": "eight dollar digits, the total cap",
+   "price": "PRICE-1",
+   "text": "10000000"
+  },
+  {
+   "cents": null,
+   "max": "total",
+   "name": "a thousand digits",
+   "price": "PRICE-1",
+   "text": "9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999"
+  },
+  {
+   "cents": 500,
+   "max": "unit",
+   "name": "a thousand zeros then a five",
+   "price": "PRICE-1",
+   "text": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005"
+  },
+  {
+   "cents": 200,
+   "max": "unit",
+   "name": "a thousand decimals",
+   "price": "PRICE-1",
+   "text": "1.9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999"
+  },
+  {
+   "cents": 500,
+   "max": "unit",
+   "name": "U+0009 before the figure",
+   "price": "PRICE-2",
+   "text": "\t5"
+  },
+  {
+   "cents": 500,
+   "max": "unit",
+   "name": "U+000A before the figure",
+   "price": "PRICE-2",
+   "text": "\n5"
+  },
+  {
+   "cents": 500,
+   "max": "unit",
+   "name": "U+000B before the figure",
+   "price": "PRICE-2",
+   "text": "\u000b5"
+  },
+  {
+   "cents": 500,
+   "max": "unit",
+   "name": "U+000C before the figure",
+   "price": "PRICE-2",
+   "text": "\f5"
+  },
+  {
+   "cents": 500,
+   "max": "unit",
+   "name": "U+000D before the figure",
+   "price": "PRICE-2",
+   "text": "\r5"
+  },
+  {
+   "cents": null,
+   "max": "unit",
+   "name": "U+001C before the figure",
+   "price": "PRICE-2",
+   "text": "\u001c5"
+  },
+  {
+   "cents": null,
+   "max": "unit",
+   "name": "U+001D before the figure",
+   "price": "PRICE-2",
+   "text": "\u001d5"
+  },
+  {
+   "cents": null,
+   "max": "unit",
+   "name": "U+001E before the figure",
+   "price": "PRICE-2",
+   "text": "\u001e5"
+  },
+  {
+   "cents": null,
+   "max": "unit",
+   "name": "U+001F before the figure",
+   "price": "PRICE-2",
+   "text": "\u001f5"
+  },
+  {
+   "cents": 500,
+   "max": "unit",
+   "name": "U+0020 before the figure",
+   "price": "PRICE-2",
+   "text": " 5"
+  },
+  {
+   "cents": 500,
+   "max": "unit",
+   "name": "U+0085 before the figure",
+   "price": "PRICE-2",
+   "text": "5"
+  },
+  {
+   "cents": 500,
+   "max": "unit",
+   "name": "U+00A0 before the figure",
+   "price": "PRICE-2",
+   "text": " 5"
+  },
+  {
+   "cents": 500,
+   "max": "unit",
+   "name": "U+1680 before the figure",
+   "price": "PRICE-2",
+   "text": " 5"
+  },
+  {
+   "cents": 500,
+   "max": "unit",
+   "name": "U+2000 before the figure",
+   "price": "PRICE-2",
+   "text": " 5"
+  },
+  {
+   "cents": 500,
+   "max": "unit",
+   "name": "U+2001 before the figure",
+   "price": "PRICE-2",
+   "text": " 5"
+  },
+  {
+   "cents": 500,
+   "max": "unit",
+   "name": "U+2002 before the figure",
+   "price": "PRICE-2",
+   "text": " 5"
+  },
+  {
+   "cents": 500,
+   "max": "unit",
+   "name": "U+2003 before the figure",
+   "price": "PRICE-2",
+   "text": " 5"
+  },
+  {
+   "cents": 500,
+   "max": "unit",
+   "name": "U+2004 before the figure",
+   "price": "PRICE-2",
+   "text": " 5"
+  },
+  {
+   "cents": 500,
+   "max": "unit",
+   "name": "U+2005 before the figure",
+   "price": "PRICE-2",
+   "text": " 5"
+  },
+  {
+   "cents": 500,
+   "max": "unit",
+   "name": "U+2006 before the figure",
+   "price": "PRICE-2",
+   "text": " 5"
+  },
+  {
+   "cents": 500,
+   "max": "unit",
+   "name": "U+2007 before the figure",
+   "price": "PRICE-2",
+   "text": " 5"
+  },
+  {
+   "cents": 500,
+   "max": "unit",
+   "name": "U+2008 before the figure",
+   "price": "PRICE-2",
+   "text": " 5"
+  },
+  {
+   "cents": 500,
+   "max": "unit",
+   "name": "U+2009 before the figure",
+   "price": "PRICE-2",
+   "text": " 5"
+  },
+  {
+   "cents": 500,
+   "max": "unit",
+   "name": "U+200A before the figure",
+   "price": "PRICE-2",
+   "text": " 5"
+  },
+  {
+   "cents": 500,
+   "max": "unit",
+   "name": "U+2028 before the figure",
+   "price": "PRICE-2",
+   "text": " 5"
+  },
+  {
+   "cents": 500,
+   "max": "unit",
+   "name": "U+2029 before the figure",
+   "price": "PRICE-2",
+   "text": " 5"
+  },
+  {
+   "cents": 500,
+   "max": "unit",
+   "name": "U+202F before the figure",
+   "price": "PRICE-2",
+   "text": " 5"
+  },
+  {
+   "cents": 500,
+   "max": "unit",
+   "name": "U+205F before the figure",
+   "price": "PRICE-2",
+   "text": " 5"
+  },
+  {
+   "cents": 500,
+   "max": "unit",
+   "name": "U+3000 before the figure",
+   "price": "PRICE-2",
+   "text": "　5"
+  },
+  {
+   "cents": null,
+   "max": "unit",
+   "name": "U+FEFF before the figure",
+   "price": "PRICE-2",
+   "text": "﻿5"
+  },
+  {
+   "cents": null,
+   "max": "unit",
+   "name": "U+180E before the figure",
+   "price": "PRICE-2",
+   "text": "᠎5"
+  },
+  {
+   "cents": null,
+   "max": "unit",
+   "name": "U+200B before the figure",
+   "price": "PRICE-2",
+   "text": "​5"
+  },
+  {
+   "cents": null,
+   "max": "unit",
+   "name": "U+001F after the figure",
+   "price": "PRICE-2",
+   "text": "5\u001f"
+  },
+  {
+   "cents": null,
+   "max": "unit",
+   "name": "U+FEFF after the figure",
+   "price": "PRICE-2",
+   "text": "5﻿"
+  },
+  {
+   "cents": 13000,
+   "max": "total",
+   "name": "spaces and a tab around a total",
+   "price": "PRICE-2",
+   "text": " \t130 \n"
+  },
+  {
+   "cents": null,
+   "max": "per_mg",
+   "name": "a byte order mark before a rate",
+   "price": "PRICE-2",
+   "text": "﻿1"
+  },
+  {
+   "cents": null,
+   "max": "unit",
+   "name": "a space inside the figure",
+   "price": "PRICE-2",
+   "text": "1 30"
+  },
+  {
+   "cents": 1000000,
+   "max": "unit",
+   "name": "the unit cap exactly",
+   "price": "PRICE-1",
+   "text": "10000"
+  },
+  {
+   "cents": null,
+   "max": "unit",
+   "name": "a tenth of a cent over the unit cap",
+   "price": "PRICE-1",
+   "text": "10000.001"
+  },
+  {
+   "cents": 100000,
+   "max": "per_mg",
+   "name": "a rate at its cap",
+   "price": "PRICE-1",
+   "text": "1000.00"
+  },
+  {
+   "cents": null,
+   "max": "per_mg",
+   "name": "a rate a hundredth of a cent over",
+   "price": "PRICE-1",
+   "text": "1000.0001"
+  },
+  {
+   "cents": 1235,
+   "max": "unit",
+   "name": "half a cent rounds up",
+   "price": "PRICE-1",
+   "text": "12.345"
+  },
+  {
+   "cents": 1234,
+   "max": "unit",
+   "name": "just under half a cent rounds down",
+   "price": "PRICE-1",
+   "text": "12.3449999"
+  },
+  {
+   "cents": 1250,
+   "max": "unit",
+   "name": "a comma as the decimal mark",
+   "price": "PRICE-1",
+   "text": "12,5"
+  },
+  {
+   "cents": 50,
+   "max": "unit",
+   "name": "nothing before the mark",
+   "price": "PRICE-1",
+   "text": ",5"
+  },
+  {
+   "cents": 500,
+   "max": "unit",
+   "name": "nothing after the mark",
+   "price": "PRICE-1",
+   "text": "5."
+  },
+  {
+   "cents": null,
+   "max": "unit",
+   "name": "the mark alone",
+   "price": "PRICE-1",
+   "text": "."
+  },
+  {
+   "cents": null,
+   "max": "unit",
+   "name": "blank",
+   "price": "PRICE-1",
+   "text": ""
+  },
+  {
+   "cents": null,
+   "max": "unit",
+   "name": "an exponent",
+   "price": "PRICE-1",
+   "text": "1e3"
+  },
+  {
+   "cents": null,
+   "max": "unit",
+   "name": "a plus sign",
+   "price": "PRICE-1",
+   "text": "+5"
+  },
+  {
+   "cents": null,
+   "max": "unit",
+   "name": "a minus sign",
+   "price": "PRICE-1",
+   "text": "-5"
+  },
+  {
+   "cents": null,
+   "max": "unit",
+   "name": "an underscore",
+   "price": "PRICE-1",
+   "text": "1_000"
+  },
+  {
+   "cents": null,
+   "max": "unit",
+   "name": "two marks",
+   "price": "PRICE-1",
+   "text": "1.000,5"
+  },
+  {
+   "cents": null,
+   "max": "unit",
+   "name": "Arabic-Indic digits",
+   "price": "PRICE-10",
+   "text": "٣"
+  },
+  {
+   "cents": null,
+   "max": "unit",
+   "name": "fullwidth digits",
+   "price": "PRICE-10",
+   "text": "５"
+  }
+ ],
+ "per_mg_price": [
+  {
+   "cents": 130,
+   "mg": "10",
+   "name": "a whole mg",
+   "price": "PRICE-7",
+   "rate_cents": 13
+  },
+  {
+   "cents": 130,
+   "mg": 10,
+   "name": "a whole mg as a number",
+   "price": "PRICE-7",
+   "rate_cents": 13
+  },
+  {
+   "cents": 4,
+   "mg": "0.35",
+   "name": "two decimals",
+   "price": "PRICE-7",
+   "rate_cents": 10
+  },
+  {
+   "mg": "0.355",
+   "name": "three decimals: an input error",
+   "price": "PRICE-7",
+   "rate_cents": 10,
+   "rejects": true
+  },
+  {
+   "mg": "-1",
+   "name": "a negative mg: an input error",
+   "price": "PRICE-7",
+   "rate_cents": 10,
+   "rejects": true
+  },
+  {
+   "cents": 0,
+   "mg": "25",
+   "name": "a rate of 0",
+   "price": "PRICE-7",
+   "rate_cents": 0
+  },
+  {
+   "cents": 100000000,
+   "mg": "1000",
+   "name": "the largest rate over 1,000 mg",
+   "price": "PRICE-7",
+   "rate_cents": 100000
+  }
+ ],
+ "price_cart": [
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": [
+    667,
+    667,
+    1333
+   ],
+   "error": null,
+   "line_errors": [
+    null,
+    null,
+    null
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 1,
+     "qty": 1
+    },
+    {
+     "group": "A",
+     "mg": 1,
+     "qty": 1
+    },
+    {
+     "group": "A",
+     "mg": 2,
+     "qty": 2
+    }
+   ],
+   "mode": "total",
+   "name": "three lines, equal remainders: the earlier line gets the cent",
+   "per_mg": "",
+   "price": "PRICE-4",
+   "tax": false,
+   "tax_percent": 15,
+   "total": "40"
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": [
+    667,
+    667,
+    2666
+   ],
+   "error": null,
+   "line_errors": [
+    null,
+    null,
+    null
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 1,
+     "qty": 1
+    },
+    {
+     "group": "A",
+     "mg": 1,
+     "qty": 1
+    },
+    {
+     "group": "A",
+     "mg": 4,
+     "qty": 1
+    }
+   ],
+   "mode": "total",
+   "name": "three lines, equal remainders, a line of 4 mg",
+   "per_mg": "",
+   "price": "PRICE-4",
+   "tax": false,
+   "tax_percent": 15,
+   "total": "40"
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": [
+    1,
+    2,
+    3
+   ],
+   "error": null,
+   "line_errors": [
+    null,
+    null,
+    null
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 1,
+     "qty": 1
+    },
+    {
+     "group": "A",
+     "mg": 2,
+     "qty": 2
+    },
+    {
+     "group": "A",
+     "mg": 5,
+     "qty": 2
+    }
+   ],
+   "mode": "total",
+   "name": "ten cents over 1, 4 and 10 mg",
+   "per_mg": "",
+   "price": "PRICE-4",
+   "tax": false,
+   "tax_percent": 15,
+   "total": "0.10"
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": [
+    867,
+    1734,
+    4333
+   ],
+   "error": null,
+   "line_errors": [
+    null,
+    null,
+    null
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 1,
+     "qty": 1
+    },
+    {
+     "group": "A",
+     "mg": 2,
+     "qty": 2
+    },
+    {
+     "group": "A",
+     "mg": 5,
+     "qty": 2
+    }
+   ],
+   "mode": "total",
+   "name": "$130 over 1, 4 and 10 mg",
+   "per_mg": "",
+   "price": "PRICE-4",
+   "tax": false,
+   "tax_percent": 15,
+   "total": "130"
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": [
+    6667,
+    13334,
+    33333
+   ],
+   "error": null,
+   "line_errors": [
+    null,
+    null,
+    null
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 1,
+     "qty": 1
+    },
+    {
+     "group": "A",
+     "mg": 2,
+     "qty": 2
+    },
+    {
+     "group": "A",
+     "mg": 5,
+     "qty": 2
+    }
+   ],
+   "mode": "total",
+   "name": "$1,000 over 1, 4 and 10 mg",
+   "per_mg": "",
+   "price": "PRICE-4",
+   "tax": false,
+   "tax_percent": 15,
+   "total": "1000"
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": [
+    16,
+    35,
+    15,
+    34
+   ],
+   "error": null,
+   "line_errors": [
+    null,
+    null,
+    null,
+    null
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 1,
+     "qty": 1
+    },
+    {
+     "group": "B",
+     "mg": 3,
+     "qty": 1
+    },
+    {
+     "group": "A",
+     "mg": 1,
+     "qty": 1
+    },
+    {
+     "group": "B",
+     "mg": 3,
+     "qty": 1
+    }
+   ],
+   "mode": "total",
+   "name": "two groups, ties inside each",
+   "per_mg": "",
+   "price": "PRICE-4",
+   "tax": false,
+   "tax_percent": 15,
+   "total": "1"
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": [
+    590,
+    590,
+    3981,
+    3981
+   ],
+   "error": null,
+   "line_errors": [
+    null,
+    null,
+    null,
+    null
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 1,
+     "qty": 3
+    },
+    {
+     "group": "A",
+     "mg": 1,
+     "qty": 3
+    },
+    {
+     "group": "B",
+     "mg": 2,
+     "qty": 1
+    },
+    {
+     "group": "B",
+     "mg": 2,
+     "qty": 1
+    }
+   ],
+   "mode": "total",
+   "name": "two groups with tax, ties",
+   "per_mg": "",
+   "price": "PRICE-4",
+   "tax": true,
+   "tax_percent": 15,
+   "total": "100"
+  },
+  {
+   "agreement": [
+    1,
+    1
+   ],
+   "each": [
+    2,
+    1
+   ],
+   "error": null,
+   "line_errors": [
+    null,
+    null
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 5,
+     "qty": 1
+    },
+    {
+     "group": "B",
+     "mg": 5,
+     "qty": 1
+    }
+   ],
+   "mode": "total",
+   "name": "an even agreement, three cents",
+   "per_mg": "",
+   "price": "PRICE-4",
+   "tax": false,
+   "tax_percent": 15,
+   "total": "0.03"
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": [
+    4,
+    3,
+    3
+   ],
+   "error": null,
+   "line_errors": [
+    null,
+    null,
+    null
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 0,
+     "qty": 1
+    },
+    {
+     "group": "A",
+     "mg": 5,
+     "qty": 1
+    },
+    {
+     "group": "A",
+     "mg": 5,
+     "qty": 1
+    }
+   ],
+   "mode": "total",
+   "name": "unknown mg: shared by units, ties",
+   "per_mg": "",
+   "price": "PRICE-4",
+   "tax": false,
+   "tax_percent": 15,
+   "total": "0.10"
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": null,
+   "error": "total",
+   "line_errors": [
+    null
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 5,
+     "qty": 1
+    }
+   ],
+   "mode": "total",
+   "name": "a total of 18 digits",
+   "per_mg": "",
+   "price": "PRICE-1",
+   "tax": false,
+   "tax_percent": 15,
+   "total": "184467440737095517"
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": null,
+   "error": "rate",
+   "line_errors": [
+    null
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 5,
+     "qty": 1
+    }
+   ],
+   "mode": "per_mg",
+   "name": "a rate of 18 digits",
+   "per_mg": "184467440737095517",
+   "price": "PRICE-1",
+   "tax": false,
+   "tax_percent": 15,
+   "total": ""
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": null,
+   "error": "unit_cap",
+   "line_errors": [
+    null
+   ],
+   "lines": [
+    {
+     "group": "B",
+     "mg": 5,
+     "qty": 999
+    }
+   ],
+   "mode": "total",
+   "name": "the cart's total cap with tax over a unit",
+   "per_mg": "",
+   "price": "PRICE-1",
+   "tax": true,
+   "tax_percent": 15,
+   "total": "10000000"
+  },
+  {
+   "agreement": [
+    1,
+    1
+   ],
+   "each": null,
+   "error": "unit_cap",
+   "line_errors": [
+    null,
+    null
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 5,
+     "qty": 999
+    },
+    {
+     "group": "B",
+     "mg": 5,
+     "qty": 1
+    }
+   ],
+   "mode": "total",
+   "name": "the cart's total cap over 1,000 units",
+   "per_mg": "",
+   "price": "PRICE-1",
+   "tax": false,
+   "tax_percent": 15,
+   "total": "10000000"
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": null,
+   "error": "total",
+   "line_errors": [
+    null
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 5,
+     "qty": 1
+    }
+   ],
+   "mode": "total",
+   "name": "a total after U+001C",
+   "per_mg": "",
+   "price": "PRICE-2",
+   "tax": false,
+   "tax_percent": 15,
+   "total": "\u001c130"
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": null,
+   "error": "total",
+   "line_errors": [
+    null
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 5,
+     "qty": 1
+    }
+   ],
+   "mode": "total",
+   "name": "a total after a byte order mark",
+   "per_mg": "",
+   "price": "PRICE-2",
+   "tax": false,
+   "tax_percent": 15,
+   "total": "﻿130"
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": [
+    13000
+   ],
+   "error": null,
+   "line_errors": [
+    null
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 5,
+     "qty": 1
+    }
+   ],
+   "mode": "total",
+   "name": "a total after a no-break space",
+   "per_mg": "",
+   "price": "PRICE-2",
+   "tax": false,
+   "tax_percent": 15,
+   "total": " 130"
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": null,
+   "error": "rate",
+   "line_errors": [
+    null
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 5,
+     "qty": 1
+    }
+   ],
+   "mode": "per_mg",
+   "name": "a rate after U+001F",
+   "per_mg": "\u001f1",
+   "price": "PRICE-2",
+   "tax": false,
+   "tax_percent": 15,
+   "total": ""
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 2.5,
+     "qty": 1
+    }
+   ],
+   "mode": "total",
+   "name": "an mg that isn't a whole number",
+   "per_mg": "",
+   "price": "PRICE-7",
+   "rejects": true,
+   "tax": false,
+   "tax_percent": 15,
+   "total": "130"
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": -1,
+     "qty": 1
+    }
+   ],
+   "mode": "per_mg",
+   "name": "a negative mg",
+   "per_mg": "1",
+   "price": "PRICE-7",
+   "rejects": true,
+   "tax": false,
+   "tax_percent": 15,
+   "total": ""
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 5,
+     "qty": 0
+    }
+   ],
+   "mode": "total",
+   "name": "a quantity of 0",
+   "per_mg": "",
+   "price": "PRICE-7",
+   "rejects": true,
+   "tax": false,
+   "tax_percent": 15,
+   "total": "130"
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 5,
+     "qty": 1000
+    }
+   ],
+   "mode": "total",
+   "name": "a quantity of 1,000",
+   "per_mg": "",
+   "price": "PRICE-7",
+   "rejects": true,
+   "tax": false,
+   "tax_percent": 15,
+   "total": "130"
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "lines": [
+    {
+     "group": "C",
+     "mg": 5,
+     "qty": 1
+    }
+   ],
+   "mode": "total",
+   "name": "a group that isn't A or B",
+   "per_mg": "",
+   "price": "PRICE-7",
+   "rejects": true,
+   "tax": false,
+   "tax_percent": 15,
+   "total": "130"
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": [
+    100
+   ],
+   "error": null,
+   "line_errors": [
+    null
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 1,
+     "qty": 999
+    }
+   ],
+   "mode": "per_mg",
+   "name": "999 units in a line",
+   "per_mg": "1",
+   "price": "PRICE-7",
+   "tax": false,
+   "tax_percent": 15,
+   "total": ""
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": null,
+   "error": "empty",
+   "line_errors": [],
+   "lines": [],
+   "mode": "total",
+   "name": "empty",
+   "per_mg": "",
+   "price": "errors",
+   "tax": false,
+   "tax_percent": 15,
+   "total": "130"
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": null,
+   "error": "total",
+   "line_errors": [
+    null
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 5,
+     "qty": 1
+    }
+   ],
+   "mode": "total",
+   "name": "no total",
+   "per_mg": "",
+   "price": "errors",
+   "tax": true,
+   "tax_percent": 15,
+   "total": ""
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": null,
+   "error": "rate",
+   "line_errors": [
+    null
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 5,
+     "qty": 1
+    }
+   ],
+   "mode": "per_mg",
+   "name": "no rate",
+   "per_mg": "",
+   "price": "errors",
+   "tax": true,
+   "tax_percent": 15,
+   "total": ""
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": null,
+   "error": "no_mg",
+   "line_errors": [
+    null,
+    "no_mg",
+    "no_mg"
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 5,
+     "qty": 1
+    },
+    {
+     "group": "B",
+     "mg": 0,
+     "qty": 2
+    },
+    {
+     "group": "A",
+     "mg": 0,
+     "qty": 1
+    }
+   ],
+   "mode": "per_mg",
+   "name": "no mg on one line of three",
+   "per_mg": "2",
+   "price": "errors",
+   "tax": true,
+   "tax_percent": 15,
+   "total": ""
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": null,
+   "error": "rate",
+   "line_errors": [
+    null
+   ],
+   "lines": [
+    {
+     "group": "B",
+     "mg": 0,
+     "qty": 2
+    }
+   ],
+   "mode": "per_mg",
+   "name": "an unreadable rate before no mg",
+   "per_mg": "x",
+   "price": "errors",
+   "tax": false,
+   "tax_percent": 15,
+   "total": ""
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": null,
+   "error": "unit_cap",
+   "line_errors": [
+    null
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 5,
+     "qty": 1
+    }
+   ],
+   "mode": "total",
+   "name": "the unit cap on a total",
+   "per_mg": "",
+   "price": "errors",
+   "tax": false,
+   "tax_percent": 15,
+   "total": "10000.01"
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": null,
+   "error": "unit_cap",
+   "line_errors": [
+    null
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 5,
+     "qty": 1
+    }
+   ],
+   "mode": "total",
+   "name": "the unit cap from tax on a total",
+   "per_mg": "",
+   "price": "errors",
+   "tax": true,
+   "tax_percent": 15,
+   "total": "9000"
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": null,
+   "error": "unit_cap",
+   "line_errors": [
+    null
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 10,
+     "qty": 1
+    }
+   ],
+   "mode": "per_mg",
+   "name": "the unit cap from tax on a rate",
+   "per_mg": "1000",
+   "price": "errors",
+   "tax": true,
+   "tax_percent": 100,
+   "total": ""
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": null,
+   "error": "unit_cap",
+   "line_errors": [
+    null
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 11,
+     "qty": 1
+    }
+   ],
+   "mode": "per_mg",
+   "name": "the unit cap per mg",
+   "per_mg": "1000",
+   "price": "errors",
+   "tax": false,
+   "tax_percent": 15,
+   "total": ""
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": [
+    3333
+   ],
+   "error": null,
+   "line_errors": [
+    null
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 5,
+     "qty": 3
+    }
+   ],
+   "mode": "total",
+   "name": "tax of 0",
+   "per_mg": "",
+   "price": "tax",
+   "tax": true,
+   "tax_percent": 0,
+   "total": "100"
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": [
+    330
+   ],
+   "error": null,
+   "line_errors": [
+    null
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 5,
+     "qty": 3
+    }
+   ],
+   "mode": "per_mg",
+   "name": "tax of 100",
+   "per_mg": "0.33",
+   "price": "tax",
+   "tax": true,
+   "tax_percent": 100,
+   "total": ""
+  },
+  {
+   "agreement": [
+    90,
+    40
+   ],
+   "each": [
+    2469,
+    3292
+   ],
+   "error": null,
+   "line_errors": [
+    null,
+    null
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 5,
+     "qty": 3
+    },
+    {
+     "group": "B",
+     "mg": 9,
+     "qty": 1
+    }
+   ],
+   "mode": "total",
+   "name": "tax of 7 on a split",
+   "per_mg": "",
+   "price": "tax",
+   "tax": true,
+   "tax_percent": 7,
+   "total": "99.99"
+  },
+  {
+   "agreement": [
+    40,
+    90
+   ],
+   "each": [
+    3333
+   ],
+   "error": null,
+   "line_errors": [
+    null
+   ],
+   "lines": [
+    {
+     "group": "A",
+     "mg": 5,
+     "qty": 3
+    }
+   ],
+   "mode": "total",
+   "name": "tax ignored when not asked",
+   "per_mg": "",
+   "price": "tax",
+   "tax": false,
+   "tax_percent": 100,
+   "total": "100"
+  }
+ ],
+ "share_total": [
+  {
+   "name": "one cent over two equal weights",
+   "parts": [
+    1,
+    0
+   ],
+   "price": "PRICE-4",
+   "total_cents": 1,
+   "weights": [
+    1,
+    1
+   ]
+  },
+  {
+   "name": "two cents over three equal weights",
+   "parts": [
+    1,
+    1,
+    0
+   ],
+   "price": "PRICE-4",
+   "total_cents": 2,
+   "weights": [
+    1,
+    1,
+    1
+   ]
+  },
+  {
+   "name": "ten over three threes",
+   "parts": [
+    4,
+    3,
+    3
+   ],
+   "price": "PRICE-4",
+   "total_cents": 10,
+   "weights": [
+    3,
+    3,
+    3
+   ]
+  },
+  {
+   "name": "equal remainders, unequal weights",
+   "parts": [
+    1000,
+    1000,
+    2000
+   ],
+   "price": "PRICE-4",
+   "total_cents": 4000,
+   "weights": [
+    1,
+    1,
+    2
+   ]
+  },
+  {
+   "name": "equal remainders across a long list",
+   "parts": [
+    5,
+    9,
+    14,
+    19,
+    24,
+    29
+   ],
+   "price": "PRICE-4",
+   "total_cents": 100,
+   "weights": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ]
+  },
+  {
+   "name": "a weight of 0 shares equally",
+   "parts": [
+    4,
+    3,
+    3
+   ],
+   "price": "PRICE-4",
+   "total_cents": 10,
+   "weights": [
+    0,
+    3,
+    3
+   ]
+  },
+  {
+   "name": "a negative weight shares equally",
+   "parts": [
+    4,
+    3,
+    3
+   ],
+   "price": "PRICE-4",
+   "total_cents": 10,
+   "weights": [
+    3,
+    -3,
+    3
+   ]
+  },
+  {
+   "name": "the largest total over the largest weights",
+   "parts": [
+    499999750,
+    499999750,
+    500
+   ],
+   "price": "PRICE-4",
+   "total_cents": 1000000000,
+   "weights": [
+    999000,
+    999000,
+    1
+   ]
+  },
+  {
+   "name": "nothing to share",
+   "parts": [
+    0,
+    0
+   ],
+   "price": "PRICE-4",
+   "total_cents": 0,
+   "weights": [
+    1,
+    2
+   ]
+  },
+  {
+   "name": "no weights",
+   "parts": [],
+   "price": "PRICE-4",
+   "total_cents": 5,
+   "weights": []
+  }
+ ],
+ "with_tax": [
+  {
+   "cents": 0,
+   "percent": 15,
+   "result": 0
+  },
+  {
+   "cents": 1,
+   "percent": 50,
+   "result": 2
+  },
+  {
+   "cents": 5,
+   "percent": 7,
+   "result": 5
+  },
+  {
+   "cents": 333,
+   "percent": 15,
+   "result": 383
+  },
+  {
+   "cents": 99999999,
+   "percent": 100,
+   "result": 199999998
+  },
+  {
+   "cents": 1000000000,
+   "percent": 15,
+   "result": 1150000000
+  },
+  {
+   "cents": 1,
+   "percent": 0,
+   "result": 1
+  },
+  {
+   "cents": 149,
+   "percent": 1,
+   "result": 150
+  }
+ ]
+}

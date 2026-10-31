@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "selling.group_of output",
+  "description": "Its cart group.",
+  "type": "object",
+  "required": [
+    "group"
+  ],
+  "properties": {
+    "group": {
+      "enum": [
+        "A",
+        "B"
+      ],
+      "description": "A: its type contains 'edible' or 'extract', any case; B: everything else."
+    }
+  }
+}

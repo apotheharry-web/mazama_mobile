@@ -59,6 +59,32 @@ void main() {
     expect(find.textContaining('This sale would total'), findsNothing);
   });
 
+  // Lab lot first (the owner, 2026-10-30; waits for his replay against the production snapshot, PS-R5): with no
+  // expiry known for the lab lot, the smaller state-only lot used to come first and give the product its figure ("6mg
+  // TPE", $0.60 at $0.10/mg, 6 x 6.0 = 36.0 mg psilocybin); now the lab lot always does.
+  testWidgets('lab lot first: an undated lab lot still gives the product its figure, price and dose', (tester) async {
+    final undated = [
+      Package(productGuid: 'PKPR-ab12c', productType: 'Extract', id: 101, weightPerUnit: 5.0, analyteWeight: 1.0,
+          strain: 'Golden Teacher', tpeMg: 8, quantity: 4),
+      stock[1],
+    ];
+    await tester.pumpWidget(cartPage(fetchPackages: (id) async => undated));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.widgetWithText(TextField, 'PKPR'), 'ab12c');
+    await tester.tap(find.widgetWithText(FilledButton, 'Add'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Price per mg'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.widgetWithText(TextFormField, 'Price per mg (TPE)'), '0.10');
+    await tester.pump();
+    expect(find.textContaining('= \$0.80 each (8 mg TPE/unit)'), findsOneWidget);
+    await tester.tap(find.descendant(of: find.byType(AlertDialog), matching: find.widgetWithText(TextButton, 'Cancel')));
+    await tester.pumpAndSettle();
+    await addLine(tester, pkpr: 'ab12c', qty: '6', price: '10.00');
+    expect(find.textContaining('6 x \$10.00 · 8mg TPE each'), findsOneWidget);
+    expect(find.text('48.0 mg TPE · 30.0 mg psilocybin in the cart'), findsOneWidget);
+  });
+
   testWidgets('a product with no state-only lot has no note', (tester) async {
     await open(tester);
     await addLine(tester, pkpr: 'ff99aa', qty: '1', price: '10.00');

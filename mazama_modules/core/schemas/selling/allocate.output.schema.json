@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "selling.allocate output",
+  "description": "The draw.",
+  "type": "object",
+  "required": [
+    "order",
+    "positions",
+    "takes",
+    "take_positions"
+  ],
+  "properties": {
+    "order": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      },
+      "description": "The lots' ids in draw order: lab lots first, the earlier expiry, an undated lot after every dated one, the fewer whole units, the lower id."
+    },
+    "positions": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      },
+      "description": "The same order as indexes into the lots given."
+    },
+    "takes": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "integer"
+        },
+        "minItems": 2,
+        "maxItems": 2
+      },
+      "description": "[id, units] for each lot that gives any, in draw order; null when the lots hold fewer units than wanted (refused)."
+    },
+    "take_positions": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "integer"
+      },
+      "description": "The lots of takes as indexes into the lots given."
+    }
+  }
+}

@@ -254,7 +254,7 @@
   "session_minutes": null
  },
  {
-  "allowed": true,
+  "allowed": false,
   "lines": [
    {
     "qty": 3,
@@ -272,11 +272,11 @@
    }
   ],
   "name": "no potency known counts as 0",
-  "psilocybin_mg": "5.00",
-  "session_minutes": 120
+  "psilocybin_mg": null,
+  "session_minutes": null
  },
  {
-  "allowed": true,
+  "allowed": false,
   "lines": [
    {
     "qty": 3,
@@ -287,7 +287,7 @@
    }
   ],
   "name": "no weight known counts as 0",
-  "psilocybin_mg": "0.0",
-  "session_minutes": 30
+  "psilocybin_mg": null,
+  "session_minutes": null
  }
 ]

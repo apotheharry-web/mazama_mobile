@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "selling.sellable input",
+  "description": "The checks to answer, in order (CR-D5: a whole list in one call): each a package record and the units asked for.",
+  "type": "object",
+  "required": [
+    "checks"
+  ],
+  "properties": {
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "record",
+          "qty"
+        ],
+        "properties": {
+          "record": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "The state's package record (the mirror's raw, a phone's upload or the state's live reply; only productGuid, quantity, zeroOut, locked, reasonLocked, flagged, reasonFlagged and pendingTransfer are read), or null: not in the center's inventory (SL-4)."
+          },
+          "qty": {
+            "description": "The units asked for. Any JSON value has an answer: anything but an integer of 1 or more is refused (SL-13); an integer is compared exactly, at any size."
+          }
+        }
+      }
+    }
+  }
+}

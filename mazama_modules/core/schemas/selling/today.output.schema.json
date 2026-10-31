@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "selling.today output",
+  "description": "The Pacific date of now (SALE-2).",
+  "type": "object",
+  "required": [
+    "date"
+  ],
+  "properties": {
+    "date": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+    }
+  }
+}

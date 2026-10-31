@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "flows.usable_login_spec input",
+  "description": "specs/core row 13: the tree of a sign-in spec as the caller's own loader read it (the core never reads YAML): the declared format, the resolved vars (text), the flows; the reader's format; the extra hosts a verified signed list adds; the served mode (null, 'login' or 'browser').",
+  "type": "object",
+  "required": [
+    "format",
+    "reader_format",
+    "vars",
+    "flows",
+    "allowed_hosts",
+    "served"
+  ],
+  "properties": {
+    "format": {},
+    "reader_format": {
+      "type": "integer"
+    },
+    "vars": {},
+    "flows": {},
+    "allowed_hosts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "served": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}

@@ -7,11 +7,12 @@
 // just reached from a different trigger (a cart add at a configured center, not a whole-inventory load at an
 // unconfigured one).
 //
-// mazama_sales' own web/stock_pages.py (the coa_data_parse route) is what joins the result into the shared
-// adhoc_coa table AND the configured pipeline's own coa_dir/CoaFolder (adhoc_coa.py's save_certificate), making
-// it visible to every service center, configured or not - and, per item 4, auto-queues a label once the parse
-// succeeds (that route's own _queue_labels_for_lot). This file only has to get the PDF there; the server does
-// the rest of items 3b/4 on its own, identically whichever trigger reached it.
+// mazama_sales' coa_data_parse route (web/stock_pages.py) keeps the PDF for the COA worker (coajobs.py, SH-R2: the
+// web process never reads one), which joins the result into the shared adhoc_coa table AND the configured
+// pipeline's own coa_dir/CoaFolder (adhoc_coa.py's store_read and write_certificate), making it visible to every
+// service center, configured or not - and, per item 4, queues the lot's labels once the read succeeds
+// (appapply.queue_labels_for_lot). This file only has to get the PDF there; the server does the rest of items 3b/4
+// on its own, identically whichever trigger reached it.
 //
 // Never blocks a cart add: CartPage calls submitCoaForLot fire-and-forget (see its own _ensureCoaForCartLine),
 // the same spirit as its unawaited(_showLabelDialog(...)) right after _onAddPkpr finishes. A failure here (no

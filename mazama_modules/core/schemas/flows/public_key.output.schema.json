@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "flows.public_key output",
+  "description": "The 32-byte key as one line of base64, or null for `none` and anything malformed.",
+  "type": "object",
+  "required": [
+    "key_b64"
+  ],
+  "properties": {
+    "key_b64": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}

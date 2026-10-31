@@ -7,8 +7,9 @@
 //     the state has no report on file for it (nothing to submit), or when its submission fails for another reason
 //     (the server refused it, as the cart's own submission would be); at most [catchUpMaxLots] are kept, the oldest
 //     dropped first (the cart tries a lot again whenever a package of it is added anyway).
-//   - the inventory snapshot (POST /p/inventory, inventory_upload_client.dart) and the sales snapshot (the Sales page's
-//     read, POST /p/ingest/sales, sales_upload_client.dart; specs/center-web CW-R10): only the newest of each kind
+//   - the inventory snapshot (POST /p/ingest/packaged, inventory_upload_client.dart; POST /p/inventory before
+//     specs/phone-sync 8b Step 6, the route chosen at send time, so a kept one is sent to today's) and the sales snapshot
+//     (the Sales page's read, POST /p/ingest/sales, sales_upload_client.dart; specs/center-web CW-R10): only the newest of each kind
 //     matters, so one per kind per center is kept, each new state read of that kind replacing it, and sent once the
 //     server answers. One the phone manages to send meanwhile replaces it outright (it is newer), so a kept one never
 //     goes after a newer one. (Interim: specs/phone-sync's engine takes these over, its migration carrying them.)
@@ -161,8 +162,8 @@ class CatchUpStore {
     if (d is! Map) return const CatchUpState();
     final lots = d['lots'];
     // Each kind under its own key, read only as that kind: inventory where builds before sales snapshots keep it
-    // (`snapshots`), sales under `salesSnapshots`, which those builds never read (one would send a sales snapshot to
-    // /p/inventory, replacing the center's mirror).
+    // (`snapshots`), sales under `salesSnapshots`, which those builds never read (one would send a sales snapshot as
+    // inventory, replacing the center's mirror).
     Iterable<PendingSnapshot> read(Object? list, String kind) => list is List
         ? [for (final s in list) PendingSnapshot.fromJson(s)].whereType<PendingSnapshot>().where((s) => s.kind == kind)
         : const [];

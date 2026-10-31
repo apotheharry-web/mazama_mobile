@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "manufacturing.serving_table input",
+  "description": "One product information sheet's amounts: its batch/lot, the certificate's figures, the packages made from it and, for a package's own sheet, that package.",
+  "type": "object",
+  "required": [
+    "kind",
+    "guid",
+    "source",
+    "meta",
+    "made",
+    "package",
+    "doses"
+  ],
+  "properties": {
+    "kind": {
+      "type": "string",
+      "description": "batch or lot."
+    },
+    "guid": {
+      "type": "string"
+    },
+    "source": {
+      "type": "object",
+      "description": "The batch/lot record (or, for a package of an untracked maker, that package's record); only analyteWeight is read: an analyteWeight present but not a JSON number means no amounts at all (DOSE-20)."
+    },
+    "meta": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "The certificate's figures (psilocybin, psilocin, lab_tpe, psilocybin_from and the four alkaloids, mg/g), or null; its TPE is coa.tpe's rule."
+    },
+    "made": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "description": "The packages made from it (productGuid, description, weightPerUnit and analyteWeight are read)."
+    },
+    "package": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "The package whose own sheet this is (its one-column table), or null."
+    },
+    "doses": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      }
+    }
+  }
+}

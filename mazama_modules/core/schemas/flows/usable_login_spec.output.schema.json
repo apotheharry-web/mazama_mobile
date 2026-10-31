@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "flows.usable_login_spec output",
+  "description": "usable, with the spec's spec_version when it is; otherwise a short fixed reason for the log (it names no part of the spec's text).",
+  "type": "object",
+  "required": [
+    "usable",
+    "spec_version",
+    "why"
+  ],
+  "properties": {
+    "usable": {
+      "type": "boolean"
+    },
+    "spec_version": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "why": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}

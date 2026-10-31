@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "flows.host_allowed output",
+  "description": "True only for an https url whose host (ASCII, lower-cased, one trailing dot dropped, port 443 or none, no userinfo, no backslash) is on the list.",
+  "type": "object",
+  "required": [
+    "allowed"
+  ],
+  "properties": {
+    "allowed": {
+      "type": "boolean"
+    }
+  }
+}

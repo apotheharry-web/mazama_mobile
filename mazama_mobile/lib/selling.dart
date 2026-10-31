@@ -1,150 +1,150 @@
-// The Dart twin of mazama_sales/src/mazama_sales/selling.py: what a sale record looks like when it's sent to
-// the state system. This stays hand-written here, not in a shared/flows/*.yaml spec, because it's this app's
-// own business logic (price math, Pacific-midnight date conversion, dose split) rather than state-system wire
-// protocol that drifts the way B2C's login endpoints do - see shared/flows/sale.yaml's own file comment for
-// that distinction. It builds the `records` value sale.yaml's `sale` flow sends as-is.
+// What a sale record looks like when it's sent to the state system, and the dates it may carry: the shared core's
+// rules (mazama_core::selling::sale, specs/core row 7), the same ones the server sends with (selling.py and
+// salejobs.py call them through the core's Python binding). Nothing of the rules is written here: these are thin calls
+// that fail closed. Held to the golden vectors (../../mazama_modules/selling/vectors/ sale_record.json, sale_date.json
+// and sale_cases.json, the SALE rows the owner approved on 2026-10-31; test/selling_vectors_test.dart,
+// test/sale_cases_vectors_test.dart).
 //
-// pacificMidnightUtc deliberately doesn't depend on a timezone package (this sandbox had no network path to
-// verify a real published version number against, and a correctness-critical conversion for an official state
-// submission isn't the place to guess one): US daylight saving - 2nd Sunday of March to 1st Sunday of November,
-// a fixed rule unchanged since the Energy Policy Act of 2005 - is simple enough to hand-roll exactly, and this
-// was checked against Python's real zoneinfo('America/Los_Angeles') for every single day across 2024-2028 (0
-// mismatches) before being ported.
-//
-// SM-11: held to golden vectors generated from selling.py itself (../../mazama_modules/selling/vectors/
-// sale_record.json and sale_date.json; test/selling_vectors_test.dart), so the phone and the server send the same
-// record for the same sale: one record per lot with its quantity (SM-D5), empty notes (SM-D4), the same date
-// forms (SM-D6), Pacific midnight around every DST switch 2024-2030.
+// Fails closed (SALE-14): when the core can't answer, no record is built (StateError: nothing is sent), no date is
+// accepted, and a reply is never taken as proof of a sale (it may have been recorded).
+import 'mazama_core.dart';
 
 const doseInitial = 'initial';
 const doseSecondary = 'secondary';
 
-DateTime _nthWeekday(int year, int month, int weekday, int n) {
-  var d = DateTime.utc(year, month, 1);
-  final delta = (weekday - d.weekday) % 7;
-  d = d.add(Duration(days: delta));
-  return d.add(Duration(days: 7 * (n - 1)));
+CoreFunctions _core(CoreFunctions? core) => core ?? MazamaCore.instance;
+
+/// The core refused to build a sale's record (SALE-10, SALE-13): [message] is its words. Nothing is sent.
+class SaleRefused implements Exception {
+  final String message;
+  const SaleRefused(this.message);
+  @override
+  String toString() => message;
 }
 
-/// Pacific midnight of [date] (year/month/day only - any time-of-day on it is ignored), as a UTC DateTime.
-/// 07:00Z in daylight time, 08:00Z in standard time - same as pacific_midnight_utc in selling.py.
-DateTime pacificMidnightLocalAsUtc(DateTime date) {
-  final dstStart = _nthWeekday(date.year, 3, DateTime.sunday, 2); // 2nd Sunday of March
-  final dstEnd = _nthWeekday(date.year, 11, DateTime.sunday, 1); // 1st Sunday of November
-  final day = DateTime.utc(date.year, date.month, date.day);
-  final isDst = day.isAfter(dstStart) && !day.isAfter(dstEnd);
-  final offsetHours = isDst ? -7 : -8;
-  return day.subtract(Duration(hours: offsetHours));
+String _ymd(DateTime d) =>
+    '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+DateTime _day(String iso) {
+  final p = iso.split('-').map(int.parse).toList();
+  return DateTime.utc(p[0], p[1], p[2]);
 }
 
-/// The same string pacific_midnight_utc returns: "2026-10-11T07:00:00.000Z".
-String pacificMidnightUtc(DateTime date) {
-  final u = pacificMidnightLocalAsUtc(date);
-  String p2(int n) => n.toString().padLeft(2, '0');
-  String p4(int n) => n.toString().padLeft(4, '0');
-  return '${p4(u.year)}-${p2(u.month)}-${p2(u.day)}T${p2(u.hour)}:${p2(u.minute)}:${p2(u.second)}.000Z';
+/// The same string the server's pacific_midnight_utc returns: "2026-10-11T07:00:00.000Z" (the 2007 US rule, SALE-1).
+/// StateError when the core can't answer.
+String pacificMidnightUtc(DateTime date, {CoreFunctions? core}) {
+  try {
+    final utc = _core(core).sellingPacificMidnight({'date': _ymd(date)})['utc'];
+    if (utc is String) return utc;
+  } catch (_) {
+    // below: no answer
+  }
+  throw StateError("mazama_core couldn't work out Pacific midnight");
 }
 
-/// The record the state system's own web page sends to CreateSalesRecords, for [qty] units of [item] at
-/// [priceCents] each. [item] is one row from the public /p/packages/{state_id} endpoint - needs productGuid,
-/// productType, id, weightPerUnit, analyteWeight, and serviceCenterId (cart_page.dart adds the selected center's).
-/// Field-for-field the same shape as selling.py's build_sale, including the fields the state ignores on
-/// create (id, isRefund, dateCreated, saleNumber - all blank/zero, same as the real web page sends).
+/// The record the state system's own web page sends to CreateSalesRecords, for [qty] units of [item] at [priceCents]
+/// each: the core's (selling.build_sale), [item]'s values passed through as given (SALE-12). Throws [SaleRefused] with
+/// the core's words when [item] lacks what a sale copies or the price each or quantity is out of bounds (SALE-10,
+/// SALE-13), StateError when the core can't answer (nothing is sent either way).
 Map<String, Object?> buildSale(
   Map<String, Object?> item,
   int priceCents,
   DateTime saleDate, {
   String dose = doseInitial,
   int qty = 1,
+  CoreFunctions? core,
 }) {
-  final price = priceCents / 100;
-  return {
-    'id': 0,
-    'productGuid': item['productGuid'],
-    'productGroup': item['productType'],
-    'productId': item['id'],
-    'numberSold': qty,
-    // From whole cents, so there is no binary rounding to disagree about: the same value as selling.py's
-    // round(price * qty, 2) in every case (sale_record.json; checked over every price to $1,000 x 59 units).
-    'productCost': priceCents * qty / 100,
-    'dateOfSale': pacificMidnightUtc(saleDate),
-    'weightPerUnit': item['weightPerUnit'],
-    'analyteWeight': item['analyteWeight'],
-    'deleted': false,
-    'deletedBy': null,
-    'dateDeleted': null,
-    'reasonDeleted': null,
-    'notes': '', // SM-D4: empty on both sides, never the description
-    'serviceCenterId': item['serviceCenterId'],
-    'changes': null,
-    'wasteOuts': <Object?>[],
-    'isRefund': '',
-    'dateCreated': '',
-    'saleNumber': '',
-    'costEach': price,
-    'initialDose': dose == doseInitial ? qty : 0,
-    'secondaryDose': dose == doseSecondary ? qty : 0,
-  };
-}
-
-/// A defensive check that [created] (sale.yaml's own `created` output - normally the state's own copy of every
-/// record just submitted, each given the same real saleNumber since they all went up in one request - see that
-/// file's own comment) actually looks like a confirmed sale for every one of the [expectedCount] records just
-/// sent, not just some other non-empty body. flow_runner.dart's own `then_require: truthy` check only confirms
-/// the response wasn't empty - which would also pass for some other non-empty-but-wrong body (a changed
-/// response shape, or a logical-error payload that happens to be non-empty) if the state system's own API ever
-/// drifted. CartPage._sell runs this second, shape-aware check before ever treating a 200 response as an
-/// actually-confirmed sale and clearing the cart over it.
-///
-/// The same three checks as the server's salejobs.py, and the same outcome when one fails (SM-D2: "may have
-/// been recorded" on both sides): one record back per record sent, every one with a non-blank saleNumber, and
-/// all of them the *same* saleNumber, since they went up in one request.
-bool looksLikeConfirmedSale(Object? created, int expectedCount) {
-  if (created is! List || created.length != expectedCount || created.isEmpty) return false;
-  final numbers = created.map((r) => r is Map ? (r['saleNumber']?.toString() ?? '') : '').toSet();
-  return numbers.length == 1 && numbers.single.isNotEmpty;
-}
-
-final _dateDashed = RegExp(r'^(\d{4})-(\d{2})-(\d{2})$');
-final _dateCompact = RegExp(r'^(\d{4})(\d{2})(\d{2})$');
-final _weekDashed = RegExp(r'^(\d{4})-W(\d{2})(?:-(\d))?$');
-final _weekCompact = RegExp(r'^(\d{4})W(\d{2})(\d)?$');
-
-bool _isLeap(int y) => y % 4 == 0 && (y % 100 != 0 || y % 400 == 0);
-
-/// The date [text] names, in exactly the forms Python's date.fromisoformat reads, or null. SM-D6: `2026-10-20`,
-/// `20261020`, `2026-W43` (its Monday), `2026W43`, `2026-W43-2`, `2026W432` - not ordinal dates, times or spaces.
-/// `\d` here is ASCII digits only, as in Python's parser.
-DateTime? _isoDate(String text) {
-  var m = _dateDashed.firstMatch(text) ?? _dateCompact.firstMatch(text);
-  if (m != null) {
-    final y = int.parse(m.group(1)!), mo = int.parse(m.group(2)!), d = int.parse(m.group(3)!);
-    if (y < 1 || mo < 1 || mo > 12 || d < 1) return null;
-    final date = DateTime.utc(y, mo, d);
-    return date.month == mo && date.day == d ? date : null; // rejects 2026-02-30 rather than rolling it over
+  Map<String, Object?> reply;
+  try {
+    reply = _core(core).sellingBuildSale(
+        {'item': item, 'price_cents': priceCents, 'sale_date': _ymd(saleDate), 'dose': dose, 'qty': qty});
+  } catch (e) {
+    throw StateError("mazama_core couldn't build the sale's record ($e)");
   }
-  m = _weekDashed.firstMatch(text) ?? _weekCompact.firstMatch(text);
-  if (m == null) return null;
-  final y = int.parse(m.group(1)!), week = int.parse(m.group(2)!);
-  final day = m.group(3) == null ? 1 : int.parse(m.group(3)!);
-  if (y < 1 || day < 1 || day > 7 || week < 1 || week > 53) return null;
-  if (week == 53) {
-    // A year has an ISO week 53 when it starts on a Thursday, or on a Wednesday in a leap year.
-    final jan1 = DateTime.utc(y, 1, 1).weekday;
-    if (!(jan1 == DateTime.thursday || (jan1 == DateTime.wednesday && _isLeap(y)))) return null;
-  }
-  final jan4 = DateTime.utc(y, 1, 4);
-  final week1Monday = jan4.subtract(Duration(days: jan4.weekday - 1));
-  return week1Monday.add(Duration(days: (week - 1) * 7 + (day - 1)));
+  final record = reply['record'], refusal = reply['refusal'];
+  if (refusal is String && record == null) throw SaleRefused(refusal);
+  if (refusal == null && record is Map) return Map<String, Object?>.from(record);
+  throw StateError('mazama_core answered a sale record with ${reply.keys.toList()}');
 }
 
-/// Throws a FormatException('bad') for anything that isn't a date in a form the server's parse_sale_date reads
-/// (see _isoDate), or FormatException('future') for a date after [today] - the same two cases selling.py
-/// distinguishes, same messages to match on. Held to mazama_modules/selling/vectors/sale_date.json.
-DateTime parseSaleDate(String text, DateTime today) {
-  final date = _isoDate(text);
-  if (date == null) throw const FormatException('bad');
-  final todayDate = DateTime.utc(today.year, today.month, today.day);
-  if (date.isAfter(todayDate)) throw const FormatException('future');
-  return date;
+/// Whether [created] (sale.yaml's own `created` output: the state's copy of every record just submitted) proves the
+/// sale for the [expectedCount] records sent: one object back per record, every saleNumber the same text that isn't
+/// blank or the same whole number above 0 (SM-D2, SALE-5, SALE-6; the core's selling.sale_proof, as the server's).
+/// False when the core can't answer: a reply this phone can't read may still have been recorded.
+bool looksLikeConfirmedSale(Object? created, int expectedCount, {CoreFunctions? core}) =>
+    saleNumberOf(created, expectedCount, core: core) != null;
+
+/// The sale number [created] proves, or null (see [looksLikeConfirmedSale]).
+String? saleNumberOf(Object? created, int expectedCount, {CoreFunctions? core}) {
+  try {
+    final n = _core(core).sellingSaleProof({'reply': created, 'sent': expectedCount})['sale_number'];
+    return n is String && n.isNotEmpty ? n : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+/// Throws a FormatException('bad') for anything that isn't a date in a form the server's parse_sale_date reads, or
+/// FormatException('future') for a date after [today] - the core's rule (selling.parse_sale_date, SM-D6), held to
+/// sale_date.json. How far back a date may go is [checkSaleDate]'s (SALE-1). StateError when the core can't answer.
+DateTime parseSaleDate(String text, DateTime today, {CoreFunctions? core}) {
+  Map<String, Object?> reply;
+  try {
+    reply = _core(core).sellingParseSaleDate({'text': text, 'today': _ymd(today)});
+  } catch (e) {
+    throw StateError("mazama_core couldn't read the sale date ($e)");
+  }
+  final date = reply['date'], error = reply['error'];
+  if (error == 'bad' || error == 'future') throw FormatException(error as String);
+  if (error == null && date is String) return _day(date);
+  throw StateError('mazama_core answered a sale date with ${reply.keys.toList()}');
+}
+
+/// Null when a sale may be dated [date]; 'future' after [today], 'too_old' more than 365 days back (SALE-1): the core's
+/// selling.check_sale_date. 'unchecked' when the core can't answer (refused: SALE-14).
+String? checkSaleDate(DateTime date, DateTime today, {CoreFunctions? core}) {
+  try {
+    final reply = _core(core).sellingCheckSaleDate({'date': _ymd(date), 'today': _ymd(today)});
+    final e = reply['error'];
+    if (e == null && reply['date'] is String) return null;
+    if (e == 'future' || e == 'too_old') return e as String;
+  } catch (_) {
+    // below
+  }
+  return 'unchecked';
+}
+
+/// The words for [checkSaleDate]'s answer.
+String saleDateRefusal(String why) => switch (why) {
+      'future' => "The sale date can't be in the future.",
+      'too_old' => "A sale can't be dated more than 365 days back.",
+      _ => "This phone can't check the sale date (its shared core failed), so the sale was never attempted.",
+    };
+
+/// The Pacific date of [now] (SALE-2: a sale's default date and the date pickers' last day, whatever the device's own
+/// zone), as a date-only DateTime. StateError when the core can't answer.
+DateTime pacificToday(DateTime now, {CoreFunctions? core}) {
+  final u = now.toUtc();
+  final text = '${_ymd(u)}T${u.hour.toString().padLeft(2, '0')}:${u.minute.toString().padLeft(2, '0')}:'
+      '${u.second.toString().padLeft(2, '0')}Z';
+  try {
+    final d = _core(core).sellingToday({'now': text})['date'];
+    if (d is String) return _day(d);
+  } catch (_) {
+    // below
+  }
+  throw StateError("mazama_core couldn't work out today's Pacific date");
+}
+
+/// A state-site date as ISO ("2026-05-27"): MM/DD/YYYY (a one-digit month or day allowed, anything after a space
+/// ignored) or ISO YYYY-MM-DD (a time after it ignored); an impossible date is null. The core's
+/// selling.parse_state_date (moved from state_date.dart, specs/core row 7). Null when the core can't answer.
+String? stateDateIso(String? s, {CoreFunctions? core}) {
+  if (s == null) return null;
+  try {
+    final d = _core(core).sellingParseStateDate({'text': s})['date'];
+    return d is String ? d : null;
+  } catch (_) {
+    return null;
+  }
 }

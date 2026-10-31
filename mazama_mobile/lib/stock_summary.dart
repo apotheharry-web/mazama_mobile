@@ -35,6 +35,10 @@ const Map<String, (int, String, String)> stockEdibleSizes = {
   stockMicro: (-2, 'Microdose', 'dm'),
 };
 
+/// The edible classes' par/order size codes, Booster then Microdose: the only sizes an edible's par row and order row
+/// take (SP-D15, MI-D17).
+final List<int> stockEdibleSizeCodes = [for (final e in stockEdibleSizes.values) e.$1];
+
 /// A row with no type: the first of these words its name contains, any case (rules.yaml name_keywords).
 const List<(String, String)> stockNameKeywords = [
   ('gumm', 'GM'), ('chocolate', 'CH'), ('choc', 'CH'), ('honey', 'HN'), ('extract', 'EX'),
@@ -289,13 +293,6 @@ String stockRowSizeKey(StockRow r, String mgMode) {
   final num mg = m != null ? double.parse(m.group(1)!) : _mgPerUnit(r, mgMode);
   if (mg <= 0) return stockOtherSize;
   return mg < stockBoosterFromMg ? stockMicro : stockBooster;
-}
-
-/// A summary size key -> its par/order size: "25" -> 25, "booster" -> -1, "micro" -> -2, "other" -> 0.
-int stockSizeCode(String key) {
-  final e = stockEdibleSizes[key];
-  if (e != null) return e.$1;
-  return key == stockOtherSize ? 0 : int.parse(key);
 }
 
 /// A par/order size -> its words: "25 mg", "Booster", "Microdose", "Other".

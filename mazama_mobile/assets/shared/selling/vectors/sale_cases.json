@@ -1,0 +1,8214 @@
+{
+ "about": "specs/core Task 13's SALE rows, as the owner approved them (CR-D6, 2026-10-31), in the shared core's answer shapes: selling.build_sale, parse_sale_date, check_sale_date, pacific_midnight, today, allocate_sale, check_sale, sale_outcome, sale_proof, review_each, review_sale_date, expiry, parse_state_date. Frozen from specs/core/replay/replay_sale.py's proposed_* (gen.py); a case marked big holds an integer beyond 64 bits, which the phone's JSON reader can't carry.",
+ "allocate_sale": [
+  {
+   "draws": [
+    [
+     0,
+     1,
+     3
+    ],
+    [
+     1,
+     2,
+     4
+    ]
+   ],
+   "input": {
+    "lines": [
+     {
+      "dose": "initial",
+      "product": "P",
+      "qty": 3
+     },
+     {
+      "dose": "secondary",
+      "product": "P",
+      "qty": 4
+     }
+    ],
+    "lots": {
+     "P": [
+      {
+       "expires": "2027-03-01",
+       "id": 1,
+       "quantity": 3,
+       "state_only": false
+      },
+      {
+       "expires": "2027-06-01",
+       "id": 2,
+       "quantity": 5,
+       "state_only": false
+      }
+     ]
+    }
+   },
+   "name": "two lines of one product share its lots",
+   "sale": "SALE-4",
+   "short": null
+  },
+  {
+   "draws": null,
+   "input": {
+    "lines": [
+     {
+      "dose": "initial",
+      "product": "P",
+      "qty": 4
+     },
+     {
+      "dose": "secondary",
+      "product": "P",
+      "qty": 3
+     }
+    ],
+    "lots": {
+     "P": [
+      {
+       "expires": "2027-03-01",
+       "id": 1,
+       "quantity": 6,
+       "state_only": false
+      }
+     ]
+    }
+   },
+   "name": "the second line is short once the first has drawn",
+   "sale": "SALE-4",
+   "short": 1
+  },
+  {
+   "draws": null,
+   "input": {
+    "lines": [
+     {
+      "dose": "initial",
+      "product": "P",
+      "qty": 2
+     },
+     {
+      "dose": "initial",
+      "product": "Q",
+      "qty": 1
+     },
+     {
+      "dose": "secondary",
+      "product": "P",
+      "qty": 2
+     }
+    ],
+    "lots": {
+     "P": [
+      {
+       "expires": "2027-03-01",
+       "id": 1,
+       "quantity": 1,
+       "state_only": false
+      },
+      {
+       "expires": "2027-03-01",
+       "id": 2,
+       "quantity": 1,
+       "state_only": false
+      },
+      {
+       "expires": null,
+       "id": 3,
+       "quantity": 1,
+       "state_only": false
+      }
+     ],
+     "Q": [
+      {
+       "expires": null,
+       "id": 9,
+       "quantity": 2,
+       "state_only": false
+      }
+     ]
+    }
+   },
+   "name": "a product between two lines of another",
+   "sale": "SALE-4",
+   "short": 2
+  },
+  {
+   "draws": [
+    [
+     0,
+     2,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ]
+   ],
+   "input": {
+    "lines": [
+     {
+      "dose": "initial",
+      "product": "P",
+      "qty": 2
+     }
+    ],
+    "lots": {
+     "P": [
+      {
+       "expires": "2027-03-01",
+       "id": 1,
+       "quantity": 5,
+       "state_only": true
+      },
+      {
+       "expires": "2028-01-01",
+       "id": 2,
+       "quantity": 1,
+       "state_only": false
+      }
+     ]
+    }
+   },
+   "name": "a lot only the state lists comes last",
+   "sale": "SALE-4",
+   "short": null
+  },
+  {
+   "draws": [
+    [
+     0,
+     1,
+     2
+    ],
+    [
+     0,
+     2,
+     1
+    ]
+   ],
+   "input": {
+    "lines": [
+     {
+      "dose": "initial",
+      "product": "P",
+      "qty": 3
+     }
+    ],
+    "lots": {
+     "P": [
+      {
+       "expires": "2027-03-01",
+       "id": 1,
+       "quantity": 2.7,
+       "state_only": false
+      },
+      {
+       "expires": null,
+       "id": 2,
+       "quantity": 2,
+       "state_only": false
+      }
+     ]
+    }
+   },
+   "name": "a fractional lot gives whole units only",
+   "sale": "SALE-4",
+   "short": null
+  },
+  {
+   "draws": null,
+   "input": {
+    "lines": [
+     {
+      "dose": "initial",
+      "product": "P",
+      "qty": 9
+     },
+     {
+      "dose": "initial",
+      "product": "Q",
+      "qty": 9
+     }
+    ],
+    "lots": {
+     "P": [
+      {
+       "expires": null,
+       "id": 1,
+       "quantity": 2,
+       "state_only": false
+      }
+     ],
+     "Q": [
+      {
+       "expires": null,
+       "id": 2,
+       "quantity": 1,
+       "state_only": false
+      }
+     ]
+    }
+   },
+   "name": "the first short line is named",
+   "sale": "SALE-4",
+   "short": 0
+  },
+  {
+   "draws": [
+    [
+     0,
+     2,
+     1
+    ]
+   ],
+   "input": {
+    "lines": [
+     {
+      "dose": "initial",
+      "product": "P",
+      "qty": 1
+     }
+    ],
+    "lots": {
+     "P": [
+      {
+       "expires": null,
+       "id": 1,
+       "quantity": -3,
+       "state_only": false
+      },
+      {
+       "expires": null,
+       "id": 2,
+       "quantity": 1,
+       "state_only": false
+      }
+     ]
+    }
+   },
+   "name": "a negative lot gives nothing",
+   "sale": "SALE-4",
+   "short": null
+  },
+  {
+   "draws": null,
+   "input": {
+    "lines": [
+     {
+      "dose": "initial",
+      "product": "P",
+      "qty": 1
+     }
+    ],
+    "lots": {
+     "P": []
+    }
+   },
+   "name": "a product with no lots is short",
+   "sale": "SALE-4",
+   "short": 0
+  }
+ ],
+ "build_sale": [
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 5,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 2050,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "one unit",
+   "record": {
+    "analyteWeight": 7.25,
+    "changes": null,
+    "costEach": 20.5,
+    "dateCreated": "",
+    "dateDeleted": null,
+    "dateOfSale": "2026-10-20T07:00:00.000Z",
+    "deleted": false,
+    "deletedBy": null,
+    "id": 0,
+    "initialDose": 1,
+    "isRefund": "",
+    "notes": "",
+    "numberSold": 1,
+    "productCost": 20.5,
+    "productGroup": "Edible Psilocybin Product",
+    "productGuid": "PKPR-aaaa0001",
+    "productId": 5,
+    "reasonDeleted": null,
+    "saleNumber": "",
+    "secondaryDose": 0,
+    "serviceCenterId": 225,
+    "wasteOuts": [],
+    "weightPerUnit": 0.5
+   },
+   "refusal": null,
+   "sale": "SALE-3"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 5,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 1001,
+    "qty": 7,
+    "sale_date": "2026-10-20"
+   },
+   "name": "a price whose product is not exact in binary",
+   "record": {
+    "analyteWeight": 7.25,
+    "changes": null,
+    "costEach": 10.01,
+    "dateCreated": "",
+    "dateDeleted": null,
+    "dateOfSale": "2026-10-20T07:00:00.000Z",
+    "deleted": false,
+    "deletedBy": null,
+    "id": 0,
+    "initialDose": 7,
+    "isRefund": "",
+    "notes": "",
+    "numberSold": 7,
+    "productCost": 70.07,
+    "productGroup": "Edible Psilocybin Product",
+    "productGuid": "PKPR-aaaa0001",
+    "productId": 5,
+    "reasonDeleted": null,
+    "saleNumber": "",
+    "secondaryDose": 0,
+    "serviceCenterId": 225,
+    "wasteOuts": [],
+    "weightPerUnit": 0.5
+   },
+   "refusal": null,
+   "sale": "SALE-3"
+  },
+  {
+   "input": {
+    "dose": "secondary",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 5,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 1000000,
+    "qty": 999,
+    "sale_date": "2026-10-20"
+   },
+   "name": "the $10,000 ceiling, 999 units",
+   "record": {
+    "analyteWeight": 7.25,
+    "changes": null,
+    "costEach": 10000.0,
+    "dateCreated": "",
+    "dateDeleted": null,
+    "dateOfSale": "2026-10-20T07:00:00.000Z",
+    "deleted": false,
+    "deletedBy": null,
+    "id": 0,
+    "initialDose": 0,
+    "isRefund": "",
+    "notes": "",
+    "numberSold": 999,
+    "productCost": 9990000.0,
+    "productGroup": "Edible Psilocybin Product",
+    "productGuid": "PKPR-aaaa0001",
+    "productId": 5,
+    "reasonDeleted": null,
+    "saleNumber": "",
+    "secondaryDose": 999,
+    "serviceCenterId": 225,
+    "wasteOuts": [],
+    "weightPerUnit": 0.5
+   },
+   "refusal": null,
+   "sale": "SALE-3"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 5,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 3333,
+    "qty": 37,
+    "sale_date": "2026-10-20"
+   },
+   "name": "a third of a dollar, 37 units",
+   "record": {
+    "analyteWeight": 7.25,
+    "changes": null,
+    "costEach": 33.33,
+    "dateCreated": "",
+    "dateDeleted": null,
+    "dateOfSale": "2026-10-20T07:00:00.000Z",
+    "deleted": false,
+    "deletedBy": null,
+    "id": 0,
+    "initialDose": 37,
+    "isRefund": "",
+    "notes": "",
+    "numberSold": 37,
+    "productCost": 1233.21,
+    "productGroup": "Edible Psilocybin Product",
+    "productGuid": "PKPR-aaaa0001",
+    "productId": 5,
+    "reasonDeleted": null,
+    "saleNumber": "",
+    "secondaryDose": 0,
+    "serviceCenterId": 225,
+    "wasteOuts": [],
+    "weightPerUnit": 0.5
+   },
+   "refusal": null,
+   "sale": "SALE-3"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 5,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 0,
+    "qty": 2,
+    "sale_date": "2026-10-20"
+   },
+   "name": "free",
+   "record": {
+    "analyteWeight": 7.25,
+    "changes": null,
+    "costEach": 0.0,
+    "dateCreated": "",
+    "dateDeleted": null,
+    "dateOfSale": "2026-10-20T07:00:00.000Z",
+    "deleted": false,
+    "deletedBy": null,
+    "id": 0,
+    "initialDose": 2,
+    "isRefund": "",
+    "notes": "",
+    "numberSold": 2,
+    "productCost": 0.0,
+    "productGroup": "Edible Psilocybin Product",
+    "productGuid": "PKPR-aaaa0001",
+    "productId": 5,
+    "reasonDeleted": null,
+    "saleNumber": "",
+    "secondaryDose": 0,
+    "serviceCenterId": 225,
+    "wasteOuts": [],
+    "weightPerUnit": 0.5
+   },
+   "refusal": null,
+   "sale": "SALE-3"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 5,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 1,
+    "qty": 3,
+    "sale_date": "2026-10-20"
+   },
+   "name": "one cent",
+   "record": {
+    "analyteWeight": 7.25,
+    "changes": null,
+    "costEach": 0.01,
+    "dateCreated": "",
+    "dateDeleted": null,
+    "dateOfSale": "2026-10-20T07:00:00.000Z",
+    "deleted": false,
+    "deletedBy": null,
+    "id": 0,
+    "initialDose": 3,
+    "isRefund": "",
+    "notes": "",
+    "numberSold": 3,
+    "productCost": 0.03,
+    "productGroup": "Edible Psilocybin Product",
+    "productGuid": "PKPR-aaaa0001",
+    "productId": 5,
+    "reasonDeleted": null,
+    "saleNumber": "",
+    "secondaryDose": 0,
+    "serviceCenterId": 225,
+    "wasteOuts": [],
+    "weightPerUnit": 0.5
+   },
+   "refusal": null,
+   "sale": "SALE-3"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 5,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2006-06-01"
+   },
+   "name": "a date before 2007 is written by the 2007 rule",
+   "record": {
+    "analyteWeight": 7.25,
+    "changes": null,
+    "costEach": 25.0,
+    "dateCreated": "",
+    "dateDeleted": null,
+    "dateOfSale": "2006-06-01T07:00:00.000Z",
+    "deleted": false,
+    "deletedBy": null,
+    "id": 0,
+    "initialDose": 1,
+    "isRefund": "",
+    "notes": "",
+    "numberSold": 1,
+    "productCost": 25.0,
+    "productGroup": "Edible Psilocybin Product",
+    "productGuid": "PKPR-aaaa0001",
+    "productId": 5,
+    "reasonDeleted": null,
+    "saleNumber": "",
+    "secondaryDose": 0,
+    "serviceCenterId": 225,
+    "wasteOuts": [],
+    "weightPerUnit": 0.5
+   },
+   "refusal": null,
+   "sale": "SALE-1"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 5,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "0999-12-31"
+   },
+   "name": "a year below 1000 is written with four digits",
+   "record": {
+    "analyteWeight": 7.25,
+    "changes": null,
+    "costEach": 25.0,
+    "dateCreated": "",
+    "dateDeleted": null,
+    "dateOfSale": "0999-12-31T08:00:00.000Z",
+    "deleted": false,
+    "deletedBy": null,
+    "id": 0,
+    "initialDose": 1,
+    "isRefund": "",
+    "notes": "",
+    "numberSold": 1,
+    "productCost": 25.0,
+    "productGroup": "Edible Psilocybin Product",
+    "productGuid": "PKPR-aaaa0001",
+    "productId": 5,
+    "reasonDeleted": null,
+    "saleNumber": "",
+    "secondaryDose": 0,
+    "serviceCenterId": 225,
+    "wasteOuts": [],
+    "weightPerUnit": 0.5
+   },
+   "refusal": null,
+   "sale": "SALE-1"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7,
+     "id": 5,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": 1
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "whole-number weights pass through as given",
+   "record": {
+    "analyteWeight": 7,
+    "changes": null,
+    "costEach": 25.0,
+    "dateCreated": "",
+    "dateDeleted": null,
+    "dateOfSale": "2026-10-20T07:00:00.000Z",
+    "deleted": false,
+    "deletedBy": null,
+    "id": 0,
+    "initialDose": 1,
+    "isRefund": "",
+    "notes": "",
+    "numberSold": 1,
+    "productCost": 25.0,
+    "productGroup": "Edible Psilocybin Product",
+    "productGuid": "PKPR-aaaa0001",
+    "productId": 5,
+    "reasonDeleted": null,
+    "saleNumber": "",
+    "secondaryDose": 0,
+    "serviceCenterId": 225,
+    "wasteOuts": [],
+    "weightPerUnit": 1
+   },
+   "refusal": null,
+   "sale": "SALE-12"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 1e-07,
+     "id": 5,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.1
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "a fraction stays as the state gave it",
+   "record": {
+    "analyteWeight": 1e-07,
+    "changes": null,
+    "costEach": 25.0,
+    "dateCreated": "",
+    "dateDeleted": null,
+    "dateOfSale": "2026-10-20T07:00:00.000Z",
+    "deleted": false,
+    "deletedBy": null,
+    "id": 0,
+    "initialDose": 1,
+    "isRefund": "",
+    "notes": "",
+    "numberSold": 1,
+    "productCost": 25.0,
+    "productGroup": "Edible Psilocybin Product",
+    "productGuid": "PKPR-aaaa0001",
+    "productId": 5,
+    "reasonDeleted": null,
+    "saleNumber": "",
+    "secondaryDose": 0,
+    "serviceCenterId": 225,
+    "wasteOuts": [],
+    "weightPerUnit": 0.1
+   },
+   "refusal": null,
+   "sale": "SALE-12"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 0.0,
+     "id": 5,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": 0
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "zero weights are numbers of 0 or more",
+   "record": {
+    "analyteWeight": 0.0,
+    "changes": null,
+    "costEach": 25.0,
+    "dateCreated": "",
+    "dateDeleted": null,
+    "dateOfSale": "2026-10-20T07:00:00.000Z",
+    "deleted": false,
+    "deletedBy": null,
+    "id": 0,
+    "initialDose": 1,
+    "isRefund": "",
+    "notes": "",
+    "numberSold": 1,
+    "productCost": 25.0,
+    "productGroup": "Edible Psilocybin Product",
+    "productGuid": "PKPR-aaaa0001",
+    "productId": 5,
+    "reasonDeleted": null,
+    "saleNumber": "",
+    "secondaryDose": 0,
+    "serviceCenterId": 225,
+    "wasteOuts": [],
+    "weightPerUnit": 0
+   },
+   "refusal": null,
+   "sale": "SALE-12"
+  },
+  {
+   "big": true,
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 1180591620717411303424,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "an id past 2^63 keeps its digits",
+   "record": {
+    "analyteWeight": 7.25,
+    "changes": null,
+    "costEach": 25.0,
+    "dateCreated": "",
+    "dateDeleted": null,
+    "dateOfSale": "2026-10-20T07:00:00.000Z",
+    "deleted": false,
+    "deletedBy": null,
+    "id": 0,
+    "initialDose": 1,
+    "isRefund": "",
+    "notes": "",
+    "numberSold": 1,
+    "productCost": 25.0,
+    "productGroup": "Edible Psilocybin Product",
+    "productGuid": "PKPR-aaaa0001",
+    "productId": 1180591620717411303424,
+    "reasonDeleted": null,
+    "saleNumber": "",
+    "secondaryDose": 0,
+    "serviceCenterId": 225,
+    "wasteOuts": [],
+    "weightPerUnit": 0.5
+   },
+   "refusal": null,
+   "sale": "SALE-12"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 5,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "",
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "a productType that is empty text is still text",
+   "record": {
+    "analyteWeight": 7.25,
+    "changes": null,
+    "costEach": 25.0,
+    "dateCreated": "",
+    "dateDeleted": null,
+    "dateOfSale": "2026-10-20T07:00:00.000Z",
+    "deleted": false,
+    "deletedBy": null,
+    "id": 0,
+    "initialDose": 1,
+    "isRefund": "",
+    "notes": "",
+    "numberSold": 1,
+    "productCost": 25.0,
+    "productGroup": "",
+    "productGuid": "PKPR-aaaa0001",
+    "productId": 5,
+    "reasonDeleted": null,
+    "saleNumber": "",
+    "secondaryDose": 0,
+    "serviceCenterId": 225,
+    "wasteOuts": [],
+    "weightPerUnit": 0.5
+   },
+   "refusal": null,
+   "sale": "SALE-12"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "description": "x",
+     "id": 5,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "quantity": 9,
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "keys the record doesn't copy are left out",
+   "record": {
+    "analyteWeight": 7.25,
+    "changes": null,
+    "costEach": 25.0,
+    "dateCreated": "",
+    "dateDeleted": null,
+    "dateOfSale": "2026-10-20T07:00:00.000Z",
+    "deleted": false,
+    "deletedBy": null,
+    "id": 0,
+    "initialDose": 1,
+    "isRefund": "",
+    "notes": "",
+    "numberSold": 1,
+    "productCost": 25.0,
+    "productGroup": "Edible Psilocybin Product",
+    "productGuid": "PKPR-aaaa0001",
+    "productId": 5,
+    "reasonDeleted": null,
+    "saleNumber": "",
+    "secondaryDose": 0,
+    "serviceCenterId": 225,
+    "wasteOuts": [],
+    "weightPerUnit": 0.5
+   },
+   "refusal": null,
+   "sale": "SALE-12"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 5,
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "productGuid absent",
+   "record": null,
+   "refusal": "the state's record lacks productGuid, so it can't be sold",
+   "sale": "SALE-13"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 5,
+     "productGuid": null,
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "productGuid null",
+   "record": null,
+   "refusal": "the state's record lacks productGuid, so it can't be sold",
+   "sale": "SALE-13"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 5,
+     "productGuid": "",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "productGuid empty",
+   "record": null,
+   "refusal": "the state's record lacks productGuid, so it can't be sold",
+   "sale": "SALE-13"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 5,
+     "productGuid": "  ",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "productGuid spaces",
+   "record": null,
+   "refusal": "the state's record lacks productGuid, so it can't be sold",
+   "sale": "SALE-13"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 5,
+     "productGuid": "\t",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "productGuid a tab",
+   "record": null,
+   "refusal": "the state's record lacks productGuid, so it can't be sold",
+   "sale": "SALE-13"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 5,
+     "productGuid": 5,
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "productGuid a number",
+   "record": null,
+   "refusal": "the state's record lacks productGuid, so it can't be sold",
+   "sale": "SALE-13"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 5,
+     "productGuid": [
+      "PKPR-1"
+     ],
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "productGuid a list",
+   "record": null,
+   "refusal": "the state's record lacks productGuid, so it can't be sold",
+   "sale": "SALE-13"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 5,
+     "productGuid": "\u001c",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "productGuid U+001C only",
+   "record": {
+    "analyteWeight": 7.25,
+    "changes": null,
+    "costEach": 25.0,
+    "dateCreated": "",
+    "dateDeleted": null,
+    "dateOfSale": "2026-10-20T07:00:00.000Z",
+    "deleted": false,
+    "deletedBy": null,
+    "id": 0,
+    "initialDose": 1,
+    "isRefund": "",
+    "notes": "",
+    "numberSold": 1,
+    "productCost": 25.0,
+    "productGroup": "Edible Psilocybin Product",
+    "productGuid": "\u001c",
+    "productId": 5,
+    "reasonDeleted": null,
+    "saleNumber": "",
+    "secondaryDose": 0,
+    "serviceCenterId": 225,
+    "wasteOuts": [],
+    "weightPerUnit": 0.5
+   },
+   "refusal": null,
+   "sale": "SALE-13"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 5,
+     "productGuid": "﻿",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "productGuid a byte order mark only",
+   "record": {
+    "analyteWeight": 7.25,
+    "changes": null,
+    "costEach": 25.0,
+    "dateCreated": "",
+    "dateDeleted": null,
+    "dateOfSale": "2026-10-20T07:00:00.000Z",
+    "deleted": false,
+    "deletedBy": null,
+    "id": 0,
+    "initialDose": 1,
+    "isRefund": "",
+    "notes": "",
+    "numberSold": 1,
+    "productCost": 25.0,
+    "productGroup": "Edible Psilocybin Product",
+    "productGuid": "﻿",
+    "productId": 5,
+    "reasonDeleted": null,
+    "saleNumber": "",
+    "secondaryDose": 0,
+    "serviceCenterId": 225,
+    "wasteOuts": [],
+    "weightPerUnit": 0.5
+   },
+   "refusal": null,
+   "sale": "SALE-13"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 5,
+     "productGuid": "PKPR-aaaa0001",
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "productType absent",
+   "record": null,
+   "refusal": "the state's record of PKPR-aaaa0001 lacks productType, so it can't be sold",
+   "sale": "SALE-13"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 5,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": null,
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "productType null",
+   "record": null,
+   "refusal": "the state's record of PKPR-aaaa0001 lacks productType, so it can't be sold",
+   "sale": "SALE-13"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 5,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": 5,
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "productType a number",
+   "record": null,
+   "refusal": "the state's record of PKPR-aaaa0001 lacks productType, so it can't be sold",
+   "sale": "SALE-13"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 5,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": true,
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "productType true",
+   "record": null,
+   "refusal": "the state's record of PKPR-aaaa0001 lacks productType, so it can't be sold",
+   "sale": "SALE-13"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "id absent",
+   "record": null,
+   "refusal": "the state's record of PKPR-aaaa0001 lacks id, so it can't be sold",
+   "sale": "SALE-13"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": null,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "id null",
+   "record": null,
+   "refusal": "the state's record of PKPR-aaaa0001 lacks id, so it can't be sold",
+   "sale": "SALE-13"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 0,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "id 0",
+   "record": null,
+   "refusal": "the state's record of PKPR-aaaa0001 lacks id, so it can't be sold",
+   "sale": "SALE-13"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": -1,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "id negative",
+   "record": null,
+   "refusal": "the state's record of PKPR-aaaa0001 lacks id, so it can't be sold",
+   "sale": "SALE-13"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": true,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "id true",
+   "record": null,
+   "refusal": "the state's record of PKPR-aaaa0001 lacks id, so it can't be sold",
+   "sale": "SALE-13"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 2.5,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "id a fraction",
+   "record": null,
+   "refusal": "the state's record of PKPR-aaaa0001 lacks id, so it can't be sold",
+   "sale": "SALE-13"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": "5",
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "id text",
+   "record": null,
+   "refusal": "the state's record of PKPR-aaaa0001 lacks id, so it can't be sold",
+   "sale": "SALE-13"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 5.0,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "id a whole float",
+   "record": null,
+   "refusal": "the state's record of PKPR-aaaa0001 lacks id, so it can't be sold",
+   "sale": "SALE-13"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 5,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "weightPerUnit absent",
+   "record": null,
+   "refusal": "the state's record of PKPR-aaaa0001 lacks weightPerUnit, so it can't be sold",
+   "sale": "SALE-13"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 5,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": null
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "weightPerUnit null",
+   "record": null,
+   "refusal": "the state's record of PKPR-aaaa0001 lacks weightPerUnit, so it can't be sold",
+   "sale": "SALE-13"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 5,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": -0.5
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "weightPerUnit negative",
+   "record": null,
+   "refusal": "the state's record of PKPR-aaaa0001 lacks weightPerUnit, so it can't be sold",
+   "sale": "SALE-13"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 5,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": "0.5"
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "weightPerUnit text",
+   "record": null,
+   "refusal": "the state's record of PKPR-aaaa0001 lacks weightPerUnit, so it can't be sold",
+   "sale": "SALE-13"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 5,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": true
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "weightPerUnit true",
+   "record": null,
+   "refusal": "the state's record of PKPR-aaaa0001 lacks weightPerUnit, so it can't be sold",
+   "sale": "SALE-13"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 5,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": [
+      0.5
+     ]
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "weightPerUnit a list",
+   "record": null,
+   "refusal": "the state's record of PKPR-aaaa0001 lacks weightPerUnit, so it can't be sold",
+   "sale": "SALE-13"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "id": 5,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "analyteWeight absent",
+   "record": null,
+   "refusal": "the state's record of PKPR-aaaa0001 lacks analyteWeight, so it can't be sold",
+   "sale": "SALE-13"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": null,
+     "id": 5,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "analyteWeight null",
+   "record": null,
+   "refusal": "the state's record of PKPR-aaaa0001 lacks analyteWeight, so it can't be sold",
+   "sale": "SALE-13"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": -1,
+     "id": 5,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "analyteWeight negative",
+   "record": null,
+   "refusal": "the state's record of PKPR-aaaa0001 lacks analyteWeight, so it can't be sold",
+   "sale": "SALE-13"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": "7.25",
+     "id": 5,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "analyteWeight text",
+   "record": null,
+   "refusal": "the state's record of PKPR-aaaa0001 lacks analyteWeight, so it can't be sold",
+   "sale": "SALE-13"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": false,
+     "id": 5,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "analyteWeight false",
+   "record": null,
+   "refusal": "the state's record of PKPR-aaaa0001 lacks analyteWeight, so it can't be sold",
+   "sale": "SALE-13"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 5,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "serviceCenterId absent",
+   "record": null,
+   "refusal": "the state's record of PKPR-aaaa0001 lacks serviceCenterId, so it can't be sold",
+   "sale": "SALE-13"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 5,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": null,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "serviceCenterId null",
+   "record": null,
+   "refusal": "the state's record of PKPR-aaaa0001 lacks serviceCenterId, so it can't be sold",
+   "sale": "SALE-13"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 5,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": true,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "serviceCenterId true",
+   "record": null,
+   "refusal": "the state's record of PKPR-aaaa0001 lacks serviceCenterId, so it can't be sold",
+   "sale": "SALE-13"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 5,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": "225",
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "serviceCenterId text",
+   "record": null,
+   "refusal": "the state's record of PKPR-aaaa0001 lacks serviceCenterId, so it can't be sold",
+   "sale": "SALE-13"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 5,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225.5,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "serviceCenterId a fraction",
+   "record": null,
+   "refusal": "the state's record of PKPR-aaaa0001 lacks serviceCenterId, so it can't be sold",
+   "sale": "SALE-13"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 5,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225.0,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "serviceCenterId a whole float",
+   "record": null,
+   "refusal": "the state's record of PKPR-aaaa0001 lacks serviceCenterId, so it can't be sold",
+   "sale": "SALE-13"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 5,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 0,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "serviceCenterId 0",
+   "record": null,
+   "refusal": "the state's record of PKPR-aaaa0001 lacks serviceCenterId, so it can't be sold",
+   "sale": "SALE-13"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 5,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": -225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "serviceCenterId negative",
+   "record": null,
+   "refusal": "the state's record of PKPR-aaaa0001 lacks serviceCenterId, so it can't be sold",
+   "sale": "SALE-13"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 5,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": -1,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "a price each below 0",
+   "record": null,
+   "refusal": "the price each must be a whole number of cents from $0 to $10,000",
+   "sale": "SALE-10"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 5,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 1000001,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "a price each a cent over $10,000",
+   "record": null,
+   "refusal": "the price each must be a whole number of cents from $0 to $10,000",
+   "sale": "SALE-10"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 5,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 2.5,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "a price each that isn't whole cents",
+   "record": null,
+   "refusal": "the price each must be a whole number of cents from $0 to $10,000",
+   "sale": "SALE-10"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 5,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": true,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "a price each of true",
+   "record": null,
+   "refusal": "the price each must be a whole number of cents from $0 to $10,000",
+   "sale": "SALE-10"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 5,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 2500,
+    "qty": 0,
+    "sale_date": "2026-10-20"
+   },
+   "name": "a quantity of 0",
+   "record": null,
+   "refusal": "the quantity must be a whole number from 1 to 999",
+   "sale": "SALE-10"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 5,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 2500,
+    "qty": 1000,
+    "sale_date": "2026-10-20"
+   },
+   "name": "a quantity of 1,000",
+   "record": null,
+   "refusal": "the quantity must be a whole number from 1 to 999",
+   "sale": "SALE-10"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 5,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 2500,
+    "qty": 2.0,
+    "sale_date": "2026-10-20"
+   },
+   "name": "a quantity that is a whole float",
+   "record": null,
+   "refusal": "the quantity must be a whole number from 1 to 999",
+   "sale": "SALE-10"
+  },
+  {
+   "input": {
+    "dose": "both",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 5,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": 2500,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "a dose that is neither",
+   "record": null,
+   "refusal": "the dose must be initial or secondary",
+   "sale": "SALE-10"
+  },
+  {
+   "input": {
+    "dose": "initial",
+    "item": {
+     "analyteWeight": 7.25,
+     "id": 0,
+     "productGuid": "PKPR-aaaa0001",
+     "productType": "Edible Psilocybin Product",
+     "serviceCenterId": 225,
+     "weightPerUnit": 0.5
+    },
+    "price_cents": -1,
+    "qty": 1,
+    "sale_date": "2026-10-20"
+   },
+   "name": "what the record lacks is said before the price",
+   "record": null,
+   "refusal": "the state's record of PKPR-aaaa0001 lacks id, so it can't be sold",
+   "sale": "SALE-13"
+  }
+ ],
+ "check_sale": [
+  {
+   "input": {
+    "cap": true,
+    "center": 225,
+    "fresh": [
+     {
+      "analyteWeight": 7.25,
+      "flagged": false,
+      "id": 1,
+      "locked": false,
+      "pendingTransfer": false,
+      "productGuid": "PKPR-aaaa0001",
+      "productType": "Edible Psilocybin Product",
+      "quantity": 10,
+      "serviceCenterId": 225,
+      "weightPerUnit": 0.5,
+      "zeroOut": false
+     }
+    ],
+    "lines": [
+     {
+      "dose": "initial",
+      "guid": "PKPR-aaaa0001",
+      "qty": 2,
+      "record_id": 1
+     }
+    ]
+   },
+   "name": "still there",
+   "refusal": null,
+   "sale": "SALE-4"
+  },
+  {
+   "input": {
+    "cap": true,
+    "center": 225,
+    "fresh": [
+     {
+      "analyteWeight": 7.25,
+      "flagged": false,
+      "id": 1,
+      "locked": false,
+      "pendingTransfer": false,
+      "productGuid": "PKPR-aaaa0001",
+      "productType": "Edible Psilocybin Product",
+      "quantity": 10,
+      "serviceCenterId": 225,
+      "weightPerUnit": 0.5,
+      "zeroOut": false
+     }
+    ],
+    "lines": [
+     {
+      "dose": "initial",
+      "guid": "PKPR-aaaa0001",
+      "qty": 6,
+      "record_id": 1
+     },
+     {
+      "dose": "secondary",
+      "guid": "PKPR-aaaa0001",
+      "qty": 5,
+      "record_id": 1
+     }
+    ]
+   },
+   "name": "two lines of one record are summed",
+   "refusal": "PKPR-aaaa0001: no units remaining (system reports quantity=10, zeroOut=False).",
+   "sale": "SALE-4"
+  },
+  {
+   "input": {
+    "cap": true,
+    "center": 225,
+    "fresh": [
+     {
+      "analyteWeight": 7.25,
+      "flagged": false,
+      "id": 1,
+      "locked": false,
+      "pendingTransfer": false,
+      "productGuid": "PKPR-aaaa0001",
+      "productType": "Edible Psilocybin Product",
+      "quantity": 10,
+      "serviceCenterId": 225,
+      "weightPerUnit": 0.1,
+      "zeroOut": false
+     }
+    ],
+    "lines": [
+     {
+      "dose": "initial",
+      "guid": "PKPR-aaaa0001",
+      "qty": 5,
+      "record_id": 1
+     },
+     {
+      "dose": "secondary",
+      "guid": "PKPR-aaaa0001",
+      "qty": 5,
+      "record_id": 1
+     }
+    ]
+   },
+   "name": "two lines of one record that fit together",
+   "refusal": null,
+   "sale": "SALE-4"
+  },
+  {
+   "input": {
+    "cap": true,
+    "center": 225,
+    "fresh": [],
+    "lines": [
+     {
+      "dose": "initial",
+      "guid": "PKPR-aaaa0001",
+      "qty": 1,
+      "record_id": 1
+     }
+    ]
+   },
+   "name": "gone from the center's stock",
+   "refusal": "PKPR-aaaa0001 is no longer in the state system's inventory for this service center.",
+   "sale": "SALE-8"
+  },
+  {
+   "input": {
+    "cap": true,
+    "center": 225,
+    "fresh": [
+     {
+      "analyteWeight": 7.25,
+      "flagged": false,
+      "id": 1,
+      "locked": false,
+      "pendingTransfer": false,
+      "productGuid": "PKPR-aaaa0001",
+      "productType": "Edible Psilocybin Product",
+      "quantity": 10,
+      "serviceCenterId": 225,
+      "weightPerUnit": 0.5,
+      "zeroOut": false
+     }
+    ],
+    "lines": [
+     {
+      "dose": "initial",
+      "guid": "PKPR-bbbb0002",
+      "qty": 1,
+      "record_id": 1
+     }
+    ]
+   },
+   "name": "the record now holds another package",
+   "refusal": "PKPR-bbbb0002 is no longer in the state system's inventory for this service center.",
+   "sale": "SALE-8"
+  },
+  {
+   "input": {
+    "cap": true,
+    "center": 225,
+    "fresh": [
+     {
+      "analyteWeight": 7.25,
+      "flagged": false,
+      "id": 1,
+      "locked": true,
+      "pendingTransfer": false,
+      "productGuid": "PKPR-aaaa0001",
+      "productType": "Edible Psilocybin Product",
+      "quantity": 10,
+      "reasonLocked": "Recall",
+      "serviceCenterId": 225,
+      "weightPerUnit": 0.5,
+      "zeroOut": false
+     }
+    ],
+    "lines": [
+     {
+      "dose": "initial",
+      "guid": "PKPR-aaaa0001",
+      "qty": 1,
+      "record_id": 1
+     }
+    ]
+   },
+   "name": "locked since",
+   "refusal": "PKPR-aaaa0001: package is locked (Recall).",
+   "sale": "SALE-8"
+  },
+  {
+   "input": {
+    "cap": true,
+    "center": 225,
+    "fresh": [
+     {
+      "analyteWeight": 7.25,
+      "flagged": false,
+      "id": 1,
+      "locked": false,
+      "pendingTransfer": false,
+      "productGuid": "PKPR-aaaa0001",
+      "productType": "Edible Psilocybin Product",
+      "quantity": 10,
+      "serviceCenterId": 226,
+      "weightPerUnit": 0.5,
+      "zeroOut": false
+     }
+    ],
+    "lines": [
+     {
+      "dose": "initial",
+      "guid": "PKPR-aaaa0001",
+      "qty": 1,
+      "record_id": 1
+     }
+    ]
+   },
+   "name": "another center's record",
+   "refusal": "PKPR-aaaa0001 belongs to a different service center.",
+   "sale": "SALE-8"
+  },
+  {
+   "input": {
+    "cap": true,
+    "center": 225,
+    "fresh": [
+     {
+      "analyteWeight": 7.25,
+      "flagged": false,
+      "id": 1,
+      "locked": false,
+      "pendingTransfer": false,
+      "productGuid": "PKPR-aaaa0001",
+      "productType": "Edible Psilocybin Product",
+      "quantity": 10,
+      "serviceCenterId": 226,
+      "weightPerUnit": 0.5,
+      "zeroOut": false
+     }
+    ],
+    "lines": [
+     {
+      "dose": "initial",
+      "guid": "PKPR-aaaa0001",
+      "qty": 99,
+      "record_id": 1
+     }
+    ]
+   },
+   "name": "the other-center check comes first",
+   "refusal": "PKPR-aaaa0001 belongs to a different service center.",
+   "sale": "SALE-8"
+  },
+  {
+   "input": {
+    "cap": true,
+    "center": 225,
+    "fresh": [
+     {
+      "analyteWeight": 10,
+      "flagged": false,
+      "id": 1,
+      "locked": false,
+      "pendingTransfer": false,
+      "productGuid": "PKPR-aaaa0001",
+      "productType": "Edible Psilocybin Product",
+      "quantity": 10,
+      "serviceCenterId": 225,
+      "weightPerUnit": 3.5,
+      "zeroOut": false
+     }
+    ],
+    "lines": [
+     {
+      "dose": "initial",
+      "guid": "PKPR-aaaa0001",
+      "qty": 2,
+      "record_id": 1
+     }
+    ]
+   },
+   "name": "over the cap on the state's figures now",
+   "refusal": "This sale would total 70.0 mg psilocybin - more than the 50 mg limit per sale (mg TPE is not subject to this cap).",
+   "sale": "SALE-8"
+  },
+  {
+   "input": {
+    "cap": false,
+    "center": 225,
+    "fresh": [
+     {
+      "analyteWeight": 10,
+      "flagged": false,
+      "id": 1,
+      "locked": false,
+      "pendingTransfer": false,
+      "productGuid": "PKPR-aaaa0001",
+      "productType": "Edible Psilocybin Product",
+      "quantity": 10,
+      "serviceCenterId": 225,
+      "weightPerUnit": 3.5,
+      "zeroOut": false
+     }
+    ],
+    "lines": [
+     {
+      "dose": "initial",
+      "guid": "PKPR-aaaa0001",
+      "qty": 2,
+      "record_id": 1
+     }
+    ]
+   },
+   "name": "the cap left to the caller",
+   "refusal": null,
+   "sale": "SALE-8"
+  },
+  {
+   "input": {
+    "cap": true,
+    "center": 225,
+    "fresh": [
+     {
+      "analyteWeight": null,
+      "flagged": false,
+      "id": 1,
+      "locked": false,
+      "pendingTransfer": false,
+      "productGuid": "PKPR-aaaa0001",
+      "productType": "Edible Psilocybin Product",
+      "quantity": 10,
+      "serviceCenterId": 225,
+      "weightPerUnit": 0.5,
+      "zeroOut": false
+     }
+    ],
+    "lines": [
+     {
+      "dose": "initial",
+      "guid": "PKPR-aaaa0001",
+      "qty": 1,
+      "record_id": 1
+     }
+    ]
+   },
+   "name": "no potency known now",
+   "refusal": "This sale holds a unit whose psilocybin isn't known (no weightPerUnit or analyteWeight), so it can't be sold here.",
+   "sale": "SALE-8"
+  },
+  {
+   "input": {
+    "cap": true,
+    "center": 225,
+    "fresh": [
+     {
+      "analyteWeight": 7.25,
+      "flagged": false,
+      "id": 1,
+      "locked": false,
+      "pendingTransfer": false,
+      "productGuid": "PKPR-aaaa0001",
+      "productType": "Edible Psilocybin Product",
+      "quantity": 10,
+      "serviceCenterId": 225,
+      "weightPerUnit": 0.5,
+      "zeroOut": false
+     }
+    ],
+    "lines": [
+     {
+      "dose": "initial",
+      "guid": "PKPR-aaaa0001",
+      "qty": 1,
+      "record_id": 1
+     }
+    ],
+    "sent": [
+     {
+      "analyteWeight": 7.25,
+      "changes": null,
+      "costEach": 20.5,
+      "dateCreated": "",
+      "dateDeleted": null,
+      "dateOfSale": "2026-10-29T07:00:00.000Z",
+      "deleted": false,
+      "deletedBy": null,
+      "id": 0,
+      "initialDose": 1,
+      "isRefund": "",
+      "notes": "",
+      "numberSold": 1,
+      "productCost": 20.5,
+      "productGroup": "Edible Psilocybin Product",
+      "productGuid": "PKPR-aaaa0001",
+      "productId": 5,
+      "reasonDeleted": null,
+      "saleNumber": "",
+      "secondaryDose": 0,
+      "serviceCenterId": 225,
+      "wasteOuts": [],
+      "weightPerUnit": 0.5
+     }
+    ]
+   },
+   "name": "nothing copied changed",
+   "refusal": null,
+   "sale": "SALE-17"
+  },
+  {
+   "input": {
+    "cap": true,
+    "center": 225,
+    "fresh": [
+     {
+      "analyteWeight": 7.0,
+      "flagged": false,
+      "id": 1,
+      "locked": false,
+      "pendingTransfer": false,
+      "productGuid": "PKPR-aaaa0001",
+      "productType": "Edible Psilocybin Product",
+      "quantity": 10,
+      "serviceCenterId": 225,
+      "weightPerUnit": 0.5,
+      "zeroOut": false
+     }
+    ],
+    "lines": [
+     {
+      "dose": "initial",
+      "guid": "PKPR-aaaa0001",
+      "qty": 1,
+      "record_id": 1
+     }
+    ],
+    "sent": [
+     {
+      "analyteWeight": 7,
+      "changes": null,
+      "costEach": 20.5,
+      "dateCreated": "",
+      "dateDeleted": null,
+      "dateOfSale": "2026-10-29T07:00:00.000Z",
+      "deleted": false,
+      "deletedBy": null,
+      "id": 0,
+      "initialDose": 1,
+      "isRefund": "",
+      "notes": "",
+      "numberSold": 1,
+      "productCost": 20.5,
+      "productGroup": "Edible Psilocybin Product",
+      "productGuid": "PKPR-aaaa0001",
+      "productId": 5,
+      "reasonDeleted": null,
+      "saleNumber": "",
+      "secondaryDose": 0,
+      "serviceCenterId": 225,
+      "wasteOuts": [],
+      "weightPerUnit": 0.5
+     }
+    ]
+   },
+   "name": "a whole number the same as its float",
+   "refusal": null,
+   "sale": "SALE-17"
+  },
+  {
+   "input": {
+    "cap": true,
+    "center": 225,
+    "fresh": [
+     {
+      "analyteWeight": 7.5,
+      "flagged": false,
+      "id": 1,
+      "locked": false,
+      "pendingTransfer": false,
+      "productGuid": "PKPR-aaaa0001",
+      "productType": "Edible Psilocybin Product",
+      "quantity": 10,
+      "serviceCenterId": 225,
+      "weightPerUnit": 0.5,
+      "zeroOut": false
+     }
+    ],
+    "lines": [
+     {
+      "dose": "initial",
+      "guid": "PKPR-aaaa0001",
+      "qty": 1,
+      "record_id": 1
+     }
+    ],
+    "sent": [
+     {
+      "analyteWeight": 7.25,
+      "changes": null,
+      "costEach": 20.5,
+      "dateCreated": "",
+      "dateDeleted": null,
+      "dateOfSale": "2026-10-29T07:00:00.000Z",
+      "deleted": false,
+      "deletedBy": null,
+      "id": 0,
+      "initialDose": 1,
+      "isRefund": "",
+      "notes": "",
+      "numberSold": 1,
+      "productCost": 20.5,
+      "productGroup": "Edible Psilocybin Product",
+      "productGuid": "PKPR-aaaa0001",
+      "productId": 5,
+      "reasonDeleted": null,
+      "saleNumber": "",
+      "secondaryDose": 0,
+      "serviceCenterId": 225,
+      "wasteOuts": [],
+      "weightPerUnit": 0.5
+     }
+    ]
+   },
+   "name": "analyteWeight changed since pricing",
+   "refusal": "PKPR-aaaa0001: the state's record changed since the sale was priced (analyteWeight); nothing was sent.",
+   "sale": "SALE-17"
+  },
+  {
+   "input": {
+    "cap": true,
+    "center": 225,
+    "fresh": [
+     {
+      "analyteWeight": 7.25,
+      "flagged": false,
+      "id": 1,
+      "locked": false,
+      "pendingTransfer": false,
+      "productGuid": "PKPR-aaaa0001",
+      "productType": "Edible Psilocybin Product",
+      "quantity": 10,
+      "serviceCenterId": 225,
+      "weightPerUnit": 0.75,
+      "zeroOut": false
+     }
+    ],
+    "lines": [
+     {
+      "dose": "initial",
+      "guid": "PKPR-aaaa0001",
+      "qty": 1,
+      "record_id": 1
+     }
+    ],
+    "sent": [
+     {
+      "analyteWeight": 7.25,
+      "changes": null,
+      "costEach": 20.5,
+      "dateCreated": "",
+      "dateDeleted": null,
+      "dateOfSale": "2026-10-29T07:00:00.000Z",
+      "deleted": false,
+      "deletedBy": null,
+      "id": 0,
+      "initialDose": 1,
+      "isRefund": "",
+      "notes": "",
+      "numberSold": 1,
+      "productCost": 20.5,
+      "productGroup": "Edible Psilocybin Product",
+      "productGuid": "PKPR-aaaa0001",
+      "productId": 5,
+      "reasonDeleted": null,
+      "saleNumber": "",
+      "secondaryDose": 0,
+      "serviceCenterId": 225,
+      "wasteOuts": [],
+      "weightPerUnit": 0.5
+     }
+    ]
+   },
+   "name": "weightPerUnit changed since pricing",
+   "refusal": "PKPR-aaaa0001: the state's record changed since the sale was priced (weightPerUnit); nothing was sent.",
+   "sale": "SALE-17"
+  },
+  {
+   "input": {
+    "cap": true,
+    "center": 225,
+    "fresh": [
+     {
+      "analyteWeight": 7.25,
+      "flagged": false,
+      "id": 1,
+      "locked": false,
+      "pendingTransfer": false,
+      "productGuid": "PKPR-aaaa0001",
+      "productType": "Whole Fungi",
+      "quantity": 10,
+      "serviceCenterId": 225,
+      "weightPerUnit": 0.5,
+      "zeroOut": false
+     }
+    ],
+    "lines": [
+     {
+      "dose": "initial",
+      "guid": "PKPR-aaaa0001",
+      "qty": 1,
+      "record_id": 1
+     }
+    ],
+    "sent": [
+     {
+      "analyteWeight": 7.25,
+      "changes": null,
+      "costEach": 20.5,
+      "dateCreated": "",
+      "dateDeleted": null,
+      "dateOfSale": "2026-10-29T07:00:00.000Z",
+      "deleted": false,
+      "deletedBy": null,
+      "id": 0,
+      "initialDose": 1,
+      "isRefund": "",
+      "notes": "",
+      "numberSold": 1,
+      "productCost": 20.5,
+      "productGroup": "Edible Psilocybin Product",
+      "productGuid": "PKPR-aaaa0001",
+      "productId": 5,
+      "reasonDeleted": null,
+      "saleNumber": "",
+      "secondaryDose": 0,
+      "serviceCenterId": 225,
+      "wasteOuts": [],
+      "weightPerUnit": 0.5
+     }
+    ]
+   },
+   "name": "productType changed since pricing",
+   "refusal": "PKPR-aaaa0001: the state's record changed since the sale was priced (productType); nothing was sent.",
+   "sale": "SALE-17"
+  },
+  {
+   "input": {
+    "cap": true,
+    "center": 225,
+    "fresh": [
+     {
+      "analyteWeight": 7.5,
+      "flagged": false,
+      "id": 1,
+      "locked": false,
+      "pendingTransfer": false,
+      "productGuid": "PKPR-aaaa0001",
+      "productType": "Extract",
+      "quantity": 10,
+      "serviceCenterId": 225,
+      "weightPerUnit": 0.5,
+      "zeroOut": false
+     }
+    ],
+    "lines": [
+     {
+      "dose": "initial",
+      "guid": "PKPR-aaaa0001",
+      "qty": 1,
+      "record_id": 1
+     }
+    ],
+    "sent": [
+     {
+      "analyteWeight": 7.25,
+      "changes": null,
+      "costEach": 20.5,
+      "dateCreated": "",
+      "dateDeleted": null,
+      "dateOfSale": "2026-10-29T07:00:00.000Z",
+      "deleted": false,
+      "deletedBy": null,
+      "id": 0,
+      "initialDose": 1,
+      "isRefund": "",
+      "notes": "",
+      "numberSold": 1,
+      "productCost": 20.5,
+      "productGroup": "Edible Psilocybin Product",
+      "productGuid": "PKPR-aaaa0001",
+      "productId": 5,
+      "reasonDeleted": null,
+      "saleNumber": "",
+      "secondaryDose": 0,
+      "serviceCenterId": 225,
+      "wasteOuts": [],
+      "weightPerUnit": 0.5
+     }
+    ]
+   },
+   "name": "two fields changed",
+   "refusal": "PKPR-aaaa0001: the state's record changed since the sale was priced (productType, analyteWeight); nothing was sent.",
+   "sale": "SALE-17"
+  },
+  {
+   "input": {
+    "cap": true,
+    "center": 225,
+    "fresh": [
+     {
+      "analyteWeight": 7.5,
+      "flagged": false,
+      "id": 1,
+      "locked": false,
+      "pendingTransfer": false,
+      "productGuid": "PKPR-aaaa0001",
+      "productType": "Edible Psilocybin Product",
+      "quantity": 10,
+      "serviceCenterId": 225,
+      "weightPerUnit": 0.5,
+      "zeroOut": false
+     }
+    ],
+    "lines": [
+     {
+      "dose": "initial",
+      "guid": "PKPR-aaaa0001",
+      "qty": 1,
+      "record_id": 1
+     }
+    ]
+   },
+   "name": "a line with nothing sent to compare",
+   "refusal": null,
+   "sale": "SALE-17"
+  }
+ ],
+ "check_sale_date": [
+  {
+   "date": "2026-10-20",
+   "error": null,
+   "today": "2026-10-20"
+  },
+  {
+   "date": "2026-10-21",
+   "error": "future",
+   "today": "2026-10-20"
+  },
+  {
+   "date": "2025-10-20",
+   "error": null,
+   "today": "2026-10-20"
+  },
+  {
+   "date": "2025-10-19",
+   "error": "too_old",
+   "today": "2026-10-20"
+  },
+  {
+   "date": "2027-02-28",
+   "error": null,
+   "today": "2028-02-27"
+  },
+  {
+   "date": "2027-03-01",
+   "error": null,
+   "today": "2028-02-29"
+  },
+  {
+   "date": "2027-02-28",
+   "error": "too_old",
+   "today": "2028-02-29"
+  },
+  {
+   "date": "2006-03-20",
+   "error": "too_old",
+   "today": "2026-10-20"
+  },
+  {
+   "date": "0001-01-01",
+   "error": "too_old",
+   "today": "2026-10-20"
+  },
+  {
+   "date": "9999-12-31",
+   "error": "future",
+   "today": "2026-10-20"
+  },
+  {
+   "date": "2026-11-01",
+   "error": "future",
+   "today": "2026-10-31"
+  }
+ ],
+ "expiry": [
+  {
+   "expired": true,
+   "expires": "2025-09-16",
+   "fresh_months": 6,
+   "hue": 0,
+   "today": "2026-10-21",
+   "words": "expired"
+  },
+  {
+   "expired": true,
+   "expires": "2026-10-19",
+   "fresh_months": 6,
+   "hue": 0,
+   "today": "2026-10-21",
+   "words": "expired"
+  },
+  {
+   "expired": true,
+   "expires": "2026-10-20",
+   "fresh_months": 6,
+   "hue": 0,
+   "today": "2026-10-21",
+   "words": "expired"
+  },
+  {
+   "expired": false,
+   "expires": "2026-10-21",
+   "fresh_months": 6,
+   "hue": 0,
+   "today": "2026-10-21",
+   "words": "<1 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2026-10-22",
+   "fresh_months": 6,
+   "hue": 1,
+   "today": "2026-10-21",
+   "words": "<1 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2026-11-05",
+   "fresh_months": 6,
+   "hue": 15,
+   "today": "2026-10-21",
+   "words": "<1 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2026-11-20",
+   "fresh_months": 6,
+   "hue": 30,
+   "today": "2026-10-21",
+   "words": "<1 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2026-11-21",
+   "fresh_months": 6,
+   "hue": 30,
+   "today": "2026-10-21",
+   "words": "1 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2026-12-06",
+   "fresh_months": 6,
+   "hue": 39,
+   "today": "2026-10-21",
+   "words": "1 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2026-12-21",
+   "fresh_months": 6,
+   "hue": 48,
+   "today": "2026-10-21",
+   "words": "2 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2027-01-05",
+   "fresh_months": 6,
+   "hue": 57,
+   "today": "2026-10-21",
+   "words": "2 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2027-02-04",
+   "fresh_months": 6,
+   "hue": 75,
+   "today": "2026-10-21",
+   "words": "3 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2027-03-07",
+   "fresh_months": 6,
+   "hue": 93,
+   "today": "2026-10-21",
+   "words": "4 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2027-03-22",
+   "fresh_months": 6,
+   "hue": 102,
+   "today": "2026-10-21",
+   "words": "4 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2027-04-06",
+   "fresh_months": 6,
+   "hue": 111,
+   "today": "2026-10-21",
+   "words": "5 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2027-04-22",
+   "fresh_months": 6,
+   "hue": 120,
+   "today": "2026-10-21",
+   "words": "6 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2027-11-25",
+   "fresh_months": 6,
+   "hue": 120,
+   "today": "2026-10-21",
+   "words": "13 mo"
+  },
+  {
+   "expired": true,
+   "expires": "2025-09-16",
+   "fresh_months": 2,
+   "hue": 0,
+   "today": "2026-10-21",
+   "words": "expired"
+  },
+  {
+   "expired": true,
+   "expires": "2026-10-19",
+   "fresh_months": 2,
+   "hue": 0,
+   "today": "2026-10-21",
+   "words": "expired"
+  },
+  {
+   "expired": true,
+   "expires": "2026-10-20",
+   "fresh_months": 2,
+   "hue": 0,
+   "today": "2026-10-21",
+   "words": "expired"
+  },
+  {
+   "expired": false,
+   "expires": "2026-10-21",
+   "fresh_months": 2,
+   "hue": 0,
+   "today": "2026-10-21",
+   "words": "<1 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2026-10-22",
+   "fresh_months": 2,
+   "hue": 1,
+   "today": "2026-10-21",
+   "words": "<1 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2026-11-05",
+   "fresh_months": 2,
+   "hue": 15,
+   "today": "2026-10-21",
+   "words": "<1 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2026-11-20",
+   "fresh_months": 2,
+   "hue": 30,
+   "today": "2026-10-21",
+   "words": "<1 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2026-11-21",
+   "fresh_months": 2,
+   "hue": 32,
+   "today": "2026-10-21",
+   "words": "1 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2026-12-06",
+   "fresh_months": 2,
+   "hue": 76,
+   "today": "2026-10-21",
+   "words": "1 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2026-12-21",
+   "fresh_months": 2,
+   "hue": 120,
+   "today": "2026-10-21",
+   "words": "2 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2027-01-05",
+   "fresh_months": 2,
+   "hue": 120,
+   "today": "2026-10-21",
+   "words": "2 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2027-02-04",
+   "fresh_months": 2,
+   "hue": 120,
+   "today": "2026-10-21",
+   "words": "3 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2027-03-07",
+   "fresh_months": 2,
+   "hue": 120,
+   "today": "2026-10-21",
+   "words": "4 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2027-03-22",
+   "fresh_months": 2,
+   "hue": 120,
+   "today": "2026-10-21",
+   "words": "4 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2027-04-06",
+   "fresh_months": 2,
+   "hue": 120,
+   "today": "2026-10-21",
+   "words": "5 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2027-04-22",
+   "fresh_months": 2,
+   "hue": 120,
+   "today": "2026-10-21",
+   "words": "6 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2027-11-25",
+   "fresh_months": 2,
+   "hue": 120,
+   "today": "2026-10-21",
+   "words": "13 mo"
+  },
+  {
+   "expired": true,
+   "expires": "2025-09-16",
+   "fresh_months": 1,
+   "hue": 0,
+   "today": "2026-10-21",
+   "words": "expired"
+  },
+  {
+   "expired": true,
+   "expires": "2026-10-19",
+   "fresh_months": 1,
+   "hue": 0,
+   "today": "2026-10-21",
+   "words": "expired"
+  },
+  {
+   "expired": true,
+   "expires": "2026-10-20",
+   "fresh_months": 1,
+   "hue": 0,
+   "today": "2026-10-21",
+   "words": "expired"
+  },
+  {
+   "expired": false,
+   "expires": "2026-10-21",
+   "fresh_months": 1,
+   "hue": 0,
+   "today": "2026-10-21",
+   "words": "<1 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2026-10-22",
+   "fresh_months": 1,
+   "hue": 1,
+   "today": "2026-10-21",
+   "words": "<1 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2026-11-05",
+   "fresh_months": 1,
+   "hue": 15,
+   "today": "2026-10-21",
+   "words": "<1 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2026-11-20",
+   "fresh_months": 1,
+   "hue": 30,
+   "today": "2026-10-21",
+   "words": "<1 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2026-11-21",
+   "fresh_months": 1,
+   "hue": 32,
+   "today": "2026-10-21",
+   "words": "1 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2026-12-06",
+   "fresh_months": 1,
+   "hue": 76,
+   "today": "2026-10-21",
+   "words": "1 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2026-12-21",
+   "fresh_months": 1,
+   "hue": 120,
+   "today": "2026-10-21",
+   "words": "2 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2027-01-05",
+   "fresh_months": 1,
+   "hue": 120,
+   "today": "2026-10-21",
+   "words": "2 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2027-02-04",
+   "fresh_months": 1,
+   "hue": 120,
+   "today": "2026-10-21",
+   "words": "3 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2027-03-07",
+   "fresh_months": 1,
+   "hue": 120,
+   "today": "2026-10-21",
+   "words": "4 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2027-03-22",
+   "fresh_months": 1,
+   "hue": 120,
+   "today": "2026-10-21",
+   "words": "4 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2027-04-06",
+   "fresh_months": 1,
+   "hue": 120,
+   "today": "2026-10-21",
+   "words": "5 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2027-04-22",
+   "fresh_months": 1,
+   "hue": 120,
+   "today": "2026-10-21",
+   "words": "6 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2027-11-25",
+   "fresh_months": 1,
+   "hue": 120,
+   "today": "2026-10-21",
+   "words": "13 mo"
+  },
+  {
+   "expired": true,
+   "expires": "2025-09-16",
+   "fresh_months": 12,
+   "hue": 0,
+   "today": "2026-10-21",
+   "words": "expired"
+  },
+  {
+   "expired": true,
+   "expires": "2026-10-19",
+   "fresh_months": 12,
+   "hue": 0,
+   "today": "2026-10-21",
+   "words": "expired"
+  },
+  {
+   "expired": true,
+   "expires": "2026-10-20",
+   "fresh_months": 12,
+   "hue": 0,
+   "today": "2026-10-21",
+   "words": "expired"
+  },
+  {
+   "expired": false,
+   "expires": "2026-10-21",
+   "fresh_months": 12,
+   "hue": 0,
+   "today": "2026-10-21",
+   "words": "<1 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2026-10-22",
+   "fresh_months": 12,
+   "hue": 1,
+   "today": "2026-10-21",
+   "words": "<1 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2026-11-05",
+   "fresh_months": 12,
+   "hue": 15,
+   "today": "2026-10-21",
+   "words": "<1 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2026-11-20",
+   "fresh_months": 12,
+   "hue": 30,
+   "today": "2026-10-21",
+   "words": "<1 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2026-11-21",
+   "fresh_months": 12,
+   "hue": 30,
+   "today": "2026-10-21",
+   "words": "1 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2026-12-06",
+   "fresh_months": 12,
+   "hue": 34,
+   "today": "2026-10-21",
+   "words": "1 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2026-12-21",
+   "fresh_months": 12,
+   "hue": 38,
+   "today": "2026-10-21",
+   "words": "2 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2027-01-05",
+   "fresh_months": 12,
+   "hue": 42,
+   "today": "2026-10-21",
+   "words": "2 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2027-02-04",
+   "fresh_months": 12,
+   "hue": 50,
+   "today": "2026-10-21",
+   "words": "3 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2027-03-07",
+   "fresh_months": 12,
+   "hue": 59,
+   "today": "2026-10-21",
+   "words": "4 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2027-03-22",
+   "fresh_months": 12,
+   "hue": 63,
+   "today": "2026-10-21",
+   "words": "4 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2027-04-06",
+   "fresh_months": 12,
+   "hue": 67,
+   "today": "2026-10-21",
+   "words": "5 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2027-04-22",
+   "fresh_months": 12,
+   "hue": 71,
+   "today": "2026-10-21",
+   "words": "6 mo"
+  },
+  {
+   "expired": false,
+   "expires": "2027-11-25",
+   "fresh_months": 12,
+   "hue": 120,
+   "today": "2026-10-21",
+   "words": "13 mo"
+  }
+ ],
+ "pacific_midnight": [
+  {
+   "date": "0001-01-01",
+   "utc": "0001-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "1900-01-01",
+   "utc": "1900-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "1999-04-04",
+   "utc": "1999-04-04T07:00:00.000Z"
+  },
+  {
+   "date": "2006-04-02",
+   "utc": "2006-04-02T07:00:00.000Z"
+  },
+  {
+   "date": "2006-10-29",
+   "utc": "2006-10-29T07:00:00.000Z"
+  },
+  {
+   "date": "2007-01-01",
+   "utc": "2007-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2007-03-10",
+   "utc": "2007-03-10T08:00:00.000Z"
+  },
+  {
+   "date": "2007-03-11",
+   "utc": "2007-03-11T08:00:00.000Z"
+  },
+  {
+   "date": "2007-03-12",
+   "utc": "2007-03-12T07:00:00.000Z"
+  },
+  {
+   "date": "2007-07-01",
+   "utc": "2007-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2007-11-03",
+   "utc": "2007-11-03T07:00:00.000Z"
+  },
+  {
+   "date": "2007-11-04",
+   "utc": "2007-11-04T07:00:00.000Z"
+  },
+  {
+   "date": "2007-11-05",
+   "utc": "2007-11-05T08:00:00.000Z"
+  },
+  {
+   "date": "2007-12-31",
+   "utc": "2007-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2008-01-01",
+   "utc": "2008-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2008-03-08",
+   "utc": "2008-03-08T08:00:00.000Z"
+  },
+  {
+   "date": "2008-03-09",
+   "utc": "2008-03-09T08:00:00.000Z"
+  },
+  {
+   "date": "2008-03-10",
+   "utc": "2008-03-10T07:00:00.000Z"
+  },
+  {
+   "date": "2008-07-01",
+   "utc": "2008-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2008-11-01",
+   "utc": "2008-11-01T07:00:00.000Z"
+  },
+  {
+   "date": "2008-11-02",
+   "utc": "2008-11-02T07:00:00.000Z"
+  },
+  {
+   "date": "2008-11-03",
+   "utc": "2008-11-03T08:00:00.000Z"
+  },
+  {
+   "date": "2008-12-31",
+   "utc": "2008-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2009-01-01",
+   "utc": "2009-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2009-03-07",
+   "utc": "2009-03-07T08:00:00.000Z"
+  },
+  {
+   "date": "2009-03-08",
+   "utc": "2009-03-08T08:00:00.000Z"
+  },
+  {
+   "date": "2009-03-09",
+   "utc": "2009-03-09T07:00:00.000Z"
+  },
+  {
+   "date": "2009-07-01",
+   "utc": "2009-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2009-10-31",
+   "utc": "2009-10-31T07:00:00.000Z"
+  },
+  {
+   "date": "2009-11-01",
+   "utc": "2009-11-01T07:00:00.000Z"
+  },
+  {
+   "date": "2009-11-02",
+   "utc": "2009-11-02T08:00:00.000Z"
+  },
+  {
+   "date": "2009-12-31",
+   "utc": "2009-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2010-01-01",
+   "utc": "2010-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2010-03-13",
+   "utc": "2010-03-13T08:00:00.000Z"
+  },
+  {
+   "date": "2010-03-14",
+   "utc": "2010-03-14T08:00:00.000Z"
+  },
+  {
+   "date": "2010-03-15",
+   "utc": "2010-03-15T07:00:00.000Z"
+  },
+  {
+   "date": "2010-07-01",
+   "utc": "2010-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2010-11-06",
+   "utc": "2010-11-06T07:00:00.000Z"
+  },
+  {
+   "date": "2010-11-07",
+   "utc": "2010-11-07T07:00:00.000Z"
+  },
+  {
+   "date": "2010-11-08",
+   "utc": "2010-11-08T08:00:00.000Z"
+  },
+  {
+   "date": "2010-12-31",
+   "utc": "2010-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2011-01-01",
+   "utc": "2011-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2011-03-12",
+   "utc": "2011-03-12T08:00:00.000Z"
+  },
+  {
+   "date": "2011-03-13",
+   "utc": "2011-03-13T08:00:00.000Z"
+  },
+  {
+   "date": "2011-03-14",
+   "utc": "2011-03-14T07:00:00.000Z"
+  },
+  {
+   "date": "2011-07-01",
+   "utc": "2011-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2011-11-05",
+   "utc": "2011-11-05T07:00:00.000Z"
+  },
+  {
+   "date": "2011-11-06",
+   "utc": "2011-11-06T07:00:00.000Z"
+  },
+  {
+   "date": "2011-11-07",
+   "utc": "2011-11-07T08:00:00.000Z"
+  },
+  {
+   "date": "2011-12-31",
+   "utc": "2011-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2012-01-01",
+   "utc": "2012-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2012-03-10",
+   "utc": "2012-03-10T08:00:00.000Z"
+  },
+  {
+   "date": "2012-03-11",
+   "utc": "2012-03-11T08:00:00.000Z"
+  },
+  {
+   "date": "2012-03-12",
+   "utc": "2012-03-12T07:00:00.000Z"
+  },
+  {
+   "date": "2012-07-01",
+   "utc": "2012-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2012-11-03",
+   "utc": "2012-11-03T07:00:00.000Z"
+  },
+  {
+   "date": "2012-11-04",
+   "utc": "2012-11-04T07:00:00.000Z"
+  },
+  {
+   "date": "2012-11-05",
+   "utc": "2012-11-05T08:00:00.000Z"
+  },
+  {
+   "date": "2012-12-31",
+   "utc": "2012-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2013-01-01",
+   "utc": "2013-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2013-03-09",
+   "utc": "2013-03-09T08:00:00.000Z"
+  },
+  {
+   "date": "2013-03-10",
+   "utc": "2013-03-10T08:00:00.000Z"
+  },
+  {
+   "date": "2013-03-11",
+   "utc": "2013-03-11T07:00:00.000Z"
+  },
+  {
+   "date": "2013-07-01",
+   "utc": "2013-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2013-11-02",
+   "utc": "2013-11-02T07:00:00.000Z"
+  },
+  {
+   "date": "2013-11-03",
+   "utc": "2013-11-03T07:00:00.000Z"
+  },
+  {
+   "date": "2013-11-04",
+   "utc": "2013-11-04T08:00:00.000Z"
+  },
+  {
+   "date": "2013-12-31",
+   "utc": "2013-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2014-01-01",
+   "utc": "2014-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2014-03-08",
+   "utc": "2014-03-08T08:00:00.000Z"
+  },
+  {
+   "date": "2014-03-09",
+   "utc": "2014-03-09T08:00:00.000Z"
+  },
+  {
+   "date": "2014-03-10",
+   "utc": "2014-03-10T07:00:00.000Z"
+  },
+  {
+   "date": "2014-07-01",
+   "utc": "2014-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2014-11-01",
+   "utc": "2014-11-01T07:00:00.000Z"
+  },
+  {
+   "date": "2014-11-02",
+   "utc": "2014-11-02T07:00:00.000Z"
+  },
+  {
+   "date": "2014-11-03",
+   "utc": "2014-11-03T08:00:00.000Z"
+  },
+  {
+   "date": "2014-12-31",
+   "utc": "2014-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2015-01-01",
+   "utc": "2015-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2015-03-07",
+   "utc": "2015-03-07T08:00:00.000Z"
+  },
+  {
+   "date": "2015-03-08",
+   "utc": "2015-03-08T08:00:00.000Z"
+  },
+  {
+   "date": "2015-03-09",
+   "utc": "2015-03-09T07:00:00.000Z"
+  },
+  {
+   "date": "2015-07-01",
+   "utc": "2015-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2015-10-31",
+   "utc": "2015-10-31T07:00:00.000Z"
+  },
+  {
+   "date": "2015-11-01",
+   "utc": "2015-11-01T07:00:00.000Z"
+  },
+  {
+   "date": "2015-11-02",
+   "utc": "2015-11-02T08:00:00.000Z"
+  },
+  {
+   "date": "2015-12-31",
+   "utc": "2015-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2016-01-01",
+   "utc": "2016-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2016-03-12",
+   "utc": "2016-03-12T08:00:00.000Z"
+  },
+  {
+   "date": "2016-03-13",
+   "utc": "2016-03-13T08:00:00.000Z"
+  },
+  {
+   "date": "2016-03-14",
+   "utc": "2016-03-14T07:00:00.000Z"
+  },
+  {
+   "date": "2016-07-01",
+   "utc": "2016-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2016-11-05",
+   "utc": "2016-11-05T07:00:00.000Z"
+  },
+  {
+   "date": "2016-11-06",
+   "utc": "2016-11-06T07:00:00.000Z"
+  },
+  {
+   "date": "2016-11-07",
+   "utc": "2016-11-07T08:00:00.000Z"
+  },
+  {
+   "date": "2016-12-31",
+   "utc": "2016-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2017-01-01",
+   "utc": "2017-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2017-03-11",
+   "utc": "2017-03-11T08:00:00.000Z"
+  },
+  {
+   "date": "2017-03-12",
+   "utc": "2017-03-12T08:00:00.000Z"
+  },
+  {
+   "date": "2017-03-13",
+   "utc": "2017-03-13T07:00:00.000Z"
+  },
+  {
+   "date": "2017-07-01",
+   "utc": "2017-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2017-11-04",
+   "utc": "2017-11-04T07:00:00.000Z"
+  },
+  {
+   "date": "2017-11-05",
+   "utc": "2017-11-05T07:00:00.000Z"
+  },
+  {
+   "date": "2017-11-06",
+   "utc": "2017-11-06T08:00:00.000Z"
+  },
+  {
+   "date": "2017-12-31",
+   "utc": "2017-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2018-01-01",
+   "utc": "2018-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2018-03-10",
+   "utc": "2018-03-10T08:00:00.000Z"
+  },
+  {
+   "date": "2018-03-11",
+   "utc": "2018-03-11T08:00:00.000Z"
+  },
+  {
+   "date": "2018-03-12",
+   "utc": "2018-03-12T07:00:00.000Z"
+  },
+  {
+   "date": "2018-07-01",
+   "utc": "2018-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2018-11-03",
+   "utc": "2018-11-03T07:00:00.000Z"
+  },
+  {
+   "date": "2018-11-04",
+   "utc": "2018-11-04T07:00:00.000Z"
+  },
+  {
+   "date": "2018-11-05",
+   "utc": "2018-11-05T08:00:00.000Z"
+  },
+  {
+   "date": "2018-12-31",
+   "utc": "2018-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2019-01-01",
+   "utc": "2019-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2019-03-09",
+   "utc": "2019-03-09T08:00:00.000Z"
+  },
+  {
+   "date": "2019-03-10",
+   "utc": "2019-03-10T08:00:00.000Z"
+  },
+  {
+   "date": "2019-03-11",
+   "utc": "2019-03-11T07:00:00.000Z"
+  },
+  {
+   "date": "2019-07-01",
+   "utc": "2019-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2019-11-02",
+   "utc": "2019-11-02T07:00:00.000Z"
+  },
+  {
+   "date": "2019-11-03",
+   "utc": "2019-11-03T07:00:00.000Z"
+  },
+  {
+   "date": "2019-11-04",
+   "utc": "2019-11-04T08:00:00.000Z"
+  },
+  {
+   "date": "2019-12-31",
+   "utc": "2019-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2020-01-01",
+   "utc": "2020-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2020-03-07",
+   "utc": "2020-03-07T08:00:00.000Z"
+  },
+  {
+   "date": "2020-03-08",
+   "utc": "2020-03-08T08:00:00.000Z"
+  },
+  {
+   "date": "2020-03-09",
+   "utc": "2020-03-09T07:00:00.000Z"
+  },
+  {
+   "date": "2020-07-01",
+   "utc": "2020-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2020-10-31",
+   "utc": "2020-10-31T07:00:00.000Z"
+  },
+  {
+   "date": "2020-11-01",
+   "utc": "2020-11-01T07:00:00.000Z"
+  },
+  {
+   "date": "2020-11-02",
+   "utc": "2020-11-02T08:00:00.000Z"
+  },
+  {
+   "date": "2020-12-31",
+   "utc": "2020-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2021-01-01",
+   "utc": "2021-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2021-03-13",
+   "utc": "2021-03-13T08:00:00.000Z"
+  },
+  {
+   "date": "2021-03-14",
+   "utc": "2021-03-14T08:00:00.000Z"
+  },
+  {
+   "date": "2021-03-15",
+   "utc": "2021-03-15T07:00:00.000Z"
+  },
+  {
+   "date": "2021-07-01",
+   "utc": "2021-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2021-11-06",
+   "utc": "2021-11-06T07:00:00.000Z"
+  },
+  {
+   "date": "2021-11-07",
+   "utc": "2021-11-07T07:00:00.000Z"
+  },
+  {
+   "date": "2021-11-08",
+   "utc": "2021-11-08T08:00:00.000Z"
+  },
+  {
+   "date": "2021-12-31",
+   "utc": "2021-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2022-01-01",
+   "utc": "2022-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2022-03-12",
+   "utc": "2022-03-12T08:00:00.000Z"
+  },
+  {
+   "date": "2022-03-13",
+   "utc": "2022-03-13T08:00:00.000Z"
+  },
+  {
+   "date": "2022-03-14",
+   "utc": "2022-03-14T07:00:00.000Z"
+  },
+  {
+   "date": "2022-07-01",
+   "utc": "2022-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2022-11-05",
+   "utc": "2022-11-05T07:00:00.000Z"
+  },
+  {
+   "date": "2022-11-06",
+   "utc": "2022-11-06T07:00:00.000Z"
+  },
+  {
+   "date": "2022-11-07",
+   "utc": "2022-11-07T08:00:00.000Z"
+  },
+  {
+   "date": "2022-12-31",
+   "utc": "2022-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2023-01-01",
+   "utc": "2023-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2023-03-11",
+   "utc": "2023-03-11T08:00:00.000Z"
+  },
+  {
+   "date": "2023-03-12",
+   "utc": "2023-03-12T08:00:00.000Z"
+  },
+  {
+   "date": "2023-03-13",
+   "utc": "2023-03-13T07:00:00.000Z"
+  },
+  {
+   "date": "2023-07-01",
+   "utc": "2023-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2023-11-04",
+   "utc": "2023-11-04T07:00:00.000Z"
+  },
+  {
+   "date": "2023-11-05",
+   "utc": "2023-11-05T07:00:00.000Z"
+  },
+  {
+   "date": "2023-11-06",
+   "utc": "2023-11-06T08:00:00.000Z"
+  },
+  {
+   "date": "2023-12-31",
+   "utc": "2023-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2024-01-01",
+   "utc": "2024-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2024-03-09",
+   "utc": "2024-03-09T08:00:00.000Z"
+  },
+  {
+   "date": "2024-03-10",
+   "utc": "2024-03-10T08:00:00.000Z"
+  },
+  {
+   "date": "2024-03-11",
+   "utc": "2024-03-11T07:00:00.000Z"
+  },
+  {
+   "date": "2024-07-01",
+   "utc": "2024-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2024-11-02",
+   "utc": "2024-11-02T07:00:00.000Z"
+  },
+  {
+   "date": "2024-11-03",
+   "utc": "2024-11-03T07:00:00.000Z"
+  },
+  {
+   "date": "2024-11-04",
+   "utc": "2024-11-04T08:00:00.000Z"
+  },
+  {
+   "date": "2024-12-31",
+   "utc": "2024-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2025-01-01",
+   "utc": "2025-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2025-03-08",
+   "utc": "2025-03-08T08:00:00.000Z"
+  },
+  {
+   "date": "2025-03-09",
+   "utc": "2025-03-09T08:00:00.000Z"
+  },
+  {
+   "date": "2025-03-10",
+   "utc": "2025-03-10T07:00:00.000Z"
+  },
+  {
+   "date": "2025-07-01",
+   "utc": "2025-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2025-11-01",
+   "utc": "2025-11-01T07:00:00.000Z"
+  },
+  {
+   "date": "2025-11-02",
+   "utc": "2025-11-02T07:00:00.000Z"
+  },
+  {
+   "date": "2025-11-03",
+   "utc": "2025-11-03T08:00:00.000Z"
+  },
+  {
+   "date": "2025-12-31",
+   "utc": "2025-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2026-01-01",
+   "utc": "2026-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2026-03-07",
+   "utc": "2026-03-07T08:00:00.000Z"
+  },
+  {
+   "date": "2026-03-08",
+   "utc": "2026-03-08T08:00:00.000Z"
+  },
+  {
+   "date": "2026-03-09",
+   "utc": "2026-03-09T07:00:00.000Z"
+  },
+  {
+   "date": "2026-07-01",
+   "utc": "2026-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2026-10-31",
+   "utc": "2026-10-31T07:00:00.000Z"
+  },
+  {
+   "date": "2026-11-01",
+   "utc": "2026-11-01T07:00:00.000Z"
+  },
+  {
+   "date": "2026-11-02",
+   "utc": "2026-11-02T08:00:00.000Z"
+  },
+  {
+   "date": "2026-12-31",
+   "utc": "2026-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2027-01-01",
+   "utc": "2027-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2027-03-13",
+   "utc": "2027-03-13T08:00:00.000Z"
+  },
+  {
+   "date": "2027-03-14",
+   "utc": "2027-03-14T08:00:00.000Z"
+  },
+  {
+   "date": "2027-03-15",
+   "utc": "2027-03-15T07:00:00.000Z"
+  },
+  {
+   "date": "2027-07-01",
+   "utc": "2027-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2027-11-06",
+   "utc": "2027-11-06T07:00:00.000Z"
+  },
+  {
+   "date": "2027-11-07",
+   "utc": "2027-11-07T07:00:00.000Z"
+  },
+  {
+   "date": "2027-11-08",
+   "utc": "2027-11-08T08:00:00.000Z"
+  },
+  {
+   "date": "2027-12-31",
+   "utc": "2027-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2028-01-01",
+   "utc": "2028-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2028-03-11",
+   "utc": "2028-03-11T08:00:00.000Z"
+  },
+  {
+   "date": "2028-03-12",
+   "utc": "2028-03-12T08:00:00.000Z"
+  },
+  {
+   "date": "2028-03-13",
+   "utc": "2028-03-13T07:00:00.000Z"
+  },
+  {
+   "date": "2028-07-01",
+   "utc": "2028-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2028-11-04",
+   "utc": "2028-11-04T07:00:00.000Z"
+  },
+  {
+   "date": "2028-11-05",
+   "utc": "2028-11-05T07:00:00.000Z"
+  },
+  {
+   "date": "2028-11-06",
+   "utc": "2028-11-06T08:00:00.000Z"
+  },
+  {
+   "date": "2028-12-31",
+   "utc": "2028-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2029-01-01",
+   "utc": "2029-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2029-03-10",
+   "utc": "2029-03-10T08:00:00.000Z"
+  },
+  {
+   "date": "2029-03-11",
+   "utc": "2029-03-11T08:00:00.000Z"
+  },
+  {
+   "date": "2029-03-12",
+   "utc": "2029-03-12T07:00:00.000Z"
+  },
+  {
+   "date": "2029-07-01",
+   "utc": "2029-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2029-11-03",
+   "utc": "2029-11-03T07:00:00.000Z"
+  },
+  {
+   "date": "2029-11-04",
+   "utc": "2029-11-04T07:00:00.000Z"
+  },
+  {
+   "date": "2029-11-05",
+   "utc": "2029-11-05T08:00:00.000Z"
+  },
+  {
+   "date": "2029-12-31",
+   "utc": "2029-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2030-01-01",
+   "utc": "2030-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2030-03-09",
+   "utc": "2030-03-09T08:00:00.000Z"
+  },
+  {
+   "date": "2030-03-10",
+   "utc": "2030-03-10T08:00:00.000Z"
+  },
+  {
+   "date": "2030-03-11",
+   "utc": "2030-03-11T07:00:00.000Z"
+  },
+  {
+   "date": "2030-07-01",
+   "utc": "2030-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2030-11-02",
+   "utc": "2030-11-02T07:00:00.000Z"
+  },
+  {
+   "date": "2030-11-03",
+   "utc": "2030-11-03T07:00:00.000Z"
+  },
+  {
+   "date": "2030-11-04",
+   "utc": "2030-11-04T08:00:00.000Z"
+  },
+  {
+   "date": "2030-12-31",
+   "utc": "2030-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2031-01-01",
+   "utc": "2031-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2031-03-08",
+   "utc": "2031-03-08T08:00:00.000Z"
+  },
+  {
+   "date": "2031-03-09",
+   "utc": "2031-03-09T08:00:00.000Z"
+  },
+  {
+   "date": "2031-03-10",
+   "utc": "2031-03-10T07:00:00.000Z"
+  },
+  {
+   "date": "2031-07-01",
+   "utc": "2031-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2031-11-01",
+   "utc": "2031-11-01T07:00:00.000Z"
+  },
+  {
+   "date": "2031-11-02",
+   "utc": "2031-11-02T07:00:00.000Z"
+  },
+  {
+   "date": "2031-11-03",
+   "utc": "2031-11-03T08:00:00.000Z"
+  },
+  {
+   "date": "2031-12-31",
+   "utc": "2031-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2032-01-01",
+   "utc": "2032-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2032-03-13",
+   "utc": "2032-03-13T08:00:00.000Z"
+  },
+  {
+   "date": "2032-03-14",
+   "utc": "2032-03-14T08:00:00.000Z"
+  },
+  {
+   "date": "2032-03-15",
+   "utc": "2032-03-15T07:00:00.000Z"
+  },
+  {
+   "date": "2032-07-01",
+   "utc": "2032-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2032-11-06",
+   "utc": "2032-11-06T07:00:00.000Z"
+  },
+  {
+   "date": "2032-11-07",
+   "utc": "2032-11-07T07:00:00.000Z"
+  },
+  {
+   "date": "2032-11-08",
+   "utc": "2032-11-08T08:00:00.000Z"
+  },
+  {
+   "date": "2032-12-31",
+   "utc": "2032-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2033-01-01",
+   "utc": "2033-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2033-03-12",
+   "utc": "2033-03-12T08:00:00.000Z"
+  },
+  {
+   "date": "2033-03-13",
+   "utc": "2033-03-13T08:00:00.000Z"
+  },
+  {
+   "date": "2033-03-14",
+   "utc": "2033-03-14T07:00:00.000Z"
+  },
+  {
+   "date": "2033-07-01",
+   "utc": "2033-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2033-11-05",
+   "utc": "2033-11-05T07:00:00.000Z"
+  },
+  {
+   "date": "2033-11-06",
+   "utc": "2033-11-06T07:00:00.000Z"
+  },
+  {
+   "date": "2033-11-07",
+   "utc": "2033-11-07T08:00:00.000Z"
+  },
+  {
+   "date": "2033-12-31",
+   "utc": "2033-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2034-01-01",
+   "utc": "2034-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2034-03-11",
+   "utc": "2034-03-11T08:00:00.000Z"
+  },
+  {
+   "date": "2034-03-12",
+   "utc": "2034-03-12T08:00:00.000Z"
+  },
+  {
+   "date": "2034-03-13",
+   "utc": "2034-03-13T07:00:00.000Z"
+  },
+  {
+   "date": "2034-07-01",
+   "utc": "2034-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2034-11-04",
+   "utc": "2034-11-04T07:00:00.000Z"
+  },
+  {
+   "date": "2034-11-05",
+   "utc": "2034-11-05T07:00:00.000Z"
+  },
+  {
+   "date": "2034-11-06",
+   "utc": "2034-11-06T08:00:00.000Z"
+  },
+  {
+   "date": "2034-12-31",
+   "utc": "2034-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2035-01-01",
+   "utc": "2035-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2035-03-10",
+   "utc": "2035-03-10T08:00:00.000Z"
+  },
+  {
+   "date": "2035-03-11",
+   "utc": "2035-03-11T08:00:00.000Z"
+  },
+  {
+   "date": "2035-03-12",
+   "utc": "2035-03-12T07:00:00.000Z"
+  },
+  {
+   "date": "2035-07-01",
+   "utc": "2035-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2035-11-03",
+   "utc": "2035-11-03T07:00:00.000Z"
+  },
+  {
+   "date": "2035-11-04",
+   "utc": "2035-11-04T07:00:00.000Z"
+  },
+  {
+   "date": "2035-11-05",
+   "utc": "2035-11-05T08:00:00.000Z"
+  },
+  {
+   "date": "2035-12-31",
+   "utc": "2035-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2036-01-01",
+   "utc": "2036-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2036-03-08",
+   "utc": "2036-03-08T08:00:00.000Z"
+  },
+  {
+   "date": "2036-03-09",
+   "utc": "2036-03-09T08:00:00.000Z"
+  },
+  {
+   "date": "2036-03-10",
+   "utc": "2036-03-10T07:00:00.000Z"
+  },
+  {
+   "date": "2036-07-01",
+   "utc": "2036-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2036-11-01",
+   "utc": "2036-11-01T07:00:00.000Z"
+  },
+  {
+   "date": "2036-11-02",
+   "utc": "2036-11-02T07:00:00.000Z"
+  },
+  {
+   "date": "2036-11-03",
+   "utc": "2036-11-03T08:00:00.000Z"
+  },
+  {
+   "date": "2036-12-31",
+   "utc": "2036-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2037-01-01",
+   "utc": "2037-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2037-03-07",
+   "utc": "2037-03-07T08:00:00.000Z"
+  },
+  {
+   "date": "2037-03-08",
+   "utc": "2037-03-08T08:00:00.000Z"
+  },
+  {
+   "date": "2037-03-09",
+   "utc": "2037-03-09T07:00:00.000Z"
+  },
+  {
+   "date": "2037-07-01",
+   "utc": "2037-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2037-10-31",
+   "utc": "2037-10-31T07:00:00.000Z"
+  },
+  {
+   "date": "2037-11-01",
+   "utc": "2037-11-01T07:00:00.000Z"
+  },
+  {
+   "date": "2037-11-02",
+   "utc": "2037-11-02T08:00:00.000Z"
+  },
+  {
+   "date": "2037-12-31",
+   "utc": "2037-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2038-01-01",
+   "utc": "2038-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2038-03-13",
+   "utc": "2038-03-13T08:00:00.000Z"
+  },
+  {
+   "date": "2038-03-14",
+   "utc": "2038-03-14T08:00:00.000Z"
+  },
+  {
+   "date": "2038-03-15",
+   "utc": "2038-03-15T07:00:00.000Z"
+  },
+  {
+   "date": "2038-07-01",
+   "utc": "2038-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2038-11-06",
+   "utc": "2038-11-06T07:00:00.000Z"
+  },
+  {
+   "date": "2038-11-07",
+   "utc": "2038-11-07T07:00:00.000Z"
+  },
+  {
+   "date": "2038-11-08",
+   "utc": "2038-11-08T08:00:00.000Z"
+  },
+  {
+   "date": "2038-12-31",
+   "utc": "2038-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2039-01-01",
+   "utc": "2039-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2039-03-12",
+   "utc": "2039-03-12T08:00:00.000Z"
+  },
+  {
+   "date": "2039-03-13",
+   "utc": "2039-03-13T08:00:00.000Z"
+  },
+  {
+   "date": "2039-03-14",
+   "utc": "2039-03-14T07:00:00.000Z"
+  },
+  {
+   "date": "2039-07-01",
+   "utc": "2039-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2039-11-05",
+   "utc": "2039-11-05T07:00:00.000Z"
+  },
+  {
+   "date": "2039-11-06",
+   "utc": "2039-11-06T07:00:00.000Z"
+  },
+  {
+   "date": "2039-11-07",
+   "utc": "2039-11-07T08:00:00.000Z"
+  },
+  {
+   "date": "2039-12-31",
+   "utc": "2039-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2040-01-01",
+   "utc": "2040-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2040-03-10",
+   "utc": "2040-03-10T08:00:00.000Z"
+  },
+  {
+   "date": "2040-03-11",
+   "utc": "2040-03-11T08:00:00.000Z"
+  },
+  {
+   "date": "2040-03-12",
+   "utc": "2040-03-12T07:00:00.000Z"
+  },
+  {
+   "date": "2040-07-01",
+   "utc": "2040-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2040-11-03",
+   "utc": "2040-11-03T07:00:00.000Z"
+  },
+  {
+   "date": "2040-11-04",
+   "utc": "2040-11-04T07:00:00.000Z"
+  },
+  {
+   "date": "2040-11-05",
+   "utc": "2040-11-05T08:00:00.000Z"
+  },
+  {
+   "date": "2040-12-31",
+   "utc": "2040-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2041-01-01",
+   "utc": "2041-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2041-03-09",
+   "utc": "2041-03-09T08:00:00.000Z"
+  },
+  {
+   "date": "2041-03-10",
+   "utc": "2041-03-10T08:00:00.000Z"
+  },
+  {
+   "date": "2041-03-11",
+   "utc": "2041-03-11T07:00:00.000Z"
+  },
+  {
+   "date": "2041-07-01",
+   "utc": "2041-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2041-11-02",
+   "utc": "2041-11-02T07:00:00.000Z"
+  },
+  {
+   "date": "2041-11-03",
+   "utc": "2041-11-03T07:00:00.000Z"
+  },
+  {
+   "date": "2041-11-04",
+   "utc": "2041-11-04T08:00:00.000Z"
+  },
+  {
+   "date": "2041-12-31",
+   "utc": "2041-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2042-01-01",
+   "utc": "2042-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2042-03-08",
+   "utc": "2042-03-08T08:00:00.000Z"
+  },
+  {
+   "date": "2042-03-09",
+   "utc": "2042-03-09T08:00:00.000Z"
+  },
+  {
+   "date": "2042-03-10",
+   "utc": "2042-03-10T07:00:00.000Z"
+  },
+  {
+   "date": "2042-07-01",
+   "utc": "2042-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2042-11-01",
+   "utc": "2042-11-01T07:00:00.000Z"
+  },
+  {
+   "date": "2042-11-02",
+   "utc": "2042-11-02T07:00:00.000Z"
+  },
+  {
+   "date": "2042-11-03",
+   "utc": "2042-11-03T08:00:00.000Z"
+  },
+  {
+   "date": "2042-12-31",
+   "utc": "2042-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2043-01-01",
+   "utc": "2043-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2043-03-07",
+   "utc": "2043-03-07T08:00:00.000Z"
+  },
+  {
+   "date": "2043-03-08",
+   "utc": "2043-03-08T08:00:00.000Z"
+  },
+  {
+   "date": "2043-03-09",
+   "utc": "2043-03-09T07:00:00.000Z"
+  },
+  {
+   "date": "2043-07-01",
+   "utc": "2043-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2043-10-31",
+   "utc": "2043-10-31T07:00:00.000Z"
+  },
+  {
+   "date": "2043-11-01",
+   "utc": "2043-11-01T07:00:00.000Z"
+  },
+  {
+   "date": "2043-11-02",
+   "utc": "2043-11-02T08:00:00.000Z"
+  },
+  {
+   "date": "2043-12-31",
+   "utc": "2043-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2044-01-01",
+   "utc": "2044-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2044-03-12",
+   "utc": "2044-03-12T08:00:00.000Z"
+  },
+  {
+   "date": "2044-03-13",
+   "utc": "2044-03-13T08:00:00.000Z"
+  },
+  {
+   "date": "2044-03-14",
+   "utc": "2044-03-14T07:00:00.000Z"
+  },
+  {
+   "date": "2044-07-01",
+   "utc": "2044-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2044-11-05",
+   "utc": "2044-11-05T07:00:00.000Z"
+  },
+  {
+   "date": "2044-11-06",
+   "utc": "2044-11-06T07:00:00.000Z"
+  },
+  {
+   "date": "2044-11-07",
+   "utc": "2044-11-07T08:00:00.000Z"
+  },
+  {
+   "date": "2044-12-31",
+   "utc": "2044-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2045-01-01",
+   "utc": "2045-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2045-03-11",
+   "utc": "2045-03-11T08:00:00.000Z"
+  },
+  {
+   "date": "2045-03-12",
+   "utc": "2045-03-12T08:00:00.000Z"
+  },
+  {
+   "date": "2045-03-13",
+   "utc": "2045-03-13T07:00:00.000Z"
+  },
+  {
+   "date": "2045-07-01",
+   "utc": "2045-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2045-11-04",
+   "utc": "2045-11-04T07:00:00.000Z"
+  },
+  {
+   "date": "2045-11-05",
+   "utc": "2045-11-05T07:00:00.000Z"
+  },
+  {
+   "date": "2045-11-06",
+   "utc": "2045-11-06T08:00:00.000Z"
+  },
+  {
+   "date": "2045-12-31",
+   "utc": "2045-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2046-01-01",
+   "utc": "2046-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2046-03-10",
+   "utc": "2046-03-10T08:00:00.000Z"
+  },
+  {
+   "date": "2046-03-11",
+   "utc": "2046-03-11T08:00:00.000Z"
+  },
+  {
+   "date": "2046-03-12",
+   "utc": "2046-03-12T07:00:00.000Z"
+  },
+  {
+   "date": "2046-07-01",
+   "utc": "2046-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2046-11-03",
+   "utc": "2046-11-03T07:00:00.000Z"
+  },
+  {
+   "date": "2046-11-04",
+   "utc": "2046-11-04T07:00:00.000Z"
+  },
+  {
+   "date": "2046-11-05",
+   "utc": "2046-11-05T08:00:00.000Z"
+  },
+  {
+   "date": "2046-12-31",
+   "utc": "2046-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2047-01-01",
+   "utc": "2047-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2047-03-09",
+   "utc": "2047-03-09T08:00:00.000Z"
+  },
+  {
+   "date": "2047-03-10",
+   "utc": "2047-03-10T08:00:00.000Z"
+  },
+  {
+   "date": "2047-03-11",
+   "utc": "2047-03-11T07:00:00.000Z"
+  },
+  {
+   "date": "2047-07-01",
+   "utc": "2047-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2047-11-02",
+   "utc": "2047-11-02T07:00:00.000Z"
+  },
+  {
+   "date": "2047-11-03",
+   "utc": "2047-11-03T07:00:00.000Z"
+  },
+  {
+   "date": "2047-11-04",
+   "utc": "2047-11-04T08:00:00.000Z"
+  },
+  {
+   "date": "2047-12-31",
+   "utc": "2047-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2048-01-01",
+   "utc": "2048-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2048-03-07",
+   "utc": "2048-03-07T08:00:00.000Z"
+  },
+  {
+   "date": "2048-03-08",
+   "utc": "2048-03-08T08:00:00.000Z"
+  },
+  {
+   "date": "2048-03-09",
+   "utc": "2048-03-09T07:00:00.000Z"
+  },
+  {
+   "date": "2048-07-01",
+   "utc": "2048-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2048-10-31",
+   "utc": "2048-10-31T07:00:00.000Z"
+  },
+  {
+   "date": "2048-11-01",
+   "utc": "2048-11-01T07:00:00.000Z"
+  },
+  {
+   "date": "2048-11-02",
+   "utc": "2048-11-02T08:00:00.000Z"
+  },
+  {
+   "date": "2048-12-31",
+   "utc": "2048-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2049-01-01",
+   "utc": "2049-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2049-03-13",
+   "utc": "2049-03-13T08:00:00.000Z"
+  },
+  {
+   "date": "2049-03-14",
+   "utc": "2049-03-14T08:00:00.000Z"
+  },
+  {
+   "date": "2049-03-15",
+   "utc": "2049-03-15T07:00:00.000Z"
+  },
+  {
+   "date": "2049-07-01",
+   "utc": "2049-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2049-11-06",
+   "utc": "2049-11-06T07:00:00.000Z"
+  },
+  {
+   "date": "2049-11-07",
+   "utc": "2049-11-07T07:00:00.000Z"
+  },
+  {
+   "date": "2049-11-08",
+   "utc": "2049-11-08T08:00:00.000Z"
+  },
+  {
+   "date": "2049-12-31",
+   "utc": "2049-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2050-01-01",
+   "utc": "2050-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2050-03-12",
+   "utc": "2050-03-12T08:00:00.000Z"
+  },
+  {
+   "date": "2050-03-13",
+   "utc": "2050-03-13T08:00:00.000Z"
+  },
+  {
+   "date": "2050-03-14",
+   "utc": "2050-03-14T07:00:00.000Z"
+  },
+  {
+   "date": "2050-07-01",
+   "utc": "2050-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2050-11-05",
+   "utc": "2050-11-05T07:00:00.000Z"
+  },
+  {
+   "date": "2050-11-06",
+   "utc": "2050-11-06T07:00:00.000Z"
+  },
+  {
+   "date": "2050-11-07",
+   "utc": "2050-11-07T08:00:00.000Z"
+  },
+  {
+   "date": "2050-12-31",
+   "utc": "2050-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2051-01-01",
+   "utc": "2051-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2051-03-11",
+   "utc": "2051-03-11T08:00:00.000Z"
+  },
+  {
+   "date": "2051-03-12",
+   "utc": "2051-03-12T08:00:00.000Z"
+  },
+  {
+   "date": "2051-03-13",
+   "utc": "2051-03-13T07:00:00.000Z"
+  },
+  {
+   "date": "2051-07-01",
+   "utc": "2051-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2051-11-04",
+   "utc": "2051-11-04T07:00:00.000Z"
+  },
+  {
+   "date": "2051-11-05",
+   "utc": "2051-11-05T07:00:00.000Z"
+  },
+  {
+   "date": "2051-11-06",
+   "utc": "2051-11-06T08:00:00.000Z"
+  },
+  {
+   "date": "2051-12-31",
+   "utc": "2051-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2052-01-01",
+   "utc": "2052-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2052-03-09",
+   "utc": "2052-03-09T08:00:00.000Z"
+  },
+  {
+   "date": "2052-03-10",
+   "utc": "2052-03-10T08:00:00.000Z"
+  },
+  {
+   "date": "2052-03-11",
+   "utc": "2052-03-11T07:00:00.000Z"
+  },
+  {
+   "date": "2052-07-01",
+   "utc": "2052-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2052-11-02",
+   "utc": "2052-11-02T07:00:00.000Z"
+  },
+  {
+   "date": "2052-11-03",
+   "utc": "2052-11-03T07:00:00.000Z"
+  },
+  {
+   "date": "2052-11-04",
+   "utc": "2052-11-04T08:00:00.000Z"
+  },
+  {
+   "date": "2052-12-31",
+   "utc": "2052-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2053-01-01",
+   "utc": "2053-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2053-03-08",
+   "utc": "2053-03-08T08:00:00.000Z"
+  },
+  {
+   "date": "2053-03-09",
+   "utc": "2053-03-09T08:00:00.000Z"
+  },
+  {
+   "date": "2053-03-10",
+   "utc": "2053-03-10T07:00:00.000Z"
+  },
+  {
+   "date": "2053-07-01",
+   "utc": "2053-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2053-11-01",
+   "utc": "2053-11-01T07:00:00.000Z"
+  },
+  {
+   "date": "2053-11-02",
+   "utc": "2053-11-02T07:00:00.000Z"
+  },
+  {
+   "date": "2053-11-03",
+   "utc": "2053-11-03T08:00:00.000Z"
+  },
+  {
+   "date": "2053-12-31",
+   "utc": "2053-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2054-01-01",
+   "utc": "2054-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2054-03-07",
+   "utc": "2054-03-07T08:00:00.000Z"
+  },
+  {
+   "date": "2054-03-08",
+   "utc": "2054-03-08T08:00:00.000Z"
+  },
+  {
+   "date": "2054-03-09",
+   "utc": "2054-03-09T07:00:00.000Z"
+  },
+  {
+   "date": "2054-07-01",
+   "utc": "2054-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2054-10-31",
+   "utc": "2054-10-31T07:00:00.000Z"
+  },
+  {
+   "date": "2054-11-01",
+   "utc": "2054-11-01T07:00:00.000Z"
+  },
+  {
+   "date": "2054-11-02",
+   "utc": "2054-11-02T08:00:00.000Z"
+  },
+  {
+   "date": "2054-12-31",
+   "utc": "2054-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2055-01-01",
+   "utc": "2055-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2055-03-13",
+   "utc": "2055-03-13T08:00:00.000Z"
+  },
+  {
+   "date": "2055-03-14",
+   "utc": "2055-03-14T08:00:00.000Z"
+  },
+  {
+   "date": "2055-03-15",
+   "utc": "2055-03-15T07:00:00.000Z"
+  },
+  {
+   "date": "2055-07-01",
+   "utc": "2055-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2055-11-06",
+   "utc": "2055-11-06T07:00:00.000Z"
+  },
+  {
+   "date": "2055-11-07",
+   "utc": "2055-11-07T07:00:00.000Z"
+  },
+  {
+   "date": "2055-11-08",
+   "utc": "2055-11-08T08:00:00.000Z"
+  },
+  {
+   "date": "2055-12-31",
+   "utc": "2055-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2056-01-01",
+   "utc": "2056-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2056-03-11",
+   "utc": "2056-03-11T08:00:00.000Z"
+  },
+  {
+   "date": "2056-03-12",
+   "utc": "2056-03-12T08:00:00.000Z"
+  },
+  {
+   "date": "2056-03-13",
+   "utc": "2056-03-13T07:00:00.000Z"
+  },
+  {
+   "date": "2056-07-01",
+   "utc": "2056-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2056-11-04",
+   "utc": "2056-11-04T07:00:00.000Z"
+  },
+  {
+   "date": "2056-11-05",
+   "utc": "2056-11-05T07:00:00.000Z"
+  },
+  {
+   "date": "2056-11-06",
+   "utc": "2056-11-06T08:00:00.000Z"
+  },
+  {
+   "date": "2056-12-31",
+   "utc": "2056-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2057-01-01",
+   "utc": "2057-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2057-03-10",
+   "utc": "2057-03-10T08:00:00.000Z"
+  },
+  {
+   "date": "2057-03-11",
+   "utc": "2057-03-11T08:00:00.000Z"
+  },
+  {
+   "date": "2057-03-12",
+   "utc": "2057-03-12T07:00:00.000Z"
+  },
+  {
+   "date": "2057-07-01",
+   "utc": "2057-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2057-11-03",
+   "utc": "2057-11-03T07:00:00.000Z"
+  },
+  {
+   "date": "2057-11-04",
+   "utc": "2057-11-04T07:00:00.000Z"
+  },
+  {
+   "date": "2057-11-05",
+   "utc": "2057-11-05T08:00:00.000Z"
+  },
+  {
+   "date": "2057-12-31",
+   "utc": "2057-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2058-01-01",
+   "utc": "2058-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2058-03-09",
+   "utc": "2058-03-09T08:00:00.000Z"
+  },
+  {
+   "date": "2058-03-10",
+   "utc": "2058-03-10T08:00:00.000Z"
+  },
+  {
+   "date": "2058-03-11",
+   "utc": "2058-03-11T07:00:00.000Z"
+  },
+  {
+   "date": "2058-07-01",
+   "utc": "2058-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2058-11-02",
+   "utc": "2058-11-02T07:00:00.000Z"
+  },
+  {
+   "date": "2058-11-03",
+   "utc": "2058-11-03T07:00:00.000Z"
+  },
+  {
+   "date": "2058-11-04",
+   "utc": "2058-11-04T08:00:00.000Z"
+  },
+  {
+   "date": "2058-12-31",
+   "utc": "2058-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2059-01-01",
+   "utc": "2059-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2059-03-08",
+   "utc": "2059-03-08T08:00:00.000Z"
+  },
+  {
+   "date": "2059-03-09",
+   "utc": "2059-03-09T08:00:00.000Z"
+  },
+  {
+   "date": "2059-03-10",
+   "utc": "2059-03-10T07:00:00.000Z"
+  },
+  {
+   "date": "2059-07-01",
+   "utc": "2059-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2059-11-01",
+   "utc": "2059-11-01T07:00:00.000Z"
+  },
+  {
+   "date": "2059-11-02",
+   "utc": "2059-11-02T07:00:00.000Z"
+  },
+  {
+   "date": "2059-11-03",
+   "utc": "2059-11-03T08:00:00.000Z"
+  },
+  {
+   "date": "2059-12-31",
+   "utc": "2059-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2060-01-01",
+   "utc": "2060-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2060-03-13",
+   "utc": "2060-03-13T08:00:00.000Z"
+  },
+  {
+   "date": "2060-03-14",
+   "utc": "2060-03-14T08:00:00.000Z"
+  },
+  {
+   "date": "2060-03-15",
+   "utc": "2060-03-15T07:00:00.000Z"
+  },
+  {
+   "date": "2060-07-01",
+   "utc": "2060-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2060-11-06",
+   "utc": "2060-11-06T07:00:00.000Z"
+  },
+  {
+   "date": "2060-11-07",
+   "utc": "2060-11-07T07:00:00.000Z"
+  },
+  {
+   "date": "2060-11-08",
+   "utc": "2060-11-08T08:00:00.000Z"
+  },
+  {
+   "date": "2060-12-31",
+   "utc": "2060-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2061-01-01",
+   "utc": "2061-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2061-03-12",
+   "utc": "2061-03-12T08:00:00.000Z"
+  },
+  {
+   "date": "2061-03-13",
+   "utc": "2061-03-13T08:00:00.000Z"
+  },
+  {
+   "date": "2061-03-14",
+   "utc": "2061-03-14T07:00:00.000Z"
+  },
+  {
+   "date": "2061-07-01",
+   "utc": "2061-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2061-11-05",
+   "utc": "2061-11-05T07:00:00.000Z"
+  },
+  {
+   "date": "2061-11-06",
+   "utc": "2061-11-06T07:00:00.000Z"
+  },
+  {
+   "date": "2061-11-07",
+   "utc": "2061-11-07T08:00:00.000Z"
+  },
+  {
+   "date": "2061-12-31",
+   "utc": "2061-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2062-01-01",
+   "utc": "2062-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2062-03-11",
+   "utc": "2062-03-11T08:00:00.000Z"
+  },
+  {
+   "date": "2062-03-12",
+   "utc": "2062-03-12T08:00:00.000Z"
+  },
+  {
+   "date": "2062-03-13",
+   "utc": "2062-03-13T07:00:00.000Z"
+  },
+  {
+   "date": "2062-07-01",
+   "utc": "2062-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2062-11-04",
+   "utc": "2062-11-04T07:00:00.000Z"
+  },
+  {
+   "date": "2062-11-05",
+   "utc": "2062-11-05T07:00:00.000Z"
+  },
+  {
+   "date": "2062-11-06",
+   "utc": "2062-11-06T08:00:00.000Z"
+  },
+  {
+   "date": "2062-12-31",
+   "utc": "2062-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2063-01-01",
+   "utc": "2063-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2063-03-10",
+   "utc": "2063-03-10T08:00:00.000Z"
+  },
+  {
+   "date": "2063-03-11",
+   "utc": "2063-03-11T08:00:00.000Z"
+  },
+  {
+   "date": "2063-03-12",
+   "utc": "2063-03-12T07:00:00.000Z"
+  },
+  {
+   "date": "2063-07-01",
+   "utc": "2063-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2063-11-03",
+   "utc": "2063-11-03T07:00:00.000Z"
+  },
+  {
+   "date": "2063-11-04",
+   "utc": "2063-11-04T07:00:00.000Z"
+  },
+  {
+   "date": "2063-11-05",
+   "utc": "2063-11-05T08:00:00.000Z"
+  },
+  {
+   "date": "2063-12-31",
+   "utc": "2063-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2064-01-01",
+   "utc": "2064-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2064-03-08",
+   "utc": "2064-03-08T08:00:00.000Z"
+  },
+  {
+   "date": "2064-03-09",
+   "utc": "2064-03-09T08:00:00.000Z"
+  },
+  {
+   "date": "2064-03-10",
+   "utc": "2064-03-10T07:00:00.000Z"
+  },
+  {
+   "date": "2064-07-01",
+   "utc": "2064-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2064-11-01",
+   "utc": "2064-11-01T07:00:00.000Z"
+  },
+  {
+   "date": "2064-11-02",
+   "utc": "2064-11-02T07:00:00.000Z"
+  },
+  {
+   "date": "2064-11-03",
+   "utc": "2064-11-03T08:00:00.000Z"
+  },
+  {
+   "date": "2064-12-31",
+   "utc": "2064-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2065-01-01",
+   "utc": "2065-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2065-03-07",
+   "utc": "2065-03-07T08:00:00.000Z"
+  },
+  {
+   "date": "2065-03-08",
+   "utc": "2065-03-08T08:00:00.000Z"
+  },
+  {
+   "date": "2065-03-09",
+   "utc": "2065-03-09T07:00:00.000Z"
+  },
+  {
+   "date": "2065-07-01",
+   "utc": "2065-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2065-10-31",
+   "utc": "2065-10-31T07:00:00.000Z"
+  },
+  {
+   "date": "2065-11-01",
+   "utc": "2065-11-01T07:00:00.000Z"
+  },
+  {
+   "date": "2065-11-02",
+   "utc": "2065-11-02T08:00:00.000Z"
+  },
+  {
+   "date": "2065-12-31",
+   "utc": "2065-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2066-01-01",
+   "utc": "2066-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2066-03-13",
+   "utc": "2066-03-13T08:00:00.000Z"
+  },
+  {
+   "date": "2066-03-14",
+   "utc": "2066-03-14T08:00:00.000Z"
+  },
+  {
+   "date": "2066-03-15",
+   "utc": "2066-03-15T07:00:00.000Z"
+  },
+  {
+   "date": "2066-07-01",
+   "utc": "2066-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2066-11-06",
+   "utc": "2066-11-06T07:00:00.000Z"
+  },
+  {
+   "date": "2066-11-07",
+   "utc": "2066-11-07T07:00:00.000Z"
+  },
+  {
+   "date": "2066-11-08",
+   "utc": "2066-11-08T08:00:00.000Z"
+  },
+  {
+   "date": "2066-12-31",
+   "utc": "2066-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2067-01-01",
+   "utc": "2067-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2067-03-12",
+   "utc": "2067-03-12T08:00:00.000Z"
+  },
+  {
+   "date": "2067-03-13",
+   "utc": "2067-03-13T08:00:00.000Z"
+  },
+  {
+   "date": "2067-03-14",
+   "utc": "2067-03-14T07:00:00.000Z"
+  },
+  {
+   "date": "2067-07-01",
+   "utc": "2067-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2067-11-05",
+   "utc": "2067-11-05T07:00:00.000Z"
+  },
+  {
+   "date": "2067-11-06",
+   "utc": "2067-11-06T07:00:00.000Z"
+  },
+  {
+   "date": "2067-11-07",
+   "utc": "2067-11-07T08:00:00.000Z"
+  },
+  {
+   "date": "2067-12-31",
+   "utc": "2067-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2068-01-01",
+   "utc": "2068-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2068-03-10",
+   "utc": "2068-03-10T08:00:00.000Z"
+  },
+  {
+   "date": "2068-03-11",
+   "utc": "2068-03-11T08:00:00.000Z"
+  },
+  {
+   "date": "2068-03-12",
+   "utc": "2068-03-12T07:00:00.000Z"
+  },
+  {
+   "date": "2068-07-01",
+   "utc": "2068-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2068-11-03",
+   "utc": "2068-11-03T07:00:00.000Z"
+  },
+  {
+   "date": "2068-11-04",
+   "utc": "2068-11-04T07:00:00.000Z"
+  },
+  {
+   "date": "2068-11-05",
+   "utc": "2068-11-05T08:00:00.000Z"
+  },
+  {
+   "date": "2068-12-31",
+   "utc": "2068-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2069-01-01",
+   "utc": "2069-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2069-03-09",
+   "utc": "2069-03-09T08:00:00.000Z"
+  },
+  {
+   "date": "2069-03-10",
+   "utc": "2069-03-10T08:00:00.000Z"
+  },
+  {
+   "date": "2069-03-11",
+   "utc": "2069-03-11T07:00:00.000Z"
+  },
+  {
+   "date": "2069-07-01",
+   "utc": "2069-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2069-11-02",
+   "utc": "2069-11-02T07:00:00.000Z"
+  },
+  {
+   "date": "2069-11-03",
+   "utc": "2069-11-03T07:00:00.000Z"
+  },
+  {
+   "date": "2069-11-04",
+   "utc": "2069-11-04T08:00:00.000Z"
+  },
+  {
+   "date": "2069-12-31",
+   "utc": "2069-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2070-01-01",
+   "utc": "2070-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2070-03-08",
+   "utc": "2070-03-08T08:00:00.000Z"
+  },
+  {
+   "date": "2070-03-09",
+   "utc": "2070-03-09T08:00:00.000Z"
+  },
+  {
+   "date": "2070-03-10",
+   "utc": "2070-03-10T07:00:00.000Z"
+  },
+  {
+   "date": "2070-07-01",
+   "utc": "2070-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2070-11-01",
+   "utc": "2070-11-01T07:00:00.000Z"
+  },
+  {
+   "date": "2070-11-02",
+   "utc": "2070-11-02T07:00:00.000Z"
+  },
+  {
+   "date": "2070-11-03",
+   "utc": "2070-11-03T08:00:00.000Z"
+  },
+  {
+   "date": "2070-12-31",
+   "utc": "2070-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2071-01-01",
+   "utc": "2071-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2071-03-07",
+   "utc": "2071-03-07T08:00:00.000Z"
+  },
+  {
+   "date": "2071-03-08",
+   "utc": "2071-03-08T08:00:00.000Z"
+  },
+  {
+   "date": "2071-03-09",
+   "utc": "2071-03-09T07:00:00.000Z"
+  },
+  {
+   "date": "2071-07-01",
+   "utc": "2071-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2071-10-31",
+   "utc": "2071-10-31T07:00:00.000Z"
+  },
+  {
+   "date": "2071-11-01",
+   "utc": "2071-11-01T07:00:00.000Z"
+  },
+  {
+   "date": "2071-11-02",
+   "utc": "2071-11-02T08:00:00.000Z"
+  },
+  {
+   "date": "2071-12-31",
+   "utc": "2071-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2072-01-01",
+   "utc": "2072-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2072-03-12",
+   "utc": "2072-03-12T08:00:00.000Z"
+  },
+  {
+   "date": "2072-03-13",
+   "utc": "2072-03-13T08:00:00.000Z"
+  },
+  {
+   "date": "2072-03-14",
+   "utc": "2072-03-14T07:00:00.000Z"
+  },
+  {
+   "date": "2072-07-01",
+   "utc": "2072-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2072-11-05",
+   "utc": "2072-11-05T07:00:00.000Z"
+  },
+  {
+   "date": "2072-11-06",
+   "utc": "2072-11-06T07:00:00.000Z"
+  },
+  {
+   "date": "2072-11-07",
+   "utc": "2072-11-07T08:00:00.000Z"
+  },
+  {
+   "date": "2072-12-31",
+   "utc": "2072-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2073-01-01",
+   "utc": "2073-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2073-03-11",
+   "utc": "2073-03-11T08:00:00.000Z"
+  },
+  {
+   "date": "2073-03-12",
+   "utc": "2073-03-12T08:00:00.000Z"
+  },
+  {
+   "date": "2073-03-13",
+   "utc": "2073-03-13T07:00:00.000Z"
+  },
+  {
+   "date": "2073-07-01",
+   "utc": "2073-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2073-11-04",
+   "utc": "2073-11-04T07:00:00.000Z"
+  },
+  {
+   "date": "2073-11-05",
+   "utc": "2073-11-05T07:00:00.000Z"
+  },
+  {
+   "date": "2073-11-06",
+   "utc": "2073-11-06T08:00:00.000Z"
+  },
+  {
+   "date": "2073-12-31",
+   "utc": "2073-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2074-01-01",
+   "utc": "2074-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2074-03-10",
+   "utc": "2074-03-10T08:00:00.000Z"
+  },
+  {
+   "date": "2074-03-11",
+   "utc": "2074-03-11T08:00:00.000Z"
+  },
+  {
+   "date": "2074-03-12",
+   "utc": "2074-03-12T07:00:00.000Z"
+  },
+  {
+   "date": "2074-07-01",
+   "utc": "2074-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2074-11-03",
+   "utc": "2074-11-03T07:00:00.000Z"
+  },
+  {
+   "date": "2074-11-04",
+   "utc": "2074-11-04T07:00:00.000Z"
+  },
+  {
+   "date": "2074-11-05",
+   "utc": "2074-11-05T08:00:00.000Z"
+  },
+  {
+   "date": "2074-12-31",
+   "utc": "2074-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2075-01-01",
+   "utc": "2075-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2075-03-09",
+   "utc": "2075-03-09T08:00:00.000Z"
+  },
+  {
+   "date": "2075-03-10",
+   "utc": "2075-03-10T08:00:00.000Z"
+  },
+  {
+   "date": "2075-03-11",
+   "utc": "2075-03-11T07:00:00.000Z"
+  },
+  {
+   "date": "2075-07-01",
+   "utc": "2075-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2075-11-02",
+   "utc": "2075-11-02T07:00:00.000Z"
+  },
+  {
+   "date": "2075-11-03",
+   "utc": "2075-11-03T07:00:00.000Z"
+  },
+  {
+   "date": "2075-11-04",
+   "utc": "2075-11-04T08:00:00.000Z"
+  },
+  {
+   "date": "2075-12-31",
+   "utc": "2075-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2076-01-01",
+   "utc": "2076-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2076-03-07",
+   "utc": "2076-03-07T08:00:00.000Z"
+  },
+  {
+   "date": "2076-03-08",
+   "utc": "2076-03-08T08:00:00.000Z"
+  },
+  {
+   "date": "2076-03-09",
+   "utc": "2076-03-09T07:00:00.000Z"
+  },
+  {
+   "date": "2076-07-01",
+   "utc": "2076-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2076-10-31",
+   "utc": "2076-10-31T07:00:00.000Z"
+  },
+  {
+   "date": "2076-11-01",
+   "utc": "2076-11-01T07:00:00.000Z"
+  },
+  {
+   "date": "2076-11-02",
+   "utc": "2076-11-02T08:00:00.000Z"
+  },
+  {
+   "date": "2076-12-31",
+   "utc": "2076-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2077-01-01",
+   "utc": "2077-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2077-03-13",
+   "utc": "2077-03-13T08:00:00.000Z"
+  },
+  {
+   "date": "2077-03-14",
+   "utc": "2077-03-14T08:00:00.000Z"
+  },
+  {
+   "date": "2077-03-15",
+   "utc": "2077-03-15T07:00:00.000Z"
+  },
+  {
+   "date": "2077-07-01",
+   "utc": "2077-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2077-11-06",
+   "utc": "2077-11-06T07:00:00.000Z"
+  },
+  {
+   "date": "2077-11-07",
+   "utc": "2077-11-07T07:00:00.000Z"
+  },
+  {
+   "date": "2077-11-08",
+   "utc": "2077-11-08T08:00:00.000Z"
+  },
+  {
+   "date": "2077-12-31",
+   "utc": "2077-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2078-01-01",
+   "utc": "2078-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2078-03-12",
+   "utc": "2078-03-12T08:00:00.000Z"
+  },
+  {
+   "date": "2078-03-13",
+   "utc": "2078-03-13T08:00:00.000Z"
+  },
+  {
+   "date": "2078-03-14",
+   "utc": "2078-03-14T07:00:00.000Z"
+  },
+  {
+   "date": "2078-07-01",
+   "utc": "2078-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2078-11-05",
+   "utc": "2078-11-05T07:00:00.000Z"
+  },
+  {
+   "date": "2078-11-06",
+   "utc": "2078-11-06T07:00:00.000Z"
+  },
+  {
+   "date": "2078-11-07",
+   "utc": "2078-11-07T08:00:00.000Z"
+  },
+  {
+   "date": "2078-12-31",
+   "utc": "2078-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2079-01-01",
+   "utc": "2079-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2079-03-11",
+   "utc": "2079-03-11T08:00:00.000Z"
+  },
+  {
+   "date": "2079-03-12",
+   "utc": "2079-03-12T08:00:00.000Z"
+  },
+  {
+   "date": "2079-03-13",
+   "utc": "2079-03-13T07:00:00.000Z"
+  },
+  {
+   "date": "2079-07-01",
+   "utc": "2079-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2079-11-04",
+   "utc": "2079-11-04T07:00:00.000Z"
+  },
+  {
+   "date": "2079-11-05",
+   "utc": "2079-11-05T07:00:00.000Z"
+  },
+  {
+   "date": "2079-11-06",
+   "utc": "2079-11-06T08:00:00.000Z"
+  },
+  {
+   "date": "2079-12-31",
+   "utc": "2079-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2080-01-01",
+   "utc": "2080-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2080-03-09",
+   "utc": "2080-03-09T08:00:00.000Z"
+  },
+  {
+   "date": "2080-03-10",
+   "utc": "2080-03-10T08:00:00.000Z"
+  },
+  {
+   "date": "2080-03-11",
+   "utc": "2080-03-11T07:00:00.000Z"
+  },
+  {
+   "date": "2080-07-01",
+   "utc": "2080-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2080-11-02",
+   "utc": "2080-11-02T07:00:00.000Z"
+  },
+  {
+   "date": "2080-11-03",
+   "utc": "2080-11-03T07:00:00.000Z"
+  },
+  {
+   "date": "2080-11-04",
+   "utc": "2080-11-04T08:00:00.000Z"
+  },
+  {
+   "date": "2080-12-31",
+   "utc": "2080-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2081-01-01",
+   "utc": "2081-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2081-03-08",
+   "utc": "2081-03-08T08:00:00.000Z"
+  },
+  {
+   "date": "2081-03-09",
+   "utc": "2081-03-09T08:00:00.000Z"
+  },
+  {
+   "date": "2081-03-10",
+   "utc": "2081-03-10T07:00:00.000Z"
+  },
+  {
+   "date": "2081-07-01",
+   "utc": "2081-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2081-11-01",
+   "utc": "2081-11-01T07:00:00.000Z"
+  },
+  {
+   "date": "2081-11-02",
+   "utc": "2081-11-02T07:00:00.000Z"
+  },
+  {
+   "date": "2081-11-03",
+   "utc": "2081-11-03T08:00:00.000Z"
+  },
+  {
+   "date": "2081-12-31",
+   "utc": "2081-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2082-01-01",
+   "utc": "2082-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2082-03-07",
+   "utc": "2082-03-07T08:00:00.000Z"
+  },
+  {
+   "date": "2082-03-08",
+   "utc": "2082-03-08T08:00:00.000Z"
+  },
+  {
+   "date": "2082-03-09",
+   "utc": "2082-03-09T07:00:00.000Z"
+  },
+  {
+   "date": "2082-07-01",
+   "utc": "2082-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2082-10-31",
+   "utc": "2082-10-31T07:00:00.000Z"
+  },
+  {
+   "date": "2082-11-01",
+   "utc": "2082-11-01T07:00:00.000Z"
+  },
+  {
+   "date": "2082-11-02",
+   "utc": "2082-11-02T08:00:00.000Z"
+  },
+  {
+   "date": "2082-12-31",
+   "utc": "2082-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2083-01-01",
+   "utc": "2083-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2083-03-13",
+   "utc": "2083-03-13T08:00:00.000Z"
+  },
+  {
+   "date": "2083-03-14",
+   "utc": "2083-03-14T08:00:00.000Z"
+  },
+  {
+   "date": "2083-03-15",
+   "utc": "2083-03-15T07:00:00.000Z"
+  },
+  {
+   "date": "2083-07-01",
+   "utc": "2083-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2083-11-06",
+   "utc": "2083-11-06T07:00:00.000Z"
+  },
+  {
+   "date": "2083-11-07",
+   "utc": "2083-11-07T07:00:00.000Z"
+  },
+  {
+   "date": "2083-11-08",
+   "utc": "2083-11-08T08:00:00.000Z"
+  },
+  {
+   "date": "2083-12-31",
+   "utc": "2083-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2084-01-01",
+   "utc": "2084-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2084-03-11",
+   "utc": "2084-03-11T08:00:00.000Z"
+  },
+  {
+   "date": "2084-03-12",
+   "utc": "2084-03-12T08:00:00.000Z"
+  },
+  {
+   "date": "2084-03-13",
+   "utc": "2084-03-13T07:00:00.000Z"
+  },
+  {
+   "date": "2084-07-01",
+   "utc": "2084-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2084-11-04",
+   "utc": "2084-11-04T07:00:00.000Z"
+  },
+  {
+   "date": "2084-11-05",
+   "utc": "2084-11-05T07:00:00.000Z"
+  },
+  {
+   "date": "2084-11-06",
+   "utc": "2084-11-06T08:00:00.000Z"
+  },
+  {
+   "date": "2084-12-31",
+   "utc": "2084-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2085-01-01",
+   "utc": "2085-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2085-03-10",
+   "utc": "2085-03-10T08:00:00.000Z"
+  },
+  {
+   "date": "2085-03-11",
+   "utc": "2085-03-11T08:00:00.000Z"
+  },
+  {
+   "date": "2085-03-12",
+   "utc": "2085-03-12T07:00:00.000Z"
+  },
+  {
+   "date": "2085-07-01",
+   "utc": "2085-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2085-11-03",
+   "utc": "2085-11-03T07:00:00.000Z"
+  },
+  {
+   "date": "2085-11-04",
+   "utc": "2085-11-04T07:00:00.000Z"
+  },
+  {
+   "date": "2085-11-05",
+   "utc": "2085-11-05T08:00:00.000Z"
+  },
+  {
+   "date": "2085-12-31",
+   "utc": "2085-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2086-01-01",
+   "utc": "2086-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2086-03-09",
+   "utc": "2086-03-09T08:00:00.000Z"
+  },
+  {
+   "date": "2086-03-10",
+   "utc": "2086-03-10T08:00:00.000Z"
+  },
+  {
+   "date": "2086-03-11",
+   "utc": "2086-03-11T07:00:00.000Z"
+  },
+  {
+   "date": "2086-07-01",
+   "utc": "2086-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2086-11-02",
+   "utc": "2086-11-02T07:00:00.000Z"
+  },
+  {
+   "date": "2086-11-03",
+   "utc": "2086-11-03T07:00:00.000Z"
+  },
+  {
+   "date": "2086-11-04",
+   "utc": "2086-11-04T08:00:00.000Z"
+  },
+  {
+   "date": "2086-12-31",
+   "utc": "2086-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2087-01-01",
+   "utc": "2087-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2087-03-08",
+   "utc": "2087-03-08T08:00:00.000Z"
+  },
+  {
+   "date": "2087-03-09",
+   "utc": "2087-03-09T08:00:00.000Z"
+  },
+  {
+   "date": "2087-03-10",
+   "utc": "2087-03-10T07:00:00.000Z"
+  },
+  {
+   "date": "2087-07-01",
+   "utc": "2087-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2087-11-01",
+   "utc": "2087-11-01T07:00:00.000Z"
+  },
+  {
+   "date": "2087-11-02",
+   "utc": "2087-11-02T07:00:00.000Z"
+  },
+  {
+   "date": "2087-11-03",
+   "utc": "2087-11-03T08:00:00.000Z"
+  },
+  {
+   "date": "2087-12-31",
+   "utc": "2087-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2088-01-01",
+   "utc": "2088-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2088-03-13",
+   "utc": "2088-03-13T08:00:00.000Z"
+  },
+  {
+   "date": "2088-03-14",
+   "utc": "2088-03-14T08:00:00.000Z"
+  },
+  {
+   "date": "2088-03-15",
+   "utc": "2088-03-15T07:00:00.000Z"
+  },
+  {
+   "date": "2088-07-01",
+   "utc": "2088-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2088-11-06",
+   "utc": "2088-11-06T07:00:00.000Z"
+  },
+  {
+   "date": "2088-11-07",
+   "utc": "2088-11-07T07:00:00.000Z"
+  },
+  {
+   "date": "2088-11-08",
+   "utc": "2088-11-08T08:00:00.000Z"
+  },
+  {
+   "date": "2088-12-31",
+   "utc": "2088-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2089-01-01",
+   "utc": "2089-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2089-03-12",
+   "utc": "2089-03-12T08:00:00.000Z"
+  },
+  {
+   "date": "2089-03-13",
+   "utc": "2089-03-13T08:00:00.000Z"
+  },
+  {
+   "date": "2089-03-14",
+   "utc": "2089-03-14T07:00:00.000Z"
+  },
+  {
+   "date": "2089-07-01",
+   "utc": "2089-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2089-11-05",
+   "utc": "2089-11-05T07:00:00.000Z"
+  },
+  {
+   "date": "2089-11-06",
+   "utc": "2089-11-06T07:00:00.000Z"
+  },
+  {
+   "date": "2089-11-07",
+   "utc": "2089-11-07T08:00:00.000Z"
+  },
+  {
+   "date": "2089-12-31",
+   "utc": "2089-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2090-01-01",
+   "utc": "2090-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2090-03-11",
+   "utc": "2090-03-11T08:00:00.000Z"
+  },
+  {
+   "date": "2090-03-12",
+   "utc": "2090-03-12T08:00:00.000Z"
+  },
+  {
+   "date": "2090-03-13",
+   "utc": "2090-03-13T07:00:00.000Z"
+  },
+  {
+   "date": "2090-07-01",
+   "utc": "2090-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2090-11-04",
+   "utc": "2090-11-04T07:00:00.000Z"
+  },
+  {
+   "date": "2090-11-05",
+   "utc": "2090-11-05T07:00:00.000Z"
+  },
+  {
+   "date": "2090-11-06",
+   "utc": "2090-11-06T08:00:00.000Z"
+  },
+  {
+   "date": "2090-12-31",
+   "utc": "2090-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2091-01-01",
+   "utc": "2091-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2091-03-10",
+   "utc": "2091-03-10T08:00:00.000Z"
+  },
+  {
+   "date": "2091-03-11",
+   "utc": "2091-03-11T08:00:00.000Z"
+  },
+  {
+   "date": "2091-03-12",
+   "utc": "2091-03-12T07:00:00.000Z"
+  },
+  {
+   "date": "2091-07-01",
+   "utc": "2091-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2091-11-03",
+   "utc": "2091-11-03T07:00:00.000Z"
+  },
+  {
+   "date": "2091-11-04",
+   "utc": "2091-11-04T07:00:00.000Z"
+  },
+  {
+   "date": "2091-11-05",
+   "utc": "2091-11-05T08:00:00.000Z"
+  },
+  {
+   "date": "2091-12-31",
+   "utc": "2091-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2092-01-01",
+   "utc": "2092-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2092-03-08",
+   "utc": "2092-03-08T08:00:00.000Z"
+  },
+  {
+   "date": "2092-03-09",
+   "utc": "2092-03-09T08:00:00.000Z"
+  },
+  {
+   "date": "2092-03-10",
+   "utc": "2092-03-10T07:00:00.000Z"
+  },
+  {
+   "date": "2092-07-01",
+   "utc": "2092-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2092-11-01",
+   "utc": "2092-11-01T07:00:00.000Z"
+  },
+  {
+   "date": "2092-11-02",
+   "utc": "2092-11-02T07:00:00.000Z"
+  },
+  {
+   "date": "2092-11-03",
+   "utc": "2092-11-03T08:00:00.000Z"
+  },
+  {
+   "date": "2092-12-31",
+   "utc": "2092-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2093-01-01",
+   "utc": "2093-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2093-03-07",
+   "utc": "2093-03-07T08:00:00.000Z"
+  },
+  {
+   "date": "2093-03-08",
+   "utc": "2093-03-08T08:00:00.000Z"
+  },
+  {
+   "date": "2093-03-09",
+   "utc": "2093-03-09T07:00:00.000Z"
+  },
+  {
+   "date": "2093-07-01",
+   "utc": "2093-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2093-10-31",
+   "utc": "2093-10-31T07:00:00.000Z"
+  },
+  {
+   "date": "2093-11-01",
+   "utc": "2093-11-01T07:00:00.000Z"
+  },
+  {
+   "date": "2093-11-02",
+   "utc": "2093-11-02T08:00:00.000Z"
+  },
+  {
+   "date": "2093-12-31",
+   "utc": "2093-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2094-01-01",
+   "utc": "2094-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2094-03-13",
+   "utc": "2094-03-13T08:00:00.000Z"
+  },
+  {
+   "date": "2094-03-14",
+   "utc": "2094-03-14T08:00:00.000Z"
+  },
+  {
+   "date": "2094-03-15",
+   "utc": "2094-03-15T07:00:00.000Z"
+  },
+  {
+   "date": "2094-07-01",
+   "utc": "2094-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2094-11-06",
+   "utc": "2094-11-06T07:00:00.000Z"
+  },
+  {
+   "date": "2094-11-07",
+   "utc": "2094-11-07T07:00:00.000Z"
+  },
+  {
+   "date": "2094-11-08",
+   "utc": "2094-11-08T08:00:00.000Z"
+  },
+  {
+   "date": "2094-12-31",
+   "utc": "2094-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2095-01-01",
+   "utc": "2095-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2095-03-12",
+   "utc": "2095-03-12T08:00:00.000Z"
+  },
+  {
+   "date": "2095-03-13",
+   "utc": "2095-03-13T08:00:00.000Z"
+  },
+  {
+   "date": "2095-03-14",
+   "utc": "2095-03-14T07:00:00.000Z"
+  },
+  {
+   "date": "2095-07-01",
+   "utc": "2095-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2095-11-05",
+   "utc": "2095-11-05T07:00:00.000Z"
+  },
+  {
+   "date": "2095-11-06",
+   "utc": "2095-11-06T07:00:00.000Z"
+  },
+  {
+   "date": "2095-11-07",
+   "utc": "2095-11-07T08:00:00.000Z"
+  },
+  {
+   "date": "2095-12-31",
+   "utc": "2095-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2096-01-01",
+   "utc": "2096-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2096-03-10",
+   "utc": "2096-03-10T08:00:00.000Z"
+  },
+  {
+   "date": "2096-03-11",
+   "utc": "2096-03-11T08:00:00.000Z"
+  },
+  {
+   "date": "2096-03-12",
+   "utc": "2096-03-12T07:00:00.000Z"
+  },
+  {
+   "date": "2096-07-01",
+   "utc": "2096-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2096-11-03",
+   "utc": "2096-11-03T07:00:00.000Z"
+  },
+  {
+   "date": "2096-11-04",
+   "utc": "2096-11-04T07:00:00.000Z"
+  },
+  {
+   "date": "2096-11-05",
+   "utc": "2096-11-05T08:00:00.000Z"
+  },
+  {
+   "date": "2096-12-31",
+   "utc": "2096-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2097-01-01",
+   "utc": "2097-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2097-03-09",
+   "utc": "2097-03-09T08:00:00.000Z"
+  },
+  {
+   "date": "2097-03-10",
+   "utc": "2097-03-10T08:00:00.000Z"
+  },
+  {
+   "date": "2097-03-11",
+   "utc": "2097-03-11T07:00:00.000Z"
+  },
+  {
+   "date": "2097-07-01",
+   "utc": "2097-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2097-11-02",
+   "utc": "2097-11-02T07:00:00.000Z"
+  },
+  {
+   "date": "2097-11-03",
+   "utc": "2097-11-03T07:00:00.000Z"
+  },
+  {
+   "date": "2097-11-04",
+   "utc": "2097-11-04T08:00:00.000Z"
+  },
+  {
+   "date": "2097-12-31",
+   "utc": "2097-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2098-01-01",
+   "utc": "2098-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2098-03-08",
+   "utc": "2098-03-08T08:00:00.000Z"
+  },
+  {
+   "date": "2098-03-09",
+   "utc": "2098-03-09T08:00:00.000Z"
+  },
+  {
+   "date": "2098-03-10",
+   "utc": "2098-03-10T07:00:00.000Z"
+  },
+  {
+   "date": "2098-07-01",
+   "utc": "2098-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2098-11-01",
+   "utc": "2098-11-01T07:00:00.000Z"
+  },
+  {
+   "date": "2098-11-02",
+   "utc": "2098-11-02T07:00:00.000Z"
+  },
+  {
+   "date": "2098-11-03",
+   "utc": "2098-11-03T08:00:00.000Z"
+  },
+  {
+   "date": "2098-12-31",
+   "utc": "2098-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2099-01-01",
+   "utc": "2099-01-01T08:00:00.000Z"
+  },
+  {
+   "date": "2099-03-07",
+   "utc": "2099-03-07T08:00:00.000Z"
+  },
+  {
+   "date": "2099-03-08",
+   "utc": "2099-03-08T08:00:00.000Z"
+  },
+  {
+   "date": "2099-03-09",
+   "utc": "2099-03-09T07:00:00.000Z"
+  },
+  {
+   "date": "2099-07-01",
+   "utc": "2099-07-01T07:00:00.000Z"
+  },
+  {
+   "date": "2099-10-31",
+   "utc": "2099-10-31T07:00:00.000Z"
+  },
+  {
+   "date": "2099-11-01",
+   "utc": "2099-11-01T07:00:00.000Z"
+  },
+  {
+   "date": "2099-11-02",
+   "utc": "2099-11-02T08:00:00.000Z"
+  },
+  {
+   "date": "2099-12-31",
+   "utc": "2099-12-31T08:00:00.000Z"
+  },
+  {
+   "date": "2100-01-01",
+   "utc": "2100-01-01T08:00:00.000Z"
+  }
+ ],
+ "parse_sale_date": [
+  {
+   "date": "2026-10-20",
+   "error": null,
+   "text": "2026-10-20",
+   "today": "2026-10-20"
+  },
+  {
+   "date": "2026-10-20",
+   "error": null,
+   "text": "20261020",
+   "today": "2026-10-20"
+  },
+  {
+   "date": "2026-10-19",
+   "error": null,
+   "text": "2026-W43",
+   "today": "2026-10-20"
+  },
+  {
+   "date": "2026-10-20",
+   "error": null,
+   "text": "2026-W43-2",
+   "today": "2026-10-20"
+  },
+  {
+   "date": null,
+   "error": "future",
+   "text": "2026-10-21",
+   "today": "2026-10-20"
+  },
+  {
+   "date": "2025-10-20",
+   "error": null,
+   "text": "2025-10-20",
+   "today": "2026-10-20"
+  },
+  {
+   "date": "2025-10-19",
+   "error": null,
+   "text": "2025-10-19",
+   "today": "2026-10-20"
+  },
+  {
+   "date": "2006-03-20",
+   "error": null,
+   "text": "2006-03-20",
+   "today": "2026-10-20"
+  },
+  {
+   "date": "0001-01-01",
+   "error": null,
+   "text": "0001-01-01",
+   "today": "2026-10-20"
+  },
+  {
+   "date": null,
+   "error": "bad",
+   "text": "0000-01-01",
+   "today": "2026-10-20"
+  },
+  {
+   "date": null,
+   "error": "future",
+   "text": "9999-12-31",
+   "today": "2026-10-20"
+  },
+  {
+   "date": null,
+   "error": "bad",
+   "text": "9999-W52-7",
+   "today": "2026-10-20"
+  },
+  {
+   "date": null,
+   "error": "future",
+   "text": "2027-02-28",
+   "today": "2026-10-20"
+  },
+  {
+   "date": null,
+   "error": "future",
+   "text": "2028-02-29",
+   "today": "2026-10-20"
+  },
+  {
+   "date": null,
+   "error": "bad",
+   "text": "2026-02-29",
+   "today": "2026-10-20"
+  },
+  {
+   "date": null,
+   "error": "bad",
+   "text": "",
+   "today": "2026-10-20"
+  },
+  {
+   "date": null,
+   "error": "bad",
+   "text": " 2026-10-20",
+   "today": "2026-10-20"
+  },
+  {
+   "date": null,
+   "error": "bad",
+   "text": "2026-10-20T00:00",
+   "today": "2026-10-20"
+  },
+  {
+   "date": null,
+   "error": "bad",
+   "text": "２０２６-10-20",
+   "today": "2026-10-20"
+  },
+  {
+   "date": null,
+   "error": "bad",
+   "text": "10/20/2026",
+   "today": "2026-10-20"
+  },
+  {
+   "date": "2026-10-20",
+   "error": null,
+   "text": "2026-10-20",
+   "today": "2028-02-29"
+  },
+  {
+   "date": "2026-10-20",
+   "error": null,
+   "text": "20261020",
+   "today": "2028-02-29"
+  },
+  {
+   "date": "2026-10-19",
+   "error": null,
+   "text": "2026-W43",
+   "today": "2028-02-29"
+  },
+  {
+   "date": "2026-10-20",
+   "error": null,
+   "text": "2026-W43-2",
+   "today": "2028-02-29"
+  },
+  {
+   "date": "2026-10-21",
+   "error": null,
+   "text": "2026-10-21",
+   "today": "2028-02-29"
+  },
+  {
+   "date": "2025-10-20",
+   "error": null,
+   "text": "2025-10-20",
+   "today": "2028-02-29"
+  },
+  {
+   "date": "2025-10-19",
+   "error": null,
+   "text": "2025-10-19",
+   "today": "2028-02-29"
+  },
+  {
+   "date": "2006-03-20",
+   "error": null,
+   "text": "2006-03-20",
+   "today": "2028-02-29"
+  },
+  {
+   "date": "0001-01-01",
+   "error": null,
+   "text": "0001-01-01",
+   "today": "2028-02-29"
+  },
+  {
+   "date": null,
+   "error": "bad",
+   "text": "0000-01-01",
+   "today": "2028-02-29"
+  },
+  {
+   "date": null,
+   "error": "future",
+   "text": "9999-12-31",
+   "today": "2028-02-29"
+  },
+  {
+   "date": null,
+   "error": "bad",
+   "text": "9999-W52-7",
+   "today": "2028-02-29"
+  },
+  {
+   "date": "2027-02-28",
+   "error": null,
+   "text": "2027-02-28",
+   "today": "2028-02-29"
+  },
+  {
+   "date": "2028-02-29",
+   "error": null,
+   "text": "2028-02-29",
+   "today": "2028-02-29"
+  },
+  {
+   "date": null,
+   "error": "bad",
+   "text": "2026-02-29",
+   "today": "2028-02-29"
+  },
+  {
+   "date": null,
+   "error": "bad",
+   "text": "",
+   "today": "2028-02-29"
+  },
+  {
+   "date": null,
+   "error": "bad",
+   "text": " 2026-10-20",
+   "today": "2028-02-29"
+  },
+  {
+   "date": null,
+   "error": "bad",
+   "text": "2026-10-20T00:00",
+   "today": "2028-02-29"
+  },
+  {
+   "date": null,
+   "error": "bad",
+   "text": "２０２６-10-20",
+   "today": "2028-02-29"
+  },
+  {
+   "date": null,
+   "error": "bad",
+   "text": "10/20/2026",
+   "today": "2028-02-29"
+  },
+  {
+   "date": null,
+   "error": "future",
+   "text": "2026-10-20",
+   "today": "2026-03-08"
+  },
+  {
+   "date": null,
+   "error": "future",
+   "text": "20261020",
+   "today": "2026-03-08"
+  },
+  {
+   "date": null,
+   "error": "future",
+   "text": "2026-W43",
+   "today": "2026-03-08"
+  },
+  {
+   "date": null,
+   "error": "future",
+   "text": "2026-W43-2",
+   "today": "2026-03-08"
+  },
+  {
+   "date": null,
+   "error": "future",
+   "text": "2026-10-21",
+   "today": "2026-03-08"
+  },
+  {
+   "date": "2025-10-20",
+   "error": null,
+   "text": "2025-10-20",
+   "today": "2026-03-08"
+  },
+  {
+   "date": "2025-10-19",
+   "error": null,
+   "text": "2025-10-19",
+   "today": "2026-03-08"
+  },
+  {
+   "date": "2006-03-20",
+   "error": null,
+   "text": "2006-03-20",
+   "today": "2026-03-08"
+  },
+  {
+   "date": "0001-01-01",
+   "error": null,
+   "text": "0001-01-01",
+   "today": "2026-03-08"
+  },
+  {
+   "date": null,
+   "error": "bad",
+   "text": "0000-01-01",
+   "today": "2026-03-08"
+  },
+  {
+   "date": null,
+   "error": "future",
+   "text": "9999-12-31",
+   "today": "2026-03-08"
+  },
+  {
+   "date": null,
+   "error": "bad",
+   "text": "9999-W52-7",
+   "today": "2026-03-08"
+  },
+  {
+   "date": null,
+   "error": "future",
+   "text": "2027-02-28",
+   "today": "2026-03-08"
+  },
+  {
+   "date": null,
+   "error": "future",
+   "text": "2028-02-29",
+   "today": "2026-03-08"
+  },
+  {
+   "date": null,
+   "error": "bad",
+   "text": "2026-02-29",
+   "today": "2026-03-08"
+  },
+  {
+   "date": null,
+   "error": "bad",
+   "text": "",
+   "today": "2026-03-08"
+  },
+  {
+   "date": null,
+   "error": "bad",
+   "text": " 2026-10-20",
+   "today": "2026-03-08"
+  },
+  {
+   "date": null,
+   "error": "bad",
+   "text": "2026-10-20T00:00",
+   "today": "2026-03-08"
+  },
+  {
+   "date": null,
+   "error": "bad",
+   "text": "２０２６-10-20",
+   "today": "2026-03-08"
+  },
+  {
+   "date": null,
+   "error": "bad",
+   "text": "10/20/2026",
+   "today": "2026-03-08"
+  }
+ ],
+ "parse_state_date": [
+  {
+   "date": "2025-05-27",
+   "text": "05/27/2025"
+  },
+  {
+   "date": "2026-06-05",
+   "text": "6/5/2026"
+  },
+  {
+   "date": "2026-12-01",
+   "text": "12/1/2026"
+  },
+  {
+   "date": "2026-06-05",
+   "text": "6/5/2026 10:00"
+  },
+  {
+   "date": "2025-05-27",
+   "text": "05/27/2025 3:14:00 PM"
+  },
+  {
+   "date": "2025-05-27",
+   "text": "  05/27/2025  "
+  },
+  {
+   "date": "2026-03-04",
+   "text": "2026-03-04"
+  },
+  {
+   "date": "2026-03-04",
+   "text": "2026-03-04T10:15:00Z"
+  },
+  {
+   "date": "2026-03-04",
+   "text": "2026-03-04 10:15:00"
+  },
+  {
+   "date": null,
+   "text": "02/30/2026"
+  },
+  {
+   "date": null,
+   "text": "13/45/2026"
+  },
+  {
+   "date": null,
+   "text": "00/10/2026"
+  },
+  {
+   "date": null,
+   "text": "04/31/2026"
+  },
+  {
+   "date": null,
+   "text": "2026-02-30"
+  },
+  {
+   "date": "2024-02-29",
+   "text": "02/29/2024"
+  },
+  {
+   "date": "2000-02-29",
+   "text": "2/29/2000"
+  },
+  {
+   "date": null,
+   "text": "02/29/2025"
+  },
+  {
+   "date": null,
+   "text": "02/29/1900"
+  },
+  {
+   "date": null,
+   "text": null
+  },
+  {
+   "date": null,
+   "text": ""
+  },
+  {
+   "date": null,
+   "text": "May 27, 2025"
+  },
+  {
+   "date": null,
+   "text": "2025/05/27"
+  }
+ ],
+ "rejects": [
+  {
+   "big": true,
+   "function": "review_each",
+   "input": {
+    "cost": 1701411834604692317316873037158841056,
+    "qty": 1
+   },
+   "why": "a cost whose cents x 2 pass i128"
+  },
+  {
+   "big": true,
+   "function": "review_each",
+   "input": {
+    "cost": 85070591730234615865843651857942052864,
+    "qty": 999
+   },
+   "why": "a cost past i128 in cents"
+  },
+  {
+   "big": true,
+   "function": "check_sale",
+   "input": {
+    "cap": false,
+    "fresh": [
+     {
+      "id": 1,
+      "productGuid": "G",
+      "quantity": 10
+     }
+    ],
+    "lines": [
+     {
+      "guid": "G",
+      "qty": 170141183460469231731687303715884105727,
+      "record_id": 1
+     },
+     {
+      "guid": "G",
+      "qty": 170141183460469231731687303715884105727,
+      "record_id": 1
+     }
+    ]
+   },
+   "why": "two lines whose units together pass i128"
+  },
+  {
+   "function": "today",
+   "input": {
+    "now": "0001-01-01T07:59:59Z"
+   },
+   "why": "a now on 0000-12-31 in Pacific time"
+  }
+ ],
+ "review_each": [
+  {
+   "cents": 13,
+   "cost": 0.125,
+   "qty": 1
+  },
+  {
+   "cents": 1,
+   "cost": 0.005,
+   "qty": 1
+  },
+  {
+   "cents": 2,
+   "cost": 0.015,
+   "qty": 1
+  },
+  {
+   "cents": 2,
+   "cost": 0.025,
+   "qty": 2
+  },
+  {
+   "cents": 417,
+   "cost": 12.5,
+   "qty": 3
+  },
+  {
+   "cents": 333,
+   "cost": 10,
+   "qty": 3
+  },
+  {
+   "cents": 0,
+   "cost": 0,
+   "qty": 1
+  },
+  {
+   "cents": 2050,
+   "cost": 20.5,
+   "qty": 1
+  },
+  {
+   "cents": 28571,
+   "cost": 1999.99,
+   "qty": 7
+  },
+  {
+   "cents": 2,
+   "cost": 0.045,
+   "qty": 3
+  }
+ ],
+ "review_sale_date": [
+  {
+   "date": "2026-10-20",
+   "text": "2026-10-20T07:00:00.000Z"
+  },
+  {
+   "date": "2026-10-19",
+   "text": "2026-10-20T06:59:59.000Z"
+  },
+  {
+   "date": "2026-10-20",
+   "text": "2026-10-20T08:00:00.000Z"
+  },
+  {
+   "date": null,
+   "text": "2026-10-20T07:00:00"
+  },
+  {
+   "date": "2026-10-19",
+   "text": "2026-10-20T07:00:00+14:00"
+  },
+  {
+   "date": "2026-10-20",
+   "text": "2026-10-20T07:00:00.000-07:00"
+  },
+  {
+   "date": "2026-10-20",
+   "text": "2026-10-20"
+  },
+  {
+   "date": "2026-10-20",
+   "text": "2026-10-20 "
+  },
+  {
+   "date": "2026-10-20",
+   "text": " 2026-10-20"
+  },
+  {
+   "date": null,
+   "text": "2026-10-2"
+  },
+  {
+   "date": null,
+   "text": ""
+  },
+  {
+   "date": null,
+   "text": "  "
+  },
+  {
+   "date": null,
+   "text": null
+  },
+  {
+   "date": null,
+   "text": 5
+  },
+  {
+   "date": null,
+   "text": "2026-13-01T07:00:00Z"
+  },
+  {
+   "date": "2006-03-20",
+   "text": "2006-03-20T08:00:00.000Z"
+  },
+  {
+   "date": "2026-10-31",
+   "text": "2026-10-31"
+  },
+  {
+   "date": null,
+   "text": "1-01-01T07:52:58.000Z"
+  },
+  {
+   "date": null,
+   "text": "0001-01-01T00:00:00Z"
+  },
+  {
+   "date": null,
+   "text": "0001-01-01T07:59:59Z"
+  },
+  {
+   "date": "0001-01-01",
+   "text": "0001-01-01T08:00:00Z"
+  },
+  {
+   "date": "9999-12-31",
+   "text": "9999-12-31T23:59:59-08:00"
+  }
+ ],
+ "sale_outcome": [
+  {
+   "event": {
+    "kind": "connect_refused"
+   },
+   "name": "a refused connection",
+   "outcome": "not_sent",
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "event": {
+    "kind": "dns_failure"
+   },
+   "name": "a failed lookup",
+   "outcome": "not_sent",
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "event": {
+    "kind": "tls_failure"
+   },
+   "name": "a failed TLS handshake",
+   "outcome": "not_sent",
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "event": {
+    "kind": "timeout"
+   },
+   "name": "a timeout",
+   "outcome": "uncertain",
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "event": {
+    "kind": "reset_after_send"
+   },
+   "name": "a reset after sending",
+   "outcome": "uncertain",
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "event": {
+    "kind": "closed_before_headers"
+   },
+   "name": "closed before the headers",
+   "outcome": "uncertain",
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "event": {
+    "kind": "something_else"
+   },
+   "name": "an event nothing names",
+   "outcome": "uncertain",
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "event": {
+    "body": "",
+    "kind": "reply",
+    "status": 404
+   },
+   "name": "a 404",
+   "outcome": "not_sent",
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "event": {
+    "body": "[{\"saleNumber\": \"S-77\"}]",
+    "kind": "reply",
+    "status": 400
+   },
+   "name": "a 400 that says recorded",
+   "outcome": "not_sent",
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "event": {
+    "body": "",
+    "kind": "reply",
+    "status": 500
+   },
+   "name": "a 500",
+   "outcome": "uncertain",
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "event": {
+    "body": "[{\"saleNumber\": \"S-77\"}]",
+    "kind": "reply",
+    "status": 201
+   },
+   "name": "a 201",
+   "outcome": "uncertain",
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "event": {
+    "body": "",
+    "kind": "reply",
+    "status": 302
+   },
+   "name": "a 302",
+   "outcome": "uncertain",
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "event": {
+    "body": "[{\"saleNumber\": \"S-77\"}]",
+    "kind": "reply",
+    "status": 200
+   },
+   "name": "a proven sale",
+   "outcome": "recorded",
+   "sale_number": "S-77",
+   "sent": 1
+  },
+  {
+   "event": {
+    "body": "[{\"saleNumber\": \"S-77\"}, {\"saleNumber\": \"S-77\"}]",
+    "kind": "reply",
+    "status": 200
+   },
+   "name": "two records, one sale number",
+   "outcome": "recorded",
+   "sale_number": "S-77",
+   "sent": 2
+  },
+  {
+   "event": {
+    "body": "[{\"saleNumber\": \"S-77\"}, {\"saleNumber\": \"S-78\"}]",
+    "kind": "reply",
+    "status": 200
+   },
+   "name": "two records, two sale numbers",
+   "outcome": "uncertain",
+   "sale_number": null,
+   "sent": 2
+  },
+  {
+   "event": {
+    "body": "[{\"saleNumber\": \"S-77\"}]",
+    "kind": "reply",
+    "status": 200
+   },
+   "name": "one record back for two sent",
+   "outcome": "uncertain",
+   "sale_number": null,
+   "sent": 2
+  },
+  {
+   "event": {
+    "body": "[{\"saleNumber\": 77}, {\"saleNumber\": \"77\"}]",
+    "kind": "reply",
+    "status": 200
+   },
+   "name": "an integer and its text are one sale number",
+   "outcome": "recorded",
+   "sale_number": "77",
+   "sent": 2
+  },
+  {
+   "event": {
+    "body": "<html>",
+    "kind": "reply",
+    "status": 200
+   },
+   "name": "not JSON",
+   "outcome": "uncertain",
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "event": {
+    "body": "[]",
+    "kind": "reply",
+    "status": 200
+   },
+   "name": "an empty list",
+   "outcome": "uncertain",
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "event": {
+    "body": "{\"saleNumber\": \"S-77\"}",
+    "kind": "reply",
+    "status": 200
+   },
+   "name": "an object",
+   "outcome": "uncertain",
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "event": {
+    "body": "true",
+    "kind": "reply",
+    "status": 200
+   },
+   "name": "true",
+   "outcome": "uncertain",
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "event": {
+    "body": "[{}]",
+    "kind": "reply",
+    "status": 200
+   },
+   "name": "no saleNumber",
+   "outcome": "uncertain",
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "event": {
+    "body": "[null]",
+    "kind": "reply",
+    "status": 200
+   },
+   "name": "a record that isn't an object",
+   "outcome": "uncertain",
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "event": {
+    "body": "[{\"saleNumber\": 0}]",
+    "kind": "reply",
+    "status": 200
+   },
+   "name": "saleNumber 0",
+   "outcome": "uncertain",
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "event": {
+    "body": "[{\"saleNumber\": false}]",
+    "kind": "reply",
+    "status": 200
+   },
+   "name": "saleNumber false",
+   "outcome": "uncertain",
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "event": {
+    "body": "[{\"saleNumber\": true}]",
+    "kind": "reply",
+    "status": 200
+   },
+   "name": "saleNumber true",
+   "outcome": "uncertain",
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "event": {
+    "body": "[{\"saleNumber\": 77}]",
+    "kind": "reply",
+    "status": 200
+   },
+   "name": "saleNumber 77",
+   "outcome": "recorded",
+   "sale_number": "77",
+   "sent": 1
+  },
+  {
+   "event": {
+    "body": "[{\"saleNumber\": 77.0}]",
+    "kind": "reply",
+    "status": 200
+   },
+   "name": "saleNumber 77.0",
+   "outcome": "uncertain",
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "event": {
+    "body": "[{\"saleNumber\": 1e2}]",
+    "kind": "reply",
+    "status": 200
+   },
+   "name": "saleNumber 1e2",
+   "outcome": "uncertain",
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "event": {
+    "body": "[{\"saleNumber\": 1.5}]",
+    "kind": "reply",
+    "status": 200
+   },
+   "name": "saleNumber 1.5",
+   "outcome": "uncertain",
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "event": {
+    "body": "[{\"saleNumber\": -3}]",
+    "kind": "reply",
+    "status": 200
+   },
+   "name": "saleNumber negative",
+   "outcome": "uncertain",
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "event": {
+    "body": "[{\"saleNumber\": 1180591620717411303424}]",
+    "kind": "reply",
+    "status": 200
+   },
+   "name": "saleNumber 2^70",
+   "outcome": "recorded",
+   "sale_number": "1180591620717411303424",
+   "sent": 1
+  },
+  {
+   "event": {
+    "body": "[{\"saleNumber\": [\"x\"]}]",
+    "kind": "reply",
+    "status": 200
+   },
+   "name": "saleNumber a list",
+   "outcome": "uncertain",
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "event": {
+    "body": "[{\"saleNumber\": {\"a\": 1}}]",
+    "kind": "reply",
+    "status": 200
+   },
+   "name": "saleNumber an object",
+   "outcome": "uncertain",
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "event": {
+    "body": "[{\"saleNumber\": []}]",
+    "kind": "reply",
+    "status": 200
+   },
+   "name": "saleNumber an empty list",
+   "outcome": "uncertain",
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "event": {
+    "body": "[{\"saleNumber\": null}]",
+    "kind": "reply",
+    "status": 200
+   },
+   "name": "saleNumber null",
+   "outcome": "uncertain",
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "event": {
+    "body": "[{\"saleNumber\": \"\"}]",
+    "kind": "reply",
+    "status": 200
+   },
+   "name": "saleNumber empty text",
+   "outcome": "uncertain",
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "event": {
+    "body": "[{\"saleNumber\": \"  \"}]",
+    "kind": "reply",
+    "status": 200
+   },
+   "name": "saleNumber spaces",
+   "outcome": "uncertain",
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "event": {
+    "body": "[{\"saleNumber\": \"\\u00a0\"}]",
+    "kind": "reply",
+    "status": 200
+   },
+   "name": "saleNumber a no-break space",
+   "outcome": "uncertain",
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "event": {
+    "body": "[{\"saleNumber\": \"\\u001c\"}]",
+    "kind": "reply",
+    "status": 200
+   },
+   "name": "saleNumber U+001C",
+   "outcome": "recorded",
+   "sale_number": "\u001c",
+   "sent": 1
+  },
+  {
+   "event": {
+    "body": "[{\"saleNumber\": \"\\ufeff\"}]",
+    "kind": "reply",
+    "status": 200
+   },
+   "name": "saleNumber a byte order mark",
+   "outcome": "recorded",
+   "sale_number": "﻿",
+   "sent": 1
+  },
+  {
+   "event": {
+    "body": "[{\"saleNumber\": \"0\"}]",
+    "kind": "reply",
+    "status": 200
+   },
+   "name": "saleNumber text 0",
+   "outcome": "recorded",
+   "sale_number": "0",
+   "sent": 1
+  },
+  {
+   "event": {
+    "body": "[{\"saleNumber\": \"false\"}]",
+    "kind": "reply",
+    "status": 200
+   },
+   "name": "saleNumber text false",
+   "outcome": "recorded",
+   "sale_number": "false",
+   "sent": 1
+  },
+  {
+   "event": {
+    "kind": "reply_cut_off",
+    "status": 200
+   },
+   "name": "a 200 whose body was cut off",
+   "outcome": "uncertain",
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "event": {
+    "kind": "reply_cut_off",
+    "status": 404
+   },
+   "name": "a 404 whose body was cut off",
+   "outcome": "uncertain",
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "event": {
+    "kind": "reply_cut_off",
+    "status": 409
+   },
+   "name": "a 409 whose body was cut off",
+   "outcome": "uncertain",
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "event": {
+    "kind": "reply_cut_off",
+    "status": 500
+   },
+   "name": "a 500 whose body was cut off",
+   "outcome": "uncertain",
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "event": {
+    "kind": "reply_timeout",
+    "status": 200
+   },
+   "name": "a 200 whose body didn't arrive in time",
+   "outcome": "uncertain",
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "event": {
+    "kind": "reply_timeout",
+    "status": 400
+   },
+   "name": "a 400 whose body didn't arrive in time",
+   "outcome": "uncertain",
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "event": {
+    "kind": "reply_timeout",
+    "status": 503
+   },
+   "name": "a 503 whose body didn't arrive in time",
+   "outcome": "uncertain",
+   "sale_number": null,
+   "sent": 1
+  }
+ ],
+ "sale_proof": [
+  {
+   "name": "a proven sale",
+   "reply": [
+    {
+     "saleNumber": "S-77"
+    }
+   ],
+   "sale_number": "S-77",
+   "sent": 1
+  },
+  {
+   "name": "two records, one sale number",
+   "reply": [
+    {
+     "saleNumber": "S-77"
+    },
+    {
+     "saleNumber": "S-77"
+    }
+   ],
+   "sale_number": "S-77",
+   "sent": 2
+  },
+  {
+   "name": "two records, two sale numbers",
+   "reply": [
+    {
+     "saleNumber": "S-77"
+    },
+    {
+     "saleNumber": "S-78"
+    }
+   ],
+   "sale_number": null,
+   "sent": 2
+  },
+  {
+   "name": "one record back for two sent",
+   "reply": [
+    {
+     "saleNumber": "S-77"
+    }
+   ],
+   "sale_number": null,
+   "sent": 2
+  },
+  {
+   "name": "an integer and its text are one sale number",
+   "reply": [
+    {
+     "saleNumber": 77
+    },
+    {
+     "saleNumber": "77"
+    }
+   ],
+   "sale_number": "77",
+   "sent": 2
+  },
+  {
+   "name": "an empty list",
+   "reply": [],
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "name": "an object",
+   "reply": {
+    "saleNumber": "S-77"
+   },
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "name": "true",
+   "reply": true,
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "name": "no saleNumber",
+   "reply": [
+    {}
+   ],
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "name": "a record that isn't an object",
+   "reply": [
+    null
+   ],
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "name": "saleNumber 0",
+   "reply": [
+    {
+     "saleNumber": 0
+    }
+   ],
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "name": "saleNumber false",
+   "reply": [
+    {
+     "saleNumber": false
+    }
+   ],
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "name": "saleNumber true",
+   "reply": [
+    {
+     "saleNumber": true
+    }
+   ],
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "name": "saleNumber 77",
+   "reply": [
+    {
+     "saleNumber": 77
+    }
+   ],
+   "sale_number": "77",
+   "sent": 1
+  },
+  {
+   "name": "saleNumber 77.0",
+   "reply": [
+    {
+     "saleNumber": 77.0
+    }
+   ],
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "name": "saleNumber 1.5",
+   "reply": [
+    {
+     "saleNumber": 1.5
+    }
+   ],
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "name": "saleNumber negative",
+   "reply": [
+    {
+     "saleNumber": -3
+    }
+   ],
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "big": true,
+   "name": "saleNumber 2^70",
+   "reply": [
+    {
+     "saleNumber": 1180591620717411303424
+    }
+   ],
+   "sale_number": "1180591620717411303424",
+   "sent": 1
+  },
+  {
+   "name": "saleNumber a list",
+   "reply": [
+    {
+     "saleNumber": [
+      "x"
+     ]
+    }
+   ],
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "name": "saleNumber an object",
+   "reply": [
+    {
+     "saleNumber": {
+      "a": 1
+     }
+    }
+   ],
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "name": "saleNumber an empty list",
+   "reply": [
+    {
+     "saleNumber": []
+    }
+   ],
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "name": "saleNumber null",
+   "reply": [
+    {
+     "saleNumber": null
+    }
+   ],
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "name": "saleNumber empty text",
+   "reply": [
+    {
+     "saleNumber": ""
+    }
+   ],
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "name": "saleNumber spaces",
+   "reply": [
+    {
+     "saleNumber": "  "
+    }
+   ],
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "name": "saleNumber a no-break space",
+   "reply": [
+    {
+     "saleNumber": " "
+    }
+   ],
+   "sale_number": null,
+   "sent": 1
+  },
+  {
+   "name": "saleNumber U+001C",
+   "reply": [
+    {
+     "saleNumber": "\u001c"
+    }
+   ],
+   "sale_number": "\u001c",
+   "sent": 1
+  },
+  {
+   "name": "saleNumber a byte order mark",
+   "reply": [
+    {
+     "saleNumber": "﻿"
+    }
+   ],
+   "sale_number": "﻿",
+   "sent": 1
+  },
+  {
+   "name": "saleNumber text 0",
+   "reply": [
+    {
+     "saleNumber": "0"
+    }
+   ],
+   "sale_number": "0",
+   "sent": 1
+  },
+  {
+   "name": "saleNumber text false",
+   "reply": [
+    {
+     "saleNumber": "false"
+    }
+   ],
+   "sale_number": "false",
+   "sent": 1
+  }
+ ],
+ "today": [
+  {
+   "date": "2026-03-07",
+   "now": "2026-03-08T07:59:59Z"
+  },
+  {
+   "date": "2026-03-08",
+   "now": "2026-03-08T08:00:00Z"
+  },
+  {
+   "date": "2026-03-08",
+   "now": "2026-03-08T09:59:59Z"
+  },
+  {
+   "date": "2026-03-08",
+   "now": "2026-03-08T10:00:00Z"
+  },
+  {
+   "date": "2026-03-08",
+   "now": "2026-03-09T06:59:59Z"
+  },
+  {
+   "date": "2026-03-09",
+   "now": "2026-03-09T07:00:00Z"
+  },
+  {
+   "date": "2026-10-30",
+   "now": "2026-10-31T06:59:59.999Z"
+  },
+  {
+   "date": "2026-10-31",
+   "now": "2026-10-31T07:00:00Z"
+  },
+  {
+   "date": "2026-10-31",
+   "now": "2026-11-01T06:59:59Z"
+  },
+  {
+   "date": "2026-11-01",
+   "now": "2026-11-01T07:00:00Z"
+  },
+  {
+   "date": "2026-11-01",
+   "now": "2026-11-01T08:59:59Z"
+  },
+  {
+   "date": "2026-11-01",
+   "now": "2026-11-01T09:00:00Z"
+  },
+  {
+   "date": "2026-11-01",
+   "now": "2026-11-02T07:59:59Z"
+  },
+  {
+   "date": "2026-11-02",
+   "now": "2026-11-02T08:00:00.000001Z"
+  },
+  {
+   "date": "2026-12-31",
+   "now": "2026-12-31T08:00:00Z"
+  },
+  {
+   "date": "2028-02-29",
+   "now": "2028-02-29T23:59:59Z"
+  }
+ ]
+}

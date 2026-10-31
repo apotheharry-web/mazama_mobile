@@ -21,7 +21,7 @@ import 'package:flutter/material.dart';
 import 'pricing.dart' show money;
 import 'responsive.dart';
 import 'state_client.dart';
-import 'state_date.dart';
+import 'selling.dart' show stateDateIso;
 import 'sync/sync_datasets.dart';
 import 'sync/updated_line.dart';
 

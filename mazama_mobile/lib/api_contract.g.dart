@@ -76,7 +76,7 @@ const loginSpecRateLimitPerMinute = 30;
 const loginHostsRateLimitPerMinute = 30;
 const loginBrowserSpecRateLimitPerMinute = 30;
 const ingestMaxRecords = 5000;
-const ingestRateLimitPerMinute = 12;
+const ingestRateLimitPerMinute = 24;
 const appLatestRateLimitPerMinute = 30;
 const appApkRateLimitPerMinute = 6;
 
@@ -101,7 +101,7 @@ const apiRoutes = <String, Map<String, Object>>{
   'login_spec': {'id': 'C17', 'method': 'GET', 'path': '/p/flows/login', 'keyRequired': true, 'request': 'none', 'reply': 'json', 'success': 200, 'fields': <String>[], 'files': <String>[], 'rateLimitPerMinute': 30},
   'login_hosts': {'id': 'C18', 'method': 'GET', 'path': '/p/flows/hosts', 'keyRequired': true, 'request': 'none', 'reply': 'json', 'success': 200, 'fields': <String>[], 'files': <String>[], 'rateLimitPerMinute': 30},
   'login_browser_spec': {'id': 'C19', 'method': 'GET', 'path': '/p/flows/login_browser', 'keyRequired': true, 'request': 'none', 'reply': 'json', 'success': 200, 'fields': <String>[], 'files': <String>[], 'rateLimitPerMinute': 30},
-  'ingest': {'id': 'C20', 'method': 'POST', 'path': '/p/ingest/{dataset}/{state_id}', 'keyRequired': true, 'request': 'json', 'reply': 'json', 'success': 200, 'fields': <String>[], 'files': <String>[], 'rateLimitPerMinute': 12},
+  'ingest': {'id': 'C20', 'method': 'POST', 'path': '/p/ingest/{dataset}/{state_id}', 'keyRequired': true, 'request': 'json', 'reply': 'json', 'success': 200, 'fields': <String>[], 'files': <String>[], 'rateLimitPerMinute': 24},
   'app_latest': {'id': 'C21', 'method': 'GET', 'path': '/p/app/latest', 'keyRequired': true, 'request': 'none', 'reply': 'json', 'success': 200, 'fields': <String>[], 'files': <String>[], 'rateLimitPerMinute': 30},
   'app_apk': {'id': 'C22', 'method': 'GET', 'path': '/p/app/apk/{build}', 'keyRequired': true, 'request': 'none', 'reply': 'file', 'success': 200, 'fields': <String>[], 'files': <String>[], 'rateLimitPerMinute': 6},
 };

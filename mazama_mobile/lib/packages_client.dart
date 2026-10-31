@@ -11,6 +11,7 @@ import 'package:http/http.dart' as http;
 
 import 'api_contract.g.dart';
 import 'app_api_key.dart';
+import 'mazama_core.dart';
 import 'server_error.dart';
 import 'server_link_client.dart' show serverClient;
 import 'stock_summary.dart';
@@ -134,6 +135,18 @@ class Package {
   /// the server has no certificate for the lot, for an older server, and for a record only the state system sent.
   final Map<String, Object?>? labelInput;
 
+  /// DOSE-8 (specs/core row 5, I10): false only on a row /p/packages marks unconfirmed - its figures are only an approved
+  /// phone's upload, which the server's own sync hasn't seen. Before a sale the phone reads every lot the sale draws from
+  /// the state again whenever any of them is unconfirmed, whatever the age of its stock. True everywhere else (a state
+  /// read, an older server that doesn't send it).
+  final bool confirmed;
+
+  /// SALE-12 (specs/core row 7): what a sale record copies of this record (productGuid, productType, id, weightPerUnit,
+  /// analyteWeight), exactly as it was received - a whole-number weight stays 1, never 1.0, and a value that is missing
+  /// stays missing, so the core refuses the sale (SALE-13) instead of sending "" or 0. Kept through CartStore ('sale');
+  /// a draft an older build saved has none, and its typed values are used ([toSaleItem]).
+  final Map<String, Object?>? saleValues;
+
   Package({
     required this.productGuid,
     required this.productType,
@@ -158,6 +171,8 @@ class Package {
     this.stateEstimate = false,
     this.stateOnly = false,
     this.labelInput,
+    this.confirmed = true,
+    this.saleValues,
   })  : _exactQuantity = exactQuantity,
         enrichedBy = enrichedAt == null ? null : (enrichedBy ?? EnrichmentSource.server);
 
@@ -187,6 +202,8 @@ class Package {
         stateEstimate: j['stateEstimate'] == true,
         stateOnly: j['stateOnly'] == true,
         labelInput: j['labelInput'] is Map ? Map<String, Object?>.from(j['labelInput'] as Map) : null,
+        confirmed: j['confirmed'] != false,
+        saleValues: j['sale'] is Map ? Map<String, Object?>.from(j['sale'] as Map) : saleValuesOf(j),
       );
 
   /// This package as the stock rules see it (stock_summary.dart, SP-R2): the server's own figures.
@@ -207,13 +224,15 @@ class Package {
   /// The shape buildSale (selling.dart) expects as its `item` argument - exactly the fields a real sale record
   /// needs (the state system's own wire shape), so strain/tpeMg (this app's own display-only additions) are
   /// deliberately left out, same as quantity already was.
-  Map<String, Object?> toSaleItem() => {
-        'productGuid': productGuid,
-        'productType': productType,
-        'id': id,
-        'weightPerUnit': weightPerUnit,
-        'analyteWeight': analyteWeight,
-      };
+  Map<String, Object?> toSaleItem() => saleValues != null
+      ? Map<String, Object?>.from(saleValues!)
+      : {
+          'productGuid': productGuid,
+          'productType': productType,
+          'id': id,
+          'weightPerUnit': weightPerUnit,
+          'analyteWeight': analyteWeight,
+        };
 
   /// The exact inverse of fromJson, including `quantity` (toSaleItem above deliberately leaves that out - this
   /// one doesn't, since it's meant to round-trip through CartStore, not describe a sale record). Not the same
@@ -231,7 +250,7 @@ class Package {
         if (lotGuid != null) 'lotGuid': lotGuid,
         'coaAvailable': coaAvailable,
         'labelAvailable': labelAvailable,
-        if (expires != null) 'expires': _isoDate(expires!),
+        if (expires != null) 'expires': _dayText(expires!),
         'mazama': mazama,
         'expired': expired,
         'unitMgTpe': unitMgTpe,
@@ -244,8 +263,19 @@ class Package {
         if (stateEstimate) 'stateEstimate': true,
         if (stateOnly) 'stateOnly': true,
         if (labelInput != null) 'labelInput': labelInput,
+        if (!confirmed) 'confirmed': false,
+        if (saleValues != null) 'sale': saleValues,
       };
 }
+
+/// What a sale record copies of a state record, as received (SALE-12): only the keys it has.
+const saleKeys = ['productGuid', 'productType', 'id', 'weightPerUnit', 'analyteWeight'];
+
+/// [r]'s [saleKeys], exactly as they are in it.
+Map<String, Object?> saleValuesOf(Map<Object?, Object?> r) => {
+      for (final k in saleKeys)
+        if (r.containsKey(k)) k: r[k],
+    };
 
 /// GETs [apiBaseUrl]/p/packages/{stateId} (C1, routes.yaml) and returns this service center's current
 /// packaged products. Throws PackagesError on anything but a clean 200 JSON list - including a 404 (no such
@@ -294,43 +324,81 @@ DateTime? _dateOrNull(Object? v) {
   return d == null ? null : DateTime(d.year, d.month, d.day);
 }
 
-String _isoDate(DateTime d) =>
+String _dayText(DateTime d) =>
     '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
-/// The records ("lots") of one product in the order a sale draws units from them (SM-17, SM-D29): the earliest
-/// [Package.expires] first, a lot with no known date after every dated one, then the smaller lot, then the lower id.
-/// The server's selling.draw_order; both are held to assets/shared/selling/vectors/allocate.json
-/// (test/lot_draw_vectors_test.dart).
-List<Package> drawOrder(List<Package> lots) => [...lots]..sort((a, b) {
-    final ae = a.expires, be = b.expires;
-    if ((ae == null) != (be == null)) return ae == null ? 1 : -1;
-    if (ae != null && be != null && ae != be) return ae.compareTo(be);
-    if (a.quantity != b.quantity) return a.quantity.compareTo(b.quantity);
-    return a.id.compareTo(b.id);
-  });
+/// The records ("lots") of one product in the order a sale draws units from them (SM-17, SM-D29): a lot only the state
+/// lists ([Package.stateOnly], which the server's rows never are) after every lot with a server figure, so a product's
+/// figure ([PkprGroup.tpeMg]), price and dose cap are always its lab lot's (specs/phone-sync PS-R5, "lab lot first");
+/// then the earliest [Package.expires], a lot with no known date after every dated one, the fewer units, the lower id.
+/// The shared core's rule (mazama_core::selling::cart::allocate, specs/core row 6), the server's selling.draw_order
+/// too; held to assets/shared/selling/vectors/allocate.json and pricing_cases.json (test/lot_draw_vectors_test.dart).
+/// Throws StateError when the core can't order them (it can't be sold from a list it couldn't order).
+List<Package> drawOrder(List<Package> lots, {CoreFunctions? core}) {
+  final got = _draw(lots, 0, core);
+  if (got == null) throw StateError("mazama_core couldn't order these lots");
+  return [for (final i in got.order) lots[i]];
+}
 
-/// [qty] units drawn from [lots] in [drawOrder]: (lot, units from it) for each lot that gives any, or null when
-/// the lots hold fewer than [qty] - refused, never put on the last lot (the server's selling.allocate).
-List<(Package, int)>? allocateLots(List<Package> lots, int qty) {
-  final out = <(Package, int)>[];
-  var left = qty;
-  for (final lot in drawOrder(lots)) {
-    if (left <= 0) break;
-    final take = left < lot.quantity ? left : lot.quantity;
-    if (take > 0) {
-      out.add((lot, take));
-      left -= take;
+/// [qty] units drawn from [lots] in [drawOrder]: (lot, units from it) for each lot that gives any, or null when the lots
+/// hold fewer than [qty] - refused, never put on the last lot (the core's allocate) - or when the core can't answer.
+List<(Package, int)>? allocateLots(List<Package> lots, int qty, {CoreFunctions? core}) => _draw(lots, qty, core)?.takes;
+
+/// The core's draw over [lots], by position in [lots]; null when it can't answer or answers in the wrong shape.
+({List<int> order, List<(Package, int)>? takes})? _draw(List<Package> lots, int qty, CoreFunctions? core) {
+  try {
+    final reply = (core ?? MazamaCore.instance).sellingAllocate({
+      'lots': [
+        for (final l in lots)
+          {'id': l.id, 'quantity': l.quantity, 'expires': l.expires == null ? null : _dayText(l.expires!), 'state_only': l.stateOnly},
+      ],
+      'qty': qty,
+    });
+    final positions = reply['positions'];
+    if (positions is! List || positions.length != lots.length || positions.any((i) => i is! int || i < 0 || i >= lots.length) ||
+        positions.toSet().length != lots.length) {
+      return null;
     }
+    final order = List<int>.from(positions);
+    final takes = reply['takes'];
+    final at = reply['take_positions'];
+    if (takes == null) return at == null ? (order: order, takes: null) : null;
+    if (takes is! List || at is! List || takes.length != at.length) return null;
+    final out = <(Package, int)>[];
+    for (var k = 0; k < takes.length; k++) {
+      final t = takes[k];
+      final i = at[k];
+      if (t is! List || t.length != 2 || i is! int || i < 0 || i >= lots.length || t[0] != lots[i].id) return null;
+      final n = t[1];
+      if (n is! int || n <= 0 || n > lots[i].quantity) return null;
+      out.add((lots[i], n));
+    }
+    if (out.fold<int>(0, (a, x) => a + x.$2) != (qty < 0 ? 0 : qty)) return null;
+    return (order: order, takes: out);
+  } catch (_) {
+    return null; // StateError (no core loaded), MazamaCoreError, or anything else
   }
-  return left > 0 ? null : out;
 }
 
 class PkprGroup {
-  /// The product's records, in [drawOrder] (SM-D29).
+  /// The product's records, in [drawOrder] (SM-D29); as given when the core couldn't order them ([drawRefused]).
   final List<Package> lots;
 
-  PkprGroup(List<Package> lots) : lots = drawOrder(lots) {
-    if (this.lots.isEmpty) throw ArgumentError('a PkprGroup needs at least one lot');
+  /// True when the shared core couldn't order this product's lots ([drawOrder] threw): the product is still listed, so
+  /// one lot the core refuses never takes down a whole screen (the scan lookup, the autocomplete, the stock page), but
+  /// it can't be sold - the cart refuses to add it, and its draw ([allocateLots], [allocateBulkSales]) refuses too.
+  final bool drawRefused;
+
+  factory PkprGroup(List<Package> lots) {
+    try {
+      return PkprGroup._(drawOrder(lots), false);
+    } on StateError {
+      return PkprGroup._(List<Package>.of(lots), true);
+    }
+  }
+
+  PkprGroup._(this.lots, this.drawRefused) {
+    if (lots.isEmpty) throw ArgumentError('a PkprGroup needs at least one lot');
   }
 
   String get productGuid => lots.first.productGuid;
@@ -359,7 +427,7 @@ class PkprGroup {
   /// specs/phone-sync PS-R5 (the owner, 2026-10-30): when some of this product's lots are known only by the state
   /// ([Package.stateOnly]), how many units they hold and their own figure, the state's psilocybin - "includes 2 unit(s)
   /// known only by the state: 6 mg psilocybin each" ("5 or 6 mg" when they differ). Null when there are none. A note
-  /// only: [tpeMg], the price and the dose cap stay the first lot's.
+  /// only: [tpeMg], the price and the dose cap stay the first lot's, which is never one of these ([drawOrder]).
   String? get stateOnlyNote {
     final only = lots.where((l) => l.stateOnly).toList();
     if (only.isEmpty) return null;
@@ -377,6 +445,9 @@ class PkprGroup {
   bool get coaAvailable => lots.every((l) => l.coaAvailable);
   bool get labelAvailable => lots.every((l) => l.labelAvailable);
 }
+
+/// Why a product whose lots the shared core couldn't order ([PkprGroup.drawRefused]) isn't sold (review M6).
+String drawRefusedText(String productGuid) => "$productGuid can't be sold here: the shared core couldn't order its lots.";
 
 /// Groups a /p/packages/{stateId} response by productGuid - see PkprGroup's own comment for why. Every group
 /// in the result has at least one lot (an empty productGuid bucket can't happen: a row only ever contributes to

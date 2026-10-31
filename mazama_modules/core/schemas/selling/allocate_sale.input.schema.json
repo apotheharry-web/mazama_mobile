@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "selling.allocate_sale input",
+  "description": "A sale's lines and each product's lots (SALE-4).",
+  "type": "object",
+  "required": [
+    "lines",
+    "lots"
+  ],
+  "properties": {
+    "lines": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "product",
+          "qty"
+        ],
+        "properties": {
+          "product": {
+            "type": "string"
+          },
+          "qty": {
+            "type": "integer"
+          },
+          "dose": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "lots": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "id",
+            "quantity",
+            "expires"
+          ],
+          "properties": {
+            "id": {
+              "type": "integer"
+            },
+            "quantity": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "Its units; drawn by whole units toward zero (PRICE-6); null is 0."
+            },
+            "expires": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+            },
+            "state_only": {
+              "type": "boolean",
+              "description": "A lot only the state lists: after every lab lot (lab lot first). Absent is false."
+            }
+          }
+        }
+      }
+    }
+  }
+}

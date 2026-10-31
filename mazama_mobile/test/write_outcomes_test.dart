@@ -6,8 +6,9 @@
 //   or looksLikeConfirmedSale for the reply (SM-D2: one record per record sent, one non-blank sale number).
 // - flow_error: the FlowError's stage and status, which the server's interpreter must match.
 //
-// Failures only package:http and dart:io can produce (a wrapped SocketException, a reply cut off part way through
-// its body, a body that never finishes) stay in flow/flow_runner_test.dart.
+// A reply whose body is cut off or never finishes (SALE-16, reply_cut_off / reply_timeout) is in the table since
+// specs/core row 7; other failures only package:http and dart:io can produce (a wrapped SocketException) stay in
+// flow/flow_runner_test.dart.
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -51,7 +52,21 @@ http.Client _client(Map<String, Object?> event) {
         http.StreamedResponse(Stream.value(utf8.encode(event['body'] as String)), event['status'] as int, request: req));
   }
   if (kind == 'timeout') return _Scripted((req) => Completer<http.StreamedResponse>().future); // never answers
+  // SALE-16: the status line came, the body didn't (all of it): cut off part way, or never finishing
+  if (kind == 'reply_cut_off') {
+    return _Scripted((req) async => http.StreamedResponse(_cutOff(), event['status'] as int, request: req));
+  }
+  if (kind == 'reply_timeout') {
+    final body = StreamController<List<int>>()..add(utf8.encode('[{"saleNumber": "S-')); // never closed
+    return _Scripted((req) async => http.StreamedResponse(body.stream, event['status'] as int, request: req));
+  }
   return _Scripted((req) => Future.error(_error(kind)));
+}
+
+/// A body that stops part way, as a reset connection does.
+Stream<List<int>> _cutOff() async* {
+  yield utf8.encode('[{"saleNumber": "S-');
+  throw const SocketException('Connection reset by peer');
 }
 
 List<Map<String, Object?>> _records(int n) => [for (var i = 0; i < n; i++) {'id': i, 'productGuid': 'PKPR-$i'}];
@@ -63,7 +78,7 @@ Future<(String, String?, FlowError?)> _run(Map<String, Object?> c) async {
     'access_token': 'TOKEN-SM12',
     'records': _records(sent),
     // A short limit so the "no answer" case ends in milliseconds; the spec's own 60 s is checked in flow_runner_test.dart.
-    if ((c['event'] as Map)['kind'] == 'timeout') 'timeout_seconds': '0.05',
+    if (const {'timeout', 'reply_timeout'}.contains((c['event'] as Map)['kind'])) 'timeout_seconds': '0.05',
   };
   try {
     final result = await runFlow(_saleSpec, 'sale', inputs, client: _client((c['event'] as Map).cast<String, Object?>()));
@@ -81,7 +96,8 @@ void main() {
     expect(_cases.length, greaterThanOrEqualTo(20));
     expect(_cases.map((c) => c['outcome']).toSet(), {'not_sent', 'uncertain', 'recorded'});
     expect(_cases.map((c) => (c['event'] as Map)['kind']).toSet(),
-        {'dns_failure', 'connect_refused', 'tls_failure', 'timeout', 'reset_after_send', 'closed_before_headers', 'reply'});
+        {'dns_failure', 'connect_refused', 'tls_failure', 'timeout', 'reset_after_send', 'closed_before_headers', 'reply',
+          'reply_cut_off', 'reply_timeout'});
     expect(_cases.map((c) => c['name']).toSet().length, _cases.length);
   });
 

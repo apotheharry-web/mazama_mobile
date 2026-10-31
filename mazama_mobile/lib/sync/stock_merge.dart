@@ -25,7 +25,7 @@
 // mapRawPackagesFromState, the sale rule included). The rule moves into the Rust core with the other shared rules
 // (specs/architecture AR-2).
 import '../coa_data_client.dart' show CoaData;
-import '../dose.dart' show ceilMg;
+import '../dose.dart' show unitTpeMg;
 import '../enrichment_store.dart';
 import '../mazama_core.dart' show CoreFunctions;
 import '../packages_client.dart';
@@ -125,6 +125,7 @@ Package _joined(Package sp, Package mp) => Package(
       id: sp.id,
       weightPerUnit: sp.weightPerUnit,
       analyteWeight: sp.analyteWeight,
+      saleValues: sp.saleValues,
       quantity: sp.quantity,
       exactQuantity: sp.exactQuantity,
       lotGuid: sp.lotGuid ?? mp.lotGuid,
@@ -149,6 +150,7 @@ Package _noCoaOrLabelKnown(Package p, {bool stateOnly = false}) => Package(
       id: p.id,
       weightPerUnit: p.weightPerUnit,
       analyteWeight: p.analyteWeight,
+      saleValues: p.saleValues,
       quantity: p.quantity,
       exactQuantity: p.exactQuantity,
       lotGuid: p.lotGuid,
@@ -175,9 +177,11 @@ Package _withCoaData(Package p, CoaData data) {
     id: p.id,
     weightPerUnit: p.weightPerUnit,
     analyteWeight: p.analyteWeight,
+    saleValues: p.saleValues,
     strain: data.strain.isNotEmpty ? data.strain : p.strain,
-    tpeMg: tpePerG == null ? p.tpeMg : ceilMg(p.weightPerUnit * tpePerG),
+    tpeMg: tpePerG == null ? p.tpeMg : unitTpeMg(p.weightPerUnit, null, tpePerG) ?? 0, // the core's (dose.dart)
     quantity: p.quantity,
     lotGuid: p.lotGuid,
+    confirmed: p.confirmed,
   );
 }

@@ -22,6 +22,9 @@ use crate::label::{civil_from_days, days_from_civil};
 use crate::stock::{py_space, py_strip};
 use crate::stock_order::py_float_repr;
 
+mod plan;
+pub use plan::{plan_json, serving_table_json};
+
 const NUM_KEYS: [(&str, &str); 6] = [
     ("psilocybin", "Psilocybin"),
     ("psilocin", "Psilocin"),

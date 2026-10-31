@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mazama_mobile/cart_slots.dart' show cartFileName, defaultCartId;
 import 'package:mazama_mobile/cart_store.dart';
 import 'package:mazama_mobile/local_store.dart';
 import 'package:mazama_mobile/packages_client.dart';
@@ -163,6 +164,49 @@ void main() {
 
     test('an id that is not a cart id is refused, never used as a file name', () async {
       await expectLater(store().save(231, [line], cartId: '../x'), throwsArgumentError);
+    });
+  });
+
+  group('SALE-12 (specs/core row 7): a lot keeps its sale values as received', () {
+    test('a whole-number weight from the server stays a whole number through a saved draft', () async {
+      final lot = Package.fromJson({'productGuid': 'PKPR-ab12c', 'productType': 'Extract', 'id': 101, 'weightPerUnit': 1,
+          'analyteWeight': 7, 'quantity': 10});
+      expect(lot.toSaleItem(), {'productGuid': 'PKPR-ab12c', 'productType': 'Extract', 'id': 101, 'weightPerUnit': 1, 'analyteWeight': 7});
+      expect(lot.toSaleItem()['weightPerUnit'], isA<int>());
+      final s = store();
+      await s.save(231, [CartLine(group: PkprGroup([lot]), qty: 1, priceCentsEach: 100)]);
+      final item = (await s.load(231))!.single.group.lots.single.toSaleItem();
+      expect(item['weightPerUnit'], isA<int>());
+      expect(item, {'productGuid': 'PKPR-ab12c', 'productType': 'Extract', 'id': 101, 'weightPerUnit': 1, 'analyteWeight': 7});
+    });
+
+    test('a value the state didn\'t send stays missing, so the core refuses the sale instead of sending "" or 0', () {
+      final lot = Package.fromJson({'productGuid': 'PKPR-ab12c', 'id': 101, 'weightPerUnit': 0.5, 'quantity': 10});
+      expect(lot.toSaleItem(), {'productGuid': 'PKPR-ab12c', 'id': 101, 'weightPerUnit': 0.5});
+      expect(lot.productType, ''); // what the screens show is unchanged
+    });
+
+    test("an older build's draft, saved before lots kept their sale values, still comes back and sells as saved", () async {
+      final dir = Directory('${tempDir.path}/nested')..createSync(recursive: true);
+      LocalStore.forDir(dir).write(cartFileName('cart', defaultCartId), jsonEncode({
+        'centerId': 231,
+        'lines': [
+          {
+            'lots': [
+              {'productGuid': 'PKPR-ab12c', 'productType': 'Extract', 'id': 101, 'weightPerUnit': 5.0, 'analyteWeight': 4.5,
+                'strain': '', 'tpeMg': 0, 'quantity': 10, 'coaAvailable': true, 'labelAvailable': true, 'mazama': false,
+                'expired': false, 'unitMgTpe': null, 'description': ''},
+            ],
+            'qty': 2,
+            'priceCentsEach': 1250,
+            'dose': 'initial',
+          },
+        ],
+      }));
+      final restored = await store().load(231);
+      expect(restored, hasLength(1));
+      expect(restored!.single.group.lots.single.toSaleItem(),
+          {'productGuid': 'PKPR-ab12c', 'productType': 'Extract', 'id': 101, 'weightPerUnit': 5.0, 'analyteWeight': 4.5});
     });
   });
 }

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "selling.review_sale_date input",
+  "description": "A failed sale's own dateOfSale, any value.",
+  "type": "object",
+  "required": [
+    "text"
+  ],
+  "properties": {
+    "text": {}
+  }
+}

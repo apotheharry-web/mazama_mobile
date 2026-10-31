@@ -2,7 +2,9 @@
 // allocateLots, PkprGroup), held to the cases the server's own Python computed (../mazama_modules/selling/gen.py ->
 // selling.py draw_order / allocate), vendored here at assets/shared/selling/vectors/allocate.json. SM-D29: the
 // earliest expiry first; a lot with no known date after every dated one; then the smaller lot; then the lower id. A
-// quantity beyond every lot is refused, never spilled onto the last lot.
+// quantity beyond every lot is refused, never spilled onto the last lot. The rule is the shared core's (specs/core row
+// 6); pricing_cases.json adds the PRICE rows the owner decided (PRICE-6: whole units decide between lots of one expiry)
+// and lab lot first (a lot only the state lists after every lab lot).
 import 'dart:convert';
 import 'dart:io';
 
@@ -10,6 +12,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mazama_mobile/packages_client.dart';
 
 final _cases = jsonDecode(File('assets/shared/selling/vectors/allocate.json').readAsStringSync()) as Map<String, Object?>;
+final _priceCases =
+    jsonDecode(File('assets/shared/selling/vectors/pricing_cases.json').readAsStringSync()) as Map<String, Object?>;
 
 List<Package> _lots(Map<String, Object?> c) => [
       for (final l in (c['lots'] as List).cast<Map<String, Object?>>())
@@ -19,13 +23,17 @@ List<Package> _lots(Map<String, Object?> c) => [
           id: l['id'] as int,
           weightPerUnit: 1,
           analyteWeight: 1,
-          quantity: l['quantity'] as int,
+          quantity: (l['quantity'] as num?)?.truncate() ?? 0, // a Package holds whole units (toward zero, PRICE-6)
           expires: l['expires'] == null ? null : DateTime.parse(l['expires'] as String),
+          stateOnly: l['state_only'] == true,
         ),
     ];
 
 void main() {
-  final cases = (_cases['cases'] as List).cast<Map<String, Object?>>();
+  final cases = [
+    ...(_cases['cases'] as List).cast<Map<String, Object?>>(),
+    ...(_priceCases['allocate'] as List).cast<Map<String, Object?>>(),
+  ];
   test('there are enough cases, and one beyond every lot', () {
     expect(cases.length, greaterThanOrEqualTo(10));
     expect(cases.any((c) => c['takes'] == null), isTrue);

@@ -74,10 +74,12 @@ Package _applyCoaData(Package p, CoaData data) {
     id: p.id,
     weightPerUnit: p.weightPerUnit,
     analyteWeight: p.analyteWeight,
+    saleValues: p.saleValues,
     strain: data.strain.isNotEmpty ? data.strain : p.strain,
-    tpeMg: tpePerG == null ? p.tpeMg : ceilMg(p.weightPerUnit * tpePerG), // SM-04 (dose.dart)
+    tpeMg: tpePerG == null ? p.tpeMg : unitTpeMg(p.weightPerUnit, null, tpePerG) ?? 0, // SM-04 (dose.dart, the core's)
     quantity: p.quantity,
     lotGuid: p.lotGuid,
+    confirmed: p.confirmed,
   );
 }
 

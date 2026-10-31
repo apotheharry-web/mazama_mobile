@@ -10,6 +10,9 @@
 // imported again, even after its document was deleted (a sold or discarded cart must not come back).
 // Bytes that are not UTF-8 were unreadable to the store too: nothing is imported and the file is renamed.
 //
+// One release later (schema index 2, LS-R5), [deleteMigratedLegacyFiles] deletes the `*.migrated` files this left: only
+// a file named `<one of legacyDocumentPatterns>.migrated`, never a live file, and never in a way that stops the app.
+//
 // session.json is not here: it holds the session's tokens, which move to secure storage (secret_store.dart), and
 // the sign-in spec and host list stay files (plan P-D4).
 import 'dart:convert';
@@ -134,5 +137,46 @@ void _importOne(LocalStore store, File file, String name) {
     rename == null ? file.renameSync(to) : rename(file, to);
   } catch (_) {
     // Imported, but the file stays: the next open finds it recorded as imported and only renames it then.
+  }
+}
+
+/// Deletes a `*.migrated` file; a test throws here to make the delete fail.
+@visibleForTesting
+void Function(File file)? debugDeleteMigratedFile;
+
+/// Deletes every file in [dir] that the import renamed `<name>.migrated` (a `<name>` of [legacyDocumentPatterns],
+/// `server_replies/` included), then `server_replies/` if that leaves it empty (LS-R5, one release after the move).
+/// Anything else is left alone: the live files, `mazama.db`, a `.migrated` file of another name. A file already gone
+/// or one that can't be deleted is skipped (it stays, harmless); never throws, so the app still starts.
+void deleteMigratedLegacyFiles(Directory dir) {
+  const suffix = '.migrated';
+  void sweep(Directory folder, String prefix) {
+    List<FileSystemEntity> entries;
+    try {
+      entries = folder.listSync();
+    } catch (_) {
+      return; // no such folder, or unreadable: nothing to delete there
+    }
+    for (final entity in entries) {
+      if (entity is! File) continue;
+      final name = '$prefix${entity.uri.pathSegments.last}';
+      if (!name.endsWith(suffix)) continue;
+      if (!isLegacyDocumentName(name.substring(0, name.length - suffix.length))) continue;
+      try {
+        final delete = debugDeleteMigratedFile;
+        delete == null ? entity.deleteSync() : delete(entity);
+      } catch (_) {
+        // Gone already, or refused: it stays, and nothing reads it.
+      }
+    }
+  }
+
+  sweep(dir, '');
+  final replies = Directory('${dir.path}/$_repliesFolder');
+  sweep(replies, '$_repliesFolder/');
+  try {
+    if (replies.existsSync() && replies.listSync().isEmpty) replies.deleteSync();
+  } catch (_) {
+    // Not empty after all, or refused: the folder stays.
   }
 }

@@ -1,35 +1,46 @@
-// Classifies a failed `sale` flow run (assets/flows/sale.yaml) the same way the real server's own
-// StateSession._write does (mazama_sales/src/mazama_sales/state/client.py's NotSent vs SendUncertain
-// exceptions): whether it's actually safe to let the worker just try again, or whether the state system may
-// already have recorded the sale, so resubmitting risks reporting it twice - a real problem for a legal sale
-// record, not a cosmetic one.
+// Classifies a failed `sale` flow run (assets/flows/sale.yaml): whether it's actually safe to let the worker just try
+// again, or whether the state system may already have recorded the sale, so resubmitting risks reporting it twice - a
+// real problem for a legal sale record, not a cosmetic one.
 //
-// SM-12: this reads the FlowError's own `stage` and `status` (flow_runner.dart), never the wording of its
-// message. It used to match "cannot reach ..." in the message, which flow_runner.dart wrote for *every*
-// transport failure - including a connection reset or a hang after the sale had already been sent - so the
-// phone told the worker "not sent, safe to try again" for a sale the state may well have recorded.
+// The rule is the shared core's (selling.sale_outcome, specs/core row 7), the same one the server's
+// StateSession._write asks for CreateSalesRecords: this only turns the FlowError's own `stage`, `status` and
+// `bodyIncomplete` (flow_runner.dart) into the event the core judges, never the wording of its message (SM-12). Only
+// a connection that never opened (FlowStage.connect) or a 4xx whose body arrived in full is "not sent"; a 4xx whose
+// body was cut off proves nothing (SALE-16). When the core can't answer, the answer is uncertain, never notSent
+// (SALE-14).
 import 'flow/flow_runner.dart';
+import 'mazama_core.dart';
 
 enum SaleOutcome {
-  /// Nothing was recorded for sure: the connection never opened (FlowStage.connect - the Dart equivalent of
-  /// client.py's httpx.ConnectError, which _write treats as NotSent), or the state system answered with a 4xx
-  /// (also NotSent in client.py: a request that reached the server and was flatly rejected before anything was
-  /// recorded). Safe to retry.
+  /// Nothing was recorded for sure: the connection never opened, or the state system answered with a 4xx read in full.
+  /// Safe to retry.
   notSent,
 
-  /// Everything else: a reset, a closed connection or no answer within the timeout after the request may have
-  /// gone out (FlowStage.send), a 5xx, a 200 the flow or looksLikeConfirmedSale rejected, or any failure this
-  /// hasn't specifically ruled safe. The sale may have been recorded even though this device never got a usable
-  /// confirmation - resubmitting risks reporting the same sale twice, so this blocks a casual retry outright,
-  /// not just warns about it.
+  /// Everything else: a reset, a closed connection or no answer within the timeout after the request may have gone
+  /// out, a 5xx, a reply cut off, a 200 the flow or looksLikeConfirmedSale rejected, or anything this hasn't
+  /// specifically ruled safe. Resubmitting risks reporting the same sale twice.
   uncertain,
 }
 
-SaleOutcome classifySaleFailure(FlowError e) {
-  if (e.stage == FlowStage.connect) return SaleOutcome.notSent;
+/// The event [e] is, in the core's terms (flows/contracts/write_outcomes.json's kinds).
+Map<String, Object?> saleFailureEvent(FlowError e) {
+  if (e.stage == FlowStage.connect) return {'kind': 'connect_refused'};
   final status = e.status;
-  if (e.stage == FlowStage.response && status != null && status >= 400 && status < 500) return SaleOutcome.notSent;
-  // Deliberately the default, not notSent: wrongly telling a worker "nothing happened, try again" when the state
-  // system actually filed it is the worse mistake to make here.
-  return SaleOutcome.uncertain;
+  if (e.stage == FlowStage.response && status != null) {
+    // a check that rejected a reply read in full: its status is the answer (a 200's body didn't prove the sale)
+    return e.bodyIncomplete ? {'kind': 'reply_cut_off', 'status': status} : {'kind': 'reply', 'status': status, 'body': ''};
+  }
+  if (e.stage == FlowStage.send) return {'kind': 'reset_after_send'};
+  return {'kind': 'unclassified'};
+}
+
+SaleOutcome classifySaleFailure(FlowError e, {CoreFunctions? core}) {
+  try {
+    final o = (core ?? MazamaCore.instance).sellingSaleOutcome({'event': saleFailureEvent(e), 'sent': 1})['outcome'];
+    // Deliberately the default, not notSent: wrongly telling a worker "nothing happened, try again" when the state
+    // system actually filed it is the worse mistake to make here.
+    return o == 'not_sent' ? SaleOutcome.notSent : SaleOutcome.uncertain;
+  } catch (_) {
+    return SaleOutcome.uncertain;
+  }
 }

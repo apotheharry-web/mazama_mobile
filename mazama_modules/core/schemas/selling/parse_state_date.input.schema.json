@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "selling.parse_state_date input",
+  "description": "A date as the state site writes it.",
+  "type": "object",
+  "required": [
+    "text"
+  ],
+  "properties": {
+    "text": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}

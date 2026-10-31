@@ -4,6 +4,8 @@
 import 'dart:convert' show utf8;
 
 import 'package:yaml/yaml.dart';
+
+import '../mazama_core.dart' show MazamaCore;
 // The scanner is not part of package:yaml's public API, but it is the only way to see anchors and aliases before the
 // loader builds anything: the loader shares an aliased node, and its duplicate-key check hashes a key deeply, so a few
 // hundred bytes of nested aliases used as a key would run for minutes inside loadYaml itself. pubspec.yaml holds yaml
@@ -72,72 +74,37 @@ const supportedFlowFormat = 3;
 /// anyone can create. No default entry is a suffix; the suffix rule stays for callers that pass one.
 const defaultAllowedHosts = <String>['psilocybin.oregon.gov', 'oregonpsilocybinprodb2c.b2clogin.com'];
 
-final _urlRe = RegExp(r'^([A-Za-z][A-Za-z0-9+.-]*)://([^/?#]*)');
-final _hostRe = RegExp(r'^[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*$');
-
 /// True when [url] is https, its host is allowed and nothing about the URL is ambiguous. One strict grammar read from
 /// the text itself, never from Uri.parse (which throws on some of these and normalises others): no backslash anywhere
 /// and no '@' in the authority; the port, if written, is exactly 443; the host, minus one trailing dot, is ASCII
 /// letters, digits and hyphens in non-empty dot-separated labels (so no '%', Unicode, '..' or IPv6 literal),
-/// compared in lower case. flowspec.py's host_allowed is the twin; the vectors are flows/contracts/spec_versions.json.
+/// compared in lower case. The rule is the shared core's (`flows.host_allowed`, specs/core row 13; flowspec.py's
+/// host_allowed calls the same function); the vectors are flows/contracts/spec_versions.json. Anything the core cannot
+/// answer is not allowed.
 bool hostAllowedUrl(String url, {Iterable<String> allowed = defaultAllowedHosts}) {
-  if (url.contains('\\')) return false;
-  final m = _urlRe.firstMatch(url);
-  if (m == null || m.group(1)!.toLowerCase() != 'https') return false;
-  final authority = m.group(2)!;
-  if (authority.contains('@')) return false;
-  final colon = authority.indexOf(':');
-  if (colon >= 0 && authority.substring(colon + 1) != '443') return false;
-  var host = colon >= 0 ? authority.substring(0, colon) : authority;
-  if (host.endsWith('.')) host = host.substring(0, host.length - 1);
-  if (!_hostRe.hasMatch(host)) return false;
-  host = host.toLowerCase();
-  for (final raw in allowed) {
-    final entry = raw.toLowerCase();
-    if (entry.startsWith('.')) {
-      if (host.endsWith(entry) && host.length > entry.length) return true;
-    } else if (host == entry) {
-      return true;
-    }
+  try {
+    return MazamaCore.instance.flowsHostAllowed({'url': url, 'allowed': allowed.toList()})['allowed'] == true;
+  } catch (_) {
+    return false;
   }
-  return false;
 }
 
 /// [hostAllowedUrl] for a parsed Uri (its text form).
 bool hostAllowed(Uri url, {Iterable<String> allowed = defaultAllowedHosts}) =>
     hostAllowedUrl(url.toString(), allowed: allowed);
 
-final _versionRe = RegExp(r'^([0-9]{4}-[0-9]{2}-[0-9]{2})\.([0-9]+)$');
-
-/// (date, whole-number part without leading zeros), or null when [v] is missing or malformed.
-(String, String)? _versionKey(String? v) {
-  final m = v == null ? null : _versionRe.firstMatch(v);
-  if (m == null) return null;
-  final n = m.group(2)!.replaceFirst(RegExp(r'^0+'), '');
-  return (m.group(1)!, n);
-}
-
-/// True when [v] is a well-formed spec_version, YYYY-MM-DD.N (flowspec.py's is_spec_version).
-bool isSpecVersion(String? v) => _versionKey(v) != null;
+/// True when [v] is a well-formed spec_version, YYYY-MM-DD.N (the core's `flows.compare_spec_versions`).
+bool isSpecVersion(String? v) => MazamaCore.instance.flowsCompareSpecVersions({'a': v, 'b': null})['a_valid'] == true;
 
 /// -1, 0 or 1: [a] older than, equal to, or newer than [b]. YYYY-MM-DD.N, by date then by N as a whole number; a
-/// missing or malformed one sorts below every valid one (flowspec.py's compare_spec_versions; the vectors are
-/// flows/contracts/spec_versions.json).
-int compareSpecVersions(String? a, String? b) {
-  final ka = _versionKey(a);
-  final kb = _versionKey(b);
-  if (ka == null || kb == null) {
-    if (ka == null && kb == null) return 0;
-    return ka == null ? -1 : 1;
-  }
-  final byDate = ka.$1.compareTo(kb.$1);
-  if (byDate != 0) return byDate.sign;
-  if (ka.$2.length != kb.$2.length) return ka.$2.length < kb.$2.length ? -1 : 1;
-  return ka.$2.compareTo(kb.$2).sign;
-}
+/// missing or malformed one sorts below every valid one (the shared core's `flows.compare_spec_versions`; the vectors
+/// are flows/contracts/spec_versions.json).
+int compareSpecVersions(String? a, String? b) =>
+    (MazamaCore.instance.flowsCompareSpecVersions({'a': a, 'b': b})['order'] as num).toInt();
 
 /// True when every request step's url, and every open_browser step's url and until, templated with the spec's `vars`
-/// only, has an allowed https host; a host that still holds `{{` is not allowed (flowspec.py's spec_hosts_allowed).
+/// only, has an allowed https host; a host that still holds `{{` is not allowed. A walk over the spec: the host rule
+/// itself is the core's ([hostAllowedUrl]).
 bool specHostsAllowed(FlowSpec spec, {Iterable<String> allowed = defaultAllowedHosts}) {
   String fill(String s) => s.replaceAllMapped(_templateRe, (m) => spec.vars[m.group(1)] ?? m.group(0)!);
   bool hostOk(Object? url) => hostAllowedUrl(fill((url ?? '').toString()), allowed: allowed);
@@ -161,26 +128,6 @@ final _withPathRe = RegExp(r'^[A-Za-z][A-Za-z0-9+.-]*://[^/?#]*/');
 /// query goes in `params`), and its templated `until` has a path (a `/` after the authority), so `https://host` can't
 /// also match `https://host.evil.example` (flowspec.py's open_browser_urls_ok is the twin).
 bool openBrowserUrlsOk(String url, String until) => !url.contains('?') && _withPathRe.hasMatch(until);
-
-/// True when every request and open_browser step's url, templated with the spec's `vars` only, has no `?`, and every
-/// open_browser's until has a path ([openBrowserUrlsOk]). The usable sign-in spec rule uses this (flowspec.py's
-/// spec_urls_shaped is the twin).
-bool specUrlsShaped(FlowSpec spec) {
-  String fill(Object? s) =>
-      (s ?? '').toString().replaceAllMapped(_templateRe, (m) => spec.vars[m.group(1)] ?? m.group(0)!);
-  bool ok(Object? node) {
-    if (node is Map) {
-      final Object? type = node['type'];
-      if (type == 'request' && fill(node['url']).contains('?')) return false;
-      if (type == 'open_browser' && !openBrowserUrlsOk(fill(node['url']), fill(node['until']))) return false;
-      return node.values.every(ok);
-    }
-    if (node is List) return node.every(ok);
-    return true;
-  }
-
-  return ok(spec.flows);
-}
 
 class FlowSpec {
   final Map<String, String> vars;

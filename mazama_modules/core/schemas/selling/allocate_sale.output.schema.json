@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "selling.allocate_sale output",
+  "description": "[line, lot id, units] per draw, or the first line its lots can't cover.",
+  "type": "object",
+  "required": [
+    "draws",
+    "short"
+  ],
+  "properties": {
+    "draws": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "array",
+        "prefixItems": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "integer"
+          },
+          {
+            "type": "integer"
+          }
+        ],
+        "minItems": 3,
+        "maxItems": 3
+      }
+    },
+    "short": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    }
+  }
+}

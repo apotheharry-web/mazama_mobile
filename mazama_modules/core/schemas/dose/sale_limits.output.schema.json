@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "dose.sale_limits output",
+  "description": "Per sale, in order: its raw psilocybin exactly (Python's str() of the Decimal sum; null when refused for a figure), whether it may be sold (at most 50 mg, and every figure usable and known), why not, and the minimum session length for all of it and for the initial dose alone (null when refused).",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "psilocybin_mg",
+      "allowed",
+      "error",
+      "session_minutes",
+      "session_minutes_initial"
+    ],
+    "properties": {
+      "psilocybin_mg": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "allowed": {
+        "type": "boolean"
+      },
+      "error": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "session_minutes": {
+        "type": [
+          "integer",
+          "null"
+        ]
+      },
+      "session_minutes_initial": {
+        "type": [
+          "integer",
+          "null"
+        ]
+      }
+    }
+  }
+}

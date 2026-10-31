@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "selling.check_sale input",
+  "description": "A sale's lines against the state's records as read just now (SM-25, SALE-17).",
+  "type": "object",
+  "required": [
+    "lines",
+    "fresh"
+  ],
+  "properties": {
+    "lines": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "record_id",
+          "guid",
+          "qty"
+        ],
+        "properties": {
+          "record_id": {
+            "type": "number"
+          },
+          "guid": {
+            "type": "string"
+          },
+          "qty": {
+            "type": "integer"
+          },
+          "dose": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "fresh": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "center": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "The selling center's state id; null or absent: no other-center check."
+    },
+    "sent": {
+      "type": "array",
+      "items": {
+        "type": [
+          "object",
+          "null"
+        ]
+      }
+    },
+    "cap": {
+      "type": "boolean"
+    }
+  }
+}

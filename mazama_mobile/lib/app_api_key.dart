@@ -13,10 +13,13 @@
 // refused (android/app/build.gradle.kts; codemagic.yaml checks the variable before building). A build without the
 // define (`flutter test`, a debug build) has an empty key and sends no header, which a server with no
 // MS_APP_API_KEY accepts and the real server refuses.
+import 'api_contract.g.dart' show appApiKeyHeader;
+
 const String appApiKey = String.fromEnvironment('APP_API_KEY', defaultValue: '');
 
-/// The header name every mazama_sales /p/ route checks (see access.py).
-const String appApiKeyHeaderName = 'X-App-Key';
+/// The header name every mazama_sales /p/ route checks (see access.py): routes.yaml's, as api_contract.g.dart has it,
+/// so the name is written once.
+const String appApiKeyHeaderName = appApiKeyHeader;
 
 /// `{appApiKeyHeaderName: key}`, or `{}` for an empty key: no header at all rather than an empty one, which some
 /// servers and proxies treat differently from none.

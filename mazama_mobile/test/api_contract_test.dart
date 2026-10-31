@@ -115,20 +115,23 @@ void main() {
     expect(png, [0x89, 0x50, 0x4e, 0x47]);
   });
 
-  test('C3 inventory: sends the example request, reads the example reply', () async {
+  // specs/phone-sync Task 8b Step 6 (PS-D7): the inventory snapshot goes to C20's `packaged` dataset, with C3's body
+  // (C20's request schema is C3's). C3 stays on the server for older builds (CW-D5); this build calls it nowhere.
+  test('C20 ingest (packaged): sends the C3 example request to the ingest route, reads the example reply', () async {
     final req = _example('inventory', 'request') as Map<String, Object?>;
     final (client, seen) = _serve(_example('inventory', 'response'));
     final out = await uploadInventorySnapshot(225, req['records'] as List<Object?>,
         workerEmail: req['workerEmail'] as String, deviceId: req['deviceId'] as String, client: client);
-    _sameRoute(seen.single, 'inventory', inventoryPath(225));
+    _sameRoute(seen.single, 'ingest', ingestPath(packagedDataset, 225));
+    expect(seen.single.url.path, '/p/ingest/packaged/225');
     expect(_jsonBody(seen.single), req);
     expect(out, _example('inventory', 'response'));
   });
 
-  test('C3 inventory: more records than the server takes is refused before sending', () async {
+  test('C20 ingest (packaged): more records than the server takes is refused before sending', () async {
     final (client, seen) = _serve({'rows': 0, 'skipped': 0});
     await expectLater(
-      uploadInventorySnapshot(225, List.filled(inventoryMaxRecords + 1, <String, Object?>{}),
+      uploadInventorySnapshot(225, List.filled(ingestMaxRecords + 1, <String, Object?>{}),
           workerEmail: 'w@example.com', deviceId: 'd', client: client),
       throwsA(isA<InventoryUploadError>()),
     );
@@ -404,6 +407,8 @@ void main() {
     final calls = <String, Future<Object?> Function(http.Client)>{
       'packages': (c) => fetchPackages(225, client: c),
       'label': (c) => fetchLabel(225, 'PKPR-aaaa0001', client: c),
+      // C3: no client of this build calls it (older builds do; the server keeps it, CW-D5). The packaged upload, its
+      // successor on C20, stands in, so its 401/429 are still held to the same wording.
       'inventory': (c) => uploadInventorySnapshot(225, const [], workerEmail: 'w', deviceId: 'd', client: c),
       'ingest': (c) => uploadSalesSnapshot(225, const [], workerEmail: 'w', deviceId: 'd', client: c),
       'center_status': (c) => centerIsConfigured(225, client: c),

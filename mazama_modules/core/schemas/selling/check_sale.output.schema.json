@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "selling.check_sale output",
+  "description": "Why the sale must not be sent, or null.",
+  "type": "object",
+  "required": [
+    "refusal"
+  ],
+  "properties": {
+    "refusal": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}

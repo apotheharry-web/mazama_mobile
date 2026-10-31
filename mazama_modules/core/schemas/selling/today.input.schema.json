@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "selling.today input",
+  "description": "Now, RFC 3339 with its zone.",
+  "type": "object",
+  "required": [
+    "now"
+  ],
+  "properties": {
+    "now": {
+      "type": "string"
+    }
+  }
+}

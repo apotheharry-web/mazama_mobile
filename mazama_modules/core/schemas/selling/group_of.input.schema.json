@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "selling.group_of input",
+  "description": "A product's type (SM-14).",
+  "type": "object",
+  "required": [
+    "product_type"
+  ],
+  "properties": {
+    "product_type": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}

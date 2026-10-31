@@ -98,4 +98,20 @@ void main() {
     await s.clear(cartId: 'c2');
     expect(await s.loadSoldDose(231, cartId: 'c2'), isNull);
   });
+
+  test('the sold session keeps the core\'s minutes, and an older build\'s kept total is still timed (specs/core row 5)',
+      () async {
+    final s = store();
+    final t0 = DateTime(2026, 10, 31, 9);
+    await s.saveSoldDose(231, 45, booster: true, cartId: 'c3', now: () => t0, minutes: 360);
+    expect(await s.loadSoldSession(231, cartId: 'c3', now: () => t0), (minutes: 360, booster: true, unknown: false));
+    expect(await s.loadSoldDose(231, cartId: 'c3'), (psilocybinMg: 45.0, booster: true)); // the total is kept too
+    // an older build kept only the total: the core times it (22.5 mg: 4 hours)
+    await s.saveSoldDose(231, 22.5, booster: false, cartId: 'c4', now: () => t0);
+    expect(await s.loadSoldSession(231, cartId: 'c4', now: () => t0), (minutes: 240, booster: false, unknown: false));
+    // ...and one over the cap has no length, as before
+    await s.saveSoldDose(231, 60, booster: false, cartId: 'c5', now: () => t0);
+    expect(await s.loadSoldSession(231, cartId: 'c5', now: () => t0), (minutes: null, booster: false, unknown: false));
+    expect(await s.loadSoldSession(232, cartId: 'c3'), isNull); // another center's
+  });
 }

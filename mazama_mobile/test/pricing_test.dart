@@ -50,6 +50,34 @@ void main() {
     });
   });
 
+  group('toCents 64-bit overflow (PRICE-1)', () {
+    test('figures that used to wrap are refused', () {
+      for (final t in ['99999999999999999', '184467440737095517', '1234567890123456789', '99999999999999999999', '9' * 40, '100000000', '100000000.50']) {
+        expect(toCents(t), isNull, reason: t);
+        expect(toCents(t, maxCents: maxTotalCents), isNull, reason: t);
+        expect(totalToCents(t), isNull, reason: t);
+        expect(perMgRateToCents(t), isNull, reason: t);
+      }
+    });
+
+    test('the total cap is the boundary and leading zeros do not count', () {
+      // the core reads any number of digits without overflow (specs/core row 6); the largest cap is the cart total's
+      expect(toCents('99999999.99'), isNull); // over the unit cap, not an overflow
+      expect(totalToCents('10000000'), 1000000000);
+      expect(totalToCents('10000000.01'), isNull);
+      expect(totalToCents('9999999.99'), 999999999);
+      expect(toCents('000000000012.5'), 1250);
+      expect(toCents('10000'), 1000000);
+      expect(toCents('12.50'), 1250);
+      expect(toCents('0.005'), 1);
+    });
+  });
+
+  test('a cap other than the unit, total or per-mg one is asserted against (review-live-fixes-1 m1, specs/core row 6)', () {
+    expect(() => toCents('1', maxCents: 100000000 * 100), throwsA(isA<AssertionError>()));
+    expect(() => toCents('1', maxCents: 99999999 * 100 + 99), throwsA(isA<AssertionError>()));
+  });
+
   group('perMgRateToCents', () {
     // Same string-based parsing as toCents, just bounded to pricing.py's MAX_PER_MG ($1,000/mg) instead of the
     // $10,000 per-unit ceiling - cross-checked against pricing.to_dec(text, MAX_PER_MG) directly, the same way

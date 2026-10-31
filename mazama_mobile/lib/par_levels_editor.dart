@@ -78,9 +78,6 @@ class _NewParRow {
 /// The sizes a strain's par row (and the combined row) takes: 25 .. 5 mg and Other.
 final List<int> _strainSizes = stockSizesFor(stockAllStrains);
 
-/// The edibles' two classes, the only cells an edible's par row shows (SP-D15): Booster, Microdose.
-final List<int> _edibleSizes = [for (final e in stockEdibleSizes.values) e.$1];
-
 class _ParLevelsEditorState extends State<ParLevelsEditor> {
   late List<ParLevel> _levels = widget.levels;
 
@@ -195,7 +192,7 @@ class _ParLevelsEditorState extends State<ParLevelsEditor> {
     final out = <Map<String, Object?>>[];
     for (final w in stockEdibles.values) {
       final r = byName[w.toLowerCase()];
-      if (r != null && (_canEdit || _hasAny(r, _edibleSizes))) {
+      if (r != null && (_canEdit || _hasAny(r, stockEdibleSizeCodes))) {
         out.add(r);
       } else if (r == null && _canEdit) {
         out.add({'name': w, 'cells': const <Map<String, Object?>>[], 'short': 0});
@@ -265,7 +262,7 @@ class _ParLevelsEditorState extends State<ParLevelsEditor> {
       fromFields(r, [..._removingCols, ...visible]);
     }
     for (final r in _edibleRows(par)) {
-      fromFields(r, _edibleSizes);
+      fromFields(r, stockEdibleSizeCodes);
     }
     for (final r in _removedRows(par)) {
       for (final c in (r['cells'] as List).cast<Map<String, Object?>>()) {
@@ -529,8 +526,8 @@ class _ParLevelsEditorState extends State<ParLevelsEditor> {
             if (edibles.isNotEmpty) ...[
               const SizedBox(height: 12),
               table([
-                head('Edible', _edibleSizes),
-                for (final r in edibles) row(r, _edibleSizes),
+                head('Edible', stockEdibleSizeCodes),
+                for (final r in edibles) row(r, stockEdibleSizeCodes),
               ]),
             ],
             const SizedBox(height: 8),

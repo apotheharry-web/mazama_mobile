@@ -5,14 +5,18 @@
 pub mod api;
 mod api_table;
 pub mod coa;
+pub mod dose;
 pub mod contracts;
+pub mod flows;
 pub mod id_patterns;
 pub mod label;
 pub mod manufacturing;
 pub mod names;
 pub mod names_table;
+mod py;
 pub mod records;
 pub mod scan;
+pub mod selling;
 pub mod stock;
 pub mod stock_order;
 pub mod tpe;

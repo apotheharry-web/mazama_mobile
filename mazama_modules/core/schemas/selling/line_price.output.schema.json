@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "selling.line_price output",
+  "description": "The unit's price, or why not.",
+  "type": "object",
+  "required": [
+    "cents",
+    "error"
+  ],
+  "properties": {
+    "cents": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "error": {
+      "enum": [
+        null,
+        "price",
+        "rate",
+        "no_mg",
+        "unit_cap"
+      ],
+      "description": "unit_cap: over $10,000 a unit (PRICE-3)."
+    }
+  }
+}

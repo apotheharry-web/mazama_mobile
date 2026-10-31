@@ -5,12 +5,14 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mazama_mobile/cart_store.dart';
 import 'package:mazama_mobile/local_store.dart';
+import 'package:mazama_mobile/local_store_import.dart';
 import 'package:sqlite3/sqlite3.dart';
 
 void main() {
   late Directory tempDir;
   setUp(() => tempDir = Directory.systemTemp.createTempSync('mazama_local_store_test_'));
   tearDown(() {
+    debugDeleteMigratedFile = null;
     LocalStore.debugCloseAll();
     if (tempDir.existsSync()) tempDir.deleteSync(recursive: true);
   });
@@ -275,12 +277,108 @@ void main() {
     expect(LocalStore.forDir(tempDir).read('a')!.body, '1');
   });
 
-  test('the schema version is 2 (the sync tables) and the journal is WAL', () {
+  test('the schema version is 3 (the sync tables, then the *.migrated files deleted) and the journal is WAL', () {
     final store = LocalStore.forDir(tempDir);
-    expect(localStoreSchemaVersion, 2);
+    expect(localStoreSchemaVersion, 3);
     expect(store.debugQuery('PRAGMA user_version').single.values.single, localStoreSchemaVersion);
     expect(store.debugQuery('PRAGMA journal_mode').single.values.single, 'wal');
     final columns = store.debugQuery('PRAGMA table_info(documents)').map((r) => r['name']).toList();
     expect(columns, ['name', 'body', 'saved_at_ms']);
+  });
+
+  // Plan Task 8 (LS-R5): one release after the move, the files the import renamed *.migrated go; a phone opens a
+  // database at version 2 (the sync tables) with them still beside it.
+  group('the next schema after the sync tables', () {
+    File file(String name) => File('${tempDir.path}/$name')..parent.createSync(recursive: true);
+
+    /// A database at version 2 holding [docs], as a phone on 0.2.4 left it.
+    void atVersion2(Map<String, String> docs) {
+      final store = LocalStore.forDir(tempDir);
+      docs.forEach(store.write);
+      LocalStore.debugCloseAll();
+      final db = sqlite3.open('${tempDir.path}/$localStoreFileName');
+      db.userVersion = 2;
+      db.close();
+    }
+
+    const migrated = [
+      'cart.json.migrated',
+      'cart_c2.json.migrated',
+      'device_id.txt.migrated',
+      'stock_cache_231.json.migrated',
+      'server_outbox.json.migrated',
+      'server_replies/par%2F231.json.migrated',
+    ];
+    const kept = [
+      'login_spec.yaml',
+      'login_hosts.json',
+      'x.json.migrated', // not a name the import ever renamed
+      'cart_NOT-AN-ID.json.migrated',
+      'debug_signin_files.json',
+    ];
+
+    test('the next schema deletes the *.migrated files and keeps every document', () {
+      final docs = {
+        'cart.json': '{"invented":"draft"}',
+        'device_id.txt': 'invented-device',
+        'server_replies/par%2F231.json': '{"invented":"par"}',
+      };
+      atVersion2(docs);
+      for (final name in [...migrated, ...kept]) {
+        file(name).writeAsStringSync('invented $name');
+      }
+
+      final store = LocalStore.forDir(tempDir);
+      expect(store.debugQuery('PRAGMA user_version').single.values.single, 3);
+      for (final name in migrated) {
+        expect(File('${tempDir.path}/$name').existsSync(), isFalse, reason: name);
+      }
+      for (final name in kept) {
+        expect(File('${tempDir.path}/$name').readAsStringSync(), 'invented $name', reason: name);
+      }
+      expect(Directory('${tempDir.path}/server_replies').existsSync(), isFalse, reason: 'left empty, so removed');
+      docs.forEach((name, body) => expect(store.read(name)?.body, body, reason: name));
+      expect(File('${tempDir.path}/$localStoreFileName').existsSync(), isTrue);
+    });
+
+    test('server_replies/ stays when something else is in it', () {
+      atVersion2(const {});
+      file('server_replies/par%2F231.json.migrated').writeAsStringSync('invented');
+      file('server_replies/par.json.tmp').writeAsStringSync('invented');
+
+      LocalStore.forDir(tempDir);
+      expect(File('${tempDir.path}/server_replies/par%2F231.json.migrated').existsSync(), isFalse);
+      expect(File('${tempDir.path}/server_replies/par.json.tmp').existsSync(), isTrue);
+    });
+
+    test('a delete that fails, or a file already gone, still opens the database at the new version', () {
+      atVersion2(const {'carts.json': '{"invented":1}'});
+      for (final name in migrated) {
+        file(name).writeAsStringSync('invented');
+      }
+      final tried = <String>[];
+      debugDeleteMigratedFile = (f) {
+        final name = f.uri.pathSegments.last;
+        tried.add(name);
+        if (name == 'cart.json.migrated') throw const FileSystemException('delete refused');
+        if (name == 'device_id.txt.migrated') {
+          f.deleteSync(); // gone under us: the real delete below finds nothing
+        }
+        f.deleteSync();
+      };
+
+      final store = LocalStore.forDir(tempDir);
+      expect(store.debugQuery('PRAGMA user_version').single.values.single, 3);
+      expect(store.read('carts.json')!.body, '{"invented":1}');
+      expect(tried, containsAll(['cart.json.migrated', 'device_id.txt.migrated', 'server_outbox.json.migrated']));
+      expect(File('${tempDir.path}/cart.json.migrated').existsSync(), isTrue, reason: 'its delete was refused');
+      expect(File('${tempDir.path}/server_outbox.json.migrated').existsSync(), isFalse);
+      expect(File('${tempDir.path}/server_replies/par%2F231.json.migrated').existsSync(), isFalse);
+
+      debugDeleteMigratedFile = null;
+      LocalStore.debugCloseAll();
+      LocalStore.forDir(tempDir);
+      expect(File('${tempDir.path}/cart.json.migrated').existsSync(), isTrue, reason: 'the migration runs once');
+    });
   });
 }

@@ -2,7 +2,8 @@
 // computed (../mazama_modules/selling/gen.py -> pricing.py price_cart), vendored here at
 // assets/shared/selling/vectors/cart.json, and the "pricing_modes" rules in assets/shared/selling/rules/rules.yaml.
 // SM-D26: per-mg tax goes on the rate; SM-D27: every unit of a line costs the same; SM-D28: a new cart starts in
-// "total".
+// "total". The rule is the shared core's (specs/core row 6); pricing_cases.json adds the PRICE rows the owner decided
+// (CR-D6, 2026-10-31): an input the core refuses (PRICE-7) is a cart this phone can't price ('core').
 import 'dart:convert';
 import 'dart:io';
 
@@ -11,6 +12,8 @@ import 'package:mazama_mobile/cart_pricing.dart';
 import 'package:yaml/yaml.dart';
 
 final _cases = jsonDecode(File('assets/shared/selling/vectors/cart.json').readAsStringSync()) as Map<String, Object?>;
+final _priceCases =
+    jsonDecode(File('assets/shared/selling/vectors/pricing_cases.json').readAsStringSync()) as Map<String, Object?>;
 final _rules =
     (loadYaml(File('assets/shared/selling/rules/rules.yaml').readAsStringSync()) as YamlMap)['pricing_modes'] as YamlMap;
 
@@ -33,7 +36,25 @@ void main() {
     });
   }
 
-  final cases = (_cases['cases'] as List).cast<Map<String, Object?>>();
+  for (final c in (_priceCases['group_of'] as List).cast<Map<String, Object?>>()) {
+    test('${c['product_type']} is in group ${c['group']} (pricing_cases.json)', () {
+      expect(groupOf(c['product_type'] as String? ?? ''), c['group']);
+    });
+  }
+
+  for (final c in (_priceCases['line_price'] as List).cast<Map<String, Object?>>()) {
+    test('${c['price']}: a line priced on its own, ${c['name']}', () {
+      final got = linePrice(perMg: c['mode'] == 'per_mg', text: c['text'] as String, mg: c['mg'] as int);
+      expect(got.cents, c['cents']);
+      expect(got.error, c['error']);
+    });
+  }
+
+  final cases = [
+    ...(_cases['cases'] as List).cast<Map<String, Object?>>(),
+    for (final c in (_priceCases['price_cart'] as List).cast<Map<String, Object?>>())
+      if (c['rejects'] == true) {...c, 'error': 'core', 'each': null} else c,
+  ];
   test('there are enough cases', () => expect(cases.length, greaterThanOrEqualTo(15)));
   for (final c in cases) {
     test(c['name'] as String, () {

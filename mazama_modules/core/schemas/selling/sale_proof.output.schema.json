@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "selling.sale_proof output",
+  "description": "The sale number it proves, or null (SM-D2).",
+  "type": "object",
+  "required": [
+    "sale_number"
+  ],
+  "properties": {
+    "sale_number": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}

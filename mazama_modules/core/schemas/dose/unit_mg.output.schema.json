@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "dose.unit_mg output",
+  "description": "Per unit, in order: the mg/g its mg TPE is worked out from (the TPE, else the state's psilocybin; null: none, or a figure that can't be read) and its mg TPE rounded up to a whole mg, ceil(x - 1e-9) (null: unknown, DOSE-9, DOSE-11).",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [
+      "tpe_per_g",
+      "tpe_mg"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "tpe_per_g": {
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "tpe_mg": {
+        "type": [
+          "integer",
+          "null"
+        ]
+      }
+    }
+  }
+}

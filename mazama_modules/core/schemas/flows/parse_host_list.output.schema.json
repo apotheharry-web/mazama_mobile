@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "flows.parse_host_list output",
+  "description": "valid with the list's version and its hosts in the file's order; otherwise valid false, version null, no hosts.",
+  "type": "object",
+  "required": [
+    "valid",
+    "version",
+    "hosts"
+  ],
+  "properties": {
+    "valid": {
+      "type": "boolean"
+    },
+    "version": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "hosts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

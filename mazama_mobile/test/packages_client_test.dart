@@ -4,7 +4,9 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart' as http_testing;
+import 'package:mazama_mobile/dose.dart';
 import 'package:mazama_mobile/packages_client.dart';
+import 'package:mazama_mobile/pricing.dart';
 
 void main() {
   test('parses the public endpoint\'s JSON rows into Packages, quantity included', () async {
@@ -115,6 +117,41 @@ void main() {
       expect(PkprGroup([joined, s1, s2]).stateOnlyNote, 'includes 3 unit(s) known only by the state: 5 or 6 mg psilocybin each');
       // the figure, price and cap inputs stay the product's first lot's
       expect([PkprGroup([s1, joined]).tpeMg, PkprGroup([s1, joined]).mgLabel], [8, 'mg TPE']);
+    });
+
+    // The owner, 2026-10-30 ("yes, lab lot first"): a price and dose-cap change where it applies, so the before and
+    // after are both held here. Not merged before the owner's replay against his production snapshot (PS-R5).
+    test('lab lot first: a lot only the state lists never comes before one with a server figure (before and after)', () {
+      Package lot(int id, {required double aw, required int tpeMg, required int quantity, bool stateOnly = false, DateTime? expires}) =>
+          Package(productGuid: 'G-1', productType: 'Extract', id: id, weightPerUnit: 5, analyteWeight: aw, tpeMg: tpeMg,
+              quantity: quantity, stateOnly: stateOnly, expires: expires);
+      // neither lot dated (the server knows no expiry for lot 1), so draw order falls to the smaller lot
+      final lab = lot(1, aw: 1.0, tpeMg: 8, quantity: 4);
+      final before = PkprGroup([lab, lot(2, aw: 1.2, tpeMg: 6, quantity: 2)]); // lot 2 as the order saw it before
+      final after = PkprGroup([lab, lot(2, aw: 1.2, tpeMg: 6, quantity: 2, stateOnly: true)]);
+      List<Object> sold(PkprGroup g, int qty) => [
+            g.tpeMg,
+            g.mgLabel,
+            perMgPriceCentsEach(10, g.tpeMg.toDouble()), // at 10 cents per mg
+            [for (final (l, n) in allocateLots(g.lots, qty)!) (l.id, n)],
+          ];
+      double capMg(PkprGroup g, int qty) => saleLimits([
+            [(record: doseFigures(g.lots.first), qty: qty, dose: 'initial')],
+          ]).single.psilocybinMgValue!; // the cart's first-lot figure, through the core (dose.dart)
+      // before: the state-only lot first - its state psilocybin shown as the product's "6 mg TPE", 60 cents a unit, and
+      // 6 units counted at its 5 x 1.2 = 6.0 mg psilocybin toward the 50 mg cap (36.0)
+      expect(sold(before, 6), [6, 'mg TPE', 60, [(2, 2), (1, 4)]]);
+      expect(capMg(before, 6), closeTo(36.0, 1e-9));
+      // after: the lab lot first - its 8 mg TPE, 80 cents a unit, 6 units at 5 x 1.0 = 5.0 mg (30.0); drawn first too
+      expect(sold(after, 6), [8, 'mg TPE', 80, [(1, 4), (2, 2)]]);
+      expect(capMg(after, 6), closeTo(30.0, 1e-9));
+      // where a lab lot was first already (dated), or no lot is state-only, nothing changes
+      final dated = PkprGroup([lot(1, aw: 1.0, tpeMg: 8, quantity: 4, expires: DateTime(2027, 3, 1)), lot(2, aw: 1.2, tpeMg: 6, quantity: 2, stateOnly: true)]);
+      expect([for (final l in dated.lots) l.id], [1, 2]);
+      expect([for (final l in drawOrder([lot(1, aw: 1, tpeMg: 8, quantity: 4), lot(2, aw: 1, tpeMg: 8, quantity: 2)])) l.id], [2, 1]);
+      // between state-only lots, the usual order
+      expect([for (final l in drawOrder([lot(3, aw: 1, tpeMg: 5, quantity: 3, stateOnly: true), lot(2, aw: 1, tpeMg: 5, quantity: 1, stateOnly: true)])) l.id],
+          [2, 3]);
     });
 
     test('a 404 says so in its status, so the stock page can tell "not set up" from "unreachable"', () async {

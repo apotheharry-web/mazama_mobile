@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "selling.build_sale input",
+  "description": "One sale record to build (SM-11).",
+  "type": "object",
+  "required": [
+    "item",
+    "price_cents",
+    "sale_date",
+    "dose",
+    "qty"
+  ],
+  "properties": {
+    "item": {
+      "type": "object",
+      "description": "The state's record (productGuid, productType, id, weightPerUnit, analyteWeight, serviceCenterId), its values passed through as given."
+    },
+    "price_cents": {
+      "description": "Whole cents 0..1000000; anything else is a refusal."
+    },
+    "sale_date": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+    },
+    "dose": {
+      "description": "initial or secondary; anything else is a refusal."
+    },
+    "qty": {
+      "description": "A whole number 1..999; anything else is a refusal."
+    }
+  }
+}

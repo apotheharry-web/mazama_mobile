@@ -199,6 +199,41 @@ void main() {
     });
   }
 
+  // review-core-row13 M4: a lone surrogate (YAML "\uD800") in a form key or value makes the spec unusable, as the
+  // server's Python refuses it. Were it handed to the core as U+FFFD, two different keys could become one in the
+  // core's view and a hidden {{password}} could pass its checks.
+  group('a lone surrogate in a form', () {
+    String formSpec(String key, String value) => '''
+vars:
+  spec_version: "2026-10-24.3"
+flows:
+  login:
+    - id: post
+      type: request
+      method: POST
+      url: "https://oregonpsilocybinprodb2c.b2clogin.com/"
+      form:
+        $key: $value
+      extract:
+        - {var: access_token, source: body, json: access_token}
+  renew:
+    - id: refresh
+      type: request
+      method: GET
+      url: "https://oregonpsilocybinprodb2c.b2clogin.com/"
+      extract:
+        - {var: access_token, source: body, json: access_token}
+''';
+    test('the same spec with plain text is usable', () {
+      expect(usableLoginSpec(formSpec('"signin"', '"yes"')), isNotNull);
+    });
+    for (final (key, value) in [(r'"\uD800"', '"yes"'), ('"signin"', r'"\uD800"'), (r'"a\uDC00b"', '"yes"')]) {
+      test('$key: $value is unusable', () {
+        expect(usableLoginSpec(formSpec(key, value)), isNull);
+      });
+    }
+  });
+
   test('a format 3 open_browser spec is unusable for a format 2 reader', () {
     final text = cases.firstWhere((c) => c['name'] == 'format 3 with open_browser')['yaml'] as String;
     expect((usableLoginSpec(text) != null, usableLoginSpec(text, maxFormat: 2) != null), (true, false));

@@ -18,6 +18,8 @@ import 'package:mazama_mobile/inventory_upload_client.dart';
 import 'package:mazama_mobile/sales_upload_client.dart';
 import 'package:mazama_mobile/server_health.dart';
 import 'package:mazama_mobile/server_link.dart';
+import 'package:mazama_mobile/sync/sync_queue.dart' show Done;
+import 'package:mazama_mobile/sync/sync_tables.dart' show QueueItem;
 import 'package:mazama_mobile/sync/updated_line.dart' show formatAsOf;
 import 'package:mazama_mobile/server_outbox.dart';
 import 'package:mazama_mobile/session.dart';
@@ -352,9 +354,42 @@ void main() {
         PendingSnapshot(stateId: 231, kind: kind, records: const [], workerEmail: 'w', deviceId: 'd', readAt: since);
     await uploadPendingSnapshot(snap('inventory'), client: c);
     await uploadPendingSnapshot(snap('sales'), client: c);
-    expect(seen, ['/p/inventory/231', '/p/ingest/sales/231']);
+    expect(seen, ['/p/ingest/packaged/231', '/p/ingest/sales/231']);
     await expectLater(uploadPendingSnapshot(snap('harvest'), client: c), throwsA(isA<ArgumentError>()));
     expect(seen, hasLength(2)); // an unknown kind is never sent anywhere
+  });
+
+  // specs/phone-sync Task 8b Step 6 (PS-D7): one sender for the inventory snapshot, on the ingest route, whoever queued
+  // it: the cart's own upload, the center_stock refresher's kept read, and what an older build left in the queue (its
+  // items hold the records and the pair, never a route, so they survive the update unchanged and go to C20 too).
+  test('the snapshot goes to the ingest route', () async {
+    final seen = <String>[];
+    final bodies = <Object?>[];
+    final c = http_testing.MockClient((req) async {
+      seen.add(req.url.path);
+      bodies.add(jsonDecode(req.body));
+      return http.Response('{"rows": 1, "skipped": 0}', 200);
+    });
+    final l = link();
+    addTearDown(l.dispose);
+    expect(await l.uploadInventorySnapshot(231, const [1], workerEmail: 'w', deviceId: 'd', client: c), {'rows': 1, 'skipped': 0});
+    final send = snapshotQueueSender((s) => uploadPendingSnapshot(s, client: c));
+    // as an older build queued them: today's body, and one saved before snapshots had kinds
+    final older = [
+      '{"stateId": 231, "kind": "inventory", "records": [2], "workerEmail": "w2", "deviceId": "d2", "readAtMs": 1761200000000}',
+      '{"stateId": 183, "records": [3], "workerEmail": "w3", "deviceId": "d3", "readAtMs": 1761200000000}',
+    ];
+    for (final body in older) {
+      final item = QueueItem(kind: 'inventory_snapshot', key: '0', body: body, queuedAt: since, nextAt: since);
+      expect(await send(item), isA<Done>());
+    }
+    expect(seen, ['/p/ingest/packaged/231', '/p/ingest/packaged/231', '/p/ingest/packaged/183']);
+    expect(bodies, [
+      {'workerEmail': 'w', 'deviceId': 'd', 'records': [1]},
+      {'workerEmail': 'w2', 'deviceId': 'd2', 'records': [2]},
+      {'workerEmail': 'w3', 'deviceId': 'd3', 'records': [3]},
+    ]);
+    expect(seen.where((p) => p.startsWith('/p/inventory/')), isEmpty);
   });
 
   test('offline, a lab report fails at once as unreachable, reading nothing from the state system', () async {

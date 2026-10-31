@@ -66,7 +66,11 @@ class FlowError implements Exception {
   /// FlowError).
   final String? reason;
 
-  FlowError(this.message, {this.stage, this.status, this.step, this.reason});
+  /// True when an answer's status arrived but its body was cut off or didn't finish arriving in time ([FlowStage.response]
+  /// with [status] set): the status alone proves nothing about what the server did (SALE-16, specs/core row 7).
+  final bool bodyIncomplete;
+
+  FlowError(this.message, {this.stage, this.status, this.step, this.reason, this.bodyIncomplete = false});
   @override
   String toString() => message;
 }
@@ -196,13 +200,14 @@ String _template(String s, Map<String, Object?> ctx) {
 }
 
 FlowError _fail(String? error, Map<String, Object?> ctx, Set<String> secretKeys,
-    {int? status, FlowStage? stage, String? step, String? reason}) {
+    {int? status, FlowStage? stage, String? step, String? reason, bool bodyIncomplete = false}) {
   var msg = error ?? 'the flow failed';
   if (status != null) msg = msg.replaceAll('{status}', status.toString());
   if (RegExp(r'\{\{\w+\}\}').hasMatch(msg)) msg = _template(msg, ctx);
   // A check that runs against a response (status set) is always the response stage; an `assert` step has neither.
   return FlowError(_scrub(msg, ctx, secretKeys),
-      stage: stage ?? (status != null ? FlowStage.response : null), status: status, step: step, reason: reason);
+      stage: stage ?? (status != null ? FlowStage.response : null), status: status, step: step, reason: reason,
+      bodyIncomplete: bodyIncomplete);
 }
 
 /// Runs the checks in order; the first that fails throws a [FlowError] carrying [step] and the check's `reason`.
@@ -310,9 +315,6 @@ Object? _bodyJson(http.Response resp) {
 }
 
 const _nothing = Object();
-
-/// The step types this interpreter runs (flowspec.py's STEP_TYPES).
-const flowStepTypes = {'generate', 'assert', 'request', 'await_input', 'open_browser'};
 
 /// The extract sources an `open_browser` step reads its returned URL with (flowspec.py's URL_SOURCES).
 const flowUrlSources = {'url_fragment', 'url_query'};
@@ -906,10 +908,10 @@ Future<http.Response> _sendHop(http.Request req, http.Client client, Duration ti
     return await http.Response.fromStream(streamed).timeout(left.isNegative ? Duration.zero : left);
   } on TimeoutException {
     throw _fail('the answer from $host did not finish arriving within ${_secondsText(timeout)} s', ctx, secretKeys,
-        stage: FlowStage.response, status: streamed.statusCode, step: sid);
+        stage: FlowStage.response, status: streamed.statusCode, step: sid, bodyIncomplete: true);
   } catch (ex) {
     throw _fail('the answer from $host was cut off: ${_kind(ex)}', ctx, secretKeys,
-        stage: FlowStage.response, status: streamed.statusCode, step: sid);
+        stage: FlowStage.response, status: streamed.statusCode, step: sid, bodyIncomplete: true);
   }
 }
 

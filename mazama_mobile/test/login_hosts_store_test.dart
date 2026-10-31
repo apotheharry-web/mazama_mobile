@@ -36,7 +36,7 @@ void main() {
   group('the text rule (shared vectors)', () {
     test('the limits are the shared ones', () {
       expect(_vectors['max_bytes'], maxHostListBytes);
-      expect(_vectors['max_hosts'], maxListedHosts);
+      expect(_vectors['max_hosts'], 10);
       expect(_cases, hasLength(50));
       expect(_cases.map((c) => c['name']).toSet(), hasLength(_cases.length));
     });

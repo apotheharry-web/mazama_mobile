@@ -1,5 +1,5 @@
 // CR-R6 (specs/core): the hot paths through the core stay within budget on CI's machine: a stock summary and its pies
-// over 2,000 rows (row 8), and a scan match over 500 packages (row 1). Only the core call is timed (its input map is
+// over 2,000 rows (row 8), a scan match over 500 packages (row 1), and a cart reprice (row 6: one call per change). Only the core call is timed (its input map is
 // built once, outside the timer; the call's own JSON encode and decode are in). The budget is CR-R6's 20 ms with
 // headroom for a debug (JIT) run in a shared bundle beside five others: 100 ms, the median of five runs after one to
 // warm up. The core measures about 5 ms for the summary alone (release, the review of Task 14): a regression to a
@@ -58,6 +58,17 @@ void main() {
     ];
     final input = {'texts': ['GOLDEN TEACHER', '25 mg TPE', 'Net wt 1.2 g', 'Best by 2027-08-31'], 'packages': packages};
     final ms = _medianMs(() => core.scanClosest(input));
+    expect(ms, lessThanOrEqualTo(_budgetMs), reason: '$ms ms');
+  });
+
+  test('a cart reprice: one call for a cart of 60 lines', () {
+    final input = {
+      'mode': 'total',
+      'lines': [for (var i = 0; i < 60; i++) {'group': i.isEven ? 'A' : 'B', 'mg': 1 + i % 25, 'qty': 1 + i % 7}],
+      'total': '1234.56', 'per_mg': '', 'tax': true, 'tax_percent': 15, 'agreement': [40, 90],
+    };
+    expect(core.sellingPriceCart(input)['error'], isNull);
+    final ms = _medianMs(() => core.sellingPriceCart(input));
     expect(ms, lessThanOrEqualTo(_budgetMs), reason: '$ms ms');
   });
 }

@@ -210,17 +210,4 @@ void main() {
       );
     });
   });
-
-  group('CoaDataSessionCache', () {
-    test('put/get/has/putAll round-trip by guid, no staleness concept', () {
-      final cache = CoaDataSessionCache();
-      expect(cache.has('G-1'), isFalse);
-      final data = CoaData(guid: 'G-1', strain: 'X', psilocybin: 1, psilocin: 1, baeocystin: 0, norbaeocystin: 0, norpsilocin: 0);
-      cache.put(data);
-      expect(cache.has('G-1'), isTrue);
-      expect(cache.get('G-1'), same(data));
-      cache.putAll({'G-2': data});
-      expect(cache.has('G-2'), isTrue);
-    });
-  });
 }

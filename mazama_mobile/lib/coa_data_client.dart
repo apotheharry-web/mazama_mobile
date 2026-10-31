@@ -265,21 +265,3 @@ Future<CoaData> uploadCoaParse({
     if (shouldClose) c.close();
   }
 }
-
-/// A tiny per-session, in-memory cache keyed by guid, so a worker re-opening the same unconfigured center
-/// doesn't redo the batch-lookup round trip for guids already resolved this session. Deliberately has no
-/// staleness/maxAge concept (unlike InventoryCacheStore) - a lot's lab numbers don't change once resolved, so
-/// unlike the inventory cache this is never shown as "possibly stale" and never expires on its own. Lives for
-/// as long as whatever holds it (a page's State object, typically) - this is a convenience, not durable
-/// storage; the durable, shared cache is the server's own adhoc_coa table.
-class CoaDataSessionCache {
-  final Map<String, CoaData> _byGuid = {};
-
-  CoaData? get(String guid) => _byGuid[guid];
-
-  void put(CoaData data) => _byGuid[data.guid] = data;
-
-  void putAll(Map<String, CoaData> data) => _byGuid.addAll(data);
-
-  bool has(String guid) => _byGuid.containsKey(guid);
-}

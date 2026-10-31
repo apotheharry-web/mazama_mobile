@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "selling.review_each input",
+  "description": "A reviewed record's typed line total and units.",
+  "type": "object",
+  "required": [
+    "cost",
+    "qty"
+  ],
+  "properties": {
+    "cost": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "qty": {
+      "type": "integer",
+      "minimum": 1
+    }
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "selling.price_cart input",
+  "description": "A cart priced as a whole (SM-14; cart.json's shape): one total shared out, or one rate per mg.",
+  "type": "object",
+  "required": [
+    "mode",
+    "lines",
+    "total",
+    "per_mg",
+    "tax",
+    "tax_percent",
+    "agreement"
+  ],
+  "properties": {
+    "mode": {
+      "enum": [
+        "total",
+        "per_mg"
+      ]
+    },
+    "lines": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "group",
+          "mg",
+          "qty"
+        ],
+        "properties": {
+          "group": {
+            "enum": [
+              "A",
+              "B"
+            ]
+          },
+          "mg": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "The whole mg a unit is sold as (SM-D16; PRICE-7: anything else is an input error); 0 is unknown."
+          },
+          "qty": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 999
+          }
+        }
+      }
+    },
+    "total": {
+      "type": "string"
+    },
+    "per_mg": {
+      "type": "string"
+    },
+    "tax": {
+      "type": "boolean"
+    },
+    "tax_percent": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "agreement": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "minItems": 2,
+      "maxItems": 2,
+      "description": "The group A : group B split of a total (the host's cartAgreementEdible, cartAgreementDried)."
+    }
+  }
+}

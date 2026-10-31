@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "selling.money input",
+  "description": "An amount in cents.",
+  "type": "object",
+  "required": [
+    "cents"
+  ],
+  "properties": {
+    "cents": {
+      "type": "integer"
+    }
+  }
+}

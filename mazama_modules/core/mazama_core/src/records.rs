@@ -1,21 +1,24 @@
 //! The record rules (specs/core row 3; specs/foundations Part A, RR-R1..RR-R5): what a state record means, decided
 //! once. A rule takes one state record, the raw JSON object the state system sends (as the server's mirror keeps it,
 //! or as a phone uploads it), and answers with a plain value: does it still have stock, which holds does it carry,
-//! can it be made into products or transferred. Sellability (`unsellable_reason`, `sellable_record`) is not here yet:
-//! it is row 4, which waits for the owner's go-ahead (CR-D6).
+//! can it be made into products or transferred. Sellability (`unsellable_reason`, `sellable_record`) is
+//! [`crate::selling`] (row 4); both read a record with Python's truthiness ([`crate::py`]).
 //!
 //! The rules keep the answers the server's Python gave before they moved (frozen in mazama_modules/records/vectors/),
 //! so they keep Python's semantics over JSON values: truthiness (`0`, `""`, `[]`, `{}`, `null` and `false` are false),
 //! `x or 0`, comparison with 0 (`true` is 1; text, a list or an object can't be compared: TypeError), `float()` of text
 //! (ValueError when it isn't a number), `0 + x` and `==` against an id. Where today's rule raises, the answer is a
-//! [`Raise`]: the server raises the same exception class when it reads that answer (RD-2).
+//! [`Raise`]: the server raises the same exception class when it reads that answer (a quantity or analyteWeight that
+//! can't be compared with 0). The dry weight is the exception to Python's semantics since the owner decided RD-2
+//! (2026-10-31): every rule reads it through [`dry_grams`], so one that isn't a plain number is none (0 g), never a
+//! raise.
 //!
 //! The drift list (RR-R3; the variants are deliberate, each a named answer):
 //!
 //! | ID   | Difference |
 //! |------|------------|
 //! | RD-1 | `units_counted` sums the quantity of every record not zeroOut, so a negative quantity lowers a total; `has_units` leaves it out |
-//! | RD-2 | `source_problem`, `has_material_strict` raise on a dryWeight that isn't a number (`source_problem` on any text, the other on text that isn't a number); `has_material` counts it as 0 |
+//! | RD-2 | decided by the owner 2026-10-31: unreadable counts as none. Every rule reads dryWeight through [`dry_grams`]: a dryWeight that isn't a plain number is 0 g (no material, nothing can be planned or sold from it), text that is one is that number; `has_material_strict` is now `has_material` (kept for its callers) |
 //! | RD-3 | `has_material_or_units` (the manufacturer page's list) vs `has_material`: a process lot with units but no dry weight is listed but not counted as material |
 //! | RD-4 | `is_held` never counts a failed test; `holds` names it |
 //! | RD-5 | sellability names a pending transfer first; `source_problem` names locked first |
@@ -23,6 +26,8 @@
 //! | RD-7 | `can_transfer` is sellability's holds and units plus who holds the package |
 use serde::Deserialize;
 use serde_json::{Map, Number, Value, json};
+
+use crate::py::truthy;
 
 /// The exception the server's rule raised for a record (RD-2), which it raises again when it reads the answer.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -61,9 +66,9 @@ pub struct Judgement {
     pub has_units: Answer<bool>,
     /// The units a record adds to a units total: its quantity when not zeroOut, else 0; a negative one counts (RD-1).
     pub units_counted: Answer<Number>,
-    /// A batch/lot with material left: not zeroOut and dryWeight > 0, an unreadable dry weight as 0 (RD-2).
+    /// A batch/lot with material left: not zeroOut and dryWeight > 0, an unreadable dry weight as 0 (RD-2, [`dry_grams`]).
     pub has_material: bool,
-    /// `has_material`, but a dryWeight that isn't a number raises (RD-2).
+    /// `has_material`: it raised on a dryWeight that wasn't a number until RD-2 was decided (2026-10-31); never raises now.
     pub has_material_strict: Answer<bool>,
     /// Listed on the manufacturer page: not zeroOut, and dryWeight > 0 or quantity > 0 (RD-3).
     pub has_material_or_units: Answer<bool>,
@@ -100,17 +105,6 @@ fn get<'a>(r: &'a Value, key: &str) -> &'a Value {
     r.get(key).unwrap_or(&NULL)
 }
 
-/// Python's truthiness of a JSON value.
-fn truthy(v: &Value) -> bool {
-    match v {
-        Value::Null => false,
-        Value::Bool(b) => *b,
-        Value::Number(n) => n.as_f64().is_some_and(|f| f != 0.0),
-        Value::String(s) => !s.is_empty(),
-        Value::Array(a) => !a.is_empty(),
-        Value::Object(o) => !o.is_empty(),
-    }
-}
 
 /// The sign of a JSON number: Less, Equal or Greater than 0 (None for NaN, which JSON can't hold).
 fn sign(n: &Number) -> Option<std::cmp::Ordering> {
@@ -149,7 +143,7 @@ fn le0(v: &Value) -> Answer<bool> {
 
 /// Python's `float(text)`: surrounding whitespace ignored, `_` allowed between digits, `inf`/`infinity`/`nan` in any
 /// case, with an optional sign; anything else is a ValueError.
-fn py_float_text(s: &str) -> Answer<f64> {
+pub(crate) fn py_float_text(s: &str) -> Answer<f64> {
     let t = s.trim();
     let chars: Vec<char> = t.chars().collect();
     let mut clean = String::with_capacity(t.len());
@@ -206,16 +200,16 @@ fn decimal(s: &str) -> bool {
     i == b.len()
 }
 
-/// Python's `float(v or 0)`.
-fn py_float(v: &Value) -> Answer<f64> {
-    if !truthy(v) {
-        return Ok(0.0);
-    }
+/// A record's dry weight in grams, as every rule reads it (RD-2, decided by the owner 2026-10-31: unreadable counts as
+/// none). A JSON number is itself (a negative one stays negative); text that is a plain number is that number, read as
+/// Python's `float()` reads it (surrounding whitespace, `_` between digits, an exponent: `"5"`, `" 5 "`, `"5.5"`,
+/// `"1e2"`); anything else (other text, `""`, `"NaN"`, `"inf"`, text too big for a finite number, true/false, a list,
+/// an object, null or absent) is none, 0 g.
+pub fn dry_grams(v: &Value) -> f64 {
     match v {
-        Value::Bool(_) => Ok(1.0),
-        Value::Number(n) => Ok(n.as_f64().unwrap_or(0.0)),
-        Value::String(s) => py_float_text(s),
-        _ => Err(Raise::TypeError),
+        Value::Number(n) => n.as_f64().filter(|f| f.is_finite()).unwrap_or(0.0),
+        Value::String(s) => py_float_text(s).ok().filter(|f| f.is_finite()).unwrap_or(0.0),
+        _ => 0.0,
     }
 }
 
@@ -283,7 +277,7 @@ fn holds(r: &Value, f: &Flags) -> Vec<(&'static str, Value)> {
 }
 
 fn source_problem(r: &Value, f: &Flags) -> Answer<Option<&'static str>> {
-    if f.zero_out || le0(get(r, "dryWeight"))? {
+    if f.zero_out || dry_grams(get(r, "dryWeight")) <= 0.0 {
         return Ok(Some("There is no weight left in it."));
     }
     for (set, why) in [(f.locked, "It is locked."), (f.flagged, "It is flagged."),
@@ -302,22 +296,14 @@ fn source_problem(r: &Value, f: &Flags) -> Answer<Option<&'static str>> {
 pub fn judge_one(r: &Value) -> Judgement {
     let f = flags(r);
     let qty = get(r, "quantity");
-    let dry = get(r, "dryWeight");
+    let dry = dry_grams(get(r, "dryWeight"));
     Judgement {
         flags: f,
         has_units: if f.zero_out { Ok(false) } else { gt0(qty) },
         units_counted: if f.zero_out { Ok(Number::from(0)) } else { plus0(qty) },
-        has_material: !f.zero_out && py_float(dry).is_ok_and(|w| w > 0.0),
-        has_material_strict: if f.zero_out { Ok(false) } else { py_float(dry).map(|w| w > 0.0) },
-        has_material_or_units: if f.zero_out {
-            Ok(false)
-        } else {
-            match gt0(dry) {
-                Ok(true) => Ok(true),
-                Ok(false) => gt0(qty),
-                Err(e) => Err(e),
-            }
-        },
+        has_material: !f.zero_out && dry > 0.0,
+        has_material_strict: Ok(!f.zero_out && dry > 0.0),
+        has_material_or_units: if f.zero_out || dry > 0.0 { Ok(!f.zero_out) } else { gt0(qty) },
         holds: holds(r, &f),
         is_held: f.locked || f.flagged || f.pending_transfer,
         source_problem: source_problem(r, &f),

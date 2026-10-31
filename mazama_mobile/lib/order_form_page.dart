@@ -51,9 +51,6 @@ class _Line {
   String get key => '$strain|$size';
 }
 
-/// An edible's two order sizes, the only fields its row has (MI-D17): Booster, Microdose.
-final List<int> _edibleSizes = [for (final e in stockEdibleSizes.values) e.$1];
-
 class _OrderFormPageState extends State<OrderFormPage> {
   List<_Line>? _lines;
   String? _loadError;
@@ -254,7 +251,7 @@ class _OrderFormPageState extends State<OrderFormPage> {
           padding: const EdgeInsets.symmetric(vertical: 6),
           child: Row(children: [
             Expanded(child: Text(e.key, style: theme.textTheme.titleSmall)),
-            for (final d in _edibleSizes)
+            for (final d in stockEdibleSizeCodes)
               if (e.value[d] != null)
                 Padding(padding: const EdgeInsets.only(left: 12), child: _quantity(e.value[d]!, label: orderSizeLabel(d))),
           ]),

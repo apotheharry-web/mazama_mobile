@@ -5,7 +5,7 @@ publish_to: "none"
 # The build number after + is the date and a count, YYMMDDNN (26102700: 2026-10-27, first build): it only goes up,
 # stays above every build TestFlight had from Codemagic's own counter, and is under Android's 2100000000 limit.
 # Each release raises it (mazama_mobile/tool/publish_public.sh refuses one that doesn't; specs/public-app PA-D3).
-version: 0.2.4+26103003
+version: 0.2.5+26103101
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
@@ -16,9 +16,6 @@ dependencies:
     sdk: flutter
   http: ^1.2.2
   crypto: ^3.0.5
-  # lib/signing.dart: pure-Dart Ed25519, to verify the owner's signature on sign-in host lists (SL-D13). 2.7.0 is
-  # the oldest allowed; pub resolves the newest 2.x (2.9.0 when this was added, published about seven weeks before)
-  cryptography: ^2.7.0
   # Held within 3.1.x: flow_spec.dart imports package:yaml/src/scanner.dart and src/token.dart (not public API) to
   # refuse anchors/aliases before loading; a 3.2 could move or change them (final review M1).
   yaml: ">=3.1.4 <3.2.0"
@@ -42,6 +39,9 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   test: ^1.25.8
+  # test/host_list_signing.dart only: pure-Dart Ed25519, to sign the tests' own host lists. The app verifies with the
+  # shared core (lib/signing.dart, specs/core row 13), so the shipped app carries no second Ed25519 (review M5)
+  cryptography: ^2.7.0
   flutter_lints: ^5.0.0           # analysis_options.yaml includes package:flutter_lints/flutter.yaml
   flutter_launcher_icons: ^0.14.3
 

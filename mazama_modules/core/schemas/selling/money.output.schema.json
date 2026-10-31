@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "selling.money output",
+  "description": "The amount as the pages show it.",
+  "type": "object",
+  "required": [
+    "text"
+  ],
+  "properties": {
+    "text": {
+      "type": "string",
+      "description": "'$1,234.56'; a negative amount as '$-12.50'."
+    }
+  }
+}

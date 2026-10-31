@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "manufacturing.plan output",
+  "description": "Per plan, in order: plans.product_plan's dict. per_unit is rounded DOWN to 0.01 g so the actual TPE never exceeds the dose; error is why it can't be made (null: it can).",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [
+      "dose",
+      "qty",
+      "potency",
+      "state_potency",
+      "coa_tpe",
+      "available",
+      "per_unit",
+      "actual_mg",
+      "max_qty",
+      "error",
+      "total",
+      "remaining"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "dose": {
+        "type": "integer"
+      },
+      "qty": {
+        "type": "integer"
+      },
+      "potency": {
+        "type": "number",
+        "description": "mg/g used: the higher of the state's figure and the certificate's TPE."
+      },
+      "state_potency": {
+        "type": "number"
+      },
+      "coa_tpe": {
+        "description": "As given; null for a certificate TPE that isn't finite (a refusal)."
+      },
+      "available": {
+        "type": "number",
+        "description": "g of dry weight left."
+      },
+      "per_unit": {
+        "type": "number"
+      },
+      "actual_mg": {
+        "type": "number",
+        "description": "per_unit x potency, rounded up to 0.01 mg; never above the dose."
+      },
+      "max_qty": {
+        "type": "integer"
+      },
+      "error": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "total": {
+        "type": "number"
+      },
+      "remaining": {
+        "type": "number"
+      }
+    }
+  }
+}

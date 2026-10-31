@@ -58,8 +58,8 @@ search for them; line numbers are left out on purpose because they change.
 
   A spec fetched from Mazama's server or saved from one is checked before it runs; the bundled specs are held to the same rule by tests. Within the state's hosts, "the sign-in host"
   is in practice the state's B2C tenant; a host added by a signed host list (claim 4) could also receive the POST.
-  - `lib/login_spec_store.dart`, `usableLoginSpec` with `_secretsPlaced`, `_plainMapsOk` and `_setNamesOk` (the
-    rule); it runs on a saved spec
+  - `lib/login_spec_store.dart`, `usableLoginSpec`, which asks the shared core's `flows.usable_login_spec` (the rule:
+    `check_secrets`, `check_plain_maps` and `check_set_names` in `mazama_modules/core/mazama_core/src/flows.rs`); it runs on a saved spec
     (`LoginSpecStore.savedSpec`, `save`), a fetched one (`lib/login_spec_client.dart`, and again in `lib/main.dart`
     before the retry) and the browser spec (`lib/browser_login_spec.dart`, `loadBrowserLoginSpec`).
   - Mazama's server holds a spec to the same rule before serving it (`login_spec_source._valid_version`, not in this
@@ -132,7 +132,8 @@ search for them; line numbers are left out on purpose because they change.
   owner's signed sign-in files from GitHub (claim 4) through `lib/github_files.dart`'s fixed addresses
   (`https://raw.githubusercontent.com/apotheharry-web/mazama_mobile/main/`, no redirect followed); that host is not in
   the allowlist, no flow runs against it, and a signed host list can't name any of the GitHub hosts that code uses
-  (`githubHostsNeverListed` in `lib/login_hosts_store.dart`; the server refuses the same list).
+  (`GITHUB_HOSTS` in the shared core's `valid_listed_host`, `mazama_modules/core/mazama_core/src/flows.rs`, which
+  `parseHostList` in `lib/login_hosts_store.dart` asks; the server asks the same function).
 - **Not covered by this claim:** lab-report downloads (`downloadStateDocument`, claim 2) start on an allowed host but
   follow a redirect to any `https` host; the token is dropped there, the `Referer`, `Origin` and `User-Agent` headers
   are sent. The in-app browser's own traffic is claim 5's.
@@ -167,7 +168,8 @@ search for them; line numbers are left out on purpose because they change.
   bundled spec replaces it. So two checks keep every sign-in and renewal away from `psilocybin.oregon.gov`, where the
   state's records and writes are:
   - before a fetched or saved spec runs, it may have no `request` step and no `open_browser` page address on that
-    host (`_noStateApiRequests` in `lib/login_spec_store.dart`; shared cases "a login request to the state's API",
+    host (the url check of the shared core's `usable_login_spec`, `mazama_modules/core/mazama_core/src/flows.rs`, asked by
+    `usableLoginSpec` in `lib/login_spec_store.dart`; shared cases "a login request to the state's API",
     "a renew request to the state's API", "an open_browser opening the state's site"). An `open_browser`'s `until`
     may name it: that address is matched, not requested by the app;
   - while any sign-in or renewal runs, bundled specs included, the app itself sends nothing to that host: a step's
@@ -306,7 +308,7 @@ search for them; line numbers are left out on purpose because they change.
   photo is taken by the phone's own camera app (`ACTION_IMAGE_CAPTURE`, `TextScanner.kt`), whichever app that is.
 - **Where to look:** `pubspec.yaml` (`dependencies:`), `pubspec.lock`, and the native dependencies in
   `android/app/build.gradle.kts`. The Dart dependencies are:
-  - `http`, `crypto`, `cryptography`, `yaml`, `path_provider`, `url_launcher`, `webview_flutter`, `share_plus`,
+  - `http`, `crypto`, `yaml`, `path_provider`, `url_launcher`, `webview_flutter`, `share_plus`,
     `ffi`, `pdfrx`, `sqlite3`, `flutter_secure_storage`;
   - `pdfrx` gets its PDF engine when the app is built; the app opens PDFs only from memory;
   - `sqlite3` likewise gets a prebuilt SQLite library when the app is built (its build hook); it keeps what the app
@@ -417,7 +419,7 @@ search for them; line numbers are left out on purpose because they change.
   their tests (`test/app_release_test.dart` with the shared vectors `assets/shared/flows/contracts/app_release_vectors.json`,
   `test/github_files_test.dart`, `test/app_update_check_test.dart` "invariant: only a verified, newer, unrefused file is
   offered", `test/app_update_download_test.dart`). No new dependency (claim 8's list is unchanged): `crypto` hashes the
-  APK, `cryptography` verifies the signature.
+  APK, the shared core verifies the signature (`lib/signing.dart`).
 
 ## What these claims do not cover
 

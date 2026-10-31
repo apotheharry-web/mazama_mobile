@@ -9,9 +9,32 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:mazama_mobile/flow/flow_runner.dart';
 import 'package:mazama_mobile/flow/flow_spec.dart';
+import 'package:mazama_mobile/mazama_core.dart';
 import 'package:mazama_mobile/sale_outcome.dart';
 
 FlowError _e({FlowStage? stage, int? status, String message = 'x'}) => FlowError(message, stage: stage, status: status);
+
+class _Unnamed implements Exception {}
+
+/// A core whose sale outcome throws [error] (SALE-14): the phone never takes that for "not sent".
+class _Broken implements CoreFunctions {
+  final Object error;
+  _Broken(this.error);
+  @override
+  Map<String, Object?> sellingSaleOutcome(Map<String, Object?> input) => throw error;
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+/// A core that answers [answer] whatever it is asked.
+class _Says implements CoreFunctions {
+  final Map<String, Object?> answer;
+  _Says(this.answer);
+  @override
+  Map<String, Object?> sellingSaleOutcome(Map<String, Object?> input) => answer;
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
 
 void main() {
   test('a failure before anything left the phone is notSent', () {
@@ -76,4 +99,26 @@ void main() {
       expect(calls.length, 1);
     });
   }
+
+  group('specs/core row 7: the core decides, and its failure is never "not sent" (SALE-14, SALE-16)', () {
+    test('a 4xx whose body was cut off or did not finish arriving is uncertain', () {
+      for (final status in [400, 404, 409, 499]) {
+        expect(classifySaleFailure(FlowError('cut off', stage: FlowStage.response, status: status, bodyIncomplete: true)),
+            SaleOutcome.uncertain, reason: '$status');
+      }
+    });
+    test('a connect failure that the core cannot judge is uncertain', () {
+      for (final error in [StateError('no core'), const MazamaCoreError('failed'), _Unnamed(), ArgumentError('x')]) {
+        expect(classifySaleFailure(_e(stage: FlowStage.connect), core: _Broken(error)), SaleOutcome.uncertain,
+            reason: error.runtimeType.toString());
+      }
+    });
+    test('an answer of the wrong shape is uncertain', () {
+      for (final answer in <Map<String, Object?>>[{}, {'outcome': 'notSent'}, {'outcome': 1}, {'outcome': 'recorded'}]) {
+        expect(classifySaleFailure(_e(stage: FlowStage.connect), core: _Says(answer)), SaleOutcome.uncertain, reason: '$answer');
+      }
+      expect(classifySaleFailure(_e(stage: FlowStage.response, status: 404), core: _Says({'outcome': 'not_sent'})),
+          SaleOutcome.notSent);
+    });
+  });
 }

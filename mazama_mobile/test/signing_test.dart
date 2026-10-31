@@ -74,32 +74,25 @@ void main() {
     expect(bundled, isNot(otherKey));
   });
 
-  group('scalarBelowOrder (RFC 8032: S < L)', () {
-    // L, little-endian, as signature bytes 32..63.
-    final order = Uint8List.fromList([
-      0xed, 0xd3, 0xf5, 0x5c, 0x1a, 0x63, 0x12, 0x58, 0xd6, 0x9c, 0xf7, 0xa2, 0xde, 0xf9, 0xde, 0x14, //
-      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10,
-    ]);
-    Uint8List sigWithS(List<int> s) => Uint8List.fromList([...List<int>.filled(32, 0xab), ...s]);
-
-    test('S = 0 and S = L - 1 are below L; S = L and S above it are not', () {
-      expect(scalarBelowOrder(sigWithS(List<int>.filled(32, 0))), isTrue);
-      expect(scalarBelowOrder(sigWithS([order[0] - 1, ...order.sublist(1)])), isTrue);
-      expect(scalarBelowOrder(sigWithS(order)), isFalse);
-      expect(scalarBelowOrder(sigWithS([order[0] + 1, ...order.sublist(1)])), isFalse);
-      expect(scalarBelowOrder(sigWithS([...order.sublist(0, 31), 0x11])), isFalse);
-      expect(scalarBelowOrder(sigWithS(List<int>.filled(32, 0xff))), isFalse);
+  // S < L (RFC 8032) is the core's rule now (flows.verify_signature, verify_strict): the vectors above hold it to the
+  // S + L malleation, and these two keep the edge cases the old Dart check had, through verifySigned.
+  group('the signature scalar (RFC 8032: S < L)', () {
+    test('a good signature verifies; its S + L vector does not', () async {
+      final good = _case('good');
+      final payload = base64.decode(good['payload_b64'] as String);
+      expect(await verifySigned(payload, good['signature'] as String, publicKey: good['public_key'] as String), isTrue);
+      final bad = _case('signature_s_plus_l');
+      expect(await verifySigned(base64.decode(bad['payload_b64'] as String), bad['signature'] as String, publicKey: bad['public_key'] as String),
+          isFalse);
     });
 
-    test('a good signature has S below L; its S + L vector does not', () {
-      expect(scalarBelowOrder(base64.decode(_case('good')['signature'] as String)), isTrue);
-      expect(scalarBelowOrder(base64.decode(_case('signature_s_plus_l')['signature'] as String)), isFalse);
-    });
-
-    test('anything but 64 bytes is not a signature', () {
-      expect(scalarBelowOrder(Uint8List(63)), isFalse);
-      expect(scalarBelowOrder(Uint8List(65)), isFalse);
-      expect(scalarBelowOrder(const <int>[]), isFalse);
+    test('anything but 64 bytes is not a signature', () async {
+      final good = _case('good');
+      final payload = base64.decode(good['payload_b64'] as String);
+      for (final length in [0, 63, 65]) {
+        final sig = '${base64.encode(Uint8List(length))}\n';
+        expect(await verifySigned(payload, sig, publicKey: good['public_key'] as String), isFalse, reason: '$length bytes');
+      }
     });
   });
 

@@ -1,0 +1,2299 @@
+{
+ "ceil_mg": [
+  {
+   "dose": "SM-D17",
+   "mg": 7,
+   "x": 7.0000000005
+  },
+  {
+   "dose": "SM-D17",
+   "mg": 8,
+   "x": 7.000000002
+  },
+  {
+   "dose": "SM-D17",
+   "mg": 0,
+   "x": -0.5
+  },
+  {
+   "dose": "SM-D17",
+   "mg": -8,
+   "x": -8.64
+  },
+  {
+   "dose": "DOSE-11",
+   "mg": null,
+   "x": 1e+300
+  },
+  {
+   "dose": "DOSE-11",
+   "mg": null,
+   "x": 9.3e+18
+  },
+  {
+   "dose": "DOSE-11",
+   "mg": null,
+   "x": -9.3e+18
+  },
+  {
+   "dose": "DOSE-11",
+   "mg": 9200000000000000000,
+   "x": 9.2e+18
+  },
+  {
+   "dose": "DOSE-11",
+   "mg": null,
+   "x": 9.223372036854776e+18
+  },
+  {
+   "dose": "DOSE-11",
+   "mg": -9223372036854775808,
+   "x": -9.223372036854776e+18
+  },
+  {
+   "dose": "DOSE-11",
+   "mg": 0,
+   "x": 5e-324
+  }
+ ],
+ "sale_limits": [
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale would total 68.0 mg psilocybin - more than the 50 mg limit per sale (mg TPE is not subject to this cap).",
+     "psilocybin_mg": "68.00",
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-1",
+   "name": "units drawn across two lots, each lot's own figures",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 2,
+       "record": {
+        "analyteWeight": 10.0,
+        "weightPerUnit": 1.0
+       }
+      },
+      {
+       "dose": "initial",
+       "qty": 2,
+       "record": {
+        "analyteWeight": 12.0,
+        "weightPerUnit": 2.0
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": true,
+     "error": null,
+     "psilocybin_mg": "44.00",
+     "session_minutes": 360,
+     "session_minutes_initial": 360
+    }
+   ],
+   "dose": "DOSE-1",
+   "name": "the same, within the cap",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 2,
+       "record": {
+        "analyteWeight": 10.0,
+        "weightPerUnit": 1.0
+       }
+      },
+      {
+       "dose": "initial",
+       "qty": 2,
+       "record": {
+        "analyteWeight": 12.0,
+        "weightPerUnit": 1.0
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": true,
+     "error": null,
+     "psilocybin_mg": "30.00",
+     "session_minutes": 300,
+     "session_minutes_initial": 180
+    }
+   ],
+   "dose": "DOSE-1",
+   "name": "an initial and a secondary line of one product",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": 10.0,
+        "weightPerUnit": 1.0
+       }
+      },
+      {
+       "dose": "secondary",
+       "qty": 2,
+       "record": {
+        "analyteWeight": 10.0,
+        "weightPerUnit": 1.0
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": true,
+     "error": null,
+     "psilocybin_mg": "10.00",
+     "session_minutes": 180,
+     "session_minutes_initial": 30
+    }
+   ],
+   "dose": "DOSE-1",
+   "name": "only a secondary line",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "secondary",
+       "qty": 1,
+       "record": {
+        "analyteWeight": 10.0,
+        "weightPerUnit": 1.0
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": true,
+     "error": null,
+     "psilocybin_mg": "2.5000",
+     "session_minutes": 60,
+     "session_minutes_initial": 60
+    }
+   ],
+   "dose": "DOSE-2",
+   "name": "exactly 2.5 mg, where doubles give 2.4999999999999996",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": 1.44,
+        "weightPerUnit": 1.66
+       }
+      },
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": 2.74,
+        "weightPerUnit": 0.04
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": true,
+     "error": null,
+     "psilocybin_mg": "50.0000",
+     "session_minutes": 360,
+     "session_minutes_initial": 360
+    }
+   ],
+   "dose": "DOSE-2",
+   "name": "exactly 50 mg, where doubles give 50.00000000000001",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": 14.96,
+        "weightPerUnit": 2.68
+       }
+      },
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": 15.48,
+        "weightPerUnit": 0.64
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": true,
+     "error": null,
+     "psilocybin_mg": "15.00",
+     "session_minutes": 240,
+     "session_minutes_initial": 240
+    }
+   ],
+   "dose": "DOSE-2",
+   "name": "exactly 15 mg in three lines",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": 50.0,
+        "weightPerUnit": 0.1
+       }
+      },
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": 25.0,
+        "weightPerUnit": 0.2
+       }
+      },
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": 10.0,
+        "weightPerUnit": 0.5
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": true,
+     "error": null,
+     "psilocybin_mg": "4.9999950",
+     "session_minutes": 60,
+     "session_minutes_initial": 60
+    }
+   ],
+   "dose": "DOSE-2",
+   "name": "just under 5 mg: 4.999999",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": 5.0,
+        "weightPerUnit": 0.999999
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale's psilocybin can't be worked out (a unit's weightPerUnit or analyteWeight is not a usable number), so it can't be sold here.",
+     "psilocybin_mg": null,
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-3",
+   "name": "weight as text",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": 10.0,
+        "weightPerUnit": "0.5"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale's psilocybin can't be worked out (a unit's weightPerUnit or analyteWeight is not a usable number), so it can't be sold here.",
+     "psilocybin_mg": null,
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-3",
+   "name": "weight as empty text",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": 10.0,
+        "weightPerUnit": ""
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale's psilocybin can't be worked out (a unit's weightPerUnit or analyteWeight is not a usable number), so it can't be sold here.",
+     "psilocybin_mg": null,
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-3",
+   "name": "weight true",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": 10.0,
+        "weightPerUnit": true
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale's psilocybin can't be worked out (a unit's weightPerUnit or analyteWeight is not a usable number), so it can't be sold here.",
+     "psilocybin_mg": null,
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-3",
+   "name": "weight false",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": 10.0,
+        "weightPerUnit": false
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale's psilocybin can't be worked out (a unit's weightPerUnit or analyteWeight is not a usable number), so it can't be sold here.",
+     "psilocybin_mg": null,
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-3",
+   "name": "weight a list",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": 10.0,
+        "weightPerUnit": []
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale's psilocybin can't be worked out (a unit's weightPerUnit or analyteWeight is not a usable number), so it can't be sold here.",
+     "psilocybin_mg": null,
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-3",
+   "name": "weight an object",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": 10.0,
+        "weightPerUnit": {}
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale's psilocybin can't be worked out (a unit's weightPerUnit or analyteWeight is not a usable number), so it can't be sold here.",
+     "psilocybin_mg": null,
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-3",
+   "name": "figure as text",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": "10",
+        "weightPerUnit": 0.5
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale's psilocybin can't be worked out (a unit's weightPerUnit or analyteWeight is not a usable number), so it can't be sold here.",
+     "psilocybin_mg": null,
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-3",
+   "name": "figure true",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": true,
+        "weightPerUnit": 0.5
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale's psilocybin can't be worked out (a unit's weightPerUnit or analyteWeight is not a usable number), so it can't be sold here.",
+     "psilocybin_mg": null,
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-3",
+   "name": "figure a list",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": [
+         10.0
+        ],
+        "weightPerUnit": 0.5
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale's psilocybin can't be worked out (a unit's weightPerUnit or analyteWeight is not a usable number), so it can't be sold here.",
+     "psilocybin_mg": null,
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-3",
+   "name": "figure an object",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": {
+         "k": 1
+        },
+        "weightPerUnit": 0.5
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale's psilocybin can't be worked out (a unit's weightPerUnit or analyteWeight is not a usable number), so it can't be sold here.",
+     "psilocybin_mg": null,
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-3",
+   "name": "a billion grams",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": 10.0,
+        "weightPerUnit": 1000000000.0
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale's psilocybin can't be worked out (a unit's weightPerUnit or analyteWeight is not a usable number), so it can't be sold here.",
+     "psilocybin_mg": null,
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-3",
+   "name": "a billion as an integer",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": 10.0,
+        "weightPerUnit": 1000000000
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale's psilocybin can't be worked out (a unit's weightPerUnit or analyteWeight is not a usable number), so it can't be sold here.",
+     "psilocybin_mg": null,
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-3",
+   "name": "1e20",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": 10.0,
+        "weightPerUnit": 1e+20
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale's psilocybin can't be worked out (a unit's weightPerUnit or analyteWeight is not a usable number), so it can't be sold here.",
+     "psilocybin_mg": null,
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-3",
+   "name": "an integer beyond 64 bits",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": 1180591620717411303424,
+        "weightPerUnit": 0.5
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale's psilocybin can't be worked out (a unit's weightPerUnit or analyteWeight is not a usable number), so it can't be sold here.",
+     "psilocybin_mg": null,
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-3",
+   "name": "units a fraction",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 2.5,
+       "record": {
+        "analyteWeight": 10.0,
+        "weightPerUnit": 0.5
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale's psilocybin can't be worked out (a unit's weightPerUnit or analyteWeight is not a usable number), so it can't be sold here.",
+     "psilocybin_mg": null,
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-3",
+   "name": "units 2.0",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 2.0,
+       "record": {
+        "analyteWeight": 10.0,
+        "weightPerUnit": 0.5
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale's psilocybin can't be worked out (a unit's weightPerUnit or analyteWeight is not a usable number), so it can't be sold here.",
+     "psilocybin_mg": null,
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-3",
+   "name": "units true",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": true,
+       "record": {
+        "analyteWeight": 10.0,
+        "weightPerUnit": 0.5
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale's psilocybin can't be worked out (a unit's weightPerUnit or analyteWeight is not a usable number), so it can't be sold here.",
+     "psilocybin_mg": null,
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-3",
+   "name": "units as text",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": "1",
+       "record": {
+        "analyteWeight": 10.0,
+        "weightPerUnit": 0.5
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale's psilocybin can't be worked out (a unit's weightPerUnit or analyteWeight is not a usable number), so it can't be sold here.",
+     "psilocybin_mg": null,
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-3",
+   "name": "units null",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": null,
+       "record": {
+        "analyteWeight": 10.0,
+        "weightPerUnit": 0.5
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale's psilocybin can't be worked out (a unit's weightPerUnit or analyteWeight is not a usable number), so it can't be sold here.",
+     "psilocybin_mg": null,
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-3",
+   "name": "units negative",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": -1,
+       "record": {
+        "analyteWeight": 10.0,
+        "weightPerUnit": 0.5
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale's psilocybin can't be worked out (a unit's weightPerUnit or analyteWeight is not a usable number), so it can't be sold here.",
+     "psilocybin_mg": null,
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-3",
+   "name": "units over a million",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 1000001,
+       "record": {
+        "analyteWeight": 1e-06,
+        "weightPerUnit": 1e-06
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": true,
+     "error": null,
+     "psilocybin_mg": "0.000001000000",
+     "session_minutes": 30,
+     "session_minutes_initial": 30
+    }
+   ],
+   "dose": "DOSE-3",
+   "name": "a million units",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 1000000,
+       "record": {
+        "analyteWeight": 1e-06,
+        "weightPerUnit": 1e-06
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale's psilocybin can't be worked out (a unit's weightPerUnit or analyteWeight is not a usable number), so it can't be sold here.",
+     "psilocybin_mg": null,
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-3",
+   "name": "an unusable line after an unknown one",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": 10.0,
+        "weightPerUnit": null
+       }
+      },
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": 10.0,
+        "weightPerUnit": "x"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale's psilocybin can't be worked out (a unit's weightPerUnit or analyteWeight is not a usable number), so it can't be sold here.",
+     "psilocybin_mg": null,
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-3",
+   "name": "an unusable line of no units",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": 10.0,
+        "weightPerUnit": 0.5
+       }
+      },
+      {
+       "dose": "initial",
+       "qty": 0,
+       "record": {
+        "analyteWeight": 10.0,
+        "weightPerUnit": "x"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale's psilocybin can't be worked out (a unit's weightPerUnit or analyteWeight is not a usable number), so it can't be sold here.",
+     "psilocybin_mg": null,
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-4",
+   "name": "a negative weight lowers nothing",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 2,
+       "record": {
+        "analyteWeight": 11.0,
+        "weightPerUnit": 2.5
+       }
+      },
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": 5.0,
+        "weightPerUnit": -1.0
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale's psilocybin can't be worked out (a unit's weightPerUnit or analyteWeight is not a usable number), so it can't be sold here.",
+     "psilocybin_mg": null,
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-4",
+   "name": "a negative figure",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": -10.0,
+        "weightPerUnit": 0.5
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale holds a unit whose psilocybin isn't known (no weightPerUnit or analyteWeight), so it can't be sold here.",
+     "psilocybin_mg": null,
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-5",
+   "name": "no potency known",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 3,
+       "record": {
+        "analyteWeight": null,
+        "weightPerUnit": 0.5
+       }
+      },
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": 5.0,
+        "weightPerUnit": 1.0
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale holds a unit whose psilocybin isn't known (no weightPerUnit or analyteWeight), so it can't be sold here.",
+     "psilocybin_mg": null,
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-5",
+   "name": "no weight known",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 3,
+       "record": {
+        "analyteWeight": 10.0,
+        "weightPerUnit": null
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale holds a unit whose psilocybin isn't known (no weightPerUnit or analyteWeight), so it can't be sold here.",
+     "psilocybin_mg": null,
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-5",
+   "name": "potency absent",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "weightPerUnit": 0.5
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale holds a unit whose psilocybin isn't known (no weightPerUnit or analyteWeight), so it can't be sold here.",
+     "psilocybin_mg": null,
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-5",
+   "name": "weight absent",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": 10.0
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale holds a unit whose psilocybin isn't known (no weightPerUnit or analyteWeight), so it can't be sold here.",
+     "psilocybin_mg": null,
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-5",
+   "name": "potency 0",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": 0,
+        "weightPerUnit": 0.5
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale holds a unit whose psilocybin isn't known (no weightPerUnit or analyteWeight), so it can't be sold here.",
+     "psilocybin_mg": null,
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-5",
+   "name": "weight 0.0",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": 10.0,
+        "weightPerUnit": 0.0
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale holds a unit whose psilocybin isn't known (no weightPerUnit or analyteWeight), so it can't be sold here.",
+     "psilocybin_mg": null,
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-5",
+   "name": "weight -0.0",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": 10.0,
+        "weightPerUnit": -0.0
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": true,
+     "error": null,
+     "psilocybin_mg": "5.00",
+     "session_minutes": 120,
+     "session_minutes_initial": 120
+    }
+   ],
+   "dose": "DOSE-5",
+   "name": "a unit of unknown potency, none of it sold",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 0,
+       "record": {
+        "analyteWeight": null,
+        "weightPerUnit": 0.5
+       }
+      },
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": 5.0,
+        "weightPerUnit": 1.0
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale would total 50.1 mg psilocybin - more than the 50 mg limit per sale (mg TPE is not subject to this cap).",
+     "psilocybin_mg": "50.0400",
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-6",
+   "name": "50.04 mg shows 50.1",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 10,
+       "record": {
+        "analyteWeight": 10.008,
+        "weightPerUnit": 0.5
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale would total 50.1 mg psilocybin - more than the 50 mg limit per sale (mg TPE is not subject to this cap).",
+     "psilocybin_mg": "50.050",
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-6",
+   "name": "50.05 mg shows 50.1",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 10,
+       "record": {
+        "analyteWeight": 10.01,
+        "weightPerUnit": 0.5
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale would total 50.3 mg psilocybin - more than the 50 mg limit per sale (mg TPE is not subject to this cap).",
+     "psilocybin_mg": "50.250",
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-6",
+   "name": "50.25 mg shows 50.3",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 10,
+       "record": {
+        "analyteWeight": 10.05,
+        "weightPerUnit": 0.5
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale would total 50.1 mg psilocybin - more than the 50 mg limit per sale (mg TPE is not subject to this cap).",
+     "psilocybin_mg": "50.0000010",
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-6",
+   "name": "50.000001 mg shows 50.1",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": 50.000001,
+        "weightPerUnit": 1.0
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale would total 72.0 mg psilocybin - more than the 50 mg limit per sale (mg TPE is not subject to this cap).",
+     "psilocybin_mg": "72.00",
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-6",
+   "name": "72 mg shows 72.0",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 3,
+       "record": {
+        "analyteWeight": 12.0,
+        "weightPerUnit": 2.0
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale would total 999999999999998000000000.1 mg psilocybin - more than the 50 mg limit per sale (mg TPE is not subject to this cap).",
+     "psilocybin_mg": "999999999999998000000000.000001000000",
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-6",
+   "name": "a billion units' worth, exactly",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 1000000,
+       "record": {
+        "analyteWeight": 999999999.999999,
+        "weightPerUnit": 999999999.999999
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": true,
+     "error": null,
+     "psilocybin_mg": "30.00",
+     "session_minutes": 300,
+     "session_minutes_initial": 300
+    },
+    {
+     "allowed": false,
+     "error": "This sale would total 72.0 mg psilocybin - more than the 50 mg limit per sale (mg TPE is not subject to this cap).",
+     "psilocybin_mg": "72.00",
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-17",
+   "name": "a bulk sell's copies, each on its own draw",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 3,
+       "record": {
+        "analyteWeight": 10.0,
+        "weightPerUnit": 1.0
+       }
+      }
+     ]
+    },
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 3,
+       "record": {
+        "analyteWeight": 12.0,
+        "weightPerUnit": 2.0
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": true,
+     "error": null,
+     "psilocybin_mg": "30.00",
+     "session_minutes": 300,
+     "session_minutes_initial": 300
+    },
+    {
+     "allowed": true,
+     "error": null,
+     "psilocybin_mg": "40.00",
+     "session_minutes": 360,
+     "session_minutes_initial": 360
+    }
+   ],
+   "dose": "DOSE-17",
+   "name": "a bulk sell whose copy 2 draws two lots, within the cap",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 3,
+       "record": {
+        "analyteWeight": 10.0,
+        "weightPerUnit": 1.0
+       }
+      }
+     ]
+    },
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": 10.0,
+        "weightPerUnit": 1.0
+       }
+      },
+      {
+       "dose": "initial",
+       "qty": 2,
+       "record": {
+        "analyteWeight": 15.0,
+        "weightPerUnit": 1.0
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale's psilocybin can't be worked out (a unit's weightPerUnit or analyteWeight is not a usable number), so it can't be sold here.",
+     "psilocybin_mg": null,
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-19",
+   "name": "seven decimal places",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": 10.0,
+        "weightPerUnit": 1.0000001
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": true,
+     "error": null,
+     "psilocybin_mg": "10.0000100",
+     "session_minutes": 180,
+     "session_minutes_initial": 180
+    }
+   ],
+   "dose": "DOSE-19",
+   "name": "six decimal places",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": 10.0,
+        "weightPerUnit": 1.000001
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": true,
+     "error": null,
+     "psilocybin_mg": "0.0000100",
+     "session_minutes": 30,
+     "session_minutes_initial": 30
+    }
+   ],
+   "dose": "DOSE-19",
+   "name": "the smallest figure",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": 10.0,
+        "weightPerUnit": 1e-06
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale's psilocybin can't be worked out (a unit's weightPerUnit or analyteWeight is not a usable number), so it can't be sold here.",
+     "psilocybin_mg": null,
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-19",
+   "name": "below the smallest figure",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": 10.0,
+        "weightPerUnit": 1e-07
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale's psilocybin can't be worked out (a unit's weightPerUnit or analyteWeight is not a usable number), so it can't be sold here.",
+     "psilocybin_mg": null,
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-19",
+   "name": "the smallest double",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": 10.0,
+        "weightPerUnit": 5e-324
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale's psilocybin can't be worked out (a unit's weightPerUnit or analyteWeight is not a usable number), so it can't be sold here.",
+     "psilocybin_mg": null,
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-19",
+   "name": "1e-300",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": 10.0,
+        "weightPerUnit": 1e-300
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale's psilocybin can't be worked out (a unit's weightPerUnit or analyteWeight is not a usable number), so it can't be sold here.",
+     "psilocybin_mg": null,
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-19",
+   "name": "a 17-digit figure",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": 10.0,
+        "weightPerUnit": 0.1234567890123456
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale's psilocybin can't be worked out (a unit's weightPerUnit or analyteWeight is not a usable number), so it can't be sold here.",
+     "psilocybin_mg": null,
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-19",
+   "name": "a figure whose double lands on 5 mg",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": 1.7543859649122806,
+        "weightPerUnit": 2.85
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale would total 1000.0 mg psilocybin - more than the 50 mg limit per sale (mg TPE is not subject to this cap).",
+     "psilocybin_mg": "999.999999999999",
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "DOSE-19",
+   "name": "the largest figure",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": 1e-06,
+        "weightPerUnit": 999999999.999999
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": true,
+     "error": null,
+     "psilocybin_mg": "0",
+     "session_minutes": 30,
+     "session_minutes_initial": 30
+    }
+   ],
+   "dose": "SM-15",
+   "name": "nothing sold: 0",
+   "sales": [
+    {
+     "lines": []
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": true,
+     "error": null,
+     "psilocybin_mg": "0.00",
+     "session_minutes": 30,
+     "session_minutes_initial": 30
+    }
+   ],
+   "dose": "SM-15",
+   "name": "no units: 0.00",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 0,
+       "record": {
+        "analyteWeight": 5.0,
+        "weightPerUnit": 1.0
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": true,
+     "error": null,
+     "psilocybin_mg": "2.49",
+     "session_minutes": 30,
+     "session_minutes_initial": 30
+    }
+   ],
+   "dose": "SM-15",
+   "name": "2.49",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": 8.3,
+        "weightPerUnit": 0.3
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": true,
+     "error": null,
+     "psilocybin_mg": "1E-12",
+     "session_minutes": 30,
+     "session_minutes_initial": 30
+    }
+   ],
+   "dose": "SM-15",
+   "name": "the smallest unit: 1E-12",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": 1e-06,
+        "weightPerUnit": 1e-06
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": true,
+     "error": null,
+     "psilocybin_mg": "0E-12",
+     "session_minutes": 30,
+     "session_minutes_initial": 30
+    }
+   ],
+   "dose": "SM-15",
+   "name": "none of the smallest unit: 0E-12",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 0,
+       "record": {
+        "analyteWeight": 1e-06,
+        "weightPerUnit": 1e-06
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": true,
+     "error": null,
+     "psilocybin_mg": "5.00",
+     "session_minutes": 120,
+     "session_minutes_initial": 120
+    }
+   ],
+   "dose": "SM-15",
+   "name": "5.00",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": 10.0,
+        "weightPerUnit": 0.5
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": true,
+     "error": null,
+     "psilocybin_mg": "50.0000",
+     "session_minutes": 360,
+     "session_minutes_initial": 360
+    }
+   ],
+   "dose": "SM-15",
+   "name": "50.0000, allowed",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 800,
+       "record": {
+        "analyteWeight": 0.25,
+        "weightPerUnit": 0.25
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": false,
+     "error": "This sale would total 72.5 mg psilocybin - more than the 50 mg limit per sale (mg TPE is not subject to this cap).",
+     "psilocybin_mg": "72.50",
+     "session_minutes": null,
+     "session_minutes_initial": null
+    }
+   ],
+   "dose": "SM-15",
+   "name": "an integer figure keeps its digits: 72.50",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": 7.25,
+        "weightPerUnit": 10
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "answers": [
+    {
+     "allowed": true,
+     "error": null,
+     "psilocybin_mg": "2.50",
+     "session_minutes": 60,
+     "session_minutes_initial": 60
+    }
+   ],
+   "dose": "SM-15",
+   "name": "every limit's step",
+   "sales": [
+    {
+     "lines": [
+      {
+       "dose": "initial",
+       "qty": 1,
+       "record": {
+        "analyteWeight": 5.0,
+        "weightPerUnit": 0.5
+       }
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "unit_mg": [
+  {
+   "dose": "DOSE-9",
+   "name": "weight as text",
+   "record": {
+    "analyteWeight": 7.25,
+    "weightPerUnit": "0.5"
+   },
+   "tpe": 8.64,
+   "tpe_mg": null,
+   "tpe_per_g": null
+  },
+  {
+   "dose": "DOSE-9",
+   "name": "weight true",
+   "record": {
+    "analyteWeight": 7.25,
+    "weightPerUnit": true
+   },
+   "tpe": 8.64,
+   "tpe_mg": null,
+   "tpe_per_g": null
+  },
+  {
+   "dose": "DOSE-9",
+   "name": "weight false",
+   "record": {
+    "analyteWeight": 7.25,
+    "weightPerUnit": false
+   },
+   "tpe": 8.64,
+   "tpe_mg": null,
+   "tpe_per_g": null
+  },
+  {
+   "dose": "DOSE-9",
+   "name": "weight a list",
+   "record": {
+    "analyteWeight": 7.25,
+    "weightPerUnit": [
+     0.5
+    ]
+   },
+   "tpe": 8.64,
+   "tpe_mg": null,
+   "tpe_per_g": null
+  },
+  {
+   "dose": "DOSE-9",
+   "name": "weight an object",
+   "record": {
+    "analyteWeight": 7.25,
+    "weightPerUnit": {
+     "g": 0.5
+    }
+   },
+   "tpe": 8.64,
+   "tpe_mg": null,
+   "tpe_per_g": null
+  },
+  {
+   "dose": "DOSE-9",
+   "name": "the state's figure as text, no TPE",
+   "record": {
+    "analyteWeight": "7.25",
+    "weightPerUnit": 0.5
+   },
+   "tpe": null,
+   "tpe_mg": null,
+   "tpe_per_g": null
+  },
+  {
+   "dose": "DOSE-9",
+   "name": "the state's figure true, no TPE",
+   "record": {
+    "analyteWeight": true,
+    "weightPerUnit": 0.5
+   },
+   "tpe": null,
+   "tpe_mg": null,
+   "tpe_per_g": null
+  },
+  {
+   "dose": "DOSE-9",
+   "name": "the state's figure as text, with a TPE",
+   "record": {
+    "analyteWeight": "7.25",
+    "weightPerUnit": 0.5
+   },
+   "tpe": 8.64,
+   "tpe_mg": null,
+   "tpe_per_g": null
+  },
+  {
+   "dose": "DOSE-9",
+   "name": "the state's figure a list, with a TPE",
+   "record": {
+    "analyteWeight": [
+     7.25
+    ],
+    "weightPerUnit": 0.5
+   },
+   "tpe": 8.64,
+   "tpe_mg": null,
+   "tpe_per_g": null
+  },
+  {
+   "dose": "DOSE-9",
+   "name": "weight absent: 0 g",
+   "record": {
+    "analyteWeight": 7.25
+   },
+   "tpe": 8.64,
+   "tpe_mg": 0,
+   "tpe_per_g": 8.64
+  },
+  {
+   "dose": "DOSE-9",
+   "name": "weight null: 0 g",
+   "record": {
+    "analyteWeight": 7.25,
+    "weightPerUnit": null
+   },
+   "tpe": 8.64,
+   "tpe_mg": 0,
+   "tpe_per_g": 8.64
+  },
+  {
+   "dose": "DOSE-9",
+   "name": "the state's figure absent, no TPE",
+   "record": {
+    "weightPerUnit": 0.5
+   },
+   "tpe": null,
+   "tpe_mg": null,
+   "tpe_per_g": null
+  },
+  {
+   "dose": "DOSE-9",
+   "name": "an integer weight and figure",
+   "record": {
+    "analyteWeight": 5,
+    "weightPerUnit": 2
+   },
+   "tpe": null,
+   "tpe_mg": 10,
+   "tpe_per_g": 5.0
+  },
+  {
+   "dose": "DOSE-10",
+   "name": "a negative weight (pinned)",
+   "record": {
+    "analyteWeight": 7.25,
+    "weightPerUnit": -1.0
+   },
+   "tpe": 8.64,
+   "tpe_mg": -8,
+   "tpe_per_g": 8.64
+  },
+  {
+   "dose": "DOSE-10",
+   "name": "a negative state figure, no TPE (pinned)",
+   "record": {
+    "analyteWeight": -7.25,
+    "weightPerUnit": 0.5
+   },
+   "tpe": null,
+   "tpe_mg": -3,
+   "tpe_per_g": -7.25
+  },
+  {
+   "dose": "DOSE-10",
+   "name": "a negative TPE (pinned)",
+   "record": {
+    "analyteWeight": 7.25,
+    "weightPerUnit": 0.5
+   },
+   "tpe": -8.64,
+   "tpe_mg": -4,
+   "tpe_per_g": -8.64
+  },
+  {
+   "dose": "DOSE-11",
+   "name": "a product that isn't finite",
+   "record": {
+    "analyteWeight": 7.25,
+    "weightPerUnit": 1e+300
+   },
+   "tpe": 1e+300,
+   "tpe_mg": null,
+   "tpe_per_g": 1e+300
+  },
+  {
+   "dose": "DOSE-11",
+   "name": "a product beyond 64 bits",
+   "record": {
+    "analyteWeight": 7.25,
+    "weightPerUnit": 10000000000.0
+   },
+   "tpe": 10000000000.0,
+   "tpe_mg": null,
+   "tpe_per_g": 10000000000.0
+  },
+  {
+   "dose": "DOSE-11",
+   "name": "a weight beyond 64 bits as an integer",
+   "record": {
+    "analyteWeight": 7.25,
+    "weightPerUnit": 1180591620717411303424
+   },
+   "tpe": 8.64,
+   "tpe_mg": null,
+   "tpe_per_g": 8.64
+  },
+  {
+   "dose": "DOSE-11",
+   "name": "just inside 64 bits",
+   "record": {
+    "analyteWeight": 7.25,
+    "weightPerUnit": 1000000000.0
+   },
+   "tpe": 9000000000.0,
+   "tpe_mg": 9000000000000000000,
+   "tpe_per_g": 9000000000.0
+  },
+  {
+   "dose": "DOSE-11",
+   "name": "0 g of a figure that isn't finite in total",
+   "record": {
+    "analyteWeight": 7.25,
+    "weightPerUnit": 0.0
+   },
+   "tpe": 1e+300,
+   "tpe_mg": 0,
+   "tpe_per_g": 1e+300
+  },
+  {
+   "dose": "SM-D17",
+   "name": "float noise is forgiven: 0.56 g x 12.5",
+   "record": {
+    "weightPerUnit": 0.56
+   },
+   "tpe": 12.5,
+   "tpe_mg": 7,
+   "tpe_per_g": 12.5
+  },
+  {
+   "dose": "SM-D17",
+   "name": "1e-9 of noise is forgiven: 7.0000000005 mg is 7",
+   "record": {
+    "weightPerUnit": 1.0
+   },
+   "tpe": 7.0000000005,
+   "tpe_mg": 7,
+   "tpe_per_g": 7.0000000005
+  },
+  {
+   "dose": "SM-D17",
+   "name": "more than 1e-9 over a whole mg rounds up",
+   "record": {
+    "weightPerUnit": 1.0
+   },
+   "tpe": 7.000000002,
+   "tpe_mg": 8,
+   "tpe_per_g": 7.000000002
+  }
+ ]
+}

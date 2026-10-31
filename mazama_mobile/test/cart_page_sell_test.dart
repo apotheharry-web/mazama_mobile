@@ -10,6 +10,7 @@ import 'package:mazama_mobile/flow/flow_spec.dart';
 import 'package:mazama_mobile/packages_client.dart';
 import 'package:mazama_mobile/state_packages_client.dart';
 import 'package:mazama_mobile/sale_log_client.dart';
+import 'package:mazama_mobile/selling.dart' show doseSecondary;
 import 'package:mazama_mobile/sellability.dart';
 import 'package:mazama_mobile/server_health.dart';
 import 'package:mazama_mobile/server_outbox.dart';
@@ -291,6 +292,166 @@ void main() {
 
       expect(find.text('Nothing in the cart yet.'), findsOneWidget);
       expect(find.textContaining('Sale recorded'), findsOneWidget);
+    });
+
+    group('one draw across the whole cart: the cap on the lots drawn, and lines of one product sharing its lots', () {
+      Package lot(int id, int quantity, {double weightPerUnit = 5.0, double analyteWeight = 0.5}) => Package(
+          productGuid: 'PKPR-ab12c', productType: 'Extract', id: id, weightPerUnit: weightPerUnit,
+          analyteWeight: analyteWeight, quantity: quantity);
+
+      Map<String, Object?> record(Package p, {int? quantity}) => {
+            'id': p.id, 'productGuid': p.productGuid, 'productType': p.productType, 'weightPerUnit': p.weightPerUnit,
+            'analyteWeight': p.analyteWeight, 'quantity': quantity ?? p.quantity, 'serviceCenterId': 231, 'zeroOut': false,
+            'locked': false, 'flagged': false, 'pendingTransfer': false,
+          };
+
+      /// Adds PKPR-ab12c as a secondary dose (a line of its own beside an initial-dose one), leaving the line dialog
+      /// open when [closeLabel] is false (the add refused).
+      Future<void> addSecondary(WidgetTester tester, String qty, {bool closeLabel = true}) async {
+        await tester.enterText(find.widgetWithText(TextField, 'PKPR'), 'ab12c');
+        await tester.tap(find.widgetWithText(FilledButton, 'Add'));
+        await tester.pumpAndSettle();
+        await tester.enterText(find.widgetWithText(TextFormField, 'Quantity'), qty);
+        await tester.enterText(find.widgetWithText(TextFormField, 'Price each'), '10.00');
+        await tester.tap(find.text('Secondary dose'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.descendant(of: find.byType(AlertDialog), matching: find.widgetWithText(FilledButton, 'Add')));
+        await tester.pumpAndSettle();
+        if (closeLabel) {
+          await tester.tap(find.widgetWithText(TextButton, 'Close'));
+          await tester.pumpAndSettle();
+        }
+      }
+
+      /// Opens the cart on [lots] (the state answering [reread] after the load, [age] later), runs [fill], then presses
+      /// Sell and, when the confirmation shows, Confirm sale. -> the fake state (what was posted).
+      Future<FakeState> sell(WidgetTester tester, List<Package> lots, Future<void> Function() fill,
+          {int created = 1, Duration age = Duration.zero, Future<List<Object?>> Function()? reread}) async {
+        final fake = FakeState();
+        final login = await runFlow(loginSpec, 'login', {'email': fakeEmail, 'password': fakePassword}, client: fake.client());
+        fake.data['CreateSalesRecords/false'] = [for (var i = 0; i < created; i++) {'id': 9001 + i, 'saleNumber': 'S-1'}];
+        var clock = DateTime.now();
+        var loaded = false;
+        await tester.pumpWidget(cartPage(
+          fetchPackages: (id) async => lots,
+          fetchRawPackagesFromState: (id, {required accessToken}) async {
+            if (!loaded || reread == null) return [for (final p in lots) record(p)];
+            return reread();
+          },
+          now: () => clock,
+          session: freshSession(accessToken: login['access_token'] as String),
+          saleSpec: Future.value(realSaleSpec),
+          httpClientFactory: fake.client,
+        ));
+        await tester.pumpAndSettle();
+        loaded = true;
+        clock = clock.add(age);
+        await fill();
+        await tester.tap(find.widgetWithText(FilledButton, 'Sell'));
+        await tester.pumpAndSettle();
+        if (find.widgetWithText(FilledButton, 'Confirm sale').evaluate().isNotEmpty) {
+          await tester.tap(find.widgetWithText(FilledButton, 'Confirm sale'));
+          await tester.pumpAndSettle();
+        }
+        return fake;
+      }
+
+      List<(Object?, Object?, Object?)> sent(FakeState fake) => [
+            for (final r in (fake.posted.single.$2 as List).cast<Map<String, Object?>>())
+              (r['productId'], r['numberSold'], r['secondaryDose']),
+          ];
+
+      testWidgets('a line that spills onto a stronger lot over 50 mg is refused before the confirmation, nothing sent',
+          (tester) async {
+        // lot 201 (drawn first, the smaller): 2 units at 10 mg; lot 202: 24 mg a unit. 4 units: 40 mg on the first
+        // lot's figure, 2 x 10 + 2 x 24 = 68 mg as the records would send it
+        final lots = [lot(201, 2, weightPerUnit: 1.0, analyteWeight: 10.0), lot(202, 10, weightPerUnit: 2.0, analyteWeight: 12.0)];
+        final fake = await sell(tester, lots, () => addLine(tester, pkpr: 'ab12c', qty: '4', price: '10.00'));
+
+        expect(
+            find.text('This sale draws later lots and would total 68.0 mg psilocybin - more than the 50 mg limit per sale '
+                '(mg TPE is not subject to this cap). Nothing was sent.'),
+            findsOneWidget);
+        expect(find.byType(AlertDialog), findsNothing); // never got as far as confirming
+        expect(fake.posted, isEmpty);
+        expect(find.text('Nothing in the cart yet.'), findsNothing);
+      });
+
+      testWidgets('a line that spills onto another lot within 50 mg sells as before, one record per lot', (tester) async {
+        final lots = [lot(201, 2, weightPerUnit: 1.0, analyteWeight: 10.0), lot(202, 10, weightPerUnit: 1.0, analyteWeight: 12.0)];
+        final fake = await sell(tester, lots, () => addLine(tester, pkpr: 'ab12c', qty: '4', price: '10.00'), created: 2);
+
+        expect(sent(fake), [(201, 2, 0), (202, 2, 0)]); // 20 + 24 = 44 mg
+        expect(find.textContaining('Sale recorded'), findsOneWidget);
+      });
+
+      testWidgets("SALE-4: a secondary-dose line can't take units the initial-dose line already holds", (tester) async {
+        await tester.pumpWidget(cartPage(fetchPackages: (id) async => [lot(101, 3)]));
+        await tester.pumpAndSettle();
+        await addLine(tester, pkpr: 'ab12c', qty: '3', price: '10.00');
+        await addSecondary(tester, '3', closeLabel: false);
+
+        expect(find.text('Only 3 in stock, 3 of them already in the cart - reduce the quantity.'), findsOneWidget);
+        await tester.tap(find.descendant(of: find.byType(AlertDialog), matching: find.widgetWithText(TextButton, 'Cancel')));
+        await tester.pumpAndSettle();
+        expect(find.textContaining('3 x \$10.00'), findsOneWidget); // only the initial-dose line
+      });
+
+      testWidgets('SALE-4: initial and secondary lines over two lots draw the first lot, then the second', (tester) async {
+        final fake = await sell(tester, [lot(101, 3), lot(105, 3)], () async {
+          await addLine(tester, pkpr: 'ab12c', qty: '3', price: '10.00');
+          await addSecondary(tester, '3');
+        }, created: 2);
+
+        expect(sent(fake), [(101, 3, 0), (105, 3, 3)]); // never 3 + 3 on lot 101
+        expect(find.textContaining('Sale recorded'), findsOneWidget);
+      });
+
+      testWidgets("SALE-4: a saved cart whose two lines of one product need more than its lot holds is refused, nothing sent",
+          (tester) async {
+        final three = lot(101, 3);
+        final cartStore = CartStore(dataDir: () => tempDir);
+        await cartStore.save(center.id, [
+          CartLine(group: PkprGroup([three]), qty: 3, priceCentsEach: 1000),
+          CartLine(group: PkprGroup([three]), qty: 3, priceCentsEach: 1000, dose: doseSecondary),
+        ]);
+        final fake = FakeState();
+        await tester.pumpWidget(cartPage(fetchPackages: (id) async => [three], cartStore: cartStore, httpClientFactory: fake.client));
+        await tester.pumpAndSettle();
+        ScaffoldMessenger.of(tester.element(find.byType(CartPage))).clearSnackBars();
+        await tester.pumpAndSettle();
+        await tester.tap(find.widgetWithText(FilledButton, 'Sell'));
+        await tester.pumpAndSettle();
+
+        expect(find.text("Only 3 of PKPR-ab12c in stock: the cart's 2 lines of it need 6. Reduce them. Nothing was sent."),
+            findsOneWidget);
+        expect(find.byType(AlertDialog), findsNothing);
+        expect(fake.posted, isEmpty);
+      });
+
+      testWidgets("SALE-4: the stock read again checks a lot for every line's units together (SM-25)", (tester) async {
+        final ten = lot(101, 10);
+        // 3 left since: each line's 2 fits, the cart's 4 doesn't
+        final fake = await sell(tester, [ten], () async {
+          await addLine(tester, pkpr: 'ab12c', qty: '2', price: '10.00');
+          await addSecondary(tester, '2');
+        }, age: const Duration(minutes: 6), reread: () async => [record(ten, quantity: 3)]);
+
+        expect(fake.posted, isEmpty);
+        expect(find.textContaining(saleLineRefusal(record(ten, quantity: 3), 'PKPR-ab12c', 4)!), findsOneWidget);
+        expect(find.textContaining('Sale recorded'), findsNothing);
+      });
+
+      testWidgets('SALE-4: the stock read again with enough for every line sends them all', (tester) async {
+        final ten = lot(101, 10);
+        final fake = await sell(tester, [ten], () async {
+          await addLine(tester, pkpr: 'ab12c', qty: '2', price: '10.00');
+          await addSecondary(tester, '2');
+        }, created: 2, age: const Duration(minutes: 6), reread: () async => [record(ten, quantity: 4)]);
+
+        expect(sent(fake), [(101, 2, 0), (101, 2, 2)]);
+        expect(find.textContaining('Sale recorded'), findsOneWidget);
+      });
     });
 
     testWidgets('a confirmed sale posts the attribution log with the worker\'s email, the request and the response',

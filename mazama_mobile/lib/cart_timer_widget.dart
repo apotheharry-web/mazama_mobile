@@ -13,14 +13,15 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import 'cart_page.dart' show sessionTimerMaxAge;
-import 'cart_pricing.dart' show minSessionDuration;
+import 'dose.dart' show SessionDose;
 
 /// The snapshot's format. The native readers ignore a snapshot whose version they don't know.
 const cartTimerSnapshotVersion = 1;
 
 /// One cart as the widget is told about it: [start] null when its timer isn't running; [dose] what its session is
-/// timed against (its lines, or what it last sold - CartPage._cartSummaries, MC-D14), null when there's none.
-typedef CartTimerSource = ({String id, String name, DateTime? start, ({double psilocybinMg, bool booster})? dose});
+/// timed against (its lines, or what it last sold - CartPage._cartSummaries, MC-D14: the core's session length, worked
+/// out once per change), null when there's none.
+typedef CartTimerSource = ({String id, String name, DateTime? start, SessionDose? dose});
 
 /// What the widget shows for [center] at [now]: every cart in [carts] whose timer is running, in that order. A timer
 /// past sessionTimerMaxAge is left out, as the carts list leaves it out. `endMs` is there only when the session table
@@ -37,7 +38,8 @@ Map<String, Object?> cartTimerSnapshot({
     final start = c.start;
     if (start == null || now.difference(start) >= sessionTimerMaxAge) continue;
     final dose = c.dose;
-    final length = dose == null ? null : minSessionDuration(dose.psilocybinMg);
+    final minutes = dose?.minutes;
+    final length = minutes == null ? null : Duration(minutes: minutes);
     out.add({
       'id': c.id,
       'name': c.name,

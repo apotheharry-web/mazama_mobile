@@ -7,7 +7,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'cart_slots.dart' show cartFileName, defaultCartId;
+import 'dose.dart' show SessionDose, keptMgLimits, sessionDoseOf;
 import 'local_store.dart';
+import 'mazama_core.dart' show CoreFunctions;
 import 'session_store.dart' show defaultSessionDataDir;
 
 class SessionTimerStore {
@@ -67,17 +69,39 @@ class SessionTimerStore {
   String _doseName(String cartId) => cartFileName('session_dose', cartId);
 
   /// What a cart just sold, for timing its client's session once the sold cart is empty (specs/multi-cart MC-D14):
-  /// [psilocybinMg], raw mg psilocybin with every dose, and whether any of it was a secondary dose ([booster]).
-  /// Overwrites whatever that cart sold before; forgotten by [clear].
+  /// [psilocybinMg], raw mg psilocybin with every dose, whether any of it was a secondary dose ([booster]) and, since
+  /// specs/core row 5, the session length the core gave for it ([minutes]; null: none). Overwrites whatever that cart
+  /// sold before; forgotten by [clear].
   Future<void> saveSoldDose(int centerId, double psilocybinMg,
-      {required bool booster, String cartId = defaultCartId, DateTime Function() now = DateTime.now}) async {
+      {required bool booster, String cartId = defaultCartId, DateTime Function() now = DateTime.now, int? minutes}) async {
     final name = _doseName(cartId);
     _store.write(name, jsonEncode({
       'centerId': centerId,
       'psilocybinMg': psilocybinMg,
       'booster': booster,
       'savedAtMs': now().millisecondsSinceEpoch,
+      if (minutes != null) 'minutes': minutes,
     }));
+  }
+
+  /// The session [saveSoldDose] last kept for the cart, as it is timed (MC-D14), or null when [loadSoldDose] has none:
+  /// its kept minutes; for a dose an older build kept (a total only, no minutes), the core's length for that total
+  /// (dose.dart's keptMgLimits), never shorter than its own, or the longest when the core can't answer (DOSE-7).
+  Future<SessionDose?> loadSoldSession(int centerId,
+      {String cartId = defaultCartId, Duration? maxAge, DateTime Function() now = DateTime.now, CoreFunctions? core}) async {
+    final dose = await loadSoldDose(centerId, cartId: cartId, maxAge: maxAge, now: now);
+    if (dose == null) return null;
+    int? minutes;
+    try {
+      final d = jsonDecode(_store.read(_doseName(cartId))?.body ?? 'null');
+      if (d is Map && d['minutes'] is int) minutes = d['minutes'] as int;
+    } on FileSystemException {
+      minutes = null;
+    } on FormatException {
+      minutes = null;
+    }
+    if (minutes != null) return (minutes: minutes, booster: dose.booster, unknown: false);
+    return sessionDoseOf(keptMgLimits(dose.psilocybinMg, core: core), booster: dose.booster);
   }
 
   /// The dose [saveSoldDose] last kept for the cart, or null: nothing kept, unreadable, another center's, or kept

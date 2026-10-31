@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "selling.parse_sale_date input",
+  "description": "A typed sale date (SM-D6).",
+  "type": "object",
+  "required": [
+    "text",
+    "today"
+  ],
+  "properties": {
+    "text": {
+      "type": "string"
+    },
+    "today": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+    }
+  }
+}

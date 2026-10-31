@@ -61,10 +61,14 @@ class StockLoad {
 
 /// Why a package record with units on hand won't be sold, in the few words the server's "Other stock" uses
 /// (stockdata.held_back_reason: unsellable_reason without "package is/has a"); null when it has none on hand, or sells.
-String? heldBackReason(Map<String, Object?> record) {
+String? heldBackReason(Map<String, Object?> record) => _hasUnits(record) ? _heldBack(unsellableReason(record)) : null;
+
+bool _hasUnits(Map<String, Object?> record) {
   final q = record['quantity'];
-  if (record['zeroOut'] == true || !(q is num && q > 0)) return null;
-  final why = unsellableReason(record);
+  return record['zeroOut'] != true && q is num && q > 0;
+}
+
+String? _heldBack(String? why) {
   if (why == null) return null;
   var w = why;
   for (final prefix in ['package ', 'is ', 'has a ']) {
@@ -128,11 +132,12 @@ List<StockRow> stockRowsFromState(
 }) {
   final rows = <StockRow>[];
   final keys = packagedProductKeys(stateRecords);
+  final why = unsellableReasons(stateRecords); // one core call for the list (CR-D5)
   for (var i = 0; i < stateRecords.length; i++) {
     final r = stateRecords[i];
     final key = keys[i];
     // SM-21: a record the server skips; SP-D9: one it won't sell (locked, flagged, pending a transfer, no units)
-    if (key == null || !isSellable(r)) continue;
+    if (key == null || why[i] != null) continue;
     rows.add(_stateRow(r, key, mazamaLicenses, today, strainOf));
   }
   return rows;
@@ -144,13 +149,16 @@ List<({StockRow row, String reason})> heldBackFromState(
   Set<String>? mazamaLicenses,
   DateTime today, {
   String Function(String? name)? strainOf,
-}) =>
-    [
-      for (final (i, key) in packagedProductKeys(stateRecords).indexed)
-        if (key != null)
-          if (heldBackReason(stateRecords[i]) case final why?)
-            (row: _stateRow(stateRecords[i], key, mazamaLicenses, today, strainOf), reason: why),
-    ];
+}) {
+  final keys = packagedProductKeys(stateRecords);
+  final withUnits = [for (final (i, key) in keys.indexed) if (key != null && _hasUnits(stateRecords[i])) i];
+  final why = unsellableReasons([for (final i in withUnits) stateRecords[i]]); // one core call (CR-D5)
+  return [
+    for (final (n, i) in withUnits.indexed)
+      if (_heldBack(why[n]) case final reason?)
+        (row: _stateRow(stateRecords[i], keys[i]!, mazamaLicenses, today, strainOf), reason: reason),
+  ];
+}
 
 StockRow _stateRow(Map<String, Object?> r, ({int stateId, String pkpr}) key, Set<String>? mazamaLicenses, DateTime today,
     String Function(String? name)? strainOf) {

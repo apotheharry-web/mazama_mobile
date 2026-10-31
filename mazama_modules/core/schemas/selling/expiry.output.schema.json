@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "selling.expiry output",
+  "description": "Expired from the day after; its words and colour.",
+  "type": "object",
+  "required": [
+    "expired",
+    "words",
+    "hue"
+  ],
+  "properties": {
+    "expired": {
+      "type": "boolean"
+    },
+    "words": {
+      "type": "string"
+    },
+    "hue": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 120
+    }
+  }
+}

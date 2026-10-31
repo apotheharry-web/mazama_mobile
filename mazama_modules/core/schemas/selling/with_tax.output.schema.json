@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "selling.with_tax output",
+  "description": "The amount with the tax on top, half up to the cent.",
+  "type": "object",
+  "required": [
+    "cents"
+  ],
+  "properties": {
+    "cents": {
+      "type": "integer"
+    }
+  }
+}

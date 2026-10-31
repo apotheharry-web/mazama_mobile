@@ -563,6 +563,8 @@ class _SelectCenterPageState extends State<SelectCenterPage> {
             fetchRawPackagesFromState: widget.fetchRawPackagesFromState,
             uploadInventorySnapshot: widget.uploadInventorySnapshot,
             submitCoaForLot: widget.submitCoaForLot,
+            // PRICE-9: the server's cart settings, else the last ones kept on this phone
+            fetchCartSettings: (stateId) => center_status_client.fetchCartSettings(stateId, datasets: widget.datasets),
             onDraftCountChanged: onDraftCountChanged,
             health: _health,
             featureTable: widget.featureTable,

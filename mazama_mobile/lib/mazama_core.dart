@@ -8,8 +8,8 @@
 //
 // The functions are the core's table (mazama_modules/core/functions.yaml), generated into mazama_core.g.dart as
 // [CoreFunctions]; [MazamaCore] is the library's, and the typed helpers below ([CoreHelpers]) work on any
-// CoreFunctions, so a test's fake gets them too. Errors from the library come back as {"error": ...} and are thrown
-// here as [MazamaCoreError].
+// CoreFunctions, so a test's fake gets them too. Errors from the library come back as {"error": ...} (that one key
+// alone) and are thrown here as [MazamaCoreError].
 import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
@@ -103,7 +103,11 @@ class MazamaCore implements CoreFunctions {
     final arg = input.toNativeUtf8();
     try {
       final reply = _decode(_take(fn(arg)));
-      if (reply is Map) {
+      // The library's own failure is an object with "error" as its only key (mazama_core_ffi's `error`). An answer
+      // may carry an "error" of its own beside other keys (selling.price_cart, selling.line_price: a typed figure the
+      // rule refuses, {"each": null, "line_errors": [...], "error": "total"}): that is the function's answer, never
+      // a failure of the library.
+      if (reply is Map && reply.length == 1) {
         if (reply['error'] case final Object error) throw MazamaCoreError(error.toString());
       }
       return reply;
@@ -161,7 +165,75 @@ class MazamaCore implements CoreFunctions {
   @override
   Map<String, Object?> manufacturingCleanText(Map<String, Object?> input) => _fns.manufacturingCleanText(input);
   @override
+  List<Object?> manufacturingPlan(Map<String, Object?> input) => _fns.manufacturingPlan(input);
+  @override
+  Map<String, Object?> manufacturingServingTable(Map<String, Object?> input) => _fns.manufacturingServingTable(input);
+  @override
   Map<String, Object?> namesProductName(Map<String, Object?> input) => _fns.namesProductName(input);
+  @override
+  Map<String, Object?> flowsHostAllowed(Map<String, Object?> input) => _fns.flowsHostAllowed(input);
+  @override
+  Map<String, Object?> flowsCompareSpecVersions(Map<String, Object?> input) => _fns.flowsCompareSpecVersions(input);
+  @override
+  Map<String, Object?> flowsParseHostList(Map<String, Object?> input) => _fns.flowsParseHostList(input);
+  @override
+  Map<String, Object?> flowsVerifySignature(Map<String, Object?> input) => _fns.flowsVerifySignature(input);
+  @override
+  Map<String, Object?> flowsPublicKey(Map<String, Object?> input) => _fns.flowsPublicKey(input);
+  @override
+  Map<String, Object?> flowsUsableLoginSpec(Map<String, Object?> input) => _fns.flowsUsableLoginSpec(input);
+  @override
+  List<Object?> sellingSellable(Map<String, Object?> input) => _fns.sellingSellable(input);
+  @override
+  Map<String, Object?> sellingParsePrice(Map<String, Object?> input) => _fns.sellingParsePrice(input);
+  @override
+  Map<String, Object?> sellingPriceCart(Map<String, Object?> input) => _fns.sellingPriceCart(input);
+  @override
+  Map<String, Object?> sellingLinePrice(Map<String, Object?> input) => _fns.sellingLinePrice(input);
+  @override
+  Map<String, Object?> sellingGroupOf(Map<String, Object?> input) => _fns.sellingGroupOf(input);
+  @override
+  Map<String, Object?> sellingShareTotal(Map<String, Object?> input) => _fns.sellingShareTotal(input);
+  @override
+  Map<String, Object?> sellingPerMgPrice(Map<String, Object?> input) => _fns.sellingPerMgPrice(input);
+  @override
+  Map<String, Object?> sellingWithTax(Map<String, Object?> input) => _fns.sellingWithTax(input);
+  @override
+  Map<String, Object?> sellingMoney(Map<String, Object?> input) => _fns.sellingMoney(input);
+  @override
+  Map<String, Object?> sellingAllocate(Map<String, Object?> input) => _fns.sellingAllocate(input);
+  @override
+  Map<String, Object?> sellingBuildSale(Map<String, Object?> input) => _fns.sellingBuildSale(input);
+  @override
+  Map<String, Object?> sellingAllocateSale(Map<String, Object?> input) => _fns.sellingAllocateSale(input);
+  @override
+  Map<String, Object?> sellingCheckSale(Map<String, Object?> input) => _fns.sellingCheckSale(input);
+  @override
+  Map<String, Object?> sellingParseSaleDate(Map<String, Object?> input) => _fns.sellingParseSaleDate(input);
+  @override
+  Map<String, Object?> sellingCheckSaleDate(Map<String, Object?> input) => _fns.sellingCheckSaleDate(input);
+  @override
+  Map<String, Object?> sellingToday(Map<String, Object?> input) => _fns.sellingToday(input);
+  @override
+  Map<String, Object?> sellingPacificMidnight(Map<String, Object?> input) => _fns.sellingPacificMidnight(input);
+  @override
+  Map<String, Object?> sellingReviewSaleDate(Map<String, Object?> input) => _fns.sellingReviewSaleDate(input);
+  @override
+  Map<String, Object?> sellingSaleOutcome(Map<String, Object?> input) => _fns.sellingSaleOutcome(input);
+  @override
+  Map<String, Object?> sellingSaleProof(Map<String, Object?> input) => _fns.sellingSaleProof(input);
+  @override
+  Map<String, Object?> sellingReviewEach(Map<String, Object?> input) => _fns.sellingReviewEach(input);
+  @override
+  Map<String, Object?> sellingExpiry(Map<String, Object?> input) => _fns.sellingExpiry(input);
+  @override
+  Map<String, Object?> sellingParseStateDate(Map<String, Object?> input) => _fns.sellingParseStateDate(input);
+  @override
+  List<Object?> doseUnitMg(Map<String, Object?> input) => _fns.doseUnitMg(input);
+  @override
+  List<Object?> doseCeilMg(Map<String, Object?> input) => _fns.doseCeilMg(input);
+  @override
+  List<Object?> doseSaleLimits(Map<String, Object?> input) => _fns.doseSaleLimits(input);
 }
 
 Object? _decode(String text) {

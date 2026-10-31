@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "selling.price_cart output",
+  "description": "Every line's price each, or why the cart can't be priced.",
+  "type": "object",
+  "required": [
+    "each",
+    "line_errors",
+    "error"
+  ],
+  "properties": {
+    "each": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "integer"
+      },
+      "description": "One price per unit for every line, in cents, or null."
+    },
+    "line_errors": {
+      "type": "array",
+      "items": {
+        "enum": [
+          null,
+          "no_mg"
+        ]
+      }
+    },
+    "error": {
+      "enum": [
+        null,
+        "empty",
+        "total",
+        "rate",
+        "no_mg",
+        "unit_cap"
+      ]
+    }
+  }
+}

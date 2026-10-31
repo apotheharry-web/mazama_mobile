@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "dose.ceil_mg input",
+  "description": "mg figures to round up to a whole mg, in order.",
+  "type": "object",
+  "required": [
+    "xs"
+  ],
+  "properties": {
+    "xs": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    }
+  }
+}

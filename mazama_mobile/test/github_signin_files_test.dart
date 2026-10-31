@@ -112,8 +112,9 @@ void main() {
   });
 
   test('the GitHub hosts can never be listed as sign-in hosts (review I2)', () {
-    expect(githubHostsNeverListed, containsAll({...apkRedirectHosts, Uri.parse(githubFilesBase).host}));
-    for (final h in githubHostsNeverListed) {
+    // the hosts the app reads signed files and updates from, and the ones GitHub serves them from: the core refuses all
+    final github = {...apkRedirectHosts, Uri.parse(githubFilesBase).host, 'github.com', 'raw.githubusercontent.com'};
+    for (final h in github) {
       expect(validListedHost(h), isFalse, reason: h);
       expect(() => parseHostList(hostListText('2026-11-01.1', [h])), throwsFormatException, reason: h);
     }

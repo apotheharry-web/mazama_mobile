@@ -1,9 +1,14 @@
 // Item 3a of "mazama_sales no longer auto-syncs every 12 hours": for a CONFIGURED service center, CartPage
 // posts its own state-system read of this center's inventory (state_packages_client.dart's
-// fetchRawPackagesFromState - the raw records, unreshaped) to mazama_sales' own POST /p/inventory/{stateId}
-// after every such read, so the mirror stays current from the worker's own device instead of waiting on this
-// server's own (now possibly manual-only) sync. PUBLIC and unauthenticated like the app's other /p/ calls -
-// see mazama_sales' web/stock_pages.py's own inventory_upload docstring for the server-side half.
+// fetchRawPackagesFromState - the raw records, unreshaped) to mazama_sales after every such read, so the mirror stays
+// current from the worker's own device instead of waiting on this server's own (now possibly manual-only) sync.
+// PUBLIC and unauthenticated like the app's other /p/ calls - see mazama_sales' web/stock_pages.py's ingest_upload
+// for the server-side half.
+// Since specs/phone-sync Task 8b Step 6 (PS-D7, specs/ingest IN-R7) the snapshot goes to the ingest route's
+// `packaged` dataset, POST /p/ingest/packaged/{stateId} (routes.yaml C20), with the same body and the same answers as
+// POST /p/inventory/{stateId} (C3), which the server keeps for older builds (CW-D5) and this build no longer calls.
+// Every sender of the snapshot comes here (the cart's upload, the catch-up queue's sender for what the center_stock
+// refresher or an older build kept), so the route is chosen at send time and a kept snapshot never names one.
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
@@ -25,17 +30,21 @@ class InventoryUploadError implements ServerRequestError {
   String toString() => message;
 }
 
+/// The ingest dataset this client sends (routes.yaml C20's `{dataset}`): a center's packaged products, a full listing
+/// (rows it lacks leave the center's stock, specs/ingest IN-D6, as C3's upload did).
+const packagedDataset = 'packaged';
 
 /// POSTs `records` (the state system's own raw packaged-product records for this center, exactly as
-/// fetchRawPackagesFromState returned them) to /p/inventory/{stateId}, wrapped with `workerEmail`/`deviceId`
+/// fetchRawPackagesFromState returned them) to /p/ingest/packaged/{stateId}, wrapped with `workerEmail`/`deviceId`
 /// so this write - which replaces the whole packaged-product mirror for a center - is attributed to a real
 /// worker and device in sync_run/the audit trail instead of landing as SYSTEM (the same convention
 /// public_sale_log/public_sale_failure already use). -> {'rows': n, 'skipped': n}, the server's own summary
 /// of what it applied. Throws [InventoryUploadError] on anything but a clean 200 JSON object - including a
 /// 404 (not a configured center; this should never actually happen for a call CartPage only makes after
-/// centerIsConfigured already said yes, but the server still checks) and a 409 (another sync is already
-/// running there right now - the caller should simply drop this attempt, not retry immediately; the next
-/// state read will post a fresher snapshot anyway).
+/// centerIsConfigured already said yes, but the server still checks) and a 429 (another sync held the
+/// center's stock too long, or the route's budget is spent - the caller should simply drop this attempt, not
+/// retry immediately; the next state read will post a fresher snapshot anyway). A phone not yet approved gets
+/// `{'rows': 0, 'skipped': 0, 'held': true}` (nothing applied; done, nothing to retry).
 Future<Map<String, Object?>> uploadInventorySnapshot(
   int stateId,
   List<Object?> records, {
@@ -44,15 +53,15 @@ Future<Map<String, Object?>> uploadInventorySnapshot(
   String baseUrl = apiBaseUrl,
   http.Client? client,
 }) async {
-  // The server refuses more than inventoryMaxRecords records outright (413, routes.yaml). The upload replaces the
+  // The server refuses more than ingestMaxRecords records outright (413, routes.yaml). The upload replaces the
   // center's whole mirror, so it can't be split: say so here rather than send it.
-  if (records.length > inventoryMaxRecords) {
-    throw InventoryUploadError('${records.length} records is more than the server takes in one upload ($inventoryMaxRecords)');
+  if (records.length > ingestMaxRecords) {
+    throw InventoryUploadError('${records.length} records is more than the server takes in one upload ($ingestMaxRecords)');
   }
   final c = client ?? serverClient();
   final shouldClose = client == null;
   try {
-    final uri = Uri.parse('$baseUrl${inventoryPath(stateId)}');
+    final uri = Uri.parse('$baseUrl${ingestPath(packagedDataset, stateId)}');
     http.Response resp;
     try {
       resp = await c.post(

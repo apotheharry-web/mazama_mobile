@@ -15,7 +15,7 @@ void main() {
     test('lists only carts whose timer is running, in the carts list order', () {
       final snap = cartTimerSnapshot(center: 'Mazama Eugene', now: now, carts: [
         (id: 'main', name: 'Cart 1', start: now.subtract(const Duration(minutes: 5)), dose: null),
-        (id: 'cb', name: 'Cart 2', start: null, dose: (psilocybinMg: 20.0, booster: false)),
+        (id: 'cb', name: 'Cart 2', start: null, dose: (minutes: 240, booster: false, unknown: false)),
         (id: 'cc', name: 'Rosa', start: now.subtract(const Duration(minutes: 1)), dose: null),
       ]);
       expect(snap['version'], 1);
@@ -28,8 +28,9 @@ void main() {
     test('a timer with a dose ends at the session length for that dose (MC-D14)', () {
       final start = now.subtract(const Duration(minutes: 10));
       final snap = cartTimerSnapshot(center: 'C', now: now, carts: [
-        // 20 mg: 4 hours (sessionTable); booster carried through for the "w/ booster" label.
-        (id: 'main', name: 'Cart 1', start: start, dose: (psilocybinMg: 20.0, booster: true)),
+        // 20 mg: 4 hours (the core's session table, worked out by the carts list); booster carried through for the
+        // "w/ booster" label.
+        (id: 'main', name: 'Cart 1', start: start, dose: (minutes: 240, booster: true, unknown: false)),
       ]);
       expect((snap['carts'] as List).single, {
         'id': 'main',
@@ -44,7 +45,7 @@ void main() {
       final start = now.subtract(const Duration(minutes: 3));
       final snap = cartTimerSnapshot(center: 'C', now: now, carts: [
         (id: 'main', name: 'A', start: start, dose: null),
-        (id: 'cb', name: 'B', start: start, dose: (psilocybinMg: 80.0, booster: false)), // over the 50 mg table
+        (id: 'cb', name: 'B', start: start, dose: (minutes: null, booster: false, unknown: false)), // over the 50 mg table: no length
       ]);
       for (final c in snap['carts'] as List) {
         expect((c as Map).containsKey('endMs'), isFalse, reason: '${c['name']}');

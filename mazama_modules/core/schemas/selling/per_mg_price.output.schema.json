@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "selling.per_mg_price output",
+  "description": "rate x mg, half up to the cent.",
+  "type": "object",
+  "required": [
+    "cents"
+  ],
+  "properties": {
+    "cents": {
+      "type": "integer"
+    }
+  }
+}

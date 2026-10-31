@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "selling.sale_outcome output",
+  "description": "How it ends (SM-12).",
+  "type": "object",
+  "required": [
+    "outcome",
+    "sale_number"
+  ],
+  "properties": {
+    "outcome": {
+      "enum": [
+        "not_sent",
+        "uncertain",
+        "recorded"
+      ]
+    },
+    "sale_number": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}

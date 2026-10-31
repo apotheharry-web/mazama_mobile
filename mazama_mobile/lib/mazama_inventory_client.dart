@@ -23,9 +23,6 @@ class MazamaInventoryError implements ServerRequestError {
   String toString() => message;
 }
 
-/// The minor analytes a lot's lab report can show (specs/mazama-inventory MI-D13), in the order the server lists them.
-const minorAnalytes = ['baeocystin', 'norbaeocystin', 'norpsilocin', 'aeruginascin'];
-
 /// One batch or lot behind Mazama's stock, for the page's lot table (MI-R7): its potency in mg per gram (null when
 /// unknown) and the minor analytes its lab report found.
 class MazamaLot {

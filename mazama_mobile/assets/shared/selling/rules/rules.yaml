@@ -57,3 +57,16 @@ expiry:
 # (salejobs.line_refusal; the server's worker re-reads before every sale). A setting, not a fixed rule.
 sale_check:
   recheck_after_minutes: 5
+
+# A sale's date (specs/core row 7, SALE-1, SALE-2): written to the state as Pacific midnight in UTC, by the US
+# daylight-saving rule of 2007 (daylight time from the 2nd Sunday of March to the 1st Sunday of November, switching at
+# 2 am: midnight of the 1st Sunday of November is still daylight time). A sale may be dated today (the Pacific date) or
+# up to backdate_days back, never after. The rule was checked day by day against zoneinfo's America/Los_Angeles up
+# to checked_until_year; mazama_core's tests fail once that year is over, so it is looked at again.
+sale_date:
+  dst_start: {month: 3, sunday: 2}
+  dst_end: {month: 11, sunday: 1}
+  standard_offset_hours: 8
+  daylight_offset_hours: 7
+  backdate_days: 365
+  checked_until_year: 2099

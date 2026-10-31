@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "selling.sale_proof input",
+  "description": "A reply already read, and how many records were sent.",
+  "type": "object",
+  "required": [
+    "reply",
+    "sent"
+  ],
+  "properties": {
+    "reply": {},
+    "sent": {
+      "type": "integer"
+    }
+  }
+}

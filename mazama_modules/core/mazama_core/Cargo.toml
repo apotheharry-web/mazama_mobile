@@ -4,7 +4,12 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+ed25519-dalek = { version = "2", default-features = false, features = ["std"] }
 regex = "1.13.1"
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = { version = "1.0.154", features = ["float_roundtrip"] }
 serde_yaml = "0.9"
+
+[dev-dependencies]
+# raw_value in tests only: the frozen vectors' integers beyond 64 bits are handed to the core as their own digits
+serde_json = { version = "1.0.154", features = ["float_roundtrip", "raw_value"] }

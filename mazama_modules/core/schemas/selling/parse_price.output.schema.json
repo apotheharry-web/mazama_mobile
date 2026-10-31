@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "selling.parse_price output",
+  "description": "The figure in cents, or null.",
+  "type": "object",
+  "required": [
+    "cents"
+  ],
+  "properties": {
+    "cents": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "Whole cents, rounded half up; null when it isn't a price or is over the cap (PRICE-1: compared digit by digit, never overflowing)."
+    }
+  }
+}

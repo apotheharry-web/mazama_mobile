@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "flows.compare_spec_versions output",
+  "description": "-1, 0 or 1: a older than, equal to, newer than b; whether each is well formed.",
+  "type": "object",
+  "required": [
+    "order",
+    "a_valid",
+    "b_valid"
+  ],
+  "properties": {
+    "order": {
+      "enum": [
+        -1,
+        0,
+        1
+      ]
+    },
+    "a_valid": {
+      "type": "boolean"
+    },
+    "b_valid": {
+      "type": "boolean"
+    }
+  }
+}

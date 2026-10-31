@@ -19,6 +19,7 @@ import 'package:mazama_mobile/enrichment_store.dart';
 import 'package:mazama_mobile/features.g.dart';
 import 'package:mazama_mobile/flow/flow_spec.dart';
 import 'package:mazama_mobile/inventory_cache_store.dart';
+import 'package:mazama_mobile/mazama_core.dart';
 import 'package:mazama_mobile/label_client.dart';
 import 'package:mazama_mobile/licenses_client.dart';
 import 'package:mazama_mobile/packages_client.dart';
@@ -104,6 +105,7 @@ Widget cartPage({
   bool Function(String lotGuid)? coaUploadPending,
   Future<bool> Function(int)? centerIsConfigured,
   Future<CartSettings> Function(int)? fetchCartSettings,
+  CoreFunctions? core,
   Future<AdhocInventoryResult> Function({
     required int stateId,
     required String accessToken,
@@ -244,6 +246,8 @@ Widget cartPage({
         centerIsConfigured: centerIsConfigured ?? (stateId) async => true,
         // SM-16: the built-in fallback unless a test sets the server's live values - never a network call.
         fetchCartSettings: fetchCartSettings ?? (stateId) async => CartSettings.fallback,
+        // specs/core row 6: this app's core unless a test gives a fake (PRICE-8)
+        core: core,
         // A test that doesn't exercise the adhoc-COA path (every test above this field was added) never reaches
         // this at all, since centerIsConfigured defaults to true above - throwing is the cheapest fixture and
         // would surface clearly as a bug if that ever stopped being the case.

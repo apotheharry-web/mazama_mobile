@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "flows.compare_spec_versions input",
+  "description": "specs/core row 13: two spec versions; a missing or malformed one sorts below every valid one.",
+  "type": "object",
+  "required": [
+    "a",
+    "b"
+  ],
+  "properties": {
+    "a": {
+      "description": "A spec_version text (YYYY-MM-DD.N); anything else, null included, is malformed."
+    },
+    "b": {
+      "description": "A spec_version text (YYYY-MM-DD.N); anything else, null included, is malformed."
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "flows.public_key input",
+  "description": "specs/core row 13 (SL-D13): a signing.pub file's text.",
+  "type": "object",
+  "required": [
+    "text"
+  ],
+  "properties": {
+    "text": {
+      "type": "string"
+    }
+  }
+}

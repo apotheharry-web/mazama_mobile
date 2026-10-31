@@ -2,6 +2,7 @@
  "workerEmail": "worker@example.com",
  "deviceId": "7f3c2a9e-4b1d-4e8a-9c55-0d2f6b8e1a34",
  "reason": "the session could not be renewed (refresh_token rejected: HTTP 400) - please sign in again.",
+ "outcome": "uncertain",
  "request": [
   {
    "analyteWeight": 7.25,

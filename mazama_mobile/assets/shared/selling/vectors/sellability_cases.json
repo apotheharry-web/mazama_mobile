@@ -1,0 +1,1275 @@
+[
+ {
+  "name": "quantity as text",
+  "qty": 1,
+  "reason": "no units remaining (system reports quantity=3, zeroOut=False)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": "3",
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": false,
+  "sl": "SL-1"
+ },
+ {
+  "name": "quantity as text, all of it",
+  "qty": 3,
+  "reason": "no units remaining (system reports quantity=3, zeroOut=False)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": "3",
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": false,
+  "sl": "SL-1"
+ },
+ {
+  "name": "quantity as empty text",
+  "qty": 1,
+  "reason": "no units remaining (system reports quantity=, zeroOut=False)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": "",
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": false,
+  "sl": "SL-1"
+ },
+ {
+  "name": "quantity as text with a decimal point",
+  "qty": 1,
+  "reason": "no units remaining (system reports quantity=2.5, zeroOut=False)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": "2.5",
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": false,
+  "sl": "SL-1"
+ },
+ {
+  "name": "quantity true",
+  "qty": 1,
+  "reason": "no units remaining (system reports quantity=True, zeroOut=False)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": true,
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": false,
+  "sl": "SL-6"
+ },
+ {
+  "name": "quantity true, two wanted",
+  "qty": 2,
+  "reason": "no units remaining (system reports quantity=True, zeroOut=False)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": true,
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": false,
+  "sl": "SL-6"
+ },
+ {
+  "name": "quantity false",
+  "qty": 1,
+  "reason": "no units remaining (system reports quantity=False, zeroOut=False)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": false,
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": false,
+  "sl": "SL-6"
+ },
+ {
+  "name": "quantity an empty list",
+  "qty": 1,
+  "reason": "no units remaining (system reports quantity=[], zeroOut=False)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": [],
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": false,
+  "sl": "SL-8"
+ },
+ {
+  "name": "quantity a list",
+  "qty": 1,
+  "reason": "no units remaining (system reports quantity=[5], zeroOut=False)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": [
+    5
+   ],
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": false,
+  "sl": "SL-8"
+ },
+ {
+  "name": "quantity an empty object",
+  "qty": 1,
+  "reason": "no units remaining (system reports quantity={}, zeroOut=False)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": {},
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": false,
+  "sl": "SL-8"
+ },
+ {
+  "name": "quantity an object",
+  "qty": 1,
+  "reason": "no units remaining (system reports quantity={\"units\":5}, zeroOut=False)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": {
+    "units": 5
+   },
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": false,
+  "sl": "SL-8"
+ },
+ {
+  "name": "lock reason true",
+  "qty": 1,
+  "reason": "package is locked (True)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": true,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 10,
+   "reasonFlagged": null,
+   "reasonLocked": true,
+   "zeroOut": false
+  },
+  "sellable_record": false,
+  "sl": "SL-2"
+ },
+ {
+  "name": "flag reason true",
+  "qty": 1,
+  "reason": "package is flagged (True)",
+  "record": {
+   "flagged": true,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 10,
+   "reasonFlagged": true,
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": false,
+  "sl": "SL-2"
+ },
+ {
+  "name": "lock reason false",
+  "qty": 1,
+  "reason": "package is locked (no reason)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": true,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 10,
+   "reasonFlagged": null,
+   "reasonLocked": false,
+   "zeroOut": false
+  },
+  "sellable_record": false,
+  "sl": "SL-2"
+ },
+ {
+  "name": "lock reason 0",
+  "qty": 1,
+  "reason": "package is locked (no reason)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": true,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 10,
+   "reasonFlagged": null,
+   "reasonLocked": 0,
+   "zeroOut": false
+  },
+  "sellable_record": false,
+  "sl": "SL-2"
+ },
+ {
+  "name": "lock reason a number",
+  "qty": 1,
+  "reason": "package is locked (7)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": true,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 10,
+   "reasonFlagged": null,
+   "reasonLocked": 7,
+   "zeroOut": false
+  },
+  "sellable_record": false,
+  "sl": "SL-2"
+ },
+ {
+  "name": "lock reason a fraction",
+  "qty": 1,
+  "reason": "package is locked (0.5)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": true,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 10,
+   "reasonFlagged": null,
+   "reasonLocked": 0.5,
+   "zeroOut": false
+  },
+  "sellable_record": false,
+  "sl": "SL-2"
+ },
+ {
+  "name": "lock reason a list",
+  "qty": 1,
+  "reason": "package is locked ([\"a\",1])",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": true,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 10,
+   "reasonFlagged": null,
+   "reasonLocked": [
+    "a",
+    1
+   ],
+   "zeroOut": false
+  },
+  "sellable_record": false,
+  "sl": "SL-10"
+ },
+ {
+  "name": "lock reason an object, keys sorted",
+  "qty": 1,
+  "reason": "package is locked ({\"a\":\"x\",\"b\":1})",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": true,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 10,
+   "reasonFlagged": null,
+   "reasonLocked": {
+    "a": "x",
+    "b": 1
+   },
+   "zeroOut": false
+  },
+  "sellable_record": false,
+  "sl": "SL-10"
+ },
+ {
+  "name": "flag reason nested, text quoted as JSON",
+  "qty": 1,
+  "reason": "package is flagged ({\"a\":\"é \\\"q\\\"\\n\\t\\u0001\\\\\",\"z\":[1.5,null,true,1e-07]})",
+  "record": {
+   "flagged": true,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 10,
+   "reasonFlagged": {
+    "a": "é \"q\"\n\t\u0001\\",
+    "z": [
+     1.5,
+     null,
+     true,
+     1e-07
+    ]
+   },
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": false,
+  "sl": "SL-10"
+ },
+ {
+  "name": "flag reason an empty list",
+  "qty": 1,
+  "reason": "package is flagged (no reason)",
+  "record": {
+   "flagged": true,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 10,
+   "reasonFlagged": [],
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": false,
+  "sl": "SL-10"
+ },
+ {
+  "name": "lock reason a list holding a big integer",
+  "qty": 1,
+  "reason": "package is locked ([1.1805916207174113e+21,-9223372036854775808,9.223372036854776e+18])",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": true,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 10,
+   "reasonFlagged": null,
+   "reasonLocked": [
+    1180591620717411303424,
+    -9223372036854775808,
+    9223372036854775808
+   ],
+   "zeroOut": false
+  },
+  "sellable_record": false,
+  "sl": "SL-10"
+ },
+ {
+  "name": "quantity a tiny fraction",
+  "qty": 1,
+  "reason": "no units remaining (system reports quantity=1e-07, zeroOut=False)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 1e-07,
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": false,
+  "sl": "SL-3"
+ },
+ {
+  "name": "quantity 1e20, zeroed out",
+  "qty": 1,
+  "reason": "no units remaining (system reports quantity=1e+20, zeroOut=True)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 1e+20,
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": true
+  },
+  "sellable_record": false,
+  "sl": "SL-3"
+ },
+ {
+  "name": "quantity 1e16, zeroed out",
+  "qty": 1,
+  "reason": "no units remaining (system reports quantity=1e+16, zeroOut=True)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 1e+16,
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": true
+  },
+  "sellable_record": false,
+  "sl": "SL-3"
+ },
+ {
+  "name": "quantity 1e15, zeroed out",
+  "qty": 1,
+  "reason": "no units remaining (system reports quantity=1000000000000000.0, zeroOut=True)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 1000000000000000.0,
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": true
+  },
+  "sellable_record": false,
+  "sl": "SL-3"
+ },
+ {
+  "name": "quantity 0.1",
+  "qty": 1,
+  "reason": "no units remaining (system reports quantity=0.1, zeroOut=False)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 0.1,
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": false,
+  "sl": "SL-3"
+ },
+ {
+  "name": "quantity 2.0, three wanted",
+  "qty": 3,
+  "reason": "no units remaining (system reports quantity=2.0, zeroOut=False)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 2.0,
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": true,
+  "sl": "SL-3"
+ },
+ {
+  "name": "quantity -0.0",
+  "qty": 1,
+  "reason": "no units remaining (system reports quantity=-0.0, zeroOut=False)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": -0.0,
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": false,
+  "sl": "SL-3"
+ },
+ {
+  "name": "quantity 0.0001",
+  "qty": 1,
+  "reason": "no units remaining (system reports quantity=0.0001, zeroOut=False)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 0.0001,
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": false,
+  "sl": "SL-3"
+ },
+ {
+  "name": "quantity 1e-05",
+  "qty": 1,
+  "reason": "no units remaining (system reports quantity=1e-05, zeroOut=False)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 1e-05,
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": false,
+  "sl": "SL-3"
+ },
+ {
+  "name": "quantity 1e300, zeroed out",
+  "qty": 1,
+  "reason": "no units remaining (system reports quantity=1e+300, zeroOut=True)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 1e+300,
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": true
+  },
+  "sellable_record": false,
+  "sl": "SL-3"
+ },
+ {
+  "name": "zeroOut a fraction",
+  "qty": 1,
+  "reason": "no units remaining (system reports quantity=10, zeroOut=0.5)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 10,
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": 0.5
+  },
+  "sellable_record": false,
+  "sl": "SL-3"
+ },
+ {
+  "name": "quantity beyond 64 bits, zeroed out",
+  "qty": 1,
+  "reason": "no units remaining (system reports quantity=1.1805916207174113e+21, zeroOut=True)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 1180591620717411303424,
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": true
+  },
+  "sellable_record": false,
+  "sl": "SL-9"
+ },
+ {
+  "name": "quantity 2**63, zeroed out",
+  "qty": 1,
+  "reason": "no units remaining (system reports quantity=9.223372036854776e+18, zeroOut=True)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 9223372036854775808,
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": true
+  },
+  "sellable_record": false,
+  "sl": "SL-9"
+ },
+ {
+  "name": "quantity the largest 64-bit integer, zeroed out",
+  "qty": 1,
+  "reason": "no units remaining (system reports quantity=9223372036854775807, zeroOut=True)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 9223372036854775807,
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": true
+  },
+  "sellable_record": false,
+  "sl": "SL-9"
+ },
+ {
+  "name": "quantity the smallest 64-bit integer",
+  "qty": 1,
+  "reason": "no units remaining (system reports quantity=-9223372036854775808, zeroOut=False)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": -9223372036854775808,
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": false,
+  "sl": "SL-9"
+ },
+ {
+  "name": "quantity beyond 64 bits, sellable",
+  "qty": 3,
+  "reason": null,
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 1180591620717411303424,
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": true,
+  "sl": "SL-9"
+ },
+ {
+  "name": "lock reason beyond 64 bits",
+  "qty": 1,
+  "reason": "package is locked (1.8446744073709552e+19)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": true,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 10,
+   "reasonFlagged": null,
+   "reasonLocked": 18446744073709551616,
+   "zeroOut": false
+  },
+  "sellable_record": false,
+  "sl": "SL-9"
+ },
+ {
+  "name": "no record",
+  "qty": 1,
+  "reason": "package not found in this service center's inventory",
+  "record": null,
+  "sellable_record": false,
+  "sl": "SL-4"
+ },
+ {
+  "name": "no record, none wanted",
+  "qty": 0,
+  "reason": "package not found in this service center's inventory",
+  "record": null,
+  "sellable_record": false,
+  "sl": "SL-4"
+ },
+ {
+  "name": "empty package id, quantity as text",
+  "qty": 1,
+  "reason": "no units remaining (system reports quantity=3, zeroOut=False)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "",
+   "productType": "Extract",
+   "quantity": "3",
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": false,
+  "sl": "SL-5/7"
+ },
+ {
+  "name": "no package id, quantity true",
+  "qty": 1,
+  "reason": "no units remaining (system reports quantity=True, zeroOut=False)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": null,
+   "productType": "Extract",
+   "quantity": true,
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": false,
+  "sl": "SL-5/7"
+ },
+ {
+  "name": "empty package id, sellable otherwise",
+  "qty": 1,
+  "reason": null,
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "",
+   "productType": "Extract",
+   "quantity": 10,
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": false,
+  "sl": "SL-5/7"
+ },
+ {
+  "name": "package id a number",
+  "qty": 1,
+  "reason": null,
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": 5,
+   "productType": "Extract",
+   "quantity": 10,
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": true,
+  "sl": "SL-5/7"
+ },
+ {
+  "name": "locked as text \"false\"",
+  "qty": 1,
+  "reason": "package is locked (no reason)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": "false",
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 10,
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": false,
+  "sl": "SL-11"
+ },
+ {
+  "name": "flagged as text \"0\"",
+  "qty": 1,
+  "reason": "package is flagged (no reason)",
+  "record": {
+   "flagged": "0",
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 10,
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": false,
+  "sl": "SL-11"
+ },
+ {
+  "name": "locked 1",
+  "qty": 1,
+  "reason": "package is locked (no reason)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": 1,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 10,
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": false,
+  "sl": "SL-11"
+ },
+ {
+  "name": "pending transfer as text",
+  "qty": 1,
+  "reason": "package has a pending transfer",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": "no",
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 10,
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": false,
+  "sl": "SL-11"
+ },
+ {
+  "name": "zeroOut as text \"false\"",
+  "qty": 1,
+  "reason": "no units remaining (system reports quantity=10, zeroOut=false)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 10,
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": "false"
+  },
+  "sellable_record": false,
+  "sl": "SL-11"
+ },
+ {
+  "name": "locked an empty list",
+  "qty": 1,
+  "reason": null,
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": [],
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 10,
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": true,
+  "sl": "SL-11"
+ },
+ {
+  "name": "two and a half units, two wanted",
+  "qty": 2,
+  "reason": null,
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 2.5,
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": true,
+  "sl": "SL-12"
+ },
+ {
+  "name": "two and a half units, three wanted",
+  "qty": 3,
+  "reason": "no units remaining (system reports quantity=2.5, zeroOut=False)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 2.5,
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": true,
+  "sl": "SL-12"
+ },
+ {
+  "name": "none wanted",
+  "qty": 0,
+  "reason": "the quantity to sell must be 1 or more (asked for 0)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 10,
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": true,
+  "sl": "SL-13"
+ },
+ {
+  "name": "minus one wanted",
+  "qty": -1,
+  "reason": "the quantity to sell must be 1 or more (asked for -1)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 10,
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": true,
+  "sl": "SL-13"
+ },
+ {
+  "name": "a fraction wanted",
+  "qty": 2.5,
+  "reason": "the quantity to sell must be 1 or more (asked for 2.5)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 10,
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": true,
+  "sl": "SL-13"
+ },
+ {
+  "name": "2.0 wanted",
+  "qty": 2.0,
+  "reason": "the quantity to sell must be 1 or more (asked for 2.0)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 10,
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": true,
+  "sl": "SL-13"
+ },
+ {
+  "name": "true wanted",
+  "qty": true,
+  "reason": "the quantity to sell must be 1 or more (asked for True)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 10,
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": true,
+  "sl": "SL-13"
+ },
+ {
+  "name": "nothing wanted",
+  "qty": null,
+  "reason": "the quantity to sell must be 1 or more (asked for None)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 10,
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": true,
+  "sl": "SL-13"
+ },
+ {
+  "name": "text wanted",
+  "qty": "1",
+  "reason": "the quantity to sell must be 1 or more (asked for 1)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 10,
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": true,
+  "sl": "SL-13"
+ },
+ {
+  "name": "10**30 wanted",
+  "qty": 1000000000000000000000000000000,
+  "reason": "no units remaining (system reports quantity=10, zeroOut=False)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 10,
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": true,
+  "sl": "SL-13"
+ },
+ {
+  "name": "none wanted of a locked package",
+  "qty": 0,
+  "reason": "the quantity to sell must be 1 or more (asked for 0)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": true,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 10,
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": false,
+  "sl": "SL-13"
+ },
+ {
+  "name": "the largest 64-bit integer wanted",
+  "qty": 9223372036854775807,
+  "reason": null,
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 9223372036854775807,
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": true,
+  "sl": "SL-13"
+ },
+ {
+  "name": "2**63 wanted",
+  "qty": 9223372036854775808,
+  "reason": null,
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 1180591620717411303424,
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": true,
+  "sl": "SL-13"
+ },
+ {
+  "name": "one unit short, beyond 64 bits (compared exactly)",
+  "qty": 1180591620717411303424,
+  "reason": "no units remaining (system reports quantity=1.1805916207174113e+21, zeroOut=False)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 1180591620717411303423,
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": true,
+  "sl": "SL-13"
+ },
+ {
+  "name": "a float quantity one short of a 54-bit ask (compared exactly)",
+  "qty": 9007199254740993,
+  "reason": "no units remaining (system reports quantity=9007199254740992.0, zeroOut=False)",
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 9007199254740992.0,
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": true,
+  "sl": "SL-13"
+ },
+ {
+  "name": "a float quantity equal to a 54-bit ask",
+  "qty": 9007199254740992,
+  "reason": null,
+  "record": {
+   "flagged": false,
+   "id": 5,
+   "locked": false,
+   "pendingTransfer": false,
+   "productGuid": "PKPR-0005",
+   "productType": "Extract",
+   "quantity": 9007199254740992.0,
+   "reasonFlagged": null,
+   "reasonLocked": null,
+   "zeroOut": false
+  },
+  "sellable_record": true,
+  "sl": "SL-13"
+ }
+]
