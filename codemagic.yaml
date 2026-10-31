@@ -183,9 +183,19 @@ workflows:
           [ -n "$apk_url" ] || { echo "error: the release has no .apk asset"; exit 1; }
           sha="$(cut -d' ' -f1 "build/$name.sha256")"
           size="$(stat -f%z "build/$name")"                        # macOS stat
-          aapt2="$(ls "$ANDROID_SDK_ROOT"/build-tools/*/aapt2 | sort -V | tail -1)"
-          min_sdk="$("$aapt2" dump badging "build/$name" | sed -n "s/^sdkVersion:'\([0-9]*\)'/\1/p")"
-          [ -n "$min_sdk" ] || { echo "error: aapt2 gave no sdkVersion"; exit 1; }
+          # aapt2 lives under ANDROID_SDK_ROOT or ANDROID_HOME depending on the machine; badging names the minimum
+          # SDK "sdkVersion:'NN'" (older build-tools) or "minSdkVersion:'NN'" (newer), not always at the line start
+          aapt2=""
+          for sdk in "${ANDROID_SDK_ROOT:-}" "${ANDROID_HOME:-}" "$HOME/Library/Android/sdk"; do
+            [ -n "$sdk" ] || continue
+            found="$(ls "$sdk"/build-tools/*/aapt2 2>/dev/null | sort -V | tail -1)"
+            [ -n "$found" ] && { aapt2="$found"; break; }
+          done
+          [ -n "$aapt2" ] || { echo "error: no aapt2 under ANDROID_SDK_ROOT, ANDROID_HOME or ~/Library/Android/sdk"; exit 1; }
+          badging="$("$aapt2" dump badging "build/$name" 2>&1)" || { echo "error: $aapt2 dump badging failed:"; echo "$badging" | head -20; exit 1; }
+          min_sdk="$(printf '%s\n' "$badging" | grep -oE "(^|[^A-Za-z])(minSdkVersion|sdkVersion):'[0-9]+'" | head -1 | grep -oE "[0-9]+'" | tr -d "'")"
+          [ -n "$min_sdk" ] || { echo "error: $aapt2 named no minimum SDK; its first lines:"; echo "$badging" | head -20; exit 1; }
+          echo "minSdk $min_sdk (from $aapt2)"
           jq -n --arg version "$version" --argjson build "$build" --arg apk "$apk_url" --arg sha256 "$sha" \
             --argjson size "$size" --argjson minSdk "$min_sdk" \
             '{kind: "mazama-mobile-release", version: $version, build: $build, apk: $apk, sha256: $sha256, size: $size, minSdk: $minSdk}' \
