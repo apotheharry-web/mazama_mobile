@@ -50,7 +50,7 @@ enum EnrichmentSource { server, phone }
 /// a per-unit dose - kept here only because buildSale (selling.dart) sends it verbatim as part of a real sale
 /// record's payload, field-for-field the same as the real web app. It must never be shown to a worker as "mg
 /// TPE" on its own, and must never be the figure a per-mg price is multiplied against - that's tpeMg's job: the
-/// server's own mazama_sales/src/mazama_sales/stockdata.py Stock.mg_of (weightPerUnit x the best known
+/// server's own mazama_sales/src/mazama_sales/stock/stockdata.py Stock.mg_of (weightPerUnit x the best known
 /// potency), rounded UP to the nearest whole mg, is this package's real per-unit dose. strain is this package's
 /// canonical strain name ('' when the server couldn't determine one).
 class Package {

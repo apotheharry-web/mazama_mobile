@@ -26,9 +26,12 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 
 import 'coa_uploader.dart' show coaReplyStatus, countsAsSent;
+import 'inventory_upload_client.dart' show InventoryUploadError;
 import 'local_store.dart';
+import 'sales_upload_client.dart' show SalesUploadError;
 import 'server_error.dart';
 import 'server_health.dart';
+import 'server_outbox.dart' show outboxRetryAfterBusy;
 import 'session_store.dart' show defaultSessionDataDir;
 import 'sync/sync_migration.dart' show openSyncTables;
 import 'sync/sync_queue.dart';
@@ -213,8 +216,8 @@ QueueKind? _snapshotQueueKind(String kind) => switch (kind) {
       _ => null,
     };
 
-/// The engine's sender for a kept snapshot: [upload] it; unreachable stops the run, a refusal drops it (the next state
-/// read sends a fresher one).
+/// The engine's sender for a kept snapshot: [upload] it; unreachable, or a 408 (the server gave up reading its body),
+/// stops the run and keeps it; a refusal drops it (the next state read sends a fresher one).
 QueueSender snapshotQueueSender(SnapshotUploader upload) => (item) async {
       final PendingSnapshot? snap;
       try {
@@ -228,9 +231,15 @@ QueueSender snapshotQueueSender(SnapshotUploader upload) => (item) async {
         return const Done();
       } catch (e) {
         if (isServerUnreachable(e)) return Unreachable(error: '$e');
+        if (snapshotTimedOut(e)) return RetryAfter(outboxRetryAfterBusy, error: '$e', status: 408);
         return const Skipped();
       }
     };
+
+/// Whether a snapshot upload's error is the server's 408 (its body took over 30 s to arrive): not a refusal, so the
+/// snapshot is kept (here and in server_link.dart's uploads).
+bool snapshotTimedOut(Object? error) =>
+    (error is InventoryUploadError && error.status == 408) || (error is SalesUploadError && error.status == 408);
 
 /// The engine's sender for a kept lab report, through a [CoaLotSubmitter] with the session current at send time ([auth]):
 /// no session, or a 429, waits; unreachable stops the run; submitted or answered, it is sent; refused otherwise (or
@@ -254,7 +263,7 @@ QueueSender keptLabReportSender(CoaLotSubmitter submit, Future<CatchUpAuth?> Fun
         return await submit(lot, credentials) ? const Done() : const Skipped();
       } catch (e) {
         if (isServerUnreachable(e)) return Unreachable(error: '$e');
-        if (coaReplyStatus(e) == 429) return const Busy();
+        if (isNotNowStatus(coaReplyStatus(e))) return const Busy();
         if (countsAsSent(e)) return const Done();
         return const Skipped();
       }

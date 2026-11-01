@@ -16,6 +16,12 @@
 // The units pie and the mg pie share one spot, one at a time: a horizontal swipe on it (or a tap on the dots below
 // it) shows the other; a picked strain's Quantity and mg serving-size pies work the same way. At either end the
 // swipe goes on to the Stock / Cart pages (center_home_page.dart), so the pie never traps a worker on this page.
+// specs/phone-sync Task 8b Step 2: in the app (and the demo) the sheets are read through the sync engine instead
+// ([CenterStockPage.sheetsFeed], sync/dataset_feed.dart): the sheets dataset, its read on open the one the center home
+// asks for as it opens (joined, never a second), reloaded by the engine when the server answers again. The rows still
+// read for themselves on open (the server's packages and the state's records, stock_rows.dart): no engine refresher
+// draws them, and the center_stock read they would come from is the cart's own (center_home_page.dart).
+//
 // There is no pull to refresh here: the owner's rule is that only the PKPR list (stock_page.dart) re-downloads the
 // inventory by pulling down.
 import 'dart:async';
@@ -27,7 +33,9 @@ import 'licenses_client.dart';
 import 'mazama_lot_table.dart';
 import 'responsive.dart';
 import 'server_health.dart';
+import 'sync/dataset_feed.dart';
 import 'sync/server_read.dart';
+import 'sync/sync_tables.dart' show DatasetRow;
 import 'sheets_client.dart';
 import 'stock_mix.dart';
 import 'stock_pie.dart';
@@ -59,6 +67,7 @@ class CenterStockPage extends StatefulWidget {
     this.openSheet,
     this.keptSheets,
     this.keepSheets,
+    this.sheetsFeed,
     this.health,
   });
 
@@ -85,6 +94,13 @@ class CenterStockPage extends StatefulWidget {
 
   /// Keeps each list of sheets the server sends, with when ([now]); nothing kept when null.
   final Future<void> Function(List<ProductSheet> sheets, DateTime at)? keepSheets;
+
+  /// The center's sheets dataset through the sync engine (sync/dataset_feed.dart): when given, the lot table reads only
+  /// through it ([loadSheets], [keptSheets], [keepSheets] unused), and the engine, not the page, reloads it when the
+  /// server answers again.
+  final DatasetFeed<List<ProductSheet>>? sheetsFeed;
+
+  bool get _hasSheets => loadSheets != null || sheetsFeed != null;
 
   /// The app's server tracker (server_health.dart, README R56): while the page shows the copy kept on the phone (or
   /// partial stock), it reloads by itself once the server answers again (README R87), and Retry asks the server first.
@@ -142,7 +158,7 @@ class _CenterStockPageState extends State<CenterStockPage> {
     if (h == null) return;
     final cameBack = _wasOffline && h.online;
     _wasOffline = h.offline;
-    if (cameBack && mounted && !_retrying && _showingKeptCopy) _load();
+    if (cameBack && mounted && !_retrying && _showingKeptCopy) _load(sheets: false);
   }
 
   /// Set while Retry asks the server: Retry reloads itself, so [_onHealth] doesn't as well.
@@ -167,6 +183,7 @@ class _CenterStockPageState extends State<CenterStockPage> {
   @override
   void dispose() {
     widget.health?.removeListener(_onHealth);
+    _sheetsRows?.cancel();
     super.dispose();
   }
 
@@ -175,16 +192,65 @@ class _CenterStockPageState extends State<CenterStockPage> {
     super.initState();
     _wasOffline = widget.health?.offline ?? false;
     widget.health?.addListener(_onHealth);
+    _sheetsRows = widget.sheetsFeed?.watch().listen(_onSheetsRow);
     _load();
   }
 
-  void _load() {
+  /// Reloads the rows, and the sheets ([sheets]; a reload because the server answers again leaves a feed's sheets to
+  /// the engine, which refreshes what is watched then).
+  void _load({bool sheets = true}) {
     setState(() {
       _rows = null;
       _error = null;
     });
     unawaited(_refresh());
+    final feed = widget.sheetsFeed;
+    if (feed != null && sheets) {
+      _sheetsSettled = false;
+      _sheetsFeedError = null;
+      _showSheets();
+      unawaited(_readSheets(feed));
+    }
   }
+
+  // ---- the sheets through the sync engine ([CenterStockPage.sheetsFeed])
+
+  StreamSubscription<DatasetRow?>? _sheetsRows;
+  DatasetRow? _sheetsRow;
+
+  /// The read on open (or Retry's) has ended: from then on each copy the engine writes is shown with its outcome.
+  bool _sheetsSettled = false;
+  Object? _sheetsFeedError;
+
+  void _onSheetsRow(DatasetRow? row) {
+    if (!mounted) return;
+    _sheetsRow = row;
+    // the engine notes a refresh's outcome before it tells the watchers: this is the outcome of the write just seen
+    if (_sheetsSettled) _sheetsFeedError = widget.sheetsFeed!.lastError();
+    _showSheets();
+  }
+
+  Future<void> _readSheets(DatasetFeed<List<ProductSheet>> feed) async {
+    final error = await feed.read();
+    if (!mounted) return;
+    _sheetsSettled = true;
+    _sheetsFeedError = error;
+    _showSheets();
+  }
+
+  void _showSheets() {
+    final shown = widget.sheetsFeed!.shows(_sheetsRow, _sheetsFeedError, settled: _sheetsSettled);
+    setState(() {
+      _sheets = shown.value;
+      _sheetsError = shown.error == null ? null : '${shown.error}';
+      _sheetsNote = shown.note == null ? null : '${shown.note}';
+      _sheetsFromCache = shown.fromCache; // the rows reload once the server answers again, as before the engine
+    });
+  }
+
+  /// Through the engine: the server's own answer to the newest refresh, said on the lot table over the sheets still
+  /// shown (dataset_feed.dart).
+  String? _sheetsNote;
 
   /// Loads rows and the lot table's sheets together. Run once when the page opens (and by Retry, through _load); this
   /// page has no pull to refresh (only the PKPR list does), so the keep-what's-on-screen branch below only matters if
@@ -193,7 +259,7 @@ class _CenterStockPageState extends State<CenterStockPage> {
     Object? rowsError, sheetsError;
     StockLoad? rows;
     ServerRead<List<ProductSheet>>? sheets;
-    final loadSheets = widget.loadSheets;
+    final loadSheets = widget.sheetsFeed == null ? widget.loadSheets : null; // a feed's sheets are read above
     final keep = widget.keepSheets;
     final kept = widget.keptSheets;
     await Future.wait<void>([
@@ -356,7 +422,7 @@ class _CenterStockPageState extends State<CenterStockPage> {
                 ),
               ),
           ],
-          if (widget.loadSheets != null) ...[
+          if (widget._hasSheets) ...[
             const SizedBox(height: 16),
             _lotTable(selected != null
                 ? lotStrainFilter(selected['name'] as String)
@@ -598,8 +664,10 @@ class _CenterStockPageState extends State<CenterStockPage> {
       key: const ValueKey('stock-lot-table'),
       lots: sheets == null ? const [] : sheetLotRows(sheets),
       filter: filter,
-      note: sheets != null ? null : (error != null ? 'Lots did not load: $error' : 'Loading…'),
-      noteIsError: sheets == null && error != null,
+      note: sheets != null
+          ? (_sheetsNote == null ? null : 'Lots did not update: $_sheetsNote')
+          : (error != null ? 'Lots did not load: $error' : 'Loading…'),
+      noteIsError: (sheets == null && error != null) || (sheets != null && _sheetsNote != null),
       onOpen: (lot) {
         final sheet = sheets?.where((s) => s.guid == lot.lot).firstOrNull;
         if (sheet != null) _open(sheet);

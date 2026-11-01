@@ -9,7 +9,8 @@
 // reads. While the app is in the foreground and something is watched, a timer refreshes every
 // [syncForegroundEvery] what is watched and older than that ([foregroundTick], PS-D6); never in the background
 // ([onBackground]). When the server answers again in the foreground, what is watched is refreshed (README R87's
-// reload, for the pages that watch: none yet in phase 2, whose pages still reload through their own health listener).
+// reload, for the pages that watch: the Mazama tab and the stock page's sheets, through sync/dataset_feed.dart, which
+// join a refresh under way ([refreshing]) and show its error ([refreshError]); the cart, which still has its own reload).
 // Selling never calls it (PS-D3).
 import 'dart:async';
 
@@ -78,6 +79,10 @@ class SyncEngine {
 
   final Map<Dataset, Refresher> _refreshers = {};
   final Map<(Dataset, String), Future<void>> _refreshing = {};
+
+  /// Why the newest refresh of each dataset and key failed, this run (none after a success): what a page reading
+  /// through [watch] shows when it has no copy, or the server's own refusal (dataset_feed.dart).
+  final Map<(Dataset, String), Object> _errors = {};
 
   /// Refreshes asked for while one of the same dataset and key was running: it runs once more after (review I1, phase
   /// 4: a refresh a sale asks for must read after that sale, never be answered by a read that started before it).
@@ -156,6 +161,16 @@ class SyncEngine {
   /// [d]'s refresher (one per dataset; a second replaces the first).
   void register(Dataset d, Refresher refresher) => _refreshers[d] = refresher;
 
+  /// Whether [d] has a refresher: a page reads it through [watch] only then (dataset_feed.dart).
+  bool refreshes(Dataset d) => _refreshers.containsKey(d);
+
+  /// The refresh of [d]'s copy for [key] under way (the center home's on open, say), else null: a page joins it rather
+  /// than asking a second ([refresh] while one runs makes it run once more).
+  Future<void>? refreshing(Dataset d, String key) => _refreshing[(d, key)];
+
+  /// Why the newest refresh of [d]'s copy for [key] failed, this run; null when it worked, or none ran.
+  Object? refreshError(Dataset d, String key) => _errors[(d, key)];
+
   /// Reads [d]'s copy for [key] afresh with its refresher and stores it, stamped with when the read started; a failure
   /// only records the try and its error. One at a time per dataset and key: a call while one runs makes it run once more
   /// when it ends (however many such calls), and gets the future of both. Never throws; nothing happens for a dataset
@@ -190,9 +205,11 @@ class SyncEngine {
     try {
       final got = await refresher(key);
       if (_disposed) return;
+      _errors.remove((d, key)); // before the watchers are told: what they read of the outcome is this one
       datasets.put(d, key, got.body, source: got.source, at: startedAt);
     } catch (e) {
       if (_disposed) return;
+      _errors[(d, key)] = e;
       datasets.failed(d, key, '$e');
     }
   }

@@ -13,6 +13,10 @@
 // While Mazama's server can't be reached, the page shows the last stock it sent (kept on the phone, sync/server_read.dart)
 // with no notice of its own: the app-wide banner says the server can't be reached (server_link.dart, README R87), and
 // the page reloads by itself once it answers again. With none kept, the error and Retry as before.
+// specs/phone-sync Task 8b Step 2: in the app (and the demo) it reads through the sync engine instead
+// ([MazamaInventoryPage.feed], sync/dataset_feed.dart): the mazama_inventory dataset shows at once with its age, the
+// read on open is the one the center home asks for as it opens (joined, never a second), and the engine reloads it when
+// the server answers again; what shows is decided as above.
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -27,22 +31,31 @@ import 'sync/server_read.dart';
 import 'stock_mix.dart';
 import 'stock_pie.dart';
 import 'swipe_pies.dart';
+import 'sync/dataset_feed.dart';
+import 'sync/sync_tables.dart' show DatasetRow;
 import 'sync/updated_line.dart';
 
 class MazamaInventoryPage extends StatefulWidget {
   const MazamaInventoryPage(
       {super.key,
-      required this.load,
+      this.load,
+      this.feed,
       this.orderForm,
       this.openSheet,
       this.openLink,
       this.kept,
       this.keep,
       this.now = DateTime.now,
-      this.health});
+      this.health})
+      : assert(load != null || feed != null, 'a page reads its mix with load, or through feed');
 
-  /// Mazama's mix: route C12 in the app (mazama_inventory_client.dart), the demo's in demo mode, anything in tests.
-  final Future<MazamaInventory> Function() load;
+  /// Mazama's mix: route C12 (mazama_inventory_client.dart), the demo's in demo mode, anything in tests. Unused with
+  /// [feed].
+  final Future<MazamaInventory> Function()? load;
+
+  /// The mazama_inventory dataset through the sync engine (sync/dataset_feed.dart): when given, the page reads only
+  /// through it ([load], [kept], [keep] unused) and has no health listener of its own (the engine reloads it).
+  final DatasetFeed<MazamaInventory>? feed;
 
   /// The copy of the mix kept on the phone, shown while the server can't be reached; none kept when null
   /// (the mazama_inventory dataset in the app, sync_datasets.dart).
@@ -93,6 +106,9 @@ class _MazamaInventoryPageState extends State<MazamaInventoryPage> {
   /// When the mix on screen was read (the age line, specs/phone-sync PS-R7); null while none is shown.
   DateTime? _readAt;
 
+  /// Through the engine: the server's own answer to its newest refresh, said beside the mix still shown (dataset_feed.dart).
+  String? _note;
+
   /// The breakdown that shows, if any: the pie it was picked on (0 By strain, 1 By type) and the strain or type. One
   /// for the page, not one per pie, so an open breakdown stays open, and a closed one closed, across a swipe.
   ({int pie, String name})? _picked;
@@ -132,18 +148,71 @@ class _MazamaInventoryPageState extends State<MazamaInventoryPage> {
   @override
   void dispose() {
     widget.health?.removeListener(_onHealth);
+    _feedRows?.cancel();
     super.dispose();
   }
 
   @override
   void initState() {
     super.initState();
+    final feed = widget.feed;
+    if (feed != null) {
+      _feedRows = feed.watch().listen(_onFeedRow);
+      unawaited(_readFeed(feed));
+      return;
+    }
     _wasOffline = widget.health?.offline ?? false;
     widget.health?.addListener(_onHealth);
     _load();
   }
 
+  // ---- through the sync engine ([MazamaInventoryPage.feed])
+
+  StreamSubscription<DatasetRow?>? _feedRows;
+  DatasetRow? _feedRow;
+
+  /// The read on open (or Retry's) has ended: from then on each copy the engine writes is shown with its outcome.
+  bool _feedSettled = false;
+  Object? _feedError;
+
+  void _onFeedRow(DatasetRow? row) {
+    if (!mounted) return;
+    _feedRow = row;
+    // the engine notes a refresh's outcome before it tells the watchers: this is the outcome of the write just seen
+    if (_feedSettled) _feedError = widget.feed!.lastError();
+    _showFeed();
+  }
+
+  Future<void> _readFeed(DatasetFeed<MazamaInventory> feed) async {
+    final error = await feed.read();
+    if (!mounted) return;
+    _feedSettled = true;
+    _feedError = error;
+    _showFeed();
+  }
+
+  void _showFeed() {
+    final shown = widget.feed!.shows(_feedRow, _feedError, settled: _feedSettled);
+    final inv = shown.value;
+    setState(() {
+      _inventory = inv;
+      _mix = inv == null ? null : stockMix(inv.cells);
+      _readAt = shown.at;
+      _error = shown.error == null ? null : '${shown.error}';
+      _note = shown.note == null ? null : '${shown.note}';
+    });
+  }
+
   void _load() {
+    final feed = widget.feed;
+    if (feed != null) {
+      // Retry: the copy stored (or the spinner) while the engine reads again, joining a read already under way
+      _feedSettled = false;
+      _feedError = null;
+      _showFeed();
+      unawaited(_readFeed(feed));
+      return;
+    }
     setState(() {
       _inventory = null;
       _mix = null;
@@ -172,7 +241,7 @@ class _MazamaInventoryPageState extends State<MazamaInventoryPage> {
       try {
         final keep = widget.keep;
         final read = await readWithCache<MazamaInventory>(
-          fetch: widget.load,
+          fetch: widget.load!,
           save: (inv, at) async {
             if (keep != null) await keep(inv, at);
           },
@@ -227,6 +296,14 @@ class _MazamaInventoryPageState extends State<MazamaInventoryPage> {
             ),
           ),
           if (_inventory != null) UpdatedLine.at(_readAt, now: widget.now),
+          if (_inventory != null && _note != null)
+            Padding(
+              key: const ValueKey('mazama-update-note'),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text('Mazama inventory did not update: $_note',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            ),
           Expanded(child: ResponsiveBody(child: _body())),
         ],
       ),

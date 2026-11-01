@@ -2,10 +2,12 @@
 // (MI-D3), a tap for a strain's types or a type's strains (MI-D4), no pull to refresh (MI-D5). The numbers are
 // stock_mix.dart's, held to the shared vectors in stock_mix_test.dart; here, what the page shows of them.
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mazama_mobile/local_store.dart';
 import 'package:mazama_mobile/mazama_contact.dart';
 import 'package:mazama_mobile/mazama_inventory_client.dart';
 import 'package:mazama_mobile/mazama_inventory_page.dart';
@@ -14,7 +16,10 @@ import 'package:mazama_mobile/sync/server_read.dart';
 import 'package:mazama_mobile/mazama_lot_table.dart';
 import 'package:mazama_mobile/stock_mix.dart';
 import 'package:mazama_mobile/stock_pie.dart';
+import 'package:mazama_mobile/sync/dataset_feed.dart';
 import 'package:mazama_mobile/sync/sync_datasets.dart';
+import 'package:mazama_mobile/sync/sync_engine.dart';
+import 'package:mazama_mobile/sync/sync_queue.dart';
 
 import 'fake_timers.dart';
 
@@ -523,6 +528,163 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.textContaining('Mazama inventory did not load: cannot reach'), findsOneWidget);
       expect(find.widgetWithText(FilledButton, 'Retry'), findsOneWidget);
+    });
+  });
+
+  // --- specs/phone-sync Task 8b Step 2: read through the sync engine's mazama_inventory dataset ------------------------
+
+  group('through the engine', () {
+    final at = DateTime.utc(2026, 10, 20, 15, 5);
+    final engines = <SyncEngine>[];
+    late Directory dir;
+    late ServerHealth health;
+    late DateTime now;
+    late int reads;
+
+    setUp(() {
+      dir = Directory.systemTemp.createTempSync('mazama_inventory_page_feed_test_');
+      health = ServerHealth(probe: () async => false, startTimer: FakeTimers().start);
+      now = at.add(const Duration(minutes: 20));
+      reads = 0;
+    });
+    tearDown(() {
+      for (final e in engines) {
+        e.dispose();
+      }
+      engines.clear();
+      health.dispose();
+      LocalStore.debugCloseAll();
+      dir.deleteSync(recursive: true);
+    });
+
+    /// An engine whose mazama_inventory refresher counts its reads and answers with [read].
+    SyncEngine engine(Future<MazamaInventory> Function() read, {bool kept = false}) {
+      final e = SyncEngine(
+        store: LocalStore.forDir(dir),
+        health: health,
+        now: () => now,
+        startTimer: FakeTimers().start,
+        senders: {for (final k in QueueKind.values) k: (item) async => const Done()},
+      );
+      engines.add(e); // disposed in tearDown, before the store is closed
+      if (kept) e.datasets.put(Dataset.mazamaInventory, '', jsonEncode(_mix.toJson()), source: sourceServer, at: at);
+      e.register(Dataset.mazamaInventory, (key) async {
+        reads++;
+        return (body: jsonEncode((await read()).toJson()), source: sourceServer);
+      });
+      return e;
+    }
+
+    Widget page(SyncEngine e) =>
+        MaterialApp(home: MazamaInventoryPage(feed: mazamaInventoryFeed(e), health: health, now: () => now));
+
+    testWidgets('the stored mix shows at once with its age, then the fresh one, read once', (tester) async {
+      final gate = Completer<MazamaInventory>();
+      final e = engine(() => gate.future, kept: true);
+      await tester.pumpWidget(page(e));
+      await tester.pump();
+      expect(find.text('6,000 mg TPE in all'), findsOneWidget); // before the server answers
+      expect(find.text('Updated 20 min ago'), findsOneWidget);
+      gate.complete(_mix);
+      await tester.pumpAndSettle();
+      expect(find.text('Updated just now'), findsOneWidget);
+      expect(reads, 1);
+    });
+
+    testWidgets('a read under way as the page opens is joined, never asked twice', (tester) async {
+      final gate = Completer<MazamaInventory>();
+      final e = engine(() => gate.future);
+      unawaited(e.refresh(Dataset.mazamaInventory, '')); // the center home's, on open
+      await tester.pumpWidget(page(e));
+      await tester.pump();
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      gate.complete(_mix);
+      await tester.pumpAndSettle();
+      expect(find.text('6,000 mg TPE in all'), findsOneWidget);
+      expect(reads, 1);
+    });
+
+    testWidgets("unreachable: the stored mix stays, with its age and no notice of its own", (tester) async {
+      final e = engine(() async => throw MazamaInventoryError("Mazama's server can't be reached", unreachable: true),
+          kept: true);
+      await tester.pumpWidget(page(e));
+      await tester.pumpAndSettle();
+      expect(find.text('6,000 mg TPE in all'), findsOneWidget);
+      expect(find.text('Updated 20 min ago'), findsOneWidget);
+      expect(find.textContaining("can't be reached"), findsNothing);
+      expect(find.text('Retry'), findsNothing);
+    });
+
+    testWidgets("a 4xx is the server's own answer: a note beside the stored mix, which stays", (tester) async {
+      final e = engine(() async => throw MazamaInventoryError('No manufacturer.'), kept: true);
+      await tester.pumpWidget(page(e));
+      await tester.pumpAndSettle();
+      expect(find.text('6,000 mg TPE in all'), findsOneWidget);
+      expect(find.text('Mazama inventory did not update: No manufacturer.'), findsOneWidget);
+      expect(find.textContaining('did not load'), findsNothing);
+    });
+
+    testWidgets("the engine's own refresh answering 401 or 429 keeps the mix on screen, with a note", (tester) async {
+      var answer = 'ok';
+      final e = engine(() async {
+        if (answer == '401') throw MazamaInventoryError('The app key was refused.');
+        if (answer == '429') throw MazamaInventoryError('Too many requests.');
+        return _mix;
+      });
+      await tester.pumpWidget(page(e));
+      await tester.pumpAndSettle();
+      expect(find.text('6,000 mg TPE in all'), findsOneWidget);
+      for (final (code, text) in [('401', 'The app key was refused.'), ('429', 'Too many requests.')]) {
+        answer = code;
+        await e.refresh(Dataset.mazamaInventory, ''); // as the five-minute tick does
+        await tester.pumpAndSettle();
+        expect(find.text('6,000 mg TPE in all'), findsOneWidget);
+        expect(find.text('Mazama inventory did not update: $text'), findsOneWidget);
+        expect(find.textContaining('did not load'), findsNothing);
+      }
+      answer = 'ok';
+      await e.refresh(Dataset.mazamaInventory, '');
+      await tester.pumpAndSettle();
+      expect(find.textContaining('did not update'), findsNothing); // a good read clears the note
+    });
+
+    testWidgets('unreachable with nothing stored: the error and Retry; Retry reads once more', (tester) async {
+      var up = false;
+      final e = engine(() async {
+        if (!up) throw MazamaInventoryError('cannot reach sales.mazamamushrooms.com: SocketException', unreachable: true);
+        return _mix;
+      });
+      await tester.pumpWidget(page(e));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Mazama inventory did not load: cannot reach'), findsOneWidget);
+      expect(reads, 1);
+      up = true;
+      await tester.tap(find.widgetWithText(FilledButton, 'Retry'));
+      await tester.pumpAndSettle();
+      expect(reads, 2);
+      expect(find.text('6,000 mg TPE in all'), findsOneWidget);
+      expect(find.textContaining('did not load'), findsNothing);
+    });
+
+    // README R87's reload is the engine's for what is watched: the page adds none of its own.
+    testWidgets('once the server answers again the engine reads it again, and the page adds no read of its own',
+        (tester) async {
+      var up = false;
+      final e = engine(() async {
+        if (!up) throw MazamaInventoryError("Mazama's server can't be reached", unreachable: true);
+        return const MazamaInventory(name: 'Mazama Mushrooms LLC', cells: [MixCell(strain: 'Penis Envy', type: 'WF', mg: 1500)]);
+      }, kept: true);
+      health.markUnreachable();
+      await tester.pumpWidget(page(e));
+      await tester.pumpAndSettle();
+      expect(find.text('6,000 mg TPE in all'), findsOneWidget); // the stored copy
+      expect(reads, 1);
+      up = true;
+      health.markReachable();
+      await tester.pumpAndSettle();
+      expect(reads, 2);
+      expect(find.text('1,500 mg TPE in all'), findsOneWidget);
+      expect(find.text('Updated just now'), findsOneWidget);
     });
   });
 }

@@ -226,7 +226,9 @@ class ServerLink {
       catchUp.snapshotSent(stateId);
       return out;
     } catch (e) {
-      if (isServerUnreachable(e)) catchUp.keepSnapshot(stateId, records, workerEmail: workerEmail, deviceId: deviceId);
+      if (isServerUnreachable(e) || snapshotTimedOut(e)) {
+        catchUp.keepSnapshot(stateId, records, workerEmail: workerEmail, deviceId: deviceId); // 408: its body never arrived
+      }
       rethrow;
     }
   }
@@ -251,7 +253,7 @@ class ServerLink {
       catchUp.snapshotSent(stateId, kind: snapshotKindSales);
       return out;
     } catch (e) {
-      if (isServerUnreachable(e)) keep();
+      if (isServerUnreachable(e) || snapshotTimedOut(e)) keep(); // 408: its body never arrived
       rethrow;
     }
   }
@@ -308,6 +310,10 @@ void linkRequestStockRefresh(int stateId) => unawaited(serverLink.engine.refresh
 /// [CartPage.watchStock]'s default (specs/phone-sync Task 8b): the app's engine's copy of [stateId]'s stock; null
 /// while no link has been made the app's (a page built before MazamaApp, a test): never builds one for it.
 Stream<DatasetRow?>? linkWatchStock(int stateId) => _serverLink?.engine.watch(Dataset.centerStock, '$stateId');
+
+/// SelectCenterPage.engine's default (specs/phone-sync Task 8b Step 2): the app's link's engine, which the Mazama tab and
+/// the stock page's sheets read through; null while no link has been made the app's (as [linkWatchStock]).
+SyncEngine? get linkEngine => _serverLink?.engine;
 
 /// Makes [link] the app's link (MazamaApp, and tests that want their own).
 void useServerLink(ServerLink link) => _serverLink = link;

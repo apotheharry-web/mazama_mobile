@@ -88,7 +88,7 @@ List<Package> mapRawPackagesFromState(List<Object?> body, {CoreFunctions? core})
     final analyteWeight = (r['analyteWeight'] as num?)?.toDouble() ?? 0;
     // The state's own wire shape carries the batch/lot id this package was made from - free with this response,
     // no extra round trip (see coa_data_client.dart's own file comment on why the adhoc-COA flow needs it). Only
-    // an id the server accepts counts (SM-09, the same rule as its stockdata.product_source): anything else would
+    // an id the server accepts counts (SM-09, the same rule as its stock/records.py product_source): anything else would
     // just be refused by /p/coa-data/parse.
     final lotGuid = packageSource(r);
     out.add(Package(

@@ -320,25 +320,28 @@ void main() {
     expect(u.isPending('HB-1'), isFalse);
   });
 
-  test('a 429 stops the run without marking the lot; the next load picks the lots up again', () async {
-    final sent = memory();
-    final u = uploader(sent: sent);
-    addTearDown(u.dispose);
-    u.enqueue([_lot('HB-1'), _lot('HB-2'), _lot('HB-3')]);
-    await fire();
-    await finish('HB-1', error: ConfiguredCoaSubmitError('Too many requests', status: 429));
-    expect(u.waiting, 0);
-    expect(timers.active, isEmpty);
-    await fire();
-    expect([for (final s in sends) s.guid], ['HB-1']);
-    expect(sent.wasSent('HB-1'), isFalse);
-    expect(catchUp.lots, isEmpty);
+  for (final status in [429, 408]) {
+    // 408: the server gave up reading the upload's body (30 s, server-hardening review C1): nothing was taken
+    test('a $status stops the run without marking the lot; the next load picks the lots up again', () async {
+      final sent = memory();
+      final u = uploader(sent: sent);
+      addTearDown(u.dispose);
+      u.enqueue([_lot('HB-1'), _lot('HB-2'), _lot('HB-3')]);
+      await fire();
+      await finish('HB-1', error: ConfiguredCoaSubmitError('Not now', status: status));
+      expect(u.waiting, 0);
+      expect(timers.active, isEmpty);
+      await fire();
+      expect([for (final s in sends) s.guid], ['HB-1']);
+      expect(sent.wasSent('HB-1'), isFalse);
+      expect(catchUp.lots, isEmpty);
 
-    u.enqueue([_lot('HB-1'), _lot('HB-2'), _lot('HB-3')]); // the next load
-    expect(u.waiting, 3);
-    await fire();
-    expect([for (final s in sends) s.guid], ['HB-1', 'HB-1']);
-  });
+      u.enqueue([_lot('HB-1'), _lot('HB-2'), _lot('HB-3')]); // the next load
+      expect(u.waiting, 3);
+      await fire();
+      expect([for (final s in sends) s.guid], ['HB-1', 'HB-1']);
+    });
+  }
 
   test('a lot with no PDF on file is skipped: not marked, not kept, the queue goes on', () async {
     final sent = memory();
@@ -437,6 +440,8 @@ void main() {
     expect(countsAsSent(ConfiguredCoaSubmitError('x', status: 202)), isTrue);
     expect(countsAsSent(CoaDataError('x', status: 409)), isTrue);
     expect(countsAsSent(ConfiguredCoaSubmitError('x', status: 429)), isFalse);
+    expect(countsAsSent(ConfiguredCoaSubmitError('x', status: 408)), isFalse); // the body never arrived: not taken
+    expect(countsAsSent(CoaDataError('x', status: 408)), isFalse);
     expect(countsAsSent(ConfiguredCoaSubmitError('x', status: 502, unreachable: true)), isFalse);
     expect(countsAsSent(ConfiguredCoaSubmitError('x', unreachable: true)), isFalse);
     expect(countsAsSent(Exception('x')), isFalse);

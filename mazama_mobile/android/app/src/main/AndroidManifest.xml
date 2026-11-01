@@ -11,7 +11,7 @@
     <uses-feature android:name="android.hardware.camera.any" android:required="false" />
 
     <application
-        android:label="mazama_mobile"
+        android:label="${appLabel}"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon"
         android:allowBackup="false"

@@ -60,7 +60,7 @@ class StockLoad {
 }
 
 /// Why a package record with units on hand won't be sold, in the few words the server's "Other stock" uses
-/// (stockdata.held_back_reason: unsellable_reason without "package is/has a"); null when it has none on hand, or sells.
+/// (stock/records.py held_back_reason: unsellable_reason without "package is/has a"); null when it has none on hand, or sells.
 String? heldBackReason(Map<String, Object?> record) => _hasUnits(record) ? _heldBack(unsellableReason(record)) : null;
 
 bool _hasUnits(Map<String, Object?> record) {

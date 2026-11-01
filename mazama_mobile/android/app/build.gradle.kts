@@ -73,6 +73,7 @@ android {
         // The app's identity on phones and in stores, the same as the iOS bundle id. Changing it makes a different app:
         // a phone keeps the old one, with its saved data, beside the new one.
         applicationId = "com.mazamamushrooms.mobile"
+        manifestPlaceholders["appLabel"] = "mazama_mobile" // the debug key's builds: "mazama_mobile (debug)", below
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
@@ -92,10 +93,24 @@ android {
         }
     }
 
+    // A build signed with a debug key is its own app: com.mazamamushrooms.mobile.debug, named "mazama_mobile (debug)".
+    // Android refuses to install over an app with another signature ("App not installed", 2026-10-31: a phone that
+    // had a debug build couldn't take the 0.2.5 release), so a debug build now installs beside the release instead of
+    // in its place, and neither blocks the other. Only builds signed with the owner's upload key are
+    // com.mazamamushrooms.mobile (lib/app_installer.dart's appPackageName, the in-app updater's check).
     buildTypes {
+        debug {
+            applicationIdSuffix = ".debug"
+            manifestPlaceholders["appLabel"] = "mazama_mobile (debug)"
+        }
         release {
-            // The owner's upload key (see "Release signing" above); the debug key only for a MAZAMA_DEV_RELEASE=1 build.
+            // The owner's upload key (see "Release signing" above); the debug key only for a MAZAMA_DEV_RELEASE=1 build,
+            // which then gets the debug build's own id too.
             signingConfig = signingConfigs.getByName(if (hasReleaseSigning) "release" else "debug")
+            if (!hasReleaseSigning) {
+                applicationIdSuffix = ".debug"
+                manifestPlaceholders["appLabel"] = "mazama_mobile (debug)"
+            }
         }
     }
 
@@ -116,10 +131,20 @@ android {
 // NDK's clang as linker, copied to build/coreJniLibs/<abi>/libmazama_core_ffi.so, which the app packs (sourceSets
 // above). Nothing is written to the source tree. When cargo or a Rust Android target is missing, or the build fails,
 // the BUILD FAILS with the fix: the core is part of every build (specs/core CR-D2), and an app without it can't start.
-// Install once: rustup target add aarch64-linux-android x86_64-linux-android. ios/build_mazama_core_ffi.sh is the iOS
-// twin.
+// Install once: rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android.
+// ios/build_mazama_core_ffi.sh is the iOS twin. armeabi-v7a is for 32-bit-only phones, which otherwise install the app
+// (Flutter packs its own armeabi-v7a libraries) and then show "This build is missing a part".
 val coreFfiManifest: File = rootProject.file("../../mazama_modules/core/mazama_core_ffi/Cargo.toml")
-val coreTargets = mapOf("aarch64-linux-android" to "arm64-v8a", "x86_64-linux-android" to "x86_64")
+val coreTargets = mapOf(
+    "aarch64-linux-android" to "arm64-v8a",
+    "armv7-linux-androideabi" to "armeabi-v7a",
+    "x86_64-linux-android" to "x86_64",
+)
+// The NDK's clang for a Rust target, where the names differ: Rust's armv7-linux-androideabi is the NDK's armv7a-...
+fun ndkClangPrefix(rustTriple: String): String = when (rustTriple) {
+    "armv7-linux-androideabi" -> "armv7a-linux-androideabi"
+    else -> rustTriple
+}
 
 val buildMazamaCoreFfi by tasks.registering {
     description = "Compiles mazama_core_ffi (Rust) for the app's ABIs; fails when Rust isn't set up."
@@ -159,7 +184,7 @@ val buildMazamaCoreFfi by tasks.registering {
         val minSdk = android.defaultConfig.minSdk ?: 21
         val targetDir = layout.buildDirectory.dir("mazama_core_ffi").get().asFile
         for ((triple, abi) in coreTargets) {
-            val linker = File(ndk, "toolchains/llvm/prebuilt/$host/bin/$triple$minSdk-clang")
+            val linker = File(ndk, "toolchains/llvm/prebuilt/$host/bin/${ndkClangPrefix(triple)}$minSdk-clang")
             if (!linker.isFile) {
                 fail("no NDK linker at ${linker.path}")
             }

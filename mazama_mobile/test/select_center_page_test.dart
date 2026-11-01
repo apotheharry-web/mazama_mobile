@@ -30,10 +30,14 @@ import 'package:mazama_mobile/state_packages_client.dart';
 import 'package:mazama_mobile/stock_mix.dart';
 import 'package:mazama_mobile/stock_summary.dart';
 import 'package:mazama_mobile/local_store.dart';
+import 'package:mazama_mobile/server_health.dart';
 import 'package:mazama_mobile/sync/sync_datasets.dart';
+import 'package:mazama_mobile/sync/sync_engine.dart';
+import 'package:mazama_mobile/sync/sync_queue.dart';
 import 'package:mazama_mobile/sync/updated_line.dart';
 
 import 'app_release_signing.dart';
+import 'fake_timers.dart';
 import 'features_off.dart';
 import 'temp_app_data_dir.dart';
 
@@ -727,6 +731,82 @@ void main() {
     await tester.pumpWidget(picker(ios));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('app-update-card')), findsNothing);
+  });
+
+  // specs/phone-sync Task 8b Step 2: the Mazama tab and the stock page's sheets read through the engine, and the
+  // center home asks for each once as it opens; the cart (in the sale path) still reads its own stock, as before.
+  testWidgets("opening a center asks the engine once for the Mazama mix and the sheets; the cart's stock read is unchanged",
+      (tester) async {
+    final engineDir = Directory.systemTemp.createTempSync('mazama_select_center_engine_');
+    addTearDown(() => engineDir.deleteSync(recursive: true));
+    final health = ServerHealth(probe: () async => false, startTimer: FakeTimers().start);
+    addTearDown(health.dispose);
+    final engine = SyncEngine(
+      store: LocalStore.forDir(engineDir),
+      health: health,
+      startTimer: FakeTimers().start,
+      senders: {for (final k in QueueKind.values) k: (item) async => const Done()},
+    );
+    addTearDown(engine.dispose);
+    final reads = <Dataset, int>{};
+    for (final d in Dataset.values) {
+      engine.register(d, (key) async {
+        reads[d] = (reads[d] ?? 0) + 1;
+        if (d == Dataset.mazamaInventory) return (body: jsonEncode((await _mazamaMix()).toJson()), source: sourceServer);
+        if (d == Dataset.sheets) return (body: jsonEncode([for (final s in await _sheets(231)) s.toJson()]), source: sourceServer);
+        throw StateError('${d.stored} is not asked for on open');
+      });
+    }
+
+    /// Opens the one center's home in a folder of its own and counts its stock reads (the cart's and the stock page's).
+    Future<({int packages, int rawState, int mix, int sheets})> open({SyncEngine? engine}) async {
+      final runDir = Directory.systemTemp.createTempSync('mazama_select_center_run_');
+      addTearDown(() => runDir.deleteSync(recursive: true));
+      var packages = 0, rawState = 0, mix = 0, sheets = 0;
+      await tester.pumpWidget(MaterialApp(
+        home: SelectCenterPage(
+          session: _freshSession(),
+          spec: _dummySpec,
+          sessionStore: SessionStore(dataDir: () => runDir),
+          engine: engine,
+          fetchMazamaInventory: () {
+            mix++;
+            return _mazamaMix();
+          },
+          fetchProductSheets: (id) {
+            sheets++;
+            return _sheets(id);
+          },
+          fetchMazamaLicenses: (id) async => const [],
+          fetchLicenses: (token) async => [_license(231, 'Bendable Service Center', 'ServiceCenter')],
+          fetchCenterPackages: (id) async {
+            packages++;
+            return [];
+          },
+          fetchRawPackagesFromState: (id, {required accessToken}) {
+            rawState++;
+            return _noRawState(id, accessToken: accessToken);
+          },
+        ),
+      ));
+      await tester.pumpAndSettle();
+      expect(find.byType(CenterHomePage), findsOneWidget);
+      expect(find.text('3,888 mg TPE in all', skipOffstage: false), findsOneWidget);
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpAndSettle();
+      return (packages: packages, rawState: rawState, mix: mix, sheets: sheets);
+    }
+
+    final before = await open(); // no engine: each page reads for itself
+    expect(before.mix, 1);
+    expect(before.sheets, 1);
+    final through = await open(engine: engine);
+    expect(reads, {Dataset.mazamaInventory: 1, Dataset.sheets: 1}); // once each; nothing else asked of the engine
+    expect(through.mix, 0); // the engine read them instead
+    expect(through.sheets, 0);
+    expect(through.packages, before.packages); // the cart's (and the stock rows') own reads, as they were
+    expect(through.rawState, before.rawState);
+    expect(before.packages, greaterThan(0));
   });
 }
 

@@ -3,19 +3,25 @@
 // test/order_par_page_test.dart). Data comes through the
 // injected loaders, as the other pages' tests inject their clients.
 
+import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mazama_mobile/center_stock_page.dart';
 import 'package:mazama_mobile/licenses_client.dart';
+import 'package:mazama_mobile/local_store.dart';
 import 'package:mazama_mobile/server_health.dart';
 import 'package:mazama_mobile/sync/server_read.dart';
 import 'package:mazama_mobile/sheets_client.dart';
 import 'package:mazama_mobile/stock_pie.dart';
 import 'package:mazama_mobile/stock_rows.dart';
 import 'package:mazama_mobile/stock_summary.dart';
+import 'package:mazama_mobile/sync/dataset_feed.dart';
 import 'package:mazama_mobile/sync/sync_datasets.dart';
+import 'package:mazama_mobile/sync/sync_engine.dart';
+import 'package:mazama_mobile/sync/sync_queue.dart';
 
 import 'fake_timers.dart';
 
@@ -736,5 +742,165 @@ void main() {
     ));
     await tester.pumpAndSettle();
     expect(find.text('Lots did not load: No such service center.'), findsOneWidget);
+  });
+
+  // --- specs/phone-sync Task 8b Step 2: the sheets read through the sync engine's sheets dataset ----------------------
+
+  group('the sheets through the engine', () {
+    final engines = <SyncEngine>[];
+    late Directory dir;
+    late ServerHealth health;
+    late int reads;
+
+    setUp(() {
+      dir = Directory.systemTemp.createTempSync('mazama_center_stock_page_feed_test_');
+      health = ServerHealth(probe: () async => false, startTimer: FakeTimers().start);
+      reads = 0;
+    });
+    tearDown(() {
+      for (final e in engines) {
+        e.dispose();
+      }
+      engines.clear();
+      health.dispose();
+      LocalStore.debugCloseAll();
+      dir.deleteSync(recursive: true);
+    });
+
+    SyncEngine engine(Future<List<ProductSheet>> Function() read) {
+      final e = SyncEngine(
+        store: LocalStore.forDir(dir),
+        health: health,
+        startTimer: FakeTimers().start,
+        senders: {for (final k in QueueKind.values) k: (item) async => const Done()},
+      );
+      engines.add(e); // disposed in tearDown, before the store is closed
+      e.register(Dataset.sheets, (key) async {
+        reads++;
+        return (body: jsonEncode([for (final s in await read()) s.toJson()]), source: sourceServer);
+      });
+      return e;
+    }
+
+    testWidgets('the dataset fills the lot table; a read under way as the page opens is joined', (tester) async {
+      final gate = Completer<List<ProductSheet>>();
+      final e = engine(() => gate.future);
+      unawaited(e.refresh(Dataset.sheets, '231')); // the center home's, on open
+      await tester.pumpWidget(MaterialApp(
+        home: CenterStockPage(
+            center: _center, loadRows: () async => const StockLoad(_rows), sheetsFeed: sheetsFeed(e, 231), health: health),
+      ));
+      // the rows load on a zero timer (_refresh's Future(...)), so the lot table is drawn a pump later; settling waits for
+      // that and not for the gated sheets read, which is still under way
+      await tester.pumpAndSettle();
+      expect(find.text('Loading…'), findsOneWidget);
+      expect(reads, 1);
+      gate.complete(_sheets);
+      await tester.pumpAndSettle();
+      await _openLots(tester);
+      expect(_lotRows(tester), containsAll(['Golden Teacher|HB-gt01', 'Penis Envy|PL-pe02']));
+      expect(reads, 1);
+    });
+
+    testWidgets("a 4xx is the server's own answer: a note on the table, the stored sheets stay", (tester) async {
+      final e = engine(() async => throw SheetsError('No such service center.'));
+      e.datasets.put(Dataset.sheets, '231', jsonEncode([for (final s in _sheets) s.toJson()]),
+          source: sourceServer, at: DateTime.utc(2026, 10, 20));
+      await tester.pumpWidget(MaterialApp(
+        home: CenterStockPage(center: _center, loadRows: () async => const StockLoad(_rows), sheetsFeed: sheetsFeed(e, 231)),
+      ));
+      await tester.pumpAndSettle();
+      expect(find.text('Lots did not update: No such service center.'), findsOneWidget);
+      await _openLots(tester);
+      expect(_lotRows(tester), containsAll(['Golden Teacher|HB-gt01', 'Penis Envy|PL-pe02']));
+    });
+
+    testWidgets("the engine's own refresh answering 401 or 429 keeps the lots on screen, with a note", (tester) async {
+      var answer = 'ok';
+      final e = engine(() async {
+        if (answer == '401') throw SheetsError('The app key was refused.');
+        if (answer == '429') throw SheetsError('Too many requests.');
+        return _sheets;
+      });
+      await tester.pumpWidget(MaterialApp(
+        home: CenterStockPage(center: _center, loadRows: () async => const StockLoad(_rows), sheetsFeed: sheetsFeed(e, 231)),
+      ));
+      await tester.pumpAndSettle();
+      await _openLots(tester);
+      for (final (code, text) in [('401', 'The app key was refused.'), ('429', 'Too many requests.')]) {
+        answer = code;
+        await e.refresh(Dataset.sheets, '231'); // as the five-minute tick does
+        await tester.pumpAndSettle();
+        expect(find.text('Lots did not update: $text'), findsOneWidget);
+        expect(find.textContaining('Lots did not load'), findsNothing);
+        expect(_lotRows(tester), containsAll(['Golden Teacher|HB-gt01', 'Penis Envy|PL-pe02']));
+      }
+    });
+
+    testWidgets('showing the stored sheets while unreachable, the server answering again reloads the rows too',
+        (tester) async {
+      var up = false;
+      final e = engine(() async {
+        if (!up) throw SheetsError("Mazama's server can't be reached", unreachable: true);
+        return _sheets;
+      });
+      e.datasets.put(Dataset.sheets, '231', jsonEncode([for (final s in _sheets) s.toJson()]),
+          source: sourceServer, at: DateTime.utc(2026, 10, 20));
+      health.markUnreachable();
+      var loads = 0;
+      await tester.pumpWidget(MaterialApp(
+        home: CenterStockPage(
+          center: _center,
+          loadRows: () async {
+            loads++;
+            return const StockLoad(_rows); // the server's own rows: not partial
+          },
+          sheetsFeed: sheetsFeed(e, 231),
+          health: health,
+        ),
+      ));
+      await tester.pumpAndSettle();
+      expect(loads, 1);
+      up = true;
+      health.markReachable();
+      await tester.pumpAndSettle();
+      expect(loads, 2); // as before the engine: the kept sheets reload the page's rows
+      expect(reads, 2); // the sheets once more, by the engine
+    });
+
+    testWidgets('showing partial stock, the server answering again reloads the rows; the sheets only by the engine',
+        (tester) async {
+      var up = false;
+      final e = engine(() async {
+        if (!up) throw SheetsError("Mazama's server can't be reached", unreachable: true);
+        return [_sheets.first];
+      });
+      e.datasets.put(Dataset.sheets, '231', jsonEncode([for (final s in _sheets) s.toJson()]),
+          source: sourceServer, at: DateTime.utc(2026, 10, 20));
+      health.markUnreachable();
+      var loads = 0;
+      await tester.pumpWidget(MaterialApp(
+        home: CenterStockPage(
+          center: _center,
+          loadRows: () async {
+            loads++;
+            return loads == 1 ? const StockLoad(_stateRows, mgMode: 'psilocybin', partial: true) : const StockLoad(_rows);
+          },
+          sheetsFeed: sheetsFeed(e, 231),
+          health: health,
+        ),
+      ));
+      await tester.pumpAndSettle();
+      await _openLots(tester);
+      expect(_lotRows(tester), containsAll(['Golden Teacher|HB-gt01', 'Penis Envy|PL-pe02'])); // the stored copy
+      expect(reads, 1);
+
+      up = true;
+      health.markReachable();
+      await tester.pumpAndSettle();
+      expect(loads, 2);
+      expect(reads, 2); // the engine's, not one more from the page
+      expect(_lotRows(tester), ['Golden Teacher|HB-gt01']);
+    });
   });
 }

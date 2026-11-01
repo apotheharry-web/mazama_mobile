@@ -9,6 +9,7 @@ import 'package:mazama_mobile/coa_data_client.dart';
 import 'package:mazama_mobile/configured_coa_submit.dart';
 import 'package:mazama_mobile/inventory_upload_client.dart';
 import 'package:mazama_mobile/local_store.dart';
+import 'package:mazama_mobile/sales_upload_client.dart';
 import 'package:mazama_mobile/server_health.dart';
 
 import 'fake_timers.dart';
@@ -87,6 +88,36 @@ void main() {
     await w.flush();
     expect([for (final s in submitted) s.$1], ['HB-1', 'HB-2']);
     expect([for (final l in w.lots) l.lotGuid], ['HB-2', 'HB-3']);
+  });
+
+  for (final status in [429, 408]) {
+    test('a $status keeps the lot waiting, unmarked (408: the server never got its body)', () async {
+      final w = work();
+      w.addCoaLot(lotGuid: 'HB-1', packageId: 1, stateId: 231);
+      coaScript = [(_) => ConfiguredCoaSubmitError('Not now', status: status)];
+      await w.flush();
+      expect(submitted, hasLength(1));
+      expect([for (final l in w.lots) l.lotGuid], ['HB-1']);
+    });
+  }
+
+  test("a snapshot the server timed out reading (408) is kept and sent again; it isn't a refusal", () async {
+    final w = work();
+    health.markUnreachable();
+    w.keepSnapshot(231, [1], workerEmail: 'w', deviceId: 'd');
+    w.keepSnapshot(231, [2], workerEmail: 'w', deviceId: 'd', kind: 'sales');
+    health.markReachable();
+    snapScript = [
+      (_) => InventoryUploadError('The request took too long to send.', status: 408),
+    ];
+    await w.flush();
+    expect(w.snapshots.keys.toSet(), {'inventory:231', 'sales:231'});
+    snapScript = [(_) => SalesUploadError('The request took too long to send.', status: 408)];
+    await w.flush();
+    expect(w.snapshots.keys.toSet(), {'inventory:231', 'sales:231'});
+    snapScript = [];
+    await w.flush();
+    expect(w.snapshots, isEmpty);
   });
 
   test('no usable session: the lots wait', () async {

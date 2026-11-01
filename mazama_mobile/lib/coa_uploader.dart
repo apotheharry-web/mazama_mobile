@@ -14,8 +14,9 @@
 //     session as it is at send time.
 //   - What the reply means (CU-R3, CU-R4):
 //       200 with numbers: sent, and every caller that asked about the lot is told (the cart patches it in);
-//       any other reply below 500 (202 queued, 202 held, 4xx refused): sent, nothing to patch;
-//       429: busy - the run stops, the waiting lots are let go and none is marked; the next load enqueues them again;
+//       any other reply below 500 (202 queued, 202 held, 4xx refused) but 429 and 408: sent, nothing to patch;
+//       429 (busy) or 408 (the server gave up reading the body): the run stops, the waiting lots are let go and none
+//       is marked; the next load enqueues them again;
 //       5xx or no connection (server_error.dart's rule), for a lot actually being sent: that lot is kept on the
 //       catch-up list (catch_up_store.dart), as a cart add's would be, and only while the list has room, so these
 //       never push out a cart add's lot; the waiting lots are let go, unmarked, and the next load enqueues them again.
@@ -100,10 +101,11 @@ int? coaReplyStatus(Object? error) {
   return null;
 }
 
-/// Whether a failed upload still counts as sent (CU-R3): the server answered it below 500 and it wasn't a 429.
+/// Whether a failed upload still counts as sent (CU-R3): the server answered it below 500, and not with a 429 or a 408
+/// (isNotNowStatus: nothing was taken).
 bool countsAsSent(Object? error) {
   final status = coaReplyStatus(error);
-  return status != null && status < 500 && status != 429;
+  return status != null && status < 500 && !isNotNowStatus(status);
 }
 
 const _labReport = 'lab_report';
@@ -206,7 +208,7 @@ QueueSender labReportQueueSender(CoaLotSend send, Future<CatchUpAuth?> Function(
             credentials);
         return data == null ? const Skipped() : Done(data); // null: no potency PDF on file at the state
       } catch (e) {
-        if (coaReplyStatus(e) == 429) return const Busy();
+        if (isNotNowStatus(coaReplyStatus(e))) return const Busy();
         if (isServerUnreachable(e)) return Unreachable(error: '$e');
         if (countsAsSent(e)) return const Done(); // queued, held or refused: the server has its answer (CU-R3)
         return const Skipped(); // the state system's read failing: not sent; the next load tries again

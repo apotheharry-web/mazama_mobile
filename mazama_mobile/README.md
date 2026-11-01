@@ -23,7 +23,7 @@ only on its `/p/` routes (labels, packages, lab-report data, scan matching, sale
 - Tests run in CI (`mobile-analyze`, `mobile-test`); see `AGENTS.md` for reading the results.
 - **The shared core is part of every build** (`lib/mazama_core.dart`, specs/core CR-D2): Android and iOS builds compile
   `../mazama_modules/core/mazama_core_ffi` and fail without Rust (`rustup target add aarch64-linux-android
-  x86_64-linux-android`, or `aarch64-apple-ios`); an app that still can't load it shows one screen, "This build is
+  armv7-linux-androideabi x86_64-linux-android`, or `aarch64-apple-ios`); an app that still can't load it shows one screen, "This build is
   missing a part. Reinstall the app." (`lib/missing_core_app.dart`). The tests need it too: build it and point
   `MAZAMA_CORE_FFI_LIB` at it, or the tests that reach it fail (`test/support/core.dart`):
 

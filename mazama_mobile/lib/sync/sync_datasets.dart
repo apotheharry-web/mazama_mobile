@@ -305,6 +305,12 @@ List<ProductSheet> _decodeSheets(Object? json) =>
 Object? _encodeInventory(MazamaInventory inventory) => inventory.toJson();
 MazamaInventory _decodeInventory(Object? json) => MazamaInventory.fromJson(Map<String, Object?>.from(json as Map));
 
+/// A `sheets` body's JSON read back (dataset_feed.dart's sheetsFeed); throws when it isn't one.
+List<ProductSheet> sheetsFromJson(Object? json) => _decodeSheets(json);
+
+/// A `mazama_inventory` body's JSON read back (dataset_feed.dart's mazamaInventoryFeed); throws when it isn't one.
+MazamaInventory mazamaInventoryFromJson(Object? json) => _decodeInventory(json);
+
 /// A center's par levels (route C10), kept as the `par` dataset.
 DatasetKeeper<List<ParLevel>> parDataset(Datasets datasets, int stateId) =>
     datasets.keeper<List<ParLevel>>(Dataset.par, '$stateId', encode: _encodePar, decode: _decodePar);

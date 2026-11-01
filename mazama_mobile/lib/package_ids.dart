@@ -10,7 +10,7 @@ bool isLotId(String s) => lotIdPattern.hasMatch(s);
 bool isPackageId(String s) => packageIdPattern.hasMatch(s);
 
 /// The batch/lot a package was made from, as the state's own record names it: the first of harvestBatchGuid,
-/// processLotGuid that is a lot id, else null. The Dart twin of the server's stockdata.product_source.
+/// processLotGuid that is a lot id, else null. The Dart twin of the server's stock/records.py product_source.
 String? packageSource(Map<String, Object?> record) {
   for (final key in const ['harvestBatchGuid', 'processLotGuid']) {
     final v = record[key];

@@ -16,10 +16,24 @@
 // tab first becomes the current page: it reads the center's whole sales history, which must not run while the worker
 // is on the Cart beside it (the pre-build below would otherwise start it there).
 //
+// specs/phone-sync Task 8b Step 2: opening the home asks the sync engine once for the refresh of each dataset its pages
+// read through the engine ([CenterHomePage.refreshOnOpen]: the Mazama tab's mazama_inventory and the Stock page's
+// sheets, sync/dataset_feed.dart), before the pages are built, so each page joins that read rather than starting its
+// own. What is not asked for, and why (each would double a read a page still makes for itself on open):
+//   - center_stock and center_status: the cart loads its own stock (CenterStock, the state and the server) and its
+//     own settings on open; it is in the sale path, which never awaits or reads through the engine (PS-D3). The Stock
+//     page's rows read the same server packages and state records for themselves (stock_rows.dart).
+//   - recent_sales: the Sales page reads the state's sales only once its tab is first opened, never beside the Cart
+//     (above), with a fresh state token; no engine refresher reads it in the app.
+//   - par: read only by the order's first step (order_par_page.dart), which the home doesn't host.
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'features.g.dart';
 import 'licenses_client.dart';
+import 'sync/sync_datasets.dart' show Dataset;
+import 'sync/sync_engine.dart';
 
 class CenterHomePage extends StatefulWidget {
   const CenterHomePage(
@@ -30,6 +44,8 @@ class CenterHomePage extends StatefulWidget {
       required this.buildCart,
       required this.buildSales,
       this.buildUpdateCard,
+      this.engine,
+      this.refreshOnOpen = const [],
       this.featureTable = features});
 
   final License center;
@@ -52,6 +68,13 @@ class CenterHomePage extends StatefulWidget {
   /// specs/app-updates AU-D10: the update card above the tabs (app_update_card.dart), given the draft cart's line count
   /// so it hides while a cart holds a line; null (tests, the demo) shows none.
   final Widget Function(int draftCount)? buildUpdateCard;
+
+  /// The sync engine the pages read [refreshOnOpen] through (the app's, or the demo's); none asked for when null.
+  final SyncEngine? engine;
+
+  /// The datasets (and keys) asked for once as the home opens (the file comment): only those its pages read through
+  /// [engine]'s watch, never one a page still reads for itself.
+  final List<(Dataset, String)> refreshOnOpen;
 
   @override
   State<CenterHomePage> createState() => _CenterHomePageState();
@@ -80,6 +103,18 @@ class _CenterHomePageState extends State<CenterHomePage> with SingleTickerProvid
 
   /// Sales has been the current page (or is the first): from then on it is built and kept like the others.
   late bool _salesOpened = _shown.isNotEmpty && _shown[_first] == _Tab.sales;
+
+  @override
+  void initState() {
+    super.initState();
+    // Before build makes the pages: each finds its read under way and joins it (DatasetFeed.read).
+    final engine = widget.engine;
+    if (engine != null) {
+      for (final (d, key) in widget.refreshOnOpen.toSet()) {
+        unawaited(engine.refresh(d, key));
+      }
+    }
+  }
 
   void _onPageChanged(int i) {
     _tabs.animateTo(i);

@@ -49,7 +49,9 @@ import 'session_store.dart';
 import 'state_packages_client.dart' as state_packages_client;
 import 'stock_rows.dart';
 import 'stock_summary.dart';
+import 'sync/dataset_feed.dart';
 import 'sync/sync_datasets.dart';
+import 'sync/sync_engine.dart';
 import 'sync/updated_line.dart';
 
 class SelectCenterPage extends StatefulWidget {
@@ -146,6 +148,13 @@ class SelectCenterPage extends StatefulWidget {
   /// the session store's folder (the app's own folder, the engine's database), the demo's in its own folder.
   final Datasets datasets;
 
+  /// specs/phone-sync Task 8b Step 2: the sync engine the Mazama tab and the stock page's sheets read through, and the
+  /// center home asks for their refreshes on open: the demo's own in demo mode; else this one; else, while the Mazama
+  /// mix and the sheets are read with the defaults (the clients the app's engine reads with), the app's link's engine
+  /// (server_link.dart's linkEngine). A dataset is read through it only when it has a refresher for it; otherwise (and
+  /// with none) the pages read for themselves, as before.
+  final SyncEngine? engine;
+
   /// The feature registry (specs/features FR-3) the picker, the center home's tabs and their pages follow: the
   /// generated one in the app (fixed per release, FT-D2); tests pass a copy with features off.
   final Map<String, Feature> featureTable;
@@ -176,6 +185,7 @@ class SelectCenterPage extends StatefulWidget {
     this.fetchMazamaLicenses = _mazamaLicenses,
     ParColumnsStore? parColumnsStore,
     Datasets? datasets,
+    this.engine,
     this.demo,
     this.featureTable = features,
     this.updateChecker,
@@ -429,9 +439,17 @@ class _SelectCenterPageState extends State<SelectCenterPage> {
         strainOf: strainFromName,
       );
 
+  /// The engine [d] is read through ([SelectCenterPage.engine]), else null: the page reads for itself.
+  SyncEngine? _engineFor(Dataset d, {required bool defaultFetch}) {
+    final demo = widget.demo;
+    final engine = demo != null ? demo.engine : widget.engine ?? (defaultFetch ? server_link.linkEngine : null);
+    return engine != null && engine.refreshes(d) ? engine : null;
+  }
+
   /// The chosen center's stock page (SP-R12, SP-R13): its par levels are set before an order (SP-D19, MI-D21). The
-  /// lot table's sheets are kept with when, and shown from that copy while the server can't be reached.
-  CenterStockPage _stockPage(License center) {
+  /// lot table's sheets are kept with when, and shown from that copy while the server can't be reached; through the
+  /// sync engine when [sheets] is given.
+  CenterStockPage _stockPage(License center, DatasetFeed<List<sheets_client.ProductSheet>>? sheets) {
     final kept = sheetsDataset(widget.datasets, center.id);
     return CenterStockPage(
       center: center,
@@ -441,6 +459,7 @@ class _SelectCenterPageState extends State<SelectCenterPage> {
       loadSheets: () => widget.fetchProductSheets(center.id),
       keepSheets: kept.save,
       keptSheets: kept.load,
+      sheetsFeed: sheets,
       health: _health,
     );
   }
@@ -527,22 +546,35 @@ class _SelectCenterPageState extends State<SelectCenterPage> {
         demo: widget.demo != null,
       );
 
-  /// SP-D8, MI-D1, CW-R10: the chosen center's Mazama inventory | Stock | Cart | Sales home, opened on Stock.
+  /// SP-D8, MI-D1, CW-R10: the chosen center's Mazama inventory | Stock | Cart | Sales home, opened on Stock. The
+  /// datasets its pages read through the sync engine are asked for once as it opens (specs/phone-sync Task 8b Step 2,
+  /// center_home_page.dart's comment says which are not, and why).
   void _open(License center) {
     if (!mounted) return;
+    final mazamaEngine =
+        _engineFor(Dataset.mazamaInventory, defaultFetch: widget.fetchMazamaInventory == _mazamaInventory);
+    final sheetsEngine = _engineFor(Dataset.sheets, defaultFetch: widget.fetchProductSheets == _productSheets);
+    final mazama = mazamaEngine == null ? null : mazamaInventoryFeed(mazamaEngine);
+    final sheets = sheetsEngine == null ? null : sheetsFeed(sheetsEngine, center.id);
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (_) => CenterHomePage(
           center: center,
           featureTable: widget.featureTable,
+          engine: mazamaEngine ?? sheetsEngine, // one engine when both are given (the demo's, this page's or the app's)
+          refreshOnOpen: [
+            if (mazamaEngine != null && _on('mazama_tab', center)) (Dataset.mazamaInventory, ''),
+            if (sheetsEngine != null && _on('center_stock', center)) (Dataset.sheets, '${center.id}'),
+          ],
           buildMazama: () => MazamaInventoryPage(
             load: widget.fetchMazamaInventory,
+            feed: mazama,
             kept: mazamaInventoryDataset(widget.datasets).load,
             keep: mazamaInventoryDataset(widget.datasets).save,
             health: _health,
             orderForm: _on('ordering', center) ? () => _orderPage(center) : null,
           ),
-          buildStock: () => _stockPage(center),
+          buildStock: () => _stockPage(center, sheets),
           buildSales: () => _salesPage(center),
           buildUpdateCard: _updates == null
               ? null

@@ -1,5 +1,5 @@
 // SM-09: the phone's id checks and "which batch/lot a package came from", held to the cases the server's own Python
-// computed (../mazama_modules/ids/gen.py -> idpatterns.LOT_ID / PACKAGE_ID, stockdata.product_source). The
+// computed (../mazama_modules/ids/gen.py -> idpatterns.LOT_ID / PACKAGE_ID, stock/records.py product_source). The
 // patterns themselves are generated into lib/id_patterns.g.dart from ../mazama_modules/ids/ids.yaml.
 //
 // Read from this app's vendored copy, assets/shared/ids/vectors/ (tool/sync_flows.sh; vendored_test.dart proves it

@@ -331,6 +331,18 @@ void main() {
     expect(l.catchUp.snapshots['sales:231']!.records, hasLength(ingestMaxRecords));
   });
 
+  test('a snapshot the server timed out reading (408) is kept for later, as an unreachable one is', () async {
+    final l = link();
+    addTearDown(l.dispose);
+    final slow = http_testing.MockClient((_) async => http.Response('{"detail": "The request took too long to send."}', 408));
+    await expectLater(l.uploadInventorySnapshot(231, const [1], workerEmail: 'w', deviceId: 'd', client: slow),
+        throwsA(isA<InventoryUploadError>()));
+    await expectLater(l.uploadSalesSnapshot(231, const [2], workerEmail: 'w', deviceId: 'd', client: slow),
+        throwsA(isA<SalesUploadError>()));
+    expect(l.catchUp.snapshots['inventory:231']!.records, [1]);
+    expect(l.catchUp.snapshots['sales:231']!.records, [2]);
+  });
+
   test('sales: an unreachable send keeps the read for later; a refusal keeps nothing', () async {
     final l = link();
     addTearDown(l.dispose);
@@ -488,16 +500,18 @@ void main() {
       });
     }
 
-    test('a cart add the server was too busy for (429) is not remembered', () async {
-      TestWidgetsFlutterBinding.ensureInitialized();
-      final l = link();
-      addTearDown(l.dispose);
-      await expectLater(
-          l.submitCoaForLot(
-              lotGuid: 'HB-9bc7d118', representativePackageId: 777, accessToken: 'T', workerEmail: 'w', deviceId: 'd', client: chain(429)),
-          throwsA(isA<ConfiguredCoaSubmitError>()));
-      expect(l.coaUploads.sent.wasSent('HB-9bc7d118'), isFalse);
-    });
+    for (final status in [429, 408]) {
+      test('a cart add the server was too busy for, or never got the body of ($status), is not remembered', () async {
+        TestWidgetsFlutterBinding.ensureInitialized();
+        final l = link();
+        addTearDown(l.dispose);
+        await expectLater(
+            l.submitCoaForLot(
+                lotGuid: 'HB-9bc7d118', representativePackageId: 777, accessToken: 'T', workerEmail: 'w', deviceId: 'd', client: chain(status)),
+            throwsA(isA<ConfiguredCoaSubmitError>()));
+        expect(l.coaUploads.sent.wasSent('HB-9bc7d118'), isFalse);
+      });
+    }
 
     test('a catch-up submission the server answered is remembered in the memory it is given', () async {
       TestWidgetsFlutterBinding.ensureInitialized();

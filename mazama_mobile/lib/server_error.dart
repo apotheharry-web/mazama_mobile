@@ -36,6 +36,11 @@ String describeServerError(int status, String body) {
   return 'the server answered HTTP $status';
 }
 
+/// Whether a reply with [status] means "not now" rather than an answer: 429 (this phone's per-minute budget, or the
+/// server busy) or 408 (the server gave up reading the request's body, 30 s, server-hardening review C1). Nothing was
+/// taken either way; the same request may be sent again after a wait.
+bool isNotNowStatus(int? status) => status == 429 || status == 408;
+
 /// Whether a reply with [status] means the server couldn't serve the request at all (5xx), not that it refused it.
 bool isUnreachableStatus(int status) => status >= 500 && status <= 599;
 

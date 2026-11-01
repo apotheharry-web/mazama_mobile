@@ -2,11 +2,28 @@
 // and tab taps switch, the Cart label shows the draft's count. The pages are stand-ins here
 // (mazama_inventory_page_test.dart covers the Mazama inventory page; (cart_page_*_test.dart covers
 // CartPage.onDraftCountChanged; center_stock_page_test.dart the stock page; select_center_page_test.dart the wiring).
+// specs/phone-sync Task 8b Step 2: opening it asks the sync engine once for each dataset its pages read through it.
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mazama_mobile/center_home_page.dart';
+import 'package:mazama_mobile/center_stock_page.dart';
 import 'package:mazama_mobile/licenses_client.dart';
+import 'package:mazama_mobile/local_store.dart';
+import 'package:mazama_mobile/mazama_inventory_client.dart';
+import 'package:mazama_mobile/mazama_inventory_page.dart';
+import 'package:mazama_mobile/server_health.dart';
+import 'package:mazama_mobile/sheets_client.dart';
+import 'package:mazama_mobile/stock_mix.dart';
+import 'package:mazama_mobile/stock_rows.dart';
+import 'package:mazama_mobile/sync/dataset_feed.dart';
+import 'package:mazama_mobile/sync/sync_datasets.dart';
+import 'package:mazama_mobile/sync/sync_engine.dart';
+import 'package:mazama_mobile/sync/sync_queue.dart';
 
+import 'fake_timers.dart';
 import 'features_off.dart';
 
 final _center = License(id: 231, licenseId: 'SC-b1c7379a', licenseName: 'Bendable Service Center', licenseType: 'ServiceCenter');
@@ -268,5 +285,117 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.byType(TabBar), findsNothing);
     expect(find.text('Nothing in this app is on for this license.'), findsOneWidget);
+  });
+
+  // --- specs/phone-sync Task 8b Step 2 ---------------------------------------------------------------------------
+
+  group('the datasets its pages read through the engine', () {
+    final engines = <SyncEngine>[];
+    late Directory dir;
+    late ServerHealth health;
+    late Map<Dataset, int> reads;
+
+    setUp(() {
+      dir = Directory.systemTemp.createTempSync('mazama_center_home_page_test_');
+      health = ServerHealth(probe: () async => false, startTimer: FakeTimers().start);
+      reads = {};
+    });
+    tearDown(() {
+      for (final e in engines) {
+        e.dispose();
+      }
+      engines.clear();
+      health.dispose();
+      LocalStore.debugCloseAll();
+      dir.deleteSync(recursive: true);
+    });
+
+    /// An engine with a counting refresher for every dataset the home's pages could read (center_stock, center_status,
+    /// par and recent_sales too, which the home must not ask for).
+    SyncEngine engine() {
+      final e = SyncEngine(
+        store: LocalStore.forDir(dir),
+        health: health,
+        startTimer: FakeTimers().start,
+        senders: {for (final k in QueueKind.values) k: (item) async => const Done()},
+      );
+      engines.add(e); // disposed in tearDown, before the store is closed
+      const mix = MazamaInventory(name: 'Mazama Mushrooms LLC', cells: [MixCell(strain: 'Golden Teacher', type: 'DH', mg: 3000)]);
+      const sheets = [
+        ProductSheet(guid: 'HB-gt01', name: 'GT 6.26', product: 'Whole Fungi', tested: 'Aug 27, 2026',
+            path: '/p/lots/mazama/HB-gt01', strains: ['Golden Teacher']),
+      ];
+      final bodies = <Dataset, String>{
+        Dataset.mazamaInventory: jsonEncode(mix.toJson()),
+        Dataset.sheets: jsonEncode([for (final s in sheets) s.toJson()]),
+        Dataset.centerStock: jsonEncode({'packages': [], 'source': sourceServer}),
+        Dataset.centerStatus: jsonEncode({'configured': true}),
+        Dataset.par: '[]',
+        Dataset.recentSales: '[]',
+      };
+      for (final MapEntry(key: d, value: body) in bodies.entries) {
+        e.register(d, (key) async {
+          reads[d] = (reads[d] ?? 0) + 1;
+          return (body: body, source: sourceServer);
+        });
+      }
+      return e;
+    }
+
+    /// The home with the real Mazama and Stock pages on [e]'s feeds; the cart a stand-in counting its own stock reads.
+    Widget home(SyncEngine e, {List<(Dataset, String)> refreshOnOpen = const [], List<int>? cartReads}) => MaterialApp(
+          home: CenterHomePage(
+            center: _center,
+            engine: e,
+            refreshOnOpen: refreshOnOpen,
+            buildMazama: () => MazamaInventoryPage(feed: mazamaInventoryFeed(e)),
+            buildStock: () => CenterStockPage(
+                center: _center, loadRows: () async => const StockLoad([]), sheetsFeed: sheetsFeed(e, _center.id)),
+            buildCart: (onCount) => _FakeSales(cartReads ?? []), // its initState: where CartPage loads its stock
+            buildSales: () => _FakeSales([]),
+          ),
+        );
+
+    const asked = [(Dataset.mazamaInventory, ''), (Dataset.sheets, '231')];
+
+    testWidgets('opening the center home refreshes each dataset once', (tester) async {
+      final e = engine();
+      final cartReads = <int>[];
+      await tester.pumpWidget(home(e, refreshOnOpen: asked, cartReads: cartReads));
+      await tester.pumpAndSettle();
+      // asked by the home, joined by each page as it was built: one read each, none twice
+      expect(reads, {Dataset.mazamaInventory: 1, Dataset.sheets: 1});
+      expect(find.text('3,000 mg TPE in all', skipOffstage: false), findsOneWidget);
+      expect(e.datasets.read(Dataset.sheets, '231'), isNotNull);
+      // the cart's stock read is its own, once, as before; the home asks nothing of center_stock or center_status
+      expect(cartReads, [1]);
+      expect(reads[Dataset.centerStock], isNull);
+      expect(reads[Dataset.centerStatus], isNull);
+    });
+
+    testWidgets('a swipe to the next tab and back reads nothing again', (tester) async {
+      final e = engine();
+      await tester.pumpWidget(home(e, refreshOnOpen: asked));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(Tab, 'Mazama'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(Tab, 'Stock'));
+      await tester.pumpAndSettle();
+      expect(reads, {Dataset.mazamaInventory: 1, Dataset.sheets: 1});
+    });
+
+    testWidgets("without the home's ask each page reads once for itself: the ask adds no read", (tester) async {
+      final e = engine();
+      await tester.pumpWidget(home(e));
+      await tester.pumpAndSettle();
+      expect(reads, {Dataset.mazamaInventory: 1, Dataset.sheets: 1});
+    });
+
+    testWidgets('a dataset asked twice in the list is still read once', (tester) async {
+      final e = engine();
+      await tester.pumpWidget(home(e, refreshOnOpen: [...asked, ...asked]));
+      await tester.pumpAndSettle();
+      expect(reads, {Dataset.mazamaInventory: 1, Dataset.sheets: 1});
+    });
   });
 }

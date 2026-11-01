@@ -25,7 +25,10 @@ class InventoryUploadError implements ServerRequestError {
   /// Mazama's server couldn't be reached (server_error.dart's rule): the snapshot waits (catch_up_store.dart).
   @override
   final bool unreachable;
-  InventoryUploadError(this.message, {this.unreachable = false});
+
+  /// The status the server answered with; null when it didn't answer (or nothing was sent).
+  final int? status;
+  InventoryUploadError(this.message, {this.unreachable = false, this.status});
   @override
   String toString() => message;
 }
@@ -73,7 +76,8 @@ Future<Map<String, Object?>> uploadInventorySnapshot(
       throw InventoryUploadError('cannot reach ${uri.host}: ${ex.runtimeType}', unreachable: true);
     }
     if (resp.statusCode != 200) {
-      throw InventoryUploadError(describeServerError(resp.statusCode, resp.body), unreachable: isUnreachableStatus(resp.statusCode));
+      throw InventoryUploadError(describeServerError(resp.statusCode, resp.body),
+          unreachable: isUnreachableStatus(resp.statusCode), status: resp.statusCode);
     }
     Object? body;
     try {
