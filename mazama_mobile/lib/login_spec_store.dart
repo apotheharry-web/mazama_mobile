@@ -1,10 +1,10 @@
-// SL-R9: the sign-in spec the phone uses. The app ships one (assets/flows/login.yaml); when the state's sign-in page
+// The sign-in spec the phone uses. The app ships one (assets/flows/login.yaml); when the state's sign-in page
 // changes, the phone can fetch a newer one from Mazama's server (login_spec_client.dart) and keep it here, in a plain
 // text file `login_spec.yaml` beside session.json. On every launch the newer valid one of the two is used, so an app
 // update that ships a newer spec than the saved one wins at once, and a saved file that is corrupt, of a later format,
 // or names a host the app won't talk to is ignored (the bundled one is used). The hosts are the app's own allowlist:
-// the built-in two plus a saved signed host list's (login_hosts_store.dart, SL-R18), which MazamaApp puts in use first.
-// The browser sign-in spec (SL-R19, browser_login_spec.dart) is kept the same way under its own name,
+// the built-in two plus a saved signed host list's (login_hosts_store.dart), which MazamaApp puts in use first.
+// The browser sign-in spec (browser_login_spec.dart) is kept the same way under its own name,
 // `login_browser_spec.yaml` ([LoginSpecStore.browser]), held to the browser served mode.
 // Same dart:io-direct, *Sync pattern as session_store.dart / device_id.dart (see cart_store.dart for why *Sync).
 import 'dart:io';
@@ -14,28 +14,28 @@ import 'login_hosts_store.dart' show currentAllowedHosts;
 import 'mazama_core.dart' show MazamaCore;
 import 'session_store.dart' show defaultSessionDataDir;
 
-/// The sign-in spec the app ships (SL-R9): the one used when no newer usable one is saved.
+/// The sign-in spec the app ships: the one used when no newer usable one is saved.
 const bundledLoginSpecAsset = 'assets/flows/login.yaml';
 
 /// The state's API: writes and readable records live there, so the password is never sent to it, and a sign-in never
 /// requests it (sign_in_attempt.dart, session.dart pass it as `neverRequest`). The usable rule holds a spec to the same
-/// (the core's `flows.usable_login_spec`, SL-D16).
+/// (the core's `flows.usable_login_spec`).
 const stateApiHost = 'psilocybin.oregon.gov';
 
-/// Where a sign-in spec is served from, and so how it is run (SL-R19, the usable rule's served mode): [login] at
+/// Where a sign-in spec is served from, and so how it is run (the usable rule's served mode): [login] at
 /// /p/flows/login, the password sign-in, run with no `browse` callback, so it has no open_browser; [browser] at
 /// /p/flows/login_browser, the sign-in on the state's own page, so it has an open_browser in `login`.
 enum ServedAs { login, browser }
 
 /// The spec in [yaml] when the phone may use it as its sign-in spec, else null. The usable rule is the shared core's
-/// (`flows.usable_login_spec`, specs/core row 13: SPEC.md "A usable sign-in spec"), the same function the server's
+/// (`flows.usable_login_spec`: SPEC.md "A usable sign-in spec"), the same function the server's
 /// login_spec_source.py asks, both held to assets/shared/flows/contracts/login_spec_validity.json; the saved file and a
 /// fetched reply are both held to it. The core does not read YAML: [FlowSpec.fromYaml] reads it here (size, YAML, no
 /// anchors/aliases, no repeated key, format, plain vars) and the tree the interpreter will run - exactly that tree - is
 /// what the core checks:
 /// - every flow is a list of step mappings, `login` and `renew` among them and not empty;
 /// - every request step has a text url, to an allowed https host (an open_browser's url and until too: [allowedHosts],
-///   by default the phone's own, currentAllowedHosts, the built-in hosts plus a saved signed list's, SL-R18), with no `?`
+///   by default the phone's own, currentAllowedHosts, the built-in hosts plus a saved signed list's), with no `?`
 ///   (a query goes in `params`; an open_browser's until has a path), never the state's API, and its `spec_version` is
 ///   well formed;
 /// - every step's fields have the right kinds; a spec using a format 2 or 3 feature declares it;
@@ -47,7 +47,7 @@ enum ServedAs { login, browser }
 ///   answer follows the same rule as the password; no var is named email, password or refresh_token;
 /// - every params/headers/form value is text and no key of theirs has `{{`; no step sets a var or an input of its flow,
 ///   except renew's request extract of refresh_token;
-/// - with [served] (SL-R19): [ServedAs.login] has no open_browser step in any flow, [ServedAs.browser] has one in
+/// - with [served]: [ServedAs.login] has no open_browser step in any flow, [ServedAs.browser] has one in
 ///   `login` (whatever its `when` says). Without it, neither is asked (the shared vectors' cases with no "served").
 ///
 /// A tree JSON cannot carry exactly (a key that is not text, a number that is not finite) is not usable. [maxFormat] is
@@ -74,7 +74,7 @@ FlowSpec? usableLoginSpec(String yaml,
 /// The file the password sign-in spec is kept in ([LoginSpecStore]).
 const loginSpecFileName = 'login_spec.yaml';
 
-/// The file the browser sign-in spec is kept in ([LoginSpecStore.browser], SL-R19), apart from [loginSpecFileName].
+/// The file the browser sign-in spec is kept in ([LoginSpecStore.browser]), apart from [loginSpecFileName].
 const browserLoginSpecFileName = 'login_browser_spec.yaml';
 
 class LoginSpecStore {
@@ -85,7 +85,7 @@ class LoginSpecStore {
   /// The file's name in [dataDir]: [loginSpecFileName], or [browserLoginSpecFileName] for [LoginSpecStore.browser].
   final String fileName;
 
-  /// The served mode the saved spec is held to, reading and saving (SL-R19).
+  /// The served mode the saved spec is held to, reading and saving.
   final ServedAs served;
 
   /// The password sign-in spec's store: `login_spec.yaml`, no open_browser.
@@ -94,7 +94,7 @@ class LoginSpecStore {
         fileName = loginSpecFileName,
         served = ServedAs.login;
 
-  /// The browser sign-in spec's store (SL-R19): `login_browser_spec.yaml`, an open_browser in `login`.
+  /// The browser sign-in spec's store: `login_browser_spec.yaml`, an open_browser in `login`.
   const LoginSpecStore.browser({Directory Function()? dataDir})
       : dataDir = dataDir ?? defaultSessionDataDir,
         fileName = browserLoginSpecFileName,

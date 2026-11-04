@@ -1,9 +1,10 @@
-// specs/multi-cart MC-R2: a center's list of carts and the file it's kept in.
+// A center's list of carts and the file it's kept in.
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mazama_mobile/cart_slots.dart';
+import 'package:mazama_mobile/local_store.dart';
 
 void main() {
   group('CartSlots', () {
@@ -113,10 +114,8 @@ void main() {
       expect(File('${tempDir.path}/nested/carts.json').existsSync(), isFalse, reason: 'kept in the database');
     });
 
-    // An older build's file is imported when the store first opens the folder, so it is written before that (P-D5).
-    test('a broken carts.json from an older build is null', () async {
-      Directory('${tempDir.path}/nested').createSync(recursive: true);
-      File('${tempDir.path}/nested/carts.json').writeAsStringSync('{not json');
+    test('a broken carts.json document is null', () async {
+      LocalStore.forDir(Directory('${tempDir.path}/nested')).write('carts.json', '{not json');
       expect(await CartSlotsStore(dataDir: () => Directory('${tempDir.path}/nested')).load(231), isNull);
     });
   });

@@ -1,4 +1,4 @@
-// SP-R10: the phone's stock rules (lib/stock_summary.dart) are held to the golden vectors generated from the server's
+// The phone's stock rules (lib/stock_summary.dart) are held to the golden vectors generated from the server's
 // own Python (../mazama_modules/stock/gen.py -> stockview.filter_rows, summarize, pies, par_table), so the phone's
 // stock page draws the same pies and par table as the server's center page. Read from this app's vendored copy,
 // assets/shared/stock/vectors/ (tool/sync_flows.sh; vendored_test.dart proves it equals the source);
@@ -59,6 +59,8 @@ void main() {
     final pars = _cases('par.json');
 
     test('the vectors are there', () {
+      expect(_cases('classify.json').length, greaterThanOrEqualTo(10));
+      expect(_cases('record_types.json').length, greaterThanOrEqualTo(5));
       expect(filters.length, greaterThanOrEqualTo(8));
       expect(summaries.length, greaterThanOrEqualTo(10));
       expect(pieCases.length, greaterThanOrEqualTo(10));
@@ -76,6 +78,27 @@ void main() {
     for (final c in pars) {
       test('par: ${c['name']}', () {
         _same(parTable(Map<String, Object?>.from(c['summary'] as Map), _levels(c['levels'])), c['par']);
+      });
+    }
+    // How a row is read, and a state record's kind: the core's, held to its frozen vectors (SP-R17).
+    for (final c in _cases('classify.json')) {
+      test('classify: ${c['name']}', () {
+        final got = stockClassify(_rows(c['rows']), c['mg_mode'] as String);
+        _same({
+          'rows': [
+            for (final r in got.rows)
+              {
+                'type': r.type, 'word': r.word, 'edible': r.edible, 'size_key': r.sizeKey, 'mg_per_unit': r.mgPerUnit,
+                'has_units': r.hasUnits, 'type_mg': r.typeMg,
+              },
+          ],
+          'type_words': got.typeWords,
+        }, c['classify']);
+      });
+    }
+    for (final c in _cases('record_types.json')) {
+      test('record types: ${c['name']}', () {
+        _same(stockRecordTypes([for (final r in c['records'] as List) Map<String, Object?>.from(r as Map)]), c['types']);
       });
     }
     // The page chains them: rows -> filter -> summary -> pies, as the server's center page does.
@@ -113,7 +136,7 @@ void main() {
     expect(StockRow.fromJson(j).toJson(), j);
     final l = <String, Object?>{'strain': 'Bluey', 'size': 0, 'par': 4};
     expect(ParLevel.fromJson(l).toJson(), l);
-    final typed = <String, Object?>{...j, 'type': 'CH'};                // specs/edibles ED-R2: kept when sent
+    final typed = <String, Object?>{...j, 'type': 'CH'};                // kept when sent
     expect(StockRow.fromJson(typed).toJson(), typed);
   });
 
@@ -124,7 +147,6 @@ void main() {
 
   test('the constants are the vendored rules.yaml', () {
     final rules = loadYaml(File('assets/shared/stock/rules/rules.yaml').readAsStringSync()) as YamlMap;
-    expect(rules['serving_sizes'], stockServingSizes);
     expect(rules['other_size'], stockOtherSize);
     expect(rules['par_columns'], stockParColumns);
     expect(rules['all_strains'], stockAllStrains);
@@ -133,15 +155,13 @@ void main() {
     expect(rules['filters'], stockFilters);
     expect(rules['default_filter'], stockFilters.first);
     expect(rules['mg_modes'], stockMgModes);
-    // specs/edibles ED-R1
+    // an edible counted under its product
     final edibles = rules['edibles'] as YamlMap;
     expect(Map<String, String>.from(edibles['products'] as YamlMap), stockEdibles);
-    expect(edibles['booster_from_mg'], stockBoosterFromMg);
     expect({
       for (final e in (edibles['sizes'] as YamlMap).entries)
         e.key as String: ((e.value as YamlMap)['code'] as int, (e.value as YamlMap)['word'] as String, (e.value as YamlMap)['slot'] as String),
     }, stockEdibleSizes);
-    expect([for (final k in rules['name_keywords'] as YamlList) ((k as YamlList)[0] as String, k[1] as String)], stockNameKeywords);
     expect(List<String>.from(rules['size_order'] as YamlList), stockSizeOrder);
   });
 
@@ -167,9 +187,12 @@ void main() {
       });
     });
 
-    test('Microdose below 3 mg, Booster from 3 mg; the name first, else mg per unit; none is other', () {
-      String key(String desc, {num? mg}) => stockRowSizeKey(row(1, desc, type: 'CH', mg: mg), 'tpe');
-      expect([key('x 2.99 mg'), key('x 3 mg'), key('x 3.01 mg'), key('bar', mg: 2.5), key('bar', mg: 40), key('bar'), key('x 2 mg', mg: 150)],
+    test('Microdose below 3 mg, Booster from 3 mg; the name first, else mg per unit; none is other (the core\'s)', () {
+      final rows = [
+        for (final (desc, mg) in [('x 2.99 mg', null), ('x 3 mg', null), ('x 3.01 mg', null), ('bar', 2.5), ('bar', 40), ('bar', null), ('x 2 mg', 150)])
+          row(1, desc, type: 'CH', mg: mg),
+      ];
+      expect(stockClassify(rows, 'tpe').rows.map((c) => c.sizeKey),
           ['micro', 'booster', 'booster', 'micro', 'booster', 'other', 'micro']);
     });
 

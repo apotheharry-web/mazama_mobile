@@ -1,6 +1,6 @@
-// Demo mode end to end (specs/demo-mode, Testing): sign in as guest / guest, the Stock page, a sale in the Cart,
+// Demo mode end to end (Testing): sign in as guest / guest, the Stock page, a sale in the Cart,
 // Switch center, sign out - all inside http.runWithClient with a client that records any request, so a page reached
-// from the demo that still used a real network function would show up here (DM-D1). The demo's own sale client is
+// from the demo that still used a real network function would show up here. The demo's own sale client is
 // the only other client in play.
 import 'dart:io';
 
@@ -39,11 +39,11 @@ Future<void> _expectDemoStock(WidgetTester tester) async {
   expect(find.byType(CenterStockPage), findsOneWidget);
   expect(find.text('111 units'), findsOneWidget);
   expect(find.byType(StockPie), findsWidgets);
-  expect(find.textContaining('below par'), findsNothing); // SP-D19: par is set when ordering
+  expect(find.textContaining('below par'), findsNothing); // par is set when ordering
   expect(find.text('Other stock (2)'), findsOneWidget);
-  // SP-D18: the demo's own three sheets, as the lot table (its chocolate lot under "Chocolate", as the pies name it)
+  // The demo's own three sheets, as the lot table (its chocolate lot under "Chocolate", as the pies name it)
   expect(find.text('3 lots · 3 strains', skipOffstage: false), findsOneWidget);
-  // Other stock starts collapsed (SP-D16): open it, unless an earlier check on this same page already did.
+  // Other stock starts collapsed: open it, unless an earlier check on this same page already did.
   final toggle = find.byKey(const ValueKey('other-toggle'));
   if (find.descendant(of: toggle, matching: find.byIcon(Icons.expand_more)).evaluate().isNotEmpty) {
     // A message from the sale ("Demo sale: nothing was sent…") may still sit over the bottom of the page.
@@ -81,18 +81,18 @@ void main() {
       expect(find.text(demoBannerText), findsOneWidget);
       await _expectDemoStock(tester);
 
-      // MI-R3: the Mazama inventory page, left of Stock, shows the demo's own mix (no request either).
+      // The Mazama inventory page, left of Stock, shows the demo's own mix (no request either).
       await tester.tap(find.text('Mazama'));
       await tester.pumpAndSettle();
-      expect(find.text('Demo Mushroom Co.'), findsNothing); // no maker's name on the page (owner, 2026-10-22)
+      expect(find.text('Demo Mushroom Co.'), findsNothing); // no maker's name on the page
       expect(find.text('46,876 mg TPE in all'), findsOneWidget);
-      // MI-D21: Order opens the demo's par levels first, compared with the demo's stock.
+      // Order opens the demo's par levels first, compared with the demo's stock.
       await tester.tap(find.byKey(const ValueKey('order-button')));
       await tester.pumpAndSettle();
-      // Starlit Meadow 25 mg short 8, Quiet Harbor 10 mg short 3, Chocolate Booster short 1 (3 of 4: specs/edibles)
+      // Starlit Meadow 25 mg short 8, Quiet Harbor 10 mg short 3, Chocolate Booster short 1 (3 of 4)
       expect(find.text('12 units below par'), findsOneWidget);
       await _tap(tester, find.byKey(const ValueKey('par-continue')));
-      // MI-R6: the order form from the demo's par levels; the demo answers with a number and sends nothing.
+      // The order form from the demo's par levels; the demo answers with a number and sends nothing.
       expect(find.widgetWithText(AppBar, 'Order from Mazama'), findsOneWidget);
       await tester.tap(find.descendant(of: find.byKey(const ValueKey('type-all')), matching: find.text('Freeze dried')));
       await tester.pumpAndSettle();
@@ -134,17 +134,17 @@ void main() {
       expect(find.textContaining('Demo sale: nothing was sent'), findsWidgets);
       expect(find.text('Cart (1)'), findsNothing); // the cart is cleared, as after a real sale
 
-      // CW-R10: the Sales tab, right of Cart: the demo reads no sales and uploads nothing (no request either).
+      // The Sales tab, right of Cart: the demo reads no sales and uploads nothing (no request either).
       await tester.tap(find.text('Sales'));
       await tester.pumpAndSettle();
       expect(find.text('No sales in the last 30 days.'), findsOneWidget);
 
-      // DM-D4: the demo stock is as it was.
+      // The demo stock is as it was.
       await tester.tap(find.text('Stock'));
       await tester.pumpAndSettle();
       await _expectDemoStock(tester);
 
-      // Switch center stays in the demo, and its fresh Stock page reloads the demo stock: still as it was (DM-D4;
+      // Switch center stays in the demo, and its fresh Stock page reloads the demo stock: still as it was (
       // the Stock page has no pull to refresh, only the PKPR list does).
       await tester.tap(find.text('Cart'));
       await tester.pumpAndSettle();

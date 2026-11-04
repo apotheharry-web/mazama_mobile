@@ -22,7 +22,7 @@
     },
     "source": {
       "type": "object",
-      "description": "The batch/lot record (or, for a package of an untracked maker, that package's record); only analyteWeight is read: an analyteWeight present but not a JSON number means no amounts at all (DOSE-20)."
+      "description": "The batch/lot record (or, for a package of an untracked maker, that package's record); only analyteWeight is read: an analyteWeight present but not a JSON number means no amounts at all."
     },
     "meta": {
       "type": [

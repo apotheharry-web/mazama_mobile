@@ -17,7 +17,6 @@
 //      pick the newest non-deprecated accepted-Potency-test document -> DownloadDocument - the same state-system
 //      calls labpdfs.py's own _package_candidates path already makes server-side, just run here on-device
 //      instead) and hands the raw bytes to this call.
-import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
@@ -25,30 +24,20 @@ import 'package:http/http.dart' as http;
 import 'api_contract.g.dart';
 import 'app_api_key.dart';
 import 'server_error.dart';
-import 'server_link_client.dart' show serverClient;
+import 'server_request.dart';
 
-class CoaDataError implements ServerRequestError {
-  @override
-  final String message;
-
-  /// Mazama's server couldn't be reached (server_error.dart's rule).
-  @override
-  final bool unreachable;
-
-  /// The server's HTTP status when it answered, null when it couldn't be reached. The background uploader
-  /// (coa_uploader.dart) tells a reply below 500 (the server has the report: queued, held or refused) from a 429 (busy)
-  /// and from no answer at all (CU-R3, CU-R4).
-  final int? status;
-  CoaDataError(this.message, {this.unreachable = false, this.status});
-  @override
-  String toString() => message;
+/// [status]: the server's HTTP status when it answered, null when it couldn't be reached. The background uploader
+/// (coa_uploader.dart) tells a reply below 500 (the server has the report: queued, held or refused) from a 429 (busy)
+/// and from no answer at all.
+class CoaDataError extends ServerFailure {
+  CoaDataError(super.message, {super.status, super.unreachable});
 }
 
 /// One lot's lab result, resolved either from the server's adhoc_coa cache (fetchCoaDataBatch) or from a fresh
 /// upload this device just parsed (uploadCoaParse) - same shape either way (mazama_modules/api/schemas/coa_data_*).
-/// [tpe] is the server's, worked out by mazama_sales' coa.tpe (SM-03: the state's psilocybin + 284.25 / 204.27 x
+/// [tpe] is the server's, worked out by mazama_sales' coa.tpe (the state's psilocybin + 284.25 / 204.27 x
 /// psilocin when the state has a figure, else the lab's printed total, else the report's formula). The phone works
-/// out no TPE of its own (SM-D15): null is unknown, and so is a missing psilocybin or psilocin - never 0.
+/// out no TPE of its own: null is unknown, and so is a missing psilocybin or psilocin - never 0.
 class CoaData {
   final String guid;
   final String strain;
@@ -56,7 +45,7 @@ class CoaData {
   /// Null when the report's value isn't known (ND / below LOQ come as 0).
   final double? psilocybin;
   final double? psilocin;
-  // SM-08: analyte names as the shared rules file (mazama_modules/coa/rules/coa_rules.yaml) and mazama_core spell them,
+  // Analyte names as the shared rules file (mazama_modules/coa/rules/coa_rules.yaml) and mazama_core spell them,
   // the same keys /p/coa-data sends.
   final double baeocystin;
   final double norbaeocystin;
@@ -111,35 +100,14 @@ class CoaData {
 /// anything but a clean 200 JSON object (there is no "unknown stateId" case here, unlike fetchPackages -
 /// center_status answers {"configured": false} for that instead of 404ing, since "not configured" is exactly
 /// the question being asked, not an error).
-Future<bool> centerIsConfigured(int stateId, {String baseUrl = apiBaseUrl, http.Client? client}) async {
-  final c = client ?? serverClient();
-  final shouldClose = client == null;
-  try {
-    final uri = Uri.parse('$baseUrl${centerStatusPath(stateId)}');
-    http.Response resp;
-    try {
-      resp = await c.get(uri, headers: appApiKeyHeaders);
-    } catch (ex) {
-      throw CoaDataError('cannot reach ${uri.host}: ${ex.runtimeType}', unreachable: true);
-    }
-    if (resp.statusCode != 200) {
-      throw CoaDataError(describeServerError(resp.statusCode, resp.body),
-          status: resp.statusCode, unreachable: isUnreachableStatus(resp.statusCode));
-    }
-    Object? body;
-    try {
-      body = jsonDecode(resp.body);
-    } on FormatException {
-      throw CoaDataError('the server did not answer with JSON');
-    }
-    if (body is! Map || body['configured'] is! bool) {
-      throw CoaDataError('unexpected response shape');
-    }
-    return body['configured'] as bool;
-  } finally {
-    if (shouldClose) c.close();
-  }
-}
+Future<bool> centerIsConfigured(int stateId, {String baseUrl = apiBaseUrl, http.Client? client}) =>
+    serverRequest('$baseUrl${centerStatusPath(stateId)}', error: CoaDataError.new, client: client, read: (resp) {
+      final body = serverJson(resp, CoaDataError.new);
+      if (body is! Map || body['configured'] is! bool) {
+        throw CoaDataError('unexpected response shape');
+      }
+      return body['configured'] as bool;
+    });
 
 /// POSTs the distinct lot guids from a center's whole inventory to /p/coa-data/batch in one call - always the
 /// first thing tried for every guid, before anything else in this file. The result only has entries for guids
@@ -149,43 +117,22 @@ Future<Map<String, CoaData>> fetchCoaDataBatch(List<String> guids, {String baseU
   if (guids.isEmpty) return {};
   // The server answers for the first coaDataBatchMaxGuids ids of a request only (routes.yaml): ask in pieces.
   if (guids.length > coaDataBatchMaxGuids) {
-    final c = client ?? serverClient();
-    try {
+    return withServerClient(client, (c) async {
       final out = <String, CoaData>{};
       for (var i = 0; i < guids.length; i += coaDataBatchMaxGuids) {
         final end = i + coaDataBatchMaxGuids < guids.length ? i + coaDataBatchMaxGuids : guids.length;
         out.addAll(await fetchCoaDataBatch(guids.sublist(i, end), baseUrl: baseUrl, client: c));
       }
       return out;
-    } finally {
-      if (client == null) c.close();
-    }
+    });
   }
-  final c = client ?? serverClient();
-  final shouldClose = client == null;
-  try {
-    final uri = Uri.parse('$baseUrl${coaDataBatchPath()}');
-    http.Response resp;
-    try {
-      resp = await c.post(uri, headers: {...appApiKeyHeaders, 'content-type': 'application/json'},
-                         body: jsonEncode({'guids': guids}));
-    } catch (ex) {
-      throw CoaDataError('cannot reach ${uri.host}: ${ex.runtimeType}', unreachable: true);
-    }
-    if (resp.statusCode != 200) {
-      throw CoaDataError(describeServerError(resp.statusCode, resp.body),
-          status: resp.statusCode, unreachable: isUnreachableStatus(resp.statusCode));
-    }
-    Object? body;
-    try {
-      body = jsonDecode(resp.body);
-    } on FormatException {
-      throw CoaDataError('the server did not answer with JSON');
-    }
+  return serverRequest('$baseUrl${coaDataBatchPath()}',
+      method: 'POST', json: {'guids': guids}, error: CoaDataError.new, client: client, read: (resp) {
+    final body = serverJson(resp, CoaDataError.new);
     if (body is! Map) {
       throw CoaDataError('unexpected response shape');
     }
-    // SM-22: the server answers with lower-cased ids ('hb-...'); callers look results up by the id as the state
+    // The server answers with lower-cased ids ('hb-...'); callers look results up by the id as the state
     // system spells it ('HB-...'). Key every result by the guid this call was asked about, compared ignoring
     // case, so a lot the server already knows is never taken for a miss (re-downloaded, re-uploaded).
     final asked = {for (final g in guids) g.toLowerCase(): g};
@@ -196,9 +143,7 @@ Future<Map<String, CoaData>> fetchCoaDataBatch(List<String> guids, {String baseU
               CoaData.fromJson(asked[(entry.key as String).toLowerCase()] ?? entry.key as String,
                   Map<String, Object?>.from(entry.value as Map))
     };
-  } finally {
-    if (shouldClose) c.close();
-  }
+  });
 }
 
 /// POSTs a lot's own lab report PDF (already downloaded from the state system by the caller - see this file's
@@ -218,50 +163,32 @@ Future<CoaData> uploadCoaParse({
   required String workerEmail,
   required String deviceId,
   /// The state's psilocybin figure for this lot (a package's analyteWeight, mg/g), sent when above 0: the server
-  /// uses it to pick the lot's section when the lab printed another id as the UID (AD-19, mazama_core's find_lot).
+  /// uses it to pick the lot's section when the lab printed another id as the UID (mazama_core's find_lot).
   double? statePsilocybin,
   String baseUrl = apiBaseUrl,
   http.Client? client,
-}) async {
-  final c = client ?? serverClient();
-  final shouldClose = client == null;
-  try {
-    final uri = Uri.parse('$baseUrl${coaDataParsePath()}');
-    final req = http.MultipartRequest('POST', uri)
-      ..headers.addAll(appApiKeyHeaders)
-      ..fields['guid'] = guid
-      // Snake_case to match mazama_sales' own Form() parameter names exactly (web/stock_pages.py's
-      // coa_data_parse: worker_email, device_id) - both have "" defaults server-side, so sending the wrong
-      // names here never raised an error, it just silently discarded accountability data on every real
-      // upload (see this file's own header comment on why worker_email/device_id exist at all). Caught by
-      // reading the route's own parameter names while chasing an unrelated 422.
-      ..fields['worker_email'] = workerEmail
-      ..fields['device_id'] = deviceId
-      ..files.add(http.MultipartFile.fromBytes('pdf', pdfBytes, filename: '$guid.pdf'));
-    if (docId != null) req.fields['doc_id'] = docId.toString();
-    if (statePsilocybin != null && statePsilocybin > 0) req.fields['state_psilocybin'] = statePsilocybin.toString();
-    http.StreamedResponse streamed;
-    try {
-      streamed = await c.send(req);
-    } catch (ex) {
-      throw CoaDataError('cannot reach ${uri.host}: ${ex.runtimeType}', unreachable: true);
-    }
-    final resp = await http.Response.fromStream(streamed);
-    if (resp.statusCode != 200) {
-      throw CoaDataError(describeServerError(resp.statusCode, resp.body),
-          status: resp.statusCode, unreachable: isUnreachableStatus(resp.statusCode));
-    }
-    Object? body;
-    try {
-      body = jsonDecode(resp.body);
-    } on FormatException {
-      throw CoaDataError('the server did not answer with JSON', status: resp.statusCode);
-    }
-    if (body is! Map) {
-      throw CoaDataError('unexpected response shape', status: resp.statusCode);
-    }
-    return CoaData.fromJson(guid, Map<String, Object?>.from(body));
-  } finally {
-    if (shouldClose) c.close();
-  }
-}
+}) =>
+    withServerClient(client, (c) async {
+      final uri = Uri.parse('$baseUrl${coaDataParsePath()}');
+      final req = http.MultipartRequest('POST', uri)
+        ..headers.addAll(appApiKeyHeaders)
+        ..fields['guid'] = guid
+        // Snake_case to match mazama_sales' own Form() parameter names exactly (web/stock_pages.py's
+        // coa_data_parse: worker_email, device_id) - both have "" defaults server-side, so sending the wrong
+        // names here never raised an error, it just silently discarded accountability data on every real
+        // upload (see this file's own header comment on why worker_email/device_id exist at all). Caught by
+        // reading the route's own parameter names while chasing an unrelated 422.
+        ..fields['worker_email'] = workerEmail
+        ..fields['device_id'] = deviceId
+        ..files.add(http.MultipartFile.fromBytes('pdf', pdfBytes, filename: '$guid.pdf'));
+      if (docId != null) req.fields['doc_id'] = docId.toString();
+      if (statePsilocybin != null && statePsilocybin > 0) req.fields['state_psilocybin'] = statePsilocybin.toString();
+      final streamed = await sendToServer(uri, () => c.send(req), CoaDataError.new);
+      final resp = await http.Response.fromStream(streamed);
+      if (resp.statusCode != 200) throw serverReplyError(resp, CoaDataError.new);
+      final body = serverJson(resp, CoaDataError.new, status: resp.statusCode);
+      if (body is! Map) {
+        throw CoaDataError('unexpected response shape', status: resp.statusCode);
+      }
+      return CoaData.fromJson(guid, Map<String, Object?>.from(body));
+    });

@@ -17,7 +17,7 @@ void main() {
       expect(req.url.toString(), 'https://psilocybin.oregon.gov/api/private/ProductTracking/GetPackagedProducts/225/ServiceCenter');
       expect(req.headers['Authorization'], 'Bearer TEST-TOKEN');
       expect(req.headers['Accept'], 'application/json');
-      expect(req.headers['User-Agent'], startsWith('Mozilla/5.0')); // SM-20: state_reads.yaml's user_agent
+      expect(req.headers['User-Agent'], startsWith('Mozilla/5.0')); // state_reads.yaml's user_agent
       return http.Response(
         jsonEncode([
           {'productGuid': 'PKPR-ab12c', 'productType': 'Extract', 'id': 101, 'weightPerUnit': 5.0, 'analyteWeight': 4.5, 'quantity': 10, 'zeroOut': false},
@@ -159,7 +159,7 @@ void main() {
     );
   });
 
-  // SM-21: the server's own rule (state/mapping.py packaged_product): a record without a whole-number id or a PKPR
+  // The server's own rule (state/mapping.py packaged_product): a record without a whole-number id or a PKPR
   // is skipped, and an id written as a string is read, not a crash.
   test('records the server would skip are skipped, and a string id is read', () {
     Map<String, Object?> row(Object? id, Object? guid) => {

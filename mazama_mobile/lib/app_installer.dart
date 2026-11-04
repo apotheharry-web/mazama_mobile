@@ -1,4 +1,4 @@
-// specs/app-updates AU-R12, AU-R13: the Android side of an update, through the native channel `mazama/app_installer`
+// The Android side of an update, through the native channel `mazama/app_installer`
 // (android/app/src/main/kotlin/com/example/mazama_mobile/AppInstaller.kt).
 //
 // - installed(): the installed app's version name and code, the phone's Android API level, the SHA-256 of each of the
@@ -10,13 +10,13 @@
 //   copies them and abandons the session unless they are exactly the signed size and SHA-256 (so the bytes installed
 //   are the bytes checked). Answers `staged:<session id>`, or `refused:<words>`;
 // - commit(session): commits it; the session always asks the worker to confirm (USER_ACTION_NOT_REQUIRED is never
-//   set). The app calls it only after checking the carts again, since the copy takes a while (review N3). Answers
+//   set). The app calls it only after checking the carts again, since the copy takes a while. Answers
 //   `started`, or `refused:<Android's words>`;
 // - abandon(session): drops a staged session (a cart line was added meanwhile);
 // - takeStatus(): Android's words for a refusal that came after the hand-over (the session's status), once, or null.
 // Inspect and install run off Android's main thread.
 //
-// Android only (AU-D13): on any other platform, or when the channel isn't there, every call fails with
+// Android only: on any other platform, or when the channel isn't there, every call fails with
 // [AppInstallerError] in fixed words, and the update check offers nothing.
 import 'package:flutter/services.dart';
 

@@ -1,8 +1,8 @@
-// CR-R6 (specs/core): the hot paths through the core stay within budget on CI's machine: a stock summary and its pies
-// over 2,000 rows (row 8), a scan match over 500 packages (row 1), and a cart reprice (row 6: one call per change). Only the core call is timed (its input map is
-// built once, outside the timer; the call's own JSON encode and decode are in). The budget is CR-R6's 20 ms with
+// The hot paths through the core stay within budget on CI's machine: a stock summary and its pies
+// over 2,000 rows, a scan match over 500 packages, and a cart reprice (one call per change). Only the core call is timed (its input map is
+// built once, outside the timer; the call's own JSON encode and decode are in). The budget is the core's 20 ms with
 // headroom for a debug (JIT) run in a shared bundle beside five others: 100 ms, the median of five runs after one to
-// warm up. The core measures about 5 ms for the summary alone (release, the review of Task 14): a regression to a
+// warm up. The core measures about 5 ms for the summary alone (release build): a regression to a
 // per-row or quadratic cost still fails it.
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mazama_mobile/mazama_core.dart';

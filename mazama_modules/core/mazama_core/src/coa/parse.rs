@@ -1,4 +1,4 @@
-//! Steps 2–9 of the parsing algorithm (specs/coa/04-parsing.md): lines -> sections -> values -> checks.
+//! The rest of reading a report (specs/coa/README.md): lines -> sections -> values -> checks.
 //!
 //! The line stream comes from [`crate::coa::lines`]; running headers and footers are skipped for sections but used for
 //! report-level fields. Everything a lab can spell differently comes from [`Rules`].
@@ -43,7 +43,7 @@ fn round(v: f64, places: u32) -> f64 {
 /// "HB-3449C265" -> ("HB-3449c265", folded=false); "HB-3449cZ65" -> ("HB-3449c265", true); None if not an id.
 pub(crate) fn normalize_id(raw: &str, rules: &Rules, id_re: &Regex) -> Option<(String, bool)> {
     let raw = raw.trim_matches(|c: char| !c.is_ascii_alphanumeric() && c != '-');
-    // a client's own id ("HL-766FBD69", AD-21): `anchor.id` is the shared lot-id pattern, so these are matched here
+    // a client's own id ("HL-766FBD69"): `anchor.id` is the shared lot-id pattern, so these are matched here
     let client = raw.split_once('-').is_some_and(|(p, t)| {
         rules.anchor.client_prefixes.iter().any(|c| eq(c, p)) && (5..=8).contains(&t.len()) && t.chars().all(|c| c.is_ascii_alphanumeric())
     });
@@ -140,7 +140,7 @@ fn find_anchor(line: &Line, i: usize, rules: &Rules, id_re: &Regex, alone: bool)
             if let Some((uid, folded)) = first.and_then(|c| normalize_id(c, rules, id_re)) {
                 return Some(Anchor { line: i, uid, folded, label_word: k });
             }
-            // AD-22: "Sample: Melange X   UID:" with the UID blank, or not an id ("UID: Big Foot") [RCL 2411143,
+            // "Sample: Melange X   UID:" with the UID blank, or not an id ("UID: Big Foot") [RCL 2411143,
             // 2501074]: a section with no id, kept only when results follow it (find_sections), never a lot's own,
             // found only through the request form's item of the same name (lot::find_lot)
             if eq(&w.text, label) && has_sample_label(line, rules) {
@@ -525,8 +525,10 @@ fn build_section(raw: &Raw, body: &[&Line], rules: &Rules, total_keys: &[String]
         norpsilocin: take("norpsilocin"),
         aeruginascin: take("aeruginascin"),
     };
-    // SM-D13: the section's TPE is AD-18's (the printed total, else the formula); the parser has no state figure.
-    // `formula` is kept apart for the check that a printed total agrees with the report's own values.
+    // the section's TPE is the printed total when the report has one, else psilocybin + 284.25 / 204.27 x psilocin
+    // ([`crate::tpe::tpe`]); the parser has no state figure, which the label and the plan bring in later.
+    // `formula` is kept apart for the check that a printed total agrees with the report's own values. Both are
+    // rounded to the rules' `tpe.round` places, halves away from zero.
     let (psilocybin, psilocin) = (analytes.psilocybin.amount(), analytes.psilocin.amount());
     let formula = crate::tpe::tpe(psilocybin, psilocin, None, None, rules.tpe.psilocin_factor).map(|t| round(t, rules.tpe.round));
     let tpe = crate::tpe::tpe(psilocybin, psilocin, lab_totals.get("tpe").copied(), None, rules.tpe.psilocin_factor)
@@ -592,14 +594,14 @@ fn build_section(raw: &Raw, body: &[&Line], rules: &Rules, total_keys: &[String]
     }
 }
 
-/// AD-9: flag the primary when a field duplicate disagrees with it beyond the tolerance.
+/// Flag the primary when a field duplicate disagrees with it beyond the tolerance.
 fn compare_duplicates(sections: &mut [Section], rules: &Rules) {
     let fd = &rules.field_duplicate;
     for p in 0..sections.len() {
         if sections[p].is_fd {
             continue;
         }
-        // with no id (AD-22) a duplicate is the one with the same sample name
+        // with no id a duplicate is the one with the same sample name
         let same = |d: usize| eq(&sections[d].uid, &sections[p].uid) && (!sections[p].uid.is_empty() || sections[d].sample == sections[p].sample);
         let dups: Vec<usize> = (0..sections.len()).filter(|&d| sections[d].is_fd && same(d)).collect();
         for d in dups {
@@ -626,7 +628,7 @@ fn compare_duplicates(sections: &mut [Section], rules: &Rules) {
 
 fn of_record(sections: &[Section]) -> BTreeMap<String, usize> {
     let mut out = BTreeMap::new();
-    // a section with no id (AD-22) is no lot's value of record
+    // a section with no id is no lot's value of record
     let mut uids: Vec<String> = sections.iter().map(|s| s.uid.to_lowercase()).filter(|u| !u.is_empty()).collect();
     uids.dedup();
     for uid in uids {
@@ -684,7 +686,7 @@ pub fn parse(t: &CoaText, rules: &Rules) -> CoaParseResult {
     let total_keys: Vec<String> = rules.lab_totals.keys().cloned().collect();
     let all = lines(t);
     let body: Vec<&Line> = all.iter().filter(|l| !l.repeated).collect();
-    // a lab profile replaces some of the rules for its reports (specs/coa/04-parsing.md step 13; ChemHistory)
+    // a lab profile replaces some of the rules for its reports (ChemHistory)
     let profile = profile_of(&all, rules);
     let own = profile.map(|p| p.apply(rules));
     let rules = own.as_ref().unwrap_or(rules);

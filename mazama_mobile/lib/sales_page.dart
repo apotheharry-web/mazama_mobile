@@ -1,16 +1,15 @@
-// specs/center-web CW-R10 (phone half), CW-D14: the center home's fourth tab (Mazama | Stock | Cart | Sales, still
+// The center home's fourth tab (Mazama | Stock | Cart | Sales, still
 // opening on Stock): the center's sales of the last 30 days, newest first, read from the state system (GetSalesRecords
 // through the shared get_json flow, state_client.dart). Each row: the date, the sale number, the product (its name,
 // else its id), how many were sold and the line's cost in dollars; a deleted (voided) record isn't shown.
 //
-// After a good read the page keeps it on the phone (the sync engine's recent_sales dataset, specs/phone-sync phase 4;
-// an older build's reply-store copy, `state_sales/<stateId>`, is moved there) and hands every record
+// After a good read the page keeps it on the phone (the sync engine's recent_sales dataset) and hands every record
 // read (not only the 30 days shown) to [SalesPage.upload], which sends them to Mazama's server for invoicing
 // (server_link.dart's uploadSalesSnapshot, kept while the server can't be reached). The page never waits on the upload
 // and never shows its outcome; selling never waits on either. Never in the demo.
 //
-// Local first (PS-R7): the copy kept from the last good read shows at once, with its age ("Updated ..."), while the page
-// reads again. A failed read keeps showing that copy with no notice of its own (sales README R87: the app-wide banner
+// Local first: the copy kept from the last good read shows at once, with its age ("Updated ..."), while the page
+// reads again. A failed read keeps showing that copy with no notice of its own (the app-wide banner
 // is the only outage notice) and Retry; with none kept, the error and Retry. It reads when its tab is first opened
 // (center_home_page.dart builds it only then, never beside the Cart); Retry, or pulling the list down, reads again.
 import 'dart:async';
@@ -25,7 +24,7 @@ import 'selling.dart' show stateDateIso;
 import 'sync/sync_datasets.dart';
 import 'sync/updated_line.dart';
 
-/// How far back the page shows (CW-D14): today and the 29 days before it.
+/// How far back the page shows: today and the 29 days before it.
 const recentSalesDays = 30;
 
 /// The state system's GetSalesRecords for [stateId], through the shared get_json flow (state_client.dart).
@@ -223,7 +222,7 @@ class _SalesPageState extends State<SalesPage> {
     final at = widget.now().toUtc();
     try {
       widget.datasets.put(Dataset.recentSales, _key, jsonEncode(records),
-          source: widget.demo ? sourceDemo : sourceState, at: at); // PS-R8: the demo's rows say demo
+          source: widget.demo ? sourceDemo : sourceState, at: at); // the demo's rows say demo
     } catch (_) {
       // the copy for a failed read is best effort
     }
@@ -280,7 +279,7 @@ class _SalesPageState extends State<SalesPage> {
       if (_failed) _retry(),
       if (rows.isEmpty) const Padding(padding: EdgeInsets.all(16), child: Text('No sales in the last 30 days.')),
     ];
-    // Pulled down: read again (MI-D5 keeps the pull-down to the stock list, the picker and this tab).
+    // Pulled down: read again (the stock list, the picker and this tab are the three that pull down).
     return RefreshIndicator(
       key: const ValueKey('sales-refresh'),
       onRefresh: _load,

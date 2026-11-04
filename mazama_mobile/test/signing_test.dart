@@ -1,4 +1,4 @@
-// SL-D13: the owner's Ed25519 signature on sign-in host lists (lib/signing.dart), held to the shared vectors
+// The owner's Ed25519 signature on sign-in host lists (lib/signing.dart), held to the shared vectors
 // ../mazama_modules/flows/contracts/signing_vectors.json (vendored at assets/shared/flows/contracts/ by
 // tool/sync_flows.sh - run that first if this can't find the file), which the server's own verifier
 // (mazama_sales signing.py) passes too. The vectors' keys are TEST keys only, injected here; the app itself reads

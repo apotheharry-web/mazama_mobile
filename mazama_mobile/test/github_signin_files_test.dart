@@ -1,4 +1,4 @@
-// specs/app-updates AU-R17: the signed sign-in files read from GitHub (github_signin_files.dart). Files are signed with
+// The signed sign-in files read from GitHub (github_signin_files.dart). Files are signed with
 // the shared vectors' TEST key (host_list_signing.dart), injected as the key; GitHub is a MockClient.
 import 'dart:io';
 

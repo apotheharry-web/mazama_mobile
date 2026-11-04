@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "dose.unit_mg output",
-  "description": "Per unit, in order: the mg/g its mg TPE is worked out from (the TPE, else the state's psilocybin; null: none, or a figure that can't be read) and its mg TPE rounded up to a whole mg, ceil(x - 1e-9) (null: unknown, DOSE-9, DOSE-11).",
+  "description": "Per unit, in order: the mg/g its mg TPE is worked out from (the lot's TPE, else the state's psilocybin; null: none, or a figure that can't be read) and its mg TPE, weightPerUnit x that mg/g rounded up to a whole mg, ceil(x - 1e-9) (null: unknown, or a product that isn't finite or fits no 64-bit integer).",
   "type": "array",
   "items": {
     "type": "object",

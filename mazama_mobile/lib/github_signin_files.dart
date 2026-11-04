@@ -1,9 +1,9 @@
-// specs/app-updates AU-R17, AU-D6: the owner's signed sign-in files read from GitHub, when Mazama's server can't answer
+// The owner's signed sign-in files read from GitHub, when Mazama's server can't answer
 // after a failed sign-in.
 //
 // The same files the server serves (login.yaml, login_browser.yaml, hosts.json), read with their `.sig` from the
 // public repository's root through github_files.dart (exact addresses, no redirect, size caps, Dart's default headers
-// only). Unlike a copy through the server (SL-D2), a copy from GitHub counts only when its signature verifies here,
+// only). Unlike a copy through the server, a copy from GitHub counts only when its signature verifies here,
 // against the bundled signing.pub; while that is `none` nothing is fetched. A spec must then be a usable sign-in spec
 // in its served mode under the attempt's hosts (login_spec_store.dart's usableLoginSpec); a host list must be a valid
 // one (login_hosts_store.dart's verifiedHostList). Everything after that is SignInPage's, unchanged: the spec version

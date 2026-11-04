@@ -1,4 +1,4 @@
-// Demo mode sign-in, session and banner (specs/demo-mode DM-D2, DM-D6, DM-R3, DM-R4, DM-R5).
+// Demo mode sign-in, session and banner.
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -57,9 +57,9 @@ void main() {
       expect(cart.session.isDemo, isTrue);
       // One center: it opens on its Stock page.
       expect(find.byType(CenterStockPage), findsOneWidget);
-      expect(find.text('Demo Service Center stock'), findsNothing); // no title bar under the tabs (owner, 2026-10-22)
+      expect(find.text('Demo Service Center stock'), findsNothing); // no title bar under the tabs
       expect(find.text(demoBannerText), findsOneWidget);
-      expect(await _store().load(), isNull); // DM-D6: not remembered
+      expect(await _store().load(), isNull); // not remembered
 
       // The banner stays over the Cart too.
       await tester.tap(find.text('Cart'));

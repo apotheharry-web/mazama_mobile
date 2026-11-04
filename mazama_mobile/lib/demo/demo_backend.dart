@@ -1,9 +1,9 @@
-// Demo mode (specs/demo-mode, DM-R1): everything the center pages take as a constructor function, answered from
+// Demo mode: everything the center pages take as a constructor function, answered from
 // invented data shipped in the app (assets/demo/demo.json, label.png) instead of the state system or the Mazama
 // server. Signing in as guest / guest (main.dart) opens SelectCenterPage.demo with one of these; from then on no page
-// reached from it makes a network call (DM-D1). The sale runs the real `sale` flow against [saleClient], a MockClient
+// reached from it makes a network call. The sale runs the real `sale` flow against [saleClient], a MockClient
 // that confirms it, so the cart's own success path is what a reviewer sees; nothing a sale does changes the demo
-// stock (DM-D4): every load answers the same packages. Par edits last as long as this backend (the demo session).
+// stock: every load answers the same packages. Par edits last as long as this backend (the demo session).
 //
 // The raw records are the state's own GetPackagedProducts shape (state_packages_client.dart), so the merged-inventory
 // path, the stock page and the cart's stock re-check run unchanged. Package ids are PKPR-DEMO…: the app's package-id
@@ -23,8 +23,6 @@ import '../coa_data_client.dart';
 import '../coa_data_resolver.dart';
 import '../coa_uploader.dart' show CoaLotResolved, CoaUploadLot;
 import '../device_id.dart';
-import '../enrichment_store.dart';
-import '../inventory_cache_store.dart';
 import '../label_client.dart';
 import '../licenses_client.dart';
 import '../mazama_inventory_client.dart';
@@ -36,6 +34,7 @@ import '../session.dart';
 import '../session_timer_store.dart';
 import '../state_packages_client.dart';
 import '../stock_summary.dart';
+import '../sync/sync_datasets.dart' show Datasets;
 import '../sync/sync_engine.dart';
 import 'demo_engine.dart';
 
@@ -65,15 +64,15 @@ class DemoBackend {
   CartStore get cartStore => CartStore(dataDir: () => dataDir);
   SessionTimerStore get sessionTimerStore => SessionTimerStore(dataDir: () => dataDir);
   CartSlotsStore get cartSlotsStore => CartSlotsStore(dataDir: () => dataDir);
-  InventoryCacheStore get inventoryCacheStore => InventoryCacheStore(dataDir: () => dataDir);
-  EnrichmentStore get enrichmentStore => EnrichmentStore(dataDir: () => dataDir);
+  /// The demo's datasets (its cart's kept stock and figures), in this folder's own database.
+  Datasets get datasets => Datasets.forDir(() => dataDir);
   DeviceIdStore get deviceIdStore => DeviceIdStore(dataDir: () => dataDir);
 
-  /// The demo's sync engine (demo_engine.dart, specs/phone-sync PS-R8): its datasets in this folder's own database,
+  /// The demo's sync engine (demo_engine.dart): its datasets in this folder's own database,
   /// nothing ever sent. Made on first use.
   late final SyncEngine engine = demoEngine(this);
 
-  /// The demo sign-in's session: never saved, never renewed (DM-D6, DM-R4).
+  /// The demo sign-in's session: never saved, never renewed.
   Session get session => Session.demo();
 
   License get center => License.fromJson(Map<String, Object?>.from(_data['center'] as Map));
@@ -88,7 +87,7 @@ class DemoBackend {
 
   Future<List<License>> fetchLicenses(String accessToken) async => [center];
 
-  /// /p/packages: every package the server would sell (the locked one is left out, SP-D9), with its fields.
+  /// /p/packages: every package the server would sell (the locked one is left out), with its fields.
   Future<List<Package>> fetchPackages(int stateId) async {
     _checkCenter(stateId);
     return [
@@ -134,25 +133,25 @@ class DemoBackend {
           {required String workerEmail, required String deviceId}) async =>
       {'demo': true, 'records': records.length};
 
-  /// The demo's sales read (CW-R10): no sales are invented, so the Sales page shows none (DM-D4: a demo sale leaves
+  /// The demo's sales read: no sales are invented, so the Sales page shows none (a demo sale leaves
   /// nothing behind).
   Future<List<Object?>> fetchSalesRecords(int stateId, {required String accessToken}) async => const [];
 
-  /// The demo has no server: a center's sales are never uploaded (specs/center-web CW-R10); nothing is sent.
+  /// The demo has no server: a center's sales are never uploaded; nothing is sent.
   Future<Map<String, Object?>> uploadSalesSnapshot(int stateId, List<Object?> records,
           {required String workerEmail, required String deviceId}) async =>
       {'rows': 0, 'skipped': 0};
 
-  /// The demo has no server to catch up with (README R56): a lot is never kept for later.
+  /// The demo has no server to catch up with: a lot is never kept for later.
   void keepCoaLotForLater(int stateId, {required String lotGuid, required int packageId, double? statePsilocybin}) {}
 
-  /// The demo never uploads a lab report (specs/coa-upload CU-R6): its lots are queued nowhere.
+  /// The demo never uploads a lab report: its lots are queued nowhere.
   void queueCoaUploads(List<CoaUploadLot> lots, {CoaLotResolved? onResolved}) {}
 
   /// Nothing is ever being uploaded in the demo.
   bool coaUploadPending(String lotGuid) => false;
 
-  /// The invented lab report of the package [representativePackageId] (DM-R2).
+  /// The invented lab report of the package [representativePackageId].
   Future<CoaData?> submitCoaForLot({
     required String lotGuid,
     required int representativePackageId,
@@ -177,7 +176,7 @@ class DemoBackend {
     return null;
   }
 
-  /// The stock page's product information sheets (specs/stock-page SP-D11): invented, with no page to open (DM-D1).
+  /// The stock page's product information sheets: invented, with no page to open.
   Future<List<ProductSheet>> fetchProductSheets(int stateId) async {
     _checkCenter(stateId);
     return [for (final s in _data['sheets'] as List) ProductSheet.fromJson(Map<String, Object?>.from(s as Map))];
@@ -185,7 +184,7 @@ class DemoBackend {
 
   int _orders = 1000;
 
-  /// The Mazama inventory page's order form (specs/mazama-inventory MI-R6): an invented number, nothing sent (DM-D1).
+  /// The Mazama inventory page's order form: an invented number, nothing sent.
   Future<OrderReceipt> submitOrder(int stateId,
       {required String workerEmail, required String deviceId, required List<OrderLine> lines, required String note}) async {
     _checkCenter(stateId);
@@ -193,7 +192,7 @@ class DemoBackend {
     return OrderReceipt(id: _orders, center: 'demo', lines: lines, note: note);
   }
 
-  /// The Mazama inventory page's mix (specs/mazama-inventory MI-R3): invented, the same on every load.
+  /// The Mazama inventory page's mix: invented, the same on every load.
   Future<MazamaInventory> fetchMazamaInventory() async =>
       MazamaInventory.fromJson(Map<String, Object?>.from(_data['mazamaInventory'] as Map));
 

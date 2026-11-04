@@ -1,6 +1,6 @@
-// The shared core for the phone's tests (specs/core CR-R3): the library CI's core-ffi-build made, given as
-// MAZAMA_CORE_FFI_LIB. A test that needs the core fails without it - never skips: the core is part of every build
-// (CR-D2), so a run without it hasn't tested the app.
+// The shared core for the phone's tests: the library CI's core-ffi-build made, given as
+// MAZAMA_CORE_FFI_LIB. A test that needs the core fails without it - never skips: the core is part of every build,
+// so a run without it hasn't tested the app.
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';

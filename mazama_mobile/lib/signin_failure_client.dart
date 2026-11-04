@@ -1,4 +1,4 @@
-// SL-R5: reports a sign-in to the state system that failed for any reason other than the worker's own wrong
+// Reports a sign-in to the state system that failed for any reason other than the worker's own wrong
 // email or password, so the owner learns when the state's sign-in page has changed (the server turns repeated
 // "structure" reports into a problem on its Status page). The report carries only what the phone knew about the
 // failure - the device, the login spec's step, how far the request got, the check's reason word, the login spec
@@ -8,19 +8,15 @@
 // Only fixed words (postSigninFailureFor): a sign-in spec fetched from Mazama's server, or saved from one, chooses its
 // own step ids and reason words, and which step fails; so the step is sent only when it is a step id of one of the
 // app's bundled sign-in specs (else "other") and the reason only when it is one of reportedSigninReasons (else null).
-import 'dart:convert';
-
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:http/http.dart' as http;
 
 import 'api_contract.g.dart';
-import 'app_api_key.dart';
 import 'browser_login_spec.dart' show browserLoginSpecAsset;
 import 'flow/flow_runner.dart';
 import 'flow/flow_spec.dart';
 import 'login_spec_store.dart' show bundledLoginSpecAsset;
-import 'server_error.dart';
-import 'server_link_client.dart' show serverClient;
+import 'server_request.dart';
 
 /// The reason words a sign-in failure report may carry; any other reason is sent as null.
 const reportedSigninReasons = {'structure', 'unavailable', 'refused', 'needs_person', 'not_allowed'};
@@ -94,32 +90,22 @@ Future<void> postSigninFailure({
   String? specVersion,
   String baseUrl = apiBaseUrl,
   http.Client? client,
-}) async {
-  final c = client ?? serverClient();   // through the server link, like every /p/ client (sales README R56)
-  final shouldClose = client == null;
-  try {
-    final uri = Uri.parse('$baseUrl${signinFailurePath()}');
-    http.Response resp;
-    try {
-      resp = await c.post(
-        uri,
-        headers: {...appApiKeyHeaders, 'Content-Type': 'application/json'},
-        body: jsonEncode({
+}) =>
+    serverRequest('$baseUrl${signinFailurePath()}',
+        method: 'POST',
+        json: {
           'deviceId': deviceId,
           'step': step,
           'stage': stage?.name,
           'reason': reason,
           'specVersion': specVersion,
           'status': status,
-        }),
-      );
-    } catch (ex) {
-      throw SigninFailureError('cannot reach ${uri.host}: ${ex.runtimeType}');
-    }
-    if (resp.statusCode < 200 || resp.statusCode >= 300) {
-      throw SigninFailureError(describeServerError(resp.statusCode, resp.body));
-    }
-  } finally {
-    if (shouldClose) c.close();
-  }
-}
+        },
+        ok: isSuccessStatus,
+        error: _signinFailureError,
+        client: client,
+        read: (_) {});
+
+// A SigninFailureError keeps only its words.
+SigninFailureError _signinFailureError(String message, {int? status, bool unreachable = false}) =>
+    SigninFailureError(message);

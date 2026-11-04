@@ -1,6 +1,6 @@
-//! Python's semantics over JSON values, shared by the rules that keep the server's Python answers (records, selling):
+//! Python's semantics over JSON values, shared by the rules that read records the way Python does (records, selling):
 //! truthiness, and for sellability an exact reading of a JSON text ([`Py`]: an integer keeps its digits at any size, as
-//! Python's `json` reads it) with the one rendering of a value in a refusal's text ([`show`], specs/core Task 10).
+//! Python's `json` reads it) with the one rendering of a value in a refusal's text ([`show`]).
 use std::cmp::Ordering;
 use std::collections::HashMap;
 
@@ -140,7 +140,7 @@ static NULL: Py = Py::Null;
 
 /// A reader of a JSON text serde_json has already checked, so it can assume the grammar holds. serde_json's check
 /// (IgnoredAny) doesn't limit nesting, so the reader does, at serde_json's own limit: deeper input is an error, never a
-/// stack overflow (row 4 review, I1).
+/// stack overflow.
 struct Reader<'a> {
     s: &'a str,
     i: usize,
@@ -295,8 +295,7 @@ pub(crate) fn as_int(v: &Py) -> Option<&Int> {
 }
 
 /// A number as a refusal shows it: an integer within 64 bits as its digits; any other number as Python's `repr()` of
-/// the float it is (SL-3, SL-9); an integer past the largest double shows as `inf` (Python's float() raises there, so
-/// the replay's `proposed` has no answer for it: wording only, row 4 review M5).
+/// the float it is; an integer past the largest double shows as `inf` (this only changes a refusal's wording).
 fn num_text(v: &Py) -> String {
     match v {
         Py::Int(n) => n.as_i64().map_or_else(|| py_float_repr(n.as_f64()), |i| i.to_string()),
@@ -305,7 +304,7 @@ fn num_text(v: &Py) -> String {
     }
 }
 
-/// How a refusal shows a value (SL-2, SL-3, SL-9, SL-10): null `None`, true/false `True`/`False`, text as itself, a
+/// How a refusal shows a value: null `None`, true/false `True`/`False`, text as itself, a
 /// number by [`num_text`], a list or an object as compact JSON with keys sorted ([`json_text`]).
 pub(crate) fn show(v: &Py) -> String {
     match v {
@@ -318,7 +317,7 @@ pub(crate) fn show(v: &Py) -> String {
 }
 
 /// Compact JSON, keys sorted, text JSON-quoted as Python's `json.dumps(ensure_ascii=False)` does (not `\u`-escaped
-/// beyond the control characters), numbers by [`num_text`] (SL-10).
+/// beyond the control characters), numbers by [`num_text`].
 fn json_text(v: &Py) -> String {
     match v {
         Py::Null => "null".into(),

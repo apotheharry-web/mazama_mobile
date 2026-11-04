@@ -222,8 +222,7 @@ search for them; line numbers are left out on purpose because they change.
   load in the in-app browser at that moment, with the browser's own cookies, not the app's tokens), and exchanges that code with
   the state's token endpoint. Cookies and site data are cleared before the page opens (every time; a clearing call that
   fails is ignored and the page still opens) and, best effort, after it closes (if the app is killed during a sign-in, that second clearing doesn't happen until the next one). The
-  clearing is app-wide. The sign-in page is the app's only webview: the Mazama inventory portal, a second in-app page
-  that shared its cookie store, was removed (specs/center-web CW-R9).
+  clearing is app-wide. The sign-in page is the app's only webview.
 - **Where to look:**
   - `lib/browser_sign_in_page.dart`: `decideBrowserNavigation`, the `NavigationDelegate`, and the clearing calls
     (`clearCookies`, `clearCache`, `clearLocalStorage`); its file comment says what the navigation check does and
@@ -351,10 +350,10 @@ search for them; line numbers are left out on purpose because they change.
   backups. (Keychain items themselves are `ThisDeviceOnly`, so an encrypted backup can't carry them to another phone.)
 - **The email is also kept elsewhere**, in `mazama.db` in the same private, backup-excluded folder: in its
   `sync_queue` table (`lib/sync/sync_queue.dart`: sale logs and failed-sale reports waiting to reach Mazama's server,
-  which carry it, claim 7, and work waiting to be redone; an older build's `server_outbox.json` and
-  `server_catch_up.json` documents until the first start moves them there, `lib/sync/sync_migration.dart`), and, until
-  the clean-up release, in the `server_outbox.json.migrated` and
-  `server_catch_up.json.migrated` files an older build left. Signing out deletes the session from secure storage
+  which carry it, claim 7, and work waiting to be redone). On a phone updated from an older build, that build's
+  `server_outbox.json` and `server_catch_up.json` documents (in `mazama.db`) and any `server_outbox.json.migrated` and
+  `server_catch_up.json.migrated` files it left stay as they were: this build never reads, moves or deletes them
+  (specs/phone-sync PS-D8). Signing out deletes the session from secure storage
   (and any `session.json` left) only: those keep what still has to be sent. The reconciliation report image, which shows the
   email, is written to the app's temporary folder when the worker shares it, and on Android label photos stay in its
   cache folder; the app doesn't delete either (the system may clear those folders). On iPhone, the cart-timers widget's shared settings hold cart names and
@@ -369,7 +368,7 @@ search for them; line numbers are left out on purpose because they change.
 - Off the phones (the desktop builds, and `flutter test`), where there is no secure storage, the session is a document
   in `mazama.db` (`DocumentSecretStore`).
 - On iPhone, the web view's own cookies and site data (the state's sign-in page while it is open, the app's only web
-  view since the Mazama inventory portal was removed, specs/center-web CW-R9) are kept by the system outside the
+  view) are kept by the system outside the
   Application Support folder, so the backup exclusion may not cover them.
 - **Developer builds only:** `lib/debug_local_storage_page.dart` can show a summary of the session on screen (the email,
   the expiry and whether tokens are present, not the tokens). It is reachable only in
@@ -463,7 +462,7 @@ search for them; line numbers are left out on purpose because they change.
 - Release builds still write some error text to the device log (`debugPrint`). Flow errors in that text are scrubbed
   as claim 6 says. Other error text is written as it is: an unexpected exception while selling (`lib/cart_page.dart`),
   errors from Mazama's server or from saving the app's own files (`lib/cart_page.dart`, `lib/server_outbox.dart`,
-  `lib/catch_up_store.dart`), and errors from the cart-timer widget (`lib/cart_timer_widget.dart`). Flutter itself
+  `lib/catch_up_store.dart`, `lib/sync/sync_queue.dart`), and errors from the cart-timer widget (`lib/cart_timer_widget.dart`). Flutter itself
   may also log the text of an error the app doesn't catch.
 - Builds made before 2026-10-26 were signed with a debug key under the app id `com.example.mazama_mobile`; remove
   them from phones: anyone holding that debug keystore could sign an "update" that Android installs over them and that

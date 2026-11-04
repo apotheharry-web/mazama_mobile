@@ -1,4 +1,4 @@
-// specs/core row 9: the order form's lines are the shared core's (stock.order_form), held to the shared cases
+// The order form's lines are the shared core's (stock.order_form), held to the shared cases
 // (assets/shared/stock/order_form/cases.json, vendored from mazama_modules/stock/order_form/) and to the Dart the page
 // ran before the move (test/support/old_order_form.dart), over those cases and a generated grid.
 import 'dart:convert';

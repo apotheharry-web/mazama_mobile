@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "selling.sale_outcome output",
-  "description": "How it ends (SM-12).",
+  "description": "How it ends.",
   "type": "object",
   "required": [
     "outcome",

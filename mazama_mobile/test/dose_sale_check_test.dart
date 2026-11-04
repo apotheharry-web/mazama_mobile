@@ -1,4 +1,4 @@
-// DOSE-8 (specs/core row 5, I10): before a sale the phone reads the state again whenever a lot it draws is only a phone's
+// Before a sale the phone reads the state again whenever a lot it draws is only a phone's
 // upload (/p/packages' `confirmed` false), whatever the age of its stock, and checks the cap again on the state's figures
 // (cart_page.dart's _recheckOldStock / _recheckBulkStock; the widget tests are in cart_page_dose_test.dart).
 import 'package:flutter_test/flutter_test.dart';

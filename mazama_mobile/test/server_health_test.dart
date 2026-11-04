@@ -1,4 +1,4 @@
-// server_health.dart: the one tracker of whether Mazama's server answers (README R56) - offline on an unreachable call,
+// server_health.dart: the one tracker of whether Mazama's server answers - offline on an unreachable call,
 // online on any answer, a probe on a backoff (15 s doubling to 5 min) and at once on coming back to the foreground.
 import 'dart:async';
 
@@ -159,7 +159,7 @@ void main() {
     expect(h.online, isTrue);
   });
 
-  // R87: the banner's close button hides it for this outage only; the next outage shows it again.
+  // The banner's close button hides it for this outage only; the next outage shows it again.
   test('the banner dismissed: for this outage only, cleared when the server answers', () {
     final h = tracker();
     var notified = 0;

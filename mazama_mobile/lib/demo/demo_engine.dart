@@ -1,7 +1,7 @@
-// specs/phone-sync PS-R8: the demo's sync engine. Its datasets come from the demo's own invented data (DemoBackend,
-// assets/demo/demo.json), stored with source `demo` in the demo's own database (its data folder: specs/foundations
-// P-D2, one database per folder, never mazama.db in the app's folder); its queue never sends (every sender answers
-// Skipped) and never takes an upload or a lab report (CU-R6), and its server tracker never probes anything.
+// The demo's sync engine. Its datasets come from the demo's own invented data (DemoBackend,
+// assets/demo/demo.json), stored with source `demo` in the demo's own database (its data folder:
+// one database per folder, never mazama.db in the app's folder); its queue never sends (every sender answers
+// Skipped) and never takes an upload or a lab report, and its server tracker never probes anything.
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';

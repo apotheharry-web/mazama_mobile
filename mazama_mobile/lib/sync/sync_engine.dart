@@ -1,17 +1,16 @@
-// The phone's one sync engine (specs/phone-sync PS-R1), one per app as the server link is: built on the local store
-// with injected senders, clock and timers, it moves today's queues in on start (PS-R9, sync_migration.dart), owns the
-// queue (PS-R4, sync_queue.dart), and sends what waits when woken: when the server tracker comes back online, at
+// The phone's one sync engine, one per app as the server link is: built on the local store
+// with injected senders, clock and timers, it owns the queue (sync_queue.dart), and sends what waits when woken: when the server tracker comes back online, at
 // start-up (MazamaApp calls [wake]), and when the app returns to the foreground while online (offline, the tracker
 // probes instead). The banner's count is [SyncQueue.waitingReports].
 //
-// It also owns the datasets (PS-R3, sync_datasets.dart): a refresher per dataset ([register]); [refresh] runs one per
+// It also owns the datasets (sync_datasets.dart): a refresher per dataset ([register]); [refresh] runs one per
 // dataset and key at a time, writes what it read, or records only the failure, and never throws; [watch] is what a page
 // reads. While the app is in the foreground and something is watched, a timer refreshes every
-// [syncForegroundEvery] what is watched and older than that ([foregroundTick], PS-D6); never in the background
-// ([onBackground]). When the server answers again in the foreground, what is watched is refreshed (README R87's
+// [syncForegroundEvery] what is watched and older than that ([foregroundTick]); never in the background
+// ([onBackground]). When the server answers again in the foreground, what is watched is refreshed (the
 // reload, for the pages that watch: the Mazama tab and the stock page's sheets, through sync/dataset_feed.dart, which
 // join a refresh under way ([refreshing]) and show its error ([refreshError]); the cart, which still has its own reload).
-// Selling never calls it (PS-D3).
+// Selling never calls it.
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -19,11 +18,10 @@ import 'package:flutter/foundation.dart';
 import '../local_store.dart';
 import '../server_health.dart';
 import 'sync_datasets.dart';
-import 'sync_migration.dart';
 import 'sync_queue.dart';
 import 'sync_tables.dart';
 
-/// PS-D6: what is watched is refreshed this often while the app is in the foreground.
+/// What is watched is refreshed this often while the app is in the foreground.
 const syncForegroundEvery = Duration(minutes: 5);
 
 /// Whether data read at [fetchedAt] is due for a refresh at [now]: [every] old or more, or that far in the future (the
@@ -42,39 +40,25 @@ class SyncEngine {
     DateTime Function()? now,
     StartTimer? startTimer,
     bool Function()? isDemo,
-  }) : _queues = [
-          SyncQueue(
-              tables: openSyncTables(store),
-              health: health,
-              senders: senders,
-              now: now,
-              startTimer: startTimer,
-              isDemo: isDemo),
-        ],
-        _ownsQueues = true {
-    _listen();
-  }
-
-  /// An engine over queues built elsewhere: for tests only (a ServerLink made from its parts), where each part has a
-  /// queue of its own over one database (the app's link builds one queue, [ServerLink.standard]). Woken, it flushes
-  /// each in turn; [queue] (the first) counts what waits in all of them, and its tables hold the datasets.
-  SyncEngine.over({required this.health, required List<SyncQueue> queues})
-      : assert(queues.isNotEmpty),
-        _queues = [
-          for (var i = 0; i < queues.length; i++)
-            if (!queues.take(i).any((q) => identical(q, queues[i]))) queues[i],
-        ],
-        _ownsQueues = false {
-    _listen();
+  }) : queue = SyncQueue(
+            tables: SyncTables(store),
+            health: health,
+            senders: senders,
+            now: now,
+            startTimer: startTimer,
+            isDemo: isDemo) {
+    _wasOnline = health.online;
+    health.addListener(_onHealth);
   }
 
   final ServerHealth health;
-  final List<SyncQueue> _queues;
-  final bool _ownsQueues;
+
+  /// Everything the phone still has to send.
+  final SyncQueue queue;
   bool _wasOnline = true;
   bool _disposed = false;
 
-  /// What the phone knows (PS-R3), in the queue's database.
+  /// What the phone knows, in the queue's database.
   late final Datasets datasets = Datasets(queue.tables, now: queue.now);
 
   final Map<Dataset, Refresher> _refreshers = {};
@@ -84,8 +68,8 @@ class SyncEngine {
   /// through [watch] shows when it has no copy, or the server's own refusal (dataset_feed.dart).
   final Map<(Dataset, String), Object> _errors = {};
 
-  /// Refreshes asked for while one of the same dataset and key was running: it runs once more after (review I1, phase
-  /// 4: a refresh a sale asks for must read after that sale, never be answered by a read that started before it).
+  /// Refreshes asked for while one of the same dataset and key was running: it runs once more after (a
+  /// refresh a sale asks for must read after that sale, never be answered by a read that started before it).
   final Set<(Dataset, String)> _again = {};
 
   /// What pages watch, with how many watchers each.
@@ -93,22 +77,14 @@ class SyncEngine {
   bool _foreground = true;
   Timer? _tick;
 
-  /// Everything the phone still has to send.
-  SyncQueue get queue => _queues.first;
-
   /// Changes whenever anything queued changes (the banner listens).
-  Listenable get changes => Listenable.merge(_queues);
-
-  void _listen() {
-    _wasOnline = health.online;
-    health.addListener(_onHealth);
-  }
+  Listenable get changes => queue;
 
   void _onHealth() {
     final online = health.online;
     if (online && !_wasOnline) {
       wake();
-      // Datasets only in the foreground (PS-D6: the tracker may probe in the background); coming back, onForeground's
+      // Datasets only in the foreground (the tracker may probe in the background); coming back, onForeground's
       // tick refreshes whatever is stale then.
       if (_foreground) {
         for (final (d, key) in _watched.keys.toList()) {
@@ -122,17 +98,14 @@ class SyncEngine {
   /// Sends what is waiting while the server answers. Returns at once.
   void wake() {
     if (_disposed || health.offline) return;
-    unawaited(_flushAll());
+    unawaited(_flush());
   }
 
-  Future<void> _flushAll() async {
-    for (final q in _queues) {
-      if (_disposed) return;
-      try {
-        await q.flush();
-      } catch (e) {
-        debugPrint('the sync queue could not be sent: $e');
-      }
+  Future<void> _flush() async {
+    try {
+      await queue.flush();
+    } catch (e) {
+      debugPrint('the sync queue could not be sent: $e');
     }
   }
 
@@ -150,7 +123,7 @@ class SyncEngine {
     _arm();
   }
 
-  /// The app went to the background: no refresh until it comes back (PS-D6: never a background fetch).
+  /// The app went to the background: no refresh until it comes back (never a background fetch).
   void onBackground() {
     _foreground = false;
     _disarm();
@@ -214,7 +187,7 @@ class SyncEngine {
     }
   }
 
-  /// [d]'s copy for [key] as stored now (null when none), then again after every refresh of it (PS-R7). While it is
+  /// [d]'s copy for [key] as stored now (null when none), then again after every refresh of it. While it is
   /// listened to, it counts as watched: refreshed by [foregroundTick] and when the server answers again.
   Stream<DatasetRow?> watch(Dataset d, String key) {
     final id = (d, key);
@@ -264,10 +237,6 @@ class SyncEngine {
     _disarm();
     _watched.clear();
     health.removeListener(_onHealth);
-    if (_ownsQueues) {
-      for (final q in _queues) {
-        q.dispose();
-      }
-    }
+    queue.dispose();
   }
 }

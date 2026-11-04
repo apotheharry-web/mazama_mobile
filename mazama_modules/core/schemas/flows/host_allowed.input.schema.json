@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "flows.host_allowed input",
-  "description": "specs/core row 13: a url and the hosts it may reach (each a host, or '.suffix'). The caller's whole list; the sign-in rules add the built-in two themselves.",
+  "description": "A url and the hosts it may reach (each a host, or '.suffix'). The caller's whole list; the sign-in rules add the built-in two themselves.",
   "type": "object",
   "required": [
     "url",

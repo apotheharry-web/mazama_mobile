@@ -1,4 +1,4 @@
-// server_link_client.dart: the http.Client every /p/ call goes through (README R56) - records how each call ended with
+// server_link_client.dart: the http.Client every /p/ call goes through - records how each call ended with
 // the tracker, and while it counts the server offline fails at once without a request.
 import 'dart:async';
 import 'dart:convert';

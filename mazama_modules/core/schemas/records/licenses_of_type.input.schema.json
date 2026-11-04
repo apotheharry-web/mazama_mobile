@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "records.licenses_of_type input",
+  "description": "A GetApplicableLicenses answer as the state system sent it (an entry that is not an object is skipped) and the license type to keep.",
+  "type": "object",
+  "required": [
+    "licenses",
+    "license_type"
+  ],
+  "properties": {
+    "licenses": {
+      "type": "array",
+      "items": true
+    },
+    "license_type": {
+      "enum": [
+        "ServiceCenter",
+        "Manufacturer"
+      ]
+    }
+  }
+}

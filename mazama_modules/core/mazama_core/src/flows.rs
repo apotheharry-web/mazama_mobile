@@ -1,13 +1,12 @@
-//! The sign-in pure rules, shared by the server and the phone (specs/core row 13): which URLs a flow may reach, which
-//! spec versions are newer, which signed host lists and sign-in specs are good, and whether a signature is the owner's.
-//! Held to the shared contracts in `mazama_modules/flows/contracts/` and the frozen vectors in `mazama_modules/signin/vectors/`
-//! (the old Python's answers, with the Dart's through the shared contracts). This is security code, and where the old Python
-//! and Dart disagreed the stricter answer is the core's (each is listed in `specs/core/01-core.plan.md`, Task 19).
+//! The sign-in pure rules, shared by the server and the phone: which URLs a flow may reach, which spec versions are
+//! newer, which signed host lists and sign-in specs are good, and whether a signature is the owner's. Held to the
+//! shared contracts in `mazama_modules/flows/contracts/` and the frozen vectors in `mazama_modules/signin/vectors/`.
+//! This is security code: where a rule could be read two ways, it takes the stricter one.
 //!
 //! - [`host_allowed_json`]: one strict grammar for a URL's host (the flow interpreters, every request and redirect).
 //! - [`compare_spec_versions_json`]: `YYYY-MM-DD.N` ordering.
-//! - [`parse_host_list_json`]: the signed list of extra sign-in hosts (SL-R18).
-//! - [`verify_signature_json`], [`public_key_json`]: the owner's Ed25519 signature (SL-D13), checked with `verify_strict`.
+//! - [`parse_host_list_json`]: the owner's signed list of extra sign-in hosts.
+//! - [`verify_signature_json`], [`public_key_json`]: the owner's Ed25519 signature, checked with `verify_strict`.
 //! - [`usable_login_spec_json`]: whether a sign-in spec the app has read may be used (SPEC.md "A usable sign-in spec").
 //!   The core never reads YAML: each side reads the text with its own loader and hands the core the tree it will run, so
 //!   what is checked is exactly what runs.
@@ -21,11 +20,12 @@ use serde_json::{Map, Value, json};
 
 use crate::api::Error;
 
-/// The two hosts a sign-in may use besides a signed list's: the state's site and its own B2C tenant (SL-R17). No suffix.
+/// The two hosts a sign-in may use besides a signed list's: the state's site and its own B2C tenant. Exact names, never
+/// a suffix match (no other `*.b2clogin.com`).
 pub const BUILT_IN_HOSTS: [&str; 2] = ["psilocybin.oregon.gov", "oregonpsilocybinprodb2c.b2clogin.com"];
-/// The state's API: the password is never sent there (SL-D16).
+/// The state's API: the password is never sent there.
 const STATE_API_HOST: &str = "psilocybin.oregon.gov";
-/// Hosts the app reads its signed files and updates from: never sign-in hosts (specs/app-updates AU-R16).
+/// Hosts the app reads its signed files and updates from: never sign-in hosts.
 const GITHUB_HOSTS: [&str; 4] =
     ["raw.githubusercontent.com", "github.com", "release-assets.githubusercontent.com", "objects.githubusercontent.com"];
 const MAX_HOST_LIST_BYTES: usize = 65_536;

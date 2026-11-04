@@ -1,7 +1,7 @@
-// Where the worker's session (access token, refresh token, expiry) is kept (specs/foundations LS-R4): on Android and
+// Where the worker's session (access token, refresh token, expiry) is kept: on Android and
 // iOS in the platform's own secure storage (Keystore / Keychain, through flutter_secure_storage), never in mazama.db
 // or any file. Elsewhere - flutter test on a Linux or macOS host, the checked-in desktop builds - there is no such
-// storage, and the session is the `session` document of the data folder's LocalStore (plan P-D6).
+// storage, and the session is the `session` document of the data folder's LocalStore.
 //
 // Asynchronous, unlike LocalStore: flutter_secure_storage is, and SessionStore's methods were Futures already.
 import 'dart:io';
@@ -48,7 +48,7 @@ class PlatformSecretStore implements SecretStore {
   Future<void> delete() => _storage.delete(key: key);
 }
 
-/// Off the phones: the [documentName] document of [dir]'s LocalStore (P-D6).
+/// Off the phones: the [documentName] document of [dir]'s LocalStore.
 class DocumentSecretStore implements SecretStore {
   const DocumentSecretStore(this.dir);
 

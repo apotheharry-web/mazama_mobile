@@ -1,4 +1,4 @@
-// reconcile_page.dart: the state's figures beside a worker's count. Here only what each row says its mg is (SM-D31):
+// reconcile_page.dart: the state's figures beside a worker's count. Here only what each row says its mg is:
 // mg TPE, or - for a product read from the state system with no TPE known - mg psilocybin.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';

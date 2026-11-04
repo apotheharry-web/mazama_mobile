@@ -1,4 +1,4 @@
-// sync/sync_tables.dart: the sync engine's tables beside the local store's documents (specs/phone-sync PS-R2) - a
+// sync/sync_tables.dart: the sync engine's tables beside the local store's documents - a
 // dataset per page's worth with its source and age, the queue with one waiting item per kind and key, and the memory
 // of what was sent. A temporary folder each, as the other store tests.
 import 'dart:io';

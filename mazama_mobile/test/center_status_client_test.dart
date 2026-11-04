@@ -1,4 +1,4 @@
-// SM-16: the phone takes a cart's settings (tax %, agreement split, units per line, cart life) from the server's
+// The phone takes a cart's settings (tax %, agreement split, units per line, cart life) from the server's
 // /p/center-status reply, and falls back to its vendored copy of ../mazama_modules/selling/rules.yaml
 // (assets/shared/selling/rules/rules.yaml) when the server can't be asked or is too old to send them.
 import 'dart:convert';
@@ -29,7 +29,7 @@ void main() {
     expect(s.configured, isTrue);
     expect(s.cart.taxPercent, 15);
     expect(s.cart.maxUnitsPerLine, 999);
-    expect(s.mazamaLicenses, ['mf-1e72fc8f']); // SP-R8
+    expect(s.mazamaLicenses, ['mf-1e72fc8f']); // the center's Mazama manufacturer licenses
   });
 
   test("Mazama's licenses come lower-case and sorted; an older server sends none", () async {

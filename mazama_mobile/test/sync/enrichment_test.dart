@@ -1,24 +1,23 @@
-// enrichment_store.dart: what Mazama's server last sent per package, and the rule for filling it back into a read
-// from the state system alone. Plain dart:io, no Flutter - under test/ like inventory_cache_store_test.dart.
+// sync/enrichment.dart: what Mazama's server last sent per package (the enrichment dataset), and the rule for filling
+// it back into a read from the state system alone.
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mazama_mobile/enrichment_store.dart';
-import 'package:mazama_mobile/local_store.dart';
 import 'package:mazama_mobile/packages_client.dart';
+import 'package:mazama_mobile/sync/enrichment.dart';
 import 'package:mazama_mobile/sync/sync_datasets.dart';
 
-/// What is kept in [dir]: the enrichment dataset's body (specs/phone-sync phase 3), null when none.
+/// What is kept in [dir]: the enrichment dataset's body, null when none.
 String? _kept(Directory dir) => Datasets.forDir(() => dir).read(Dataset.enrichment, '')?.body;
 
 void main() {
   late Directory tempDir;
-  setUp(() => tempDir = Directory.systemTemp.createTempSync('mazama_enrichment_store_test_'));
+  setUp(() => tempDir = Directory.systemTemp.createTempSync('mazama_enrichment_test_'));
   tearDown(() => tempDir.deleteSync(recursive: true));
 
-  EnrichmentStore store({int maxEntries = 2000, Duration maxAge = const Duration(days: 30)}) =>
-      EnrichmentStore(dataDir: () => Directory('${tempDir.path}/nested'), maxEntries: maxEntries, maxAge: maxAge);
+  // A fresh handle on the folder's database each time, as a page or the engine has.
+  Datasets store() => Datasets.forDir(() => Directory('${tempDir.path}/nested'));
 
   final seenAt = DateTime.utc(2026, 10, 21, 15, 30);
 
@@ -32,72 +31,60 @@ void main() {
       productGuid: guid, productType: 'Extract', id: id, weightPerUnit: wpu, analyteWeight: aw, tpeMg: (wpu * aw).ceil(),
       quantity: qty, lotGuid: 'HB-1234abcd');
 
-  group('EnrichmentStore', () {
-    test('nothing stored: load is empty', () async {
-      expect(await store().load(seenAt), isEmpty);
+  group('the enrichment dataset', () {
+    test('nothing stored: nothing kept', () {
+      expect(keptEnrichment(store(), seenAt), isEmpty);
     });
 
-    test("remember then load round-trips each package's strain, tpeMg, expiry, inputs and when it was seen", () async {
-      final s = store();
-      await s.remember([served()], seenAt);
-      final known = await s.load(seenAt.add(const Duration(hours: 1)));
+    test("remembered then read back: each package's strain, tpeMg, expiry, inputs and when it was seen", () {
+      rememberServerFigures(store(), [served()], seenAt);
+      final known = keptEnrichment(store(), seenAt.add(const Duration(hours: 1)));
       final e = known[enrichmentKey('PKPR-ab12c', 101)]!;
       expect([e.productGuid, e.id, e.weightPerUnit, e.analyteWeight, e.strain, e.tpeMg], ['PKPR-ab12c', 101, 5.0, 1.0, 'Golden Teacher', 8]);
       expect(e.expires, DateTime(2027, 3, 1));
       expect(e.seenAt, seenAt);
-      // Survives an app restart: a brand-new store over the same folder reads the same file.
-      expect((await store().load(seenAt))[enrichmentKey('PKPR-ab12c', 101)]!.tpeMg, 8);
+      expect(jsonDecode(_kept(Directory('${tempDir.path}/nested'))!)['version'], 1);
     });
 
-    test('a later answer replaces the same package and keeps the others, whatever center sent them', () async {
-      final s = store();
-      await s.remember([served(id: 101), served(id: 102, tpe: 12)], seenAt);
-      await s.remember([served(id: 101, tpe: 9)], seenAt.add(const Duration(days: 1)));
-      final known = await s.load(seenAt.add(const Duration(days: 1)));
+    test('a later answer replaces the same package and keeps the others, whatever center sent them', () {
+      rememberServerFigures(store(), [served(id: 101), served(id: 102, tpe: 12)], seenAt);
+      rememberServerFigures(store(), [served(id: 101, tpe: 9)], seenAt.add(const Duration(days: 1)));
+      final known = keptEnrichment(store(), seenAt.add(const Duration(days: 1)));
       expect(known[enrichmentKey('PKPR-ab12c', 101)]!.tpeMg, 9);
       expect(known[enrichmentKey('PKPR-ab12c', 102)]!.tpeMg, 12);
     });
 
-    test('a row with no known potency (tpeMg 0) is not kept', () async {
-      final s = store();
-      await s.remember([served(tpe: 0)], seenAt);
-      expect(await s.load(seenAt), isEmpty);
+    test('a row with no known potency (tpeMg 0) is not kept', () {
+      rememberServerFigures(store(), [served(tpe: 0)], seenAt);
+      expect(keptEnrichment(store(), seenAt), isEmpty);
     });
 
-    test('bounded: at most maxEntries are kept, the most recently seen', () async {
-      final s = store(maxEntries: 3);
+    test('bounded: at most maxEntries are kept, the most recently seen', () {
       for (var i = 0; i < 5; i++) {
-        await s.remember([served(id: 200 + i)], seenAt.add(Duration(minutes: i)));
+        rememberServerFigures(store(), [served(id: 200 + i)], seenAt.add(Duration(minutes: i)), maxEntries: 3);
       }
-      final known = await s.load(seenAt.add(const Duration(hours: 1)));
+      final known = keptEnrichment(store(), seenAt.add(const Duration(hours: 1)));
       expect(known.keys.toSet(), {enrichmentKey('PKPR-ab12c', 202), enrichmentKey('PKPR-ab12c', 203), enrichmentKey('PKPR-ab12c', 204)});
-      expect(File('${tempDir.path}/nested/enrichment.json').existsSync(), isFalse, reason: 'kept in the database');
       final kept = jsonDecode(_kept(Directory('${tempDir.path}/nested'))!) as Map;
       expect((kept['entries'] as List).length, 3);
+      expect(enrichmentMaxEntries, 2000);
     });
 
-    test('bounded: entries older than maxAge are not handed back, and are dropped on the next write', () async {
-      final s = store(maxAge: const Duration(days: 30));
-      await s.remember([served(id: 101)], seenAt);
-      expect(await s.load(seenAt.add(const Duration(days: 31))), isEmpty);
-      await s.remember([served(id: 102)], seenAt.add(const Duration(days: 31)));
+    test('bounded: entries older than maxAge are not handed back, and are dropped on the next write', () {
+      expect(enrichmentMaxAge, const Duration(days: 30));
+      rememberServerFigures(store(), [served(id: 101)], seenAt);
+      expect(keptEnrichment(store(), seenAt.add(const Duration(days: 31))), isEmpty);
+      rememberServerFigures(store(), [served(id: 102)], seenAt.add(const Duration(days: 31)));
       final kept = jsonDecode(_kept(Directory('${tempDir.path}/nested'))!) as Map;
       expect([for (final e in kept['entries'] as List) (e as Map)['id']], [102]);
     });
 
-    // Each as an older build's file, written before the store first opens its folder (plan P-D5).
-    test('a damaged or foreign file reads as empty, and clear removes it', () async {
-      for (final (i, body) in ['{"version": 1, "entries": [{"productGuid": 3}', '{"version": 99, "entries": []}'].indexed) {
-        final dir = Directory('${tempDir.path}/older$i')..createSync(recursive: true);
-        File('${dir.path}/enrichment.json').writeAsStringSync(body);
-        final s = EnrichmentStore(dataDir: () => dir);
-        expect(await s.load(seenAt), isEmpty, reason: body);
-        await s.remember([served()], seenAt);
-        await s.clear();
-        expect(await s.load(seenAt), isEmpty);
-        expect(LocalStore.forDir(dir).read('enrichment.json'), isNull);
-        expect(_kept(dir), isNull);
-        await s.clear(); // nothing there: still fine
+    test('a damaged or foreign copy reads as nothing kept, and the next write replaces it', () {
+      for (final body in ['{"version": 1, "entries": [{"productGuid": 3}', '{"version": 99, "entries": []}', '[]']) {
+        store().put(Dataset.enrichment, '', body, source: sourceServer, at: seenAt);
+        expect(keptEnrichment(store(), seenAt), isEmpty, reason: body);
+        rememberServerFigures(store(), [served()], seenAt);
+        expect(keptEnrichment(store(), seenAt).keys, [enrichmentKey('PKPR-ab12c', 101)], reason: body);
       }
     });
   });
@@ -112,17 +99,17 @@ void main() {
         productGuid: 'PKPR-ab12c', productType: 'Extract', id: 101, weightPerUnit: 5.0, analyteWeight: 1.0, strain: 'Golden Teacher',
         tpeMg: 8, quantity: 9, expires: DateTime(2027, 3, 1), labelInput: li);
 
-    test('remembered with the rest, and filled back in while the weight and potency still match', () async {
-      await store().remember([servedWith(input)], seenAt);
-      final known = await store().load(seenAt);
+    test('remembered with the rest, and filled back in while the weight and potency still match', () {
+      rememberServerFigures(store(), [servedWith(input)], seenAt);
+      final known = keptEnrichment(store(), seenAt);
       expect(known.values.single.labelInput, input);
       expect(applyEnrichment([fromState()], known).single.labelInput, input);
       expect(applyEnrichment([fromState(wpu: 6.0)], known).single.labelInput, isNull); // changed: not this record's any more
     });
 
-    test('an entry kept before R64, or from a reply with none, has none', () async {
-      await store().remember([servedWith(null)], seenAt);
-      final known = await store().load(seenAt);
+    test('an entry kept without one, or from a reply with none, has none', () {
+      rememberServerFigures(store(), [servedWith(null)], seenAt);
+      final known = keptEnrichment(store(), seenAt);
       expect(known.values.single.labelInput, isNull);
       expect(applyEnrichment([fromState()], known).single.labelInput, isNull);
     });
@@ -189,50 +176,50 @@ void main() {
     });
   });
 
-  // SM-D31: the phone's own mazama_core reading of a lab report, kept beside the server's figures.
+  // The phone's own mazama_core reading of a lab report, kept beside the server's figures.
   group("the phone's reading of a lab report", () {
     // mazama_core's TPE 1.75 mg/g for the record (state psilocybin 1.0 + factor x psilocin), so 5 g x 1.75 = 8.75 -> 9 mg.
     PackageEnrichment reading({int id = 101, double wpu = 5.0, double aw = 1.0, int tpe = 9, DateTime? at}) => PackageEnrichment(
         productGuid: 'PKPR-ab12c', id: id, weightPerUnit: wpu, analyteWeight: aw, strain: 'Golden Teacher', tpeMg: tpe,
         expires: null, seenAt: at ?? seenAt, source: EnrichmentSource.phone, tpeMgPerG: 1.75, psilocinMg: 2.69);
 
-    test('rememberPhone round-trips the reading, its source, TPE per gram and psilocin', () async {
-      await store().rememberPhone([reading()], seenAt);
-      final e = (await store().load(seenAt))[enrichmentKey('PKPR-ab12c', 101)]!;
+    test('rememberPhoneReadings round-trips the reading, its source, TPE per gram and psilocin', () {
+      rememberPhoneReadings(store(), [reading()], seenAt);
+      final e = keptEnrichment(store(), seenAt)[enrichmentKey('PKPR-ab12c', 101)]!;
       expect([e.source, e.tpeMg, e.tpeMgPerG, e.psilocinMg, e.weightPerUnit, e.analyteWeight, e.strain],
           [EnrichmentSource.phone, 9, 1.75, 2.69, 5.0, 1.0, 'Golden Teacher']);
-      // a server entry written before SM-D31 (no source key) reads as the server's
+      // a server entry with no source key reads as the server's
       expect(PackageEnrichment.fromJson({'productGuid': 'G', 'id': 1, 'weightPerUnit': 1, 'analyteWeight': 1, 'strain': '',
         'tpeMg': 3, 'seenAtMs': 0})!.source, EnrichmentSource.server);
     });
 
-    test("never replaces the server's figures for the same weight and state potency", () async {
+    test("never replaces the server's figures for the same weight and state potency", () {
       final s = store();
-      await s.remember([served()], seenAt);
-      await s.rememberPhone([reading(at: seenAt.add(const Duration(days: 1)))], seenAt.add(const Duration(days: 1)));
-      final e = (await s.load(seenAt.add(const Duration(days: 1))))[enrichmentKey('PKPR-ab12c', 101)]!;
+      rememberServerFigures(s, [served()], seenAt);
+      rememberPhoneReadings(s, [reading(at: seenAt.add(const Duration(days: 1)))], seenAt.add(const Duration(days: 1)));
+      final e = keptEnrichment(s, seenAt.add(const Duration(days: 1)))[enrichmentKey('PKPR-ab12c', 101)]!;
       expect([e.source, e.tpeMg], [EnrichmentSource.server, 8]);
     });
 
-    test("replaces the server's figures that were for another state potency", () async {
+    test("replaces the server's figures that were for another state potency", () {
       final s = store();
-      await s.remember([served(aw: 0.9)], seenAt);
-      await s.rememberPhone([reading()], seenAt);
-      final e = (await s.load(seenAt))[enrichmentKey('PKPR-ab12c', 101)]!;
+      rememberServerFigures(s, [served(aw: 0.9)], seenAt);
+      rememberPhoneReadings(s, [reading()], seenAt);
+      final e = keptEnrichment(s, seenAt)[enrichmentKey('PKPR-ab12c', 101)]!;
       expect([e.source, e.tpeMg, e.analyteWeight], [EnrichmentSource.phone, 9, 1.0]);
     });
 
-    test("the server's figures replace the phone's when they arrive", () async {
+    test("the server's figures replace the phone's when they arrive", () {
       final s = store();
-      await s.rememberPhone([reading()], seenAt);
-      await s.remember([served()], seenAt.add(const Duration(hours: 1)));
-      final e = (await s.load(seenAt.add(const Duration(hours: 1))))[enrichmentKey('PKPR-ab12c', 101)]!;
+      rememberPhoneReadings(s, [reading()], seenAt);
+      rememberServerFigures(s, [served()], seenAt.add(const Duration(hours: 1)));
+      final e = keptEnrichment(s, seenAt.add(const Duration(hours: 1)))[enrichmentKey('PKPR-ab12c', 101)]!;
       expect([e.source, e.tpeMg, e.tpeMgPerG], [EnrichmentSource.server, 8, null]);
     });
 
-    test('a reading with no mg TPE is not kept', () async {
-      await store().rememberPhone([reading(tpe: 0)], seenAt);
-      expect(await store().load(seenAt), isEmpty);
+    test('a reading with no mg TPE is not kept', () {
+      rememberPhoneReadings(store(), [reading(tpe: 0)], seenAt);
+      expect(keptEnrichment(store(), seenAt), isEmpty);
     });
 
     test('fills a state read when weight and state potency match, marked as the phone\'s', () {
@@ -267,7 +254,7 @@ void main() {
       expect([for (final p in out) p.tpeMg], [5, 5]);
       expect([for (final p in out) p.stateEstimate], [true, true]);
       expect(out.first.strain, 'GT'); // what is kept for record 101 besides its mg still shows
-      expect(out.first.expires, DateTime(2027, 3, 1)); // and still orders the draw (SM-D29)
+      expect(out.first.expires, DateTime(2027, 3, 1)); // and still orders the draw
       final g = PkprGroup(out);
       expect([g.mgFigure, g.mgLabel, g.tpeMg], [MgFigure.psilocybin, 'mg psilocybin', 5]);
       expect(mgFigureLabel(MgFigure.tpe), 'mg TPE');

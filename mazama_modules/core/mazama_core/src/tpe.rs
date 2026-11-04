@@ -1,12 +1,15 @@
-//! TPE, total equivalent psilocybin (mg/g): the one rule (SM-03; AD-18 amended by SM-D14, specs/shared-modules/
-//! decisions.md), used by the parser (a section's `tpe`, with no state figure) and the label module (with the
-//! package's state figure). The server's `coa.tpe` is held to the same cases (corpus/tpe/cases.json).
+//! TPE, total equivalent psilocybin (mg/g): the one rule, used by the parser (a section's `tpe`, with no state
+//! figure) and the label module (with the package's state figure). The server's `coa.tpe` is held to the same cases
+//! (corpus/tpe/cases.json). 284.25 / 204.27 is the ratio of psilocybin's molar mass to psilocin's, so a mg of
+//! psilocin counts as the psilocybin it is equivalent to.
 
-/// TPE from what is known, unrounded; `None` when it can't be worked out (missing is never zero, AD-3). ND and
-/// below-LOQ values come in as 0 (`Value::amount`).
-/// - a state psilocybin figure and a psilocin value: state + `psilocin_factor` x psilocin (a printed total is ignored);
-/// - else the lab's printed total, when it is a number >= 0;
-/// - else, with no state figure, psilocybin + `psilocin_factor` x psilocin.
+/// TPE from what is known, unrounded; `None` when it can't be worked out (a missing value is never taken as zero).
+/// ND and below-LOQ values come in as 0 (`Value::amount`): they are measured as none, not missing.
+/// - a state psilocybin figure (the state record's `analyteWeight`) and a psilocin value: state + `psilocin_factor` x
+///   psilocin (a printed total is ignored: the state's psilocybin wins over the lab report's);
+/// - else the lab's printed Total Equivalent Psilocybin, when it is a number >= 0;
+/// - else, with no state figure, the report's psilocybin + `psilocin_factor` x psilocin;
+/// - else (a state figure but no psilocin, and no printed total) `None`.
 ///
 /// `psilocin_factor` is the rules' (284.25 / 204.27).
 pub fn tpe(

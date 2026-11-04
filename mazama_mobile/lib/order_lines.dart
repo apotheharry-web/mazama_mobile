@@ -1,6 +1,5 @@
-// The lines the order form starts from (specs/mazama-inventory MI-D7, MI-D16, MI-D17; specs/edibles ED-A6): which of
-// the center's par levels become lines, and in what order. The rule is the shared core's (stock.order_form, specs/core
-// row 9), held to assets/shared/stock/order_form/cases.json; order_form_page.dart only draws them. The server checks
+// The lines the order form starts from: which of
+// the center's par levels become lines, and in what order. The rule is the shared core's (stock.order_form), held to assets/shared/stock/order_form/cases.json; order_form_page.dart only draws them. The server checks
 // the order the phone sends with the same core (stock.order_check).
 import 'mazama_core.dart';
 import 'stock_summary.dart';

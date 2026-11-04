@@ -1,5 +1,5 @@
 // sales_upload_client.dart: a center's sales records, as the phone read them from the state system, go to the ingest
-// route's `sales` dataset (POST /p/ingest/sales/{state_id}, specs/ingest IN-R7, specs/center-web CW-R10, CW-D16).
+// route's `sales` dataset (POST /p/ingest/sales/{state_id}).
 import 'dart:convert';
 import 'dart:io';
 
@@ -9,11 +9,13 @@ import 'package:http/testing.dart' as http_testing;
 import 'package:mazama_mobile/api_contract.g.dart';
 import 'package:mazama_mobile/app_api_key.dart';
 import 'package:mazama_mobile/catch_up_store.dart';
+import 'package:mazama_mobile/local_store.dart';
 import 'package:mazama_mobile/sales_upload_client.dart';
 import 'package:mazama_mobile/server_error.dart';
 import 'package:mazama_mobile/server_health.dart';
 import 'package:mazama_mobile/server_link.dart';
-import 'package:mazama_mobile/server_outbox.dart';
+import 'package:mazama_mobile/sync/sync_engine.dart';
+import 'package:mazama_mobile/sync/sync_queue.dart' show QueueKind;
 
 import 'fake_timers.dart';
 
@@ -92,8 +94,8 @@ void main() {
     expect(refused.status, 400);
   });
 
-  // Review Focus (center-web plan T12, test_held_or_missing_route_is_not_an_error): an unapproved phone's held reply
-  // is done, and an older server without the `sales` dataset (404) drops the snapshot: neither is kept to retry, and
+  // An unapproved phone's held reply
+  // is done, and a server without the `sales` dataset (404) drops the snapshot: neither is kept to retry, and
   // the server link's caller is told nothing is wrong beyond a plain refusal (the Sales page shows no upload error).
   group('a held or missing route is not an error', () {
     late Directory dir;
@@ -102,23 +104,25 @@ void main() {
       dir = Directory.systemTemp.createTempSync('mazama_sales_upload_test_');
       timers = FakeTimers();
     });
-    tearDown(() => dir.deleteSync(recursive: true));
+    tearDown(() {
+      LocalStore.debugCloseAll();
+      dir.deleteSync(recursive: true);
+    });
 
     ServerLink link(List<PendingSnapshot> uploaded, {Object? Function()? fail}) {
       final health = ServerHealth(probe: () async => false, startTimer: timers.start);
+      final upload = snapshotQueueSender((s) async {
+        uploaded.add(s);
+        final e = fail?.call();
+        if (e != null) throw e;
+      });
       return ServerLink(
         health: health,
-        outbox: ServerOutbox(health: health, store: OutboxStore(dataDir: () => dir), send: (_) async {}, startTimer: timers.start),
-        catchUp: CatchUpWork(
+        engine: SyncEngine(
+          store: LocalStore.forDir(dir),
           health: health,
-          store: CatchUpStore(dataDir: () => dir),
-          submitCoa: (lot, auth) async => true,
-          uploadSnapshot: (s) async {
-            uploaded.add(s);
-            final e = fail?.call();
-            if (e != null) throw e;
-          },
-          auth: () async => null,
+          startTimer: timers.start,
+          senders: {QueueKind.inventorySnapshot: upload, QueueKind.salesSnapshot: upload},
         ),
       );
     }
@@ -132,7 +136,7 @@ void main() {
       expect(await l.uploadSalesSnapshot(225, _records, workerEmail: 'w', deviceId: 'd', client: client),
           {'rows': 0, 'skipped': 0, 'held': true});
       expect(seen, hasLength(2));
-      expect(l.catchUp.snapshots, isEmpty);
+      expect(l.queue.keptSnapshots, isEmpty);
     });
 
     test('a 404 from an older server is a plain refusal (not unreachable) and keeps nothing', () async {
@@ -147,7 +151,7 @@ void main() {
       }
       expect(error, isA<SalesUploadError>().having((e) => e.status, 'status', 404));
       expect(isServerUnreachable(error), isFalse);
-      expect(l.catchUp.snapshots, isEmpty);
+      expect(l.queue.keptSnapshots, isEmpty);
     });
 
     test('a kept sales snapshot that meets a 404 once the server answers is dropped, not retried', () async {
@@ -157,12 +161,12 @@ void main() {
       l.health.markUnreachable();
       await expectLater(l.uploadSalesSnapshot(225, _records, workerEmail: 'w', deviceId: 'd'),
           throwsA(isA<SalesUploadError>().having((e) => e.unreachable, 'unreachable', isTrue)));
-      expect(l.catchUp.snapshots.keys, ['sales:225']);
+      expect(l.queue.keptSnapshots.keys, ['sales:225']);
       l.health.markReachable();
-      await l.catchUp.flush();
+      await l.queue.flush();
       expect([for (final s in uploaded) (s.kind, s.stateId)], [('sales', 225)]);
-      expect(l.catchUp.snapshots, isEmpty);
-      await l.catchUp.flush();
+      expect(l.queue.keptSnapshots, isEmpty);
+      await l.queue.flush();
       expect(uploaded, hasLength(1));
     });
   });

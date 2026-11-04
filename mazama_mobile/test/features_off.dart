@@ -1,5 +1,5 @@
-// A copy of the generated feature table with some features switched off on the phone, for the tests of each gate
-// (specs/features FR-3). The phone's real table is fixed per release (FT-D2); only tests pass another.
+// A copy of the generated feature table with some features switched off on the phone, for the tests of each gate.
+// The phone's real table is fixed per release; only tests pass another.
 import 'package:mazama_mobile/features.g.dart';
 
 Map<String, Feature> featuresWithOff(List<String> names) {
@@ -16,6 +16,7 @@ Map<String, Feature> featuresWithOff(List<String> names) {
               built: e.value.built,
               onWeb: e.value.onWeb,
               onPhone: const [],
+              onPhoneDebug: const [],
               pages: e.value.pages,
               uses: e.value.uses,
               shared: e.value.shared,

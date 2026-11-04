@@ -1,4 +1,4 @@
-// SM-12: the phone decides "not sent" vs "uncertain" from where the request failed (FlowError.stage) and the
+// The phone decides "not sent" vs "uncertain" from where the request failed (FlowError.stage) and the
 // status the state answered with (FlowError.status), the same rule as mazama_sales' StateSession._write - never
 // from the wording of the message. Every case both apps share, end to end from the request to the outcome, is in
 // assets/shared/flows/contracts/write_outcomes.json (write_outcomes_test.dart); these are the classifier's own edges.
@@ -16,7 +16,7 @@ FlowError _e({FlowStage? stage, int? status, String message = 'x'}) => FlowError
 
 class _Unnamed implements Exception {}
 
-/// A core whose sale outcome throws [error] (SALE-14): the phone never takes that for "not sent".
+/// A core whose sale outcome throws [error]: the phone never takes that for "not sent".
 class _Broken implements CoreFunctions {
   final Object error;
   _Broken(this.error);
@@ -42,7 +42,7 @@ void main() {
   });
 
   test('a failure after the request may have gone out is uncertain - the reported double-sale bug', () {
-    // A connection reset or a timeout after sending used to read as "cannot reach ..." and so as notSent.
+    // A connection reset or a timeout after sending is not "cannot reach ..." and so not notSent.
     expect(classifySaleFailure(_e(stage: FlowStage.send, message: 'cannot reach psilocybin.oregon.gov: SocketException')),
         SaleOutcome.uncertain);
   });
@@ -70,7 +70,7 @@ void main() {
     expect(classifySaleFailure(_e()), SaleOutcome.uncertain);
   });
 
-  // SL-R8 review: the runner follows redirects itself, but never a POST's. A sale the state answered with a redirect
+  // The runner follows redirects itself, but never a POST's. A sale the state answered with a redirect
   // has reached it and may be recorded; following it would let the next hop's connect error or 4xx read as notSent.
   for (final code in [301, 302, 303, 307, 308]) {
     test('the real sale flow answered $code is uncertain, and nothing more is sent', () async {

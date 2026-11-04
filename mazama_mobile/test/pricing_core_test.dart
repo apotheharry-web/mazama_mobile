@@ -1,8 +1,8 @@
-// specs/core row 6 (Task 12): the cart's prices come from the shared core and fail closed (PRICE-8): a core that throws
+// The cart's prices come from the shared core and fail closed: a core that throws
 // (StateError, MazamaCoreError, an exception of a type nothing names), answers with something that isn't a map, or
 // answers a price of the wrong shape (a wrong number of lines, a negative or non-whole cent, a price over the unit
-// cap, an error code it doesn't have) leaves the cart unpriced and Sell off. PRICE-3: the line dialog's rate per mg is
-// held to the $10,000 unit cap. PRICE-9: a cart whose center's tax and split this phone doesn't know adds no tax and
+// cap, an error code it doesn't have) leaves the cart unpriced and Sell off. The line dialog's rate per mg is
+// held to the $10,000 unit cap. A cart whose center's tax and split this phone doesn't know adds no tax and
 // splits no total, and the last cart settings the server sent are kept for when it can't be reached.
 import 'dart:convert';
 import 'dart:io';

@@ -1,4 +1,4 @@
-// specs/app-updates AU-R8, AU-R9, AU-R14, AU-R15: what the phone offers (app_update_check.dart's offerFor) and when
+// What the phone offers (app_update_check.dart's offerFor) and when
 // it looks (AppUpdateChecker). Release files are signed with the TEST key (app_release_signing.dart); the installed app
 // is a fake (no Android here).
 import 'dart:convert';

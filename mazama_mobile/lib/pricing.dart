@@ -1,11 +1,11 @@
-// Prices in whole cents: the shared core's rule (mazama_core::selling::pricing, specs/core row 6), the same one the
+// Prices in whole cents: the shared core's rule (mazama_core::selling::pricing), the same one the
 // server's pricing.py calls through its Python binding. Held to mazama_modules/selling/vectors/pricing.json and
-// pricing_cases.json (the PRICE rows the owner decided on 2026-10-31; test/pricing_vectors_test.dart) and the ceilings
+// pricing_cases.json (the cases the owner decided; test/pricing_vectors_test.dart) and the ceilings
 // in mazama_modules/selling/rules.yaml (vendored at assets/shared/selling/rules/). Nothing of the rule is written here:
-// a typed figure is read by the core digit by digit (PRICE-1: no 64-bit overflow), trimming only what both apps trimmed
-// (PRICE-2), and rounded half up to the cent (SM-D9, SM-D10).
+// a typed figure is read by the core digit by digit (no 64-bit overflow), with only white space trimmed from its ends
+// (a figure carrying any other control character is refused), and rounded half up to the cent.
 //
-// Fails closed (PRICE-8): when the core can't answer (not loaded, an error, a reply of the wrong shape), a typed figure
+// Fails closed: when the core can't answer (not loaded, an error, a reply of the wrong shape), a typed figure
 // reads as no price ([toCents] null) and the functions that compute a price throw [StateError]; the cart turns either
 // into "this phone can't price this cart" (cart_pricing.dart). [money] only formats an amount for the screen: it stays
 // here, held to the same vectors.
@@ -24,12 +24,12 @@ const int maxPerMgCents = 1000 * 100;
 /// The core's name for each cap [toCents] reads to.
 const _caps = {maxUnitCents: 'unit', maxTotalCents: 'total', maxPerMgCents: 'per_mg'};
 
-/// The reason shown when this phone's core can't price (PRICE-8).
+/// The reason shown when this phone's core can't price.
 const coreFailedPriceMessage = "this phone can't price this cart (its shared core failed), so it can't be sold here";
 
 CoreFunctions _core(CoreFunctions? core) => core ?? MazamaCore.instance;
 
-/// The core's whole-number answer [key] of [reply]: an integer of 0 or more, else a StateError (PRICE-8).
+/// The core's whole-number answer [key] of [reply]: an integer of 0 or more, else a StateError.
 int coreCents(Map<String, Object?> reply, String key) {
   final v = reply[key];
   if (v is! int || v < 0) throw StateError('mazama_core answered $key with ${v.runtimeType}');
@@ -37,8 +37,8 @@ int coreCents(Map<String, Object?> reply, String key) {
 }
 
 /// A price typed by a worker -> cents (rounded half up), or null when it isn't a valid price (blank, negative, not a
-/// plain decimal - SM-D9 - or above [maxCents], which is one of [maxUnitCents], [maxTotalCents], [maxPerMgCents]), or
-/// when the core can't answer (PRICE-8: no price).
+/// plain decimal - or above [maxCents], which is one of [maxUnitCents], [maxTotalCents], [maxPerMgCents]), or
+/// when the core can't answer (no price).
 int? toCents(String text, {int maxCents = maxUnitCents, CoreFunctions? core}) {
   final cap = _caps[maxCents];
   assert(cap != null, 'toCents reads to the unit, total or per-mg cap only; $maxCents is none of them');

@@ -21,11 +21,11 @@
 // Both gaps are a direct, documented trade for working at all when Mazama's server is unreachable - resilient_
 // inventory.dart's own file comment explains how this fits into the three-tier fallback, and
 // stock_page.dart/cart_page.dart mark a result that came from here so a worker is never shown a confident-
-// looking number without knowing what it is: unless figures kept on the phone fill it in (enrichment_store.dart), a
-// package from here is shown as "mg psilocybin", never "mg TPE" (SM-D31, Package.mgFigure).
+// looking number without knowing what it is: unless figures kept on the phone fill it in (sync/enrichment.dart), a
+// package from here is shown as "mg psilocybin", never "mg TPE" (Package.mgFigure).
 //
 // Runs state_client.dart's fetchStateFlow with the packaged_products flow from ../../mazama_modules/flows/state_reads.yaml
-// rather than its own hand-rolled GET - the same request shape as before, now coming from the one spec
+// rather than its own hand-rolled GET - the request shape comes from the one spec
 // mazama_sales' state/client.py also runs. See state_client.dart's own file comment for why a 401 here isn't
 // retried the way StateSession.get() retries one.
 import 'package:http/http.dart' as http;
@@ -49,7 +49,7 @@ class StatePackagesError implements Exception {
 /// GETs GetPackagedProducts/{stateId}/ServiceCenter directly against the real state system and returns the
 /// RAW records exactly as the state answered them - no mapping into [Package] at all. This is what
 /// inventory_upload_client.dart's uploadInventorySnapshot posts straight back to mazama_sales' own
-/// POST /p/ingest/packaged/{stateId} (item 3a; C3's /p/inventory before phone-sync 8b Step 6): that endpoint's own mapper (mazama_sales' state/mapping.py,
+/// POST /p/ingest/packaged/{stateId}: that endpoint's own mapper (mazama_sales' state/mapping.py,
 /// reused via sync.run_sync) expects exactly this shape, the same one fetchPackagesFromState below already
 /// reads fields out of - sending the SAME records, unreshaped, means this app never has to keep its own
 /// re-encoding of the state's wire format in sync with the server's.
@@ -68,27 +68,27 @@ Future<List<Object?>> fetchRawPackagesFromState(int stateId, {required String ac
 }
 
 /// The pure mapping step fetchPackagesFromState below runs right after fetchRawPackagesFromState - split out
-/// so a caller that already has the raw records (merged_inventory.dart's fetchMergedInventory, which also
+/// so a caller that already has the raw records (sync/stock_merge.dart's mergeStock, whose callers also
 /// needs them unmapped for inventory_upload_client.dart's uploadInventorySnapshot) can map them without a
 /// second network round trip.
 ///
-/// [core] reads each name's strain (SM-19); it defaults to this app's ([MazamaCore.instance]).
+/// [core] reads each name's strain; it defaults to this app's ([MazamaCore.instance]).
 List<Package> mapRawPackagesFromState(List<Object?> body, {CoreFunctions? core}) {
   final reader = core ?? MazamaCore.instance;
   final out = <Package>[];
   final records = [for (final e in body) if (e is Map) Map<String, Object?>.from(e)];
-  final why = unsellableReasons(records, core: reader); // one core call for the list (CR-D5)
+  final why = unsellableReasons(records, core: reader); // one core call for the list
   for (final (i, r) in records.indexed) {
-    // SM-21: a record the server's own mapping skips (no whole-number id, no PKPR) is skipped here too.
+    // A record the server's own mapping skips (no whole-number id, no PKPR) is skipped here too.
     final key = packagedProductKey(r);
-    // SM-10: the server's own sale rule (sellability.dart), the same one /p/packages applies on the normal path -
+    // The server's own sale rule (sellability.dart), the same one /p/packages applies on the normal path -
     // not just "in stock": a locked, flagged or pending-transfer package is left out too.
     if (key == null || why[i] != null) continue;
     final weightPerUnit = (r['weightPerUnit'] as num?)?.toDouble() ?? 0;
     final analyteWeight = (r['analyteWeight'] as num?)?.toDouble() ?? 0;
     // The state's own wire shape carries the batch/lot id this package was made from - free with this response,
     // no extra round trip (see coa_data_client.dart's own file comment on why the adhoc-COA flow needs it). Only
-    // an id the server accepts counts (SM-09, the same rule as its stock/records.py product_source): anything else would
+    // an id the server accepts counts (the same rule as its stock/records.py product_source): anything else would
     // just be refused by /p/coa-data/parse.
     final lotGuid = packageSource(r);
     out.add(Package(
@@ -98,8 +98,8 @@ List<Package> mapRawPackagesFromState(List<Object?> body, {CoreFunctions? core})
       strain: strainFromName(r['description'] as String?, reader),
       weightPerUnit: weightPerUnit,
       analyteWeight: analyteWeight,
-      saleValues: saleValuesOf(r), // SALE-12: the state's own values, as a sale record copies them
-      tpeMg: unitTpeMg(weightPerUnit, analyteWeight, null) ?? 0, // SM-04: the state's figure, rounded up (dose.dart)
+      saleValues: saleValuesOf(r), // the state's own values, as a sale record copies them
+      tpeMg: unitTpeMg(weightPerUnit, analyteWeight, null) ?? 0, // the state's figure, rounded up (dose.dart)
       quantity: (r['quantity'] as num?)?.toInt() ?? 0,
       exactQuantity: r['quantity'] is num ? r['quantity'] as num : null,
       lotGuid: lotGuid,

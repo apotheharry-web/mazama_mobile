@@ -1,4 +1,4 @@
-// sync/updated_line.dart: the one age line a page shows for what it shows (specs/phone-sync PS-R7, PS-D5): "Updated just
+// sync/updated_line.dart: the one age line a page shows for what it shows: "Updated just
 // now" under a minute (and for any time in the future: a clock moved back), "Updated N min ago" under an hour, the time
 // today, the date and time before that. The widget shows the oldest of its rows, and nothing while none is stored.
 import 'package:flutter/material.dart';

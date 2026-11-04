@@ -1,4 +1,4 @@
-// SM-23: every /p/ error reply is {"detail": "..."} (../mazama_modules/api/schemas/error.schema.json); the phone turns
+// Every /p/ error reply is {"detail": "..."} (../mazama_modules/api/schemas/error.schema.json); the phone turns
 // one into a message with describeServerError, the same way for every route. The 401 and 429 examples are vendored
 // at assets/shared/api/examples/.
 import 'dart:async' show TimeoutException;

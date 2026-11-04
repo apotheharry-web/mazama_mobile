@@ -1,5 +1,6 @@
-// specs/phone-sync PS-R5 (owner, 2026-10-30): a product with a lot only the state lists (no lab report on Mazama's
-// server) stays one line, shown, priced and capped by its first lot's figure exactly as before; the line and its
+// A product with a lot only the state lists (no lab report on Mazama's
+// server) stays one line, shown and priced by its first lot's figure (its psilocybin and cap counted from
+// the lots the sale draws, each its own figures); the line and its
 // dialog add a note saying how many of its units only the state knows and their own figure, in mg psilocybin.
 // Invented fixtures (this folder is published).
 import 'dart:io';
@@ -54,14 +55,16 @@ void main() {
     await addLine(tester, pkpr: 'ab12c', qty: '6', price: '10.00');
     expect(find.textContaining('6 x \$10.00 · 8mg TPE each'), findsOneWidget);
     expect(find.text(note), findsOneWidget);
-    // the dose summary and the 50 mg cap: by the product's first lot, as before (6 x 8 TPE, 6 x 5 x 1.0 psilocybin)
-    expect(find.text('48.0 mg TPE · 30.0 mg psilocybin in the cart'), findsOneWidget);
+    // the TPE: by the product's first lot (6 x 8); the psilocybin and the 50 mg cap count the lots
+    // the sale draws, each its own figure: 4 x 5 x 1.0 from lot 101, then 2 x 5 x 1.2 from the state-only lot 102 (the
+    // first-lot figure said 30.0)
+    expect(find.text('48.0 mg TPE · 32.0 mg psilocybin in the cart'), findsOneWidget);
     expect(find.textContaining('This sale would total'), findsNothing);
   });
 
-  // Lab lot first (the owner, 2026-10-30; waits for his replay against the production snapshot, PS-R5): with no
-  // expiry known for the lab lot, the smaller state-only lot used to come first and give the product its figure ("6mg
-  // TPE", $0.60 at $0.10/mg, 6 x 6.0 = 36.0 mg psilocybin); now the lab lot always does.
+  // Lab lot first: with no
+  // expiry known for the lab lot, the lab lot still comes before the smaller state-only lot and gives the product its
+  // figure (not "6mg TPE", $0.60 at $0.10/mg, 6 x 6.0 = 36.0 mg psilocybin from the state-only lot).
   testWidgets('lab lot first: an undated lab lot still gives the product its figure, price and dose', (tester) async {
     final undated = [
       Package(productGuid: 'PKPR-ab12c', productType: 'Extract', id: 101, weightPerUnit: 5.0, analyteWeight: 1.0,
@@ -82,7 +85,8 @@ void main() {
     await tester.pumpAndSettle();
     await addLine(tester, pkpr: 'ab12c', qty: '6', price: '10.00');
     expect(find.textContaining('6 x \$10.00 · 8mg TPE each'), findsOneWidget);
-    expect(find.text('48.0 mg TPE · 30.0 mg psilocybin in the cart'), findsOneWidget);
+    // The psilocybin counts the lots drawn, the lab lot's 4 units then the state-only lot's 2 (20 + 12)
+    expect(find.text('48.0 mg TPE · 32.0 mg psilocybin in the cart'), findsOneWidget);
   });
 
   testWidgets('a product with no state-only lot has no note', (tester) async {

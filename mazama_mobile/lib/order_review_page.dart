@@ -1,7 +1,7 @@
-// specs/mazama-inventory MI-D10: the review page between the order form and Mazama. It shows the order as it will be
+// The review page between the order form and Mazama. It shows the order as it will be
 // sent (each line, the units in all) with a box for notes that go along with it. "Back to edit" (or the back gesture)
 // returns to the form with everything kept, the notes included; "Submit order" is what sends it
-// (order_client.dart, route C14). A refusal keeps this page as it was, with the server's message; an order that
+// (order_client.dart, POST /p/orders/{state_id}). A refusal keeps this page as it was, with the server's message; an order that
 // can't reach Mazama's server is never queued: the page says to try again later, with the order and notes as they were
 // (sync/server_read.dart).
 import 'package:flutter/material.dart';
@@ -21,7 +21,7 @@ class OrderReviewResult {
   const OrderReviewResult({required this.note, this.receipt});
 }
 
-/// "12 × Golden Teacher 25 mg, Freeze dried", or "20 × Chocolate Booster" for an edible product (specs/edibles ED-A6:
+/// "12 × Golden Teacher 25 mg, Freeze dried", or "20 × Chocolate Booster" for an edible product (
 /// the product is its own kind): one line as the review page, the confirmation and the form's summary write it.
 String orderLineText(OrderLine l) => stockIsProduct(l.strain)
     ? '${l.quantity} × ${l.strain} ${orderSizeLabel(l.size)}'

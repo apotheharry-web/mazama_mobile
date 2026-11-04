@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "records.dry_grams input",
+  "description": "Records' dryWeight values, as the state sent them.",
+  "type": "object",
+  "required": [
+    "values"
+  ],
+  "properties": {
+    "values": {
+      "type": "array"
+    }
+  }
+}

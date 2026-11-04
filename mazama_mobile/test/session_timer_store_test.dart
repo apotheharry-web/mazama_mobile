@@ -48,18 +48,14 @@ void main() {
     await s.clear(); // must not throw even though there is nothing left to delete
   });
 
-  // An older build's file is imported when the store first opens the folder (local_store_import.dart), so these write
-  // it before the store is first used there (plan P-D5).
-  test('a corrupted file on disk reads back as null, not a crash', () async {
-    await Directory('${tempDir.path}/nested').create(recursive: true);
-    await File('${tempDir.path}/nested/session_timer.json').writeAsString('not json{{{');
+  test('a damaged document reads back as null, not a crash', () async {
+    LocalStore.forDir(Directory('${tempDir.path}/nested')).write('session_timer.json', 'not json{{{');
     expect(await store().load(231), isNull);
   });
 
-  test('a file missing startMillis reads back as null', () async {
+  test('a document missing startMillis reads back as null', () async {
     final s = store();
-    await Directory('${tempDir.path}/nested').create(recursive: true);
-    await File('${tempDir.path}/nested/session_timer.json').writeAsString('{"centerId": 231}');
+    LocalStore.forDir(Directory('${tempDir.path}/nested')).write('session_timer.json', '{"centerId": 231}');
     expect(await s.load(231), isNull);
   });
 

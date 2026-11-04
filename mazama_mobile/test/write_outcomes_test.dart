@@ -1,13 +1,13 @@
-// SM-12, through the shared case table: every case in assets/shared/flows/contracts/write_outcomes.json (vendored
+// Through the shared case table: every case in assets/shared/flows/contracts/write_outcomes.json (vendored
 // from ../mazama_modules/flows/contracts/ by tool/sync_flows.sh) ends the same way on the phone as on the server
 // (mazama_sales/tests/state/test_write_outcomes.py).
 //
 // - outcome: what the cart makes of it: runFlow on the vendored sale.yaml, then classifySaleFailure for a FlowError
-//   or looksLikeConfirmedSale for the reply (SM-D2: one record per record sent, one non-blank sale number).
+//   or looksLikeConfirmedSale for the reply (one record per record sent, one non-blank sale number).
 // - flow_error: the FlowError's stage and status, which the server's interpreter must match.
 //
-// A reply whose body is cut off or never finishes (SALE-16, reply_cut_off / reply_timeout) is in the table since
-// specs/core row 7; other failures only package:http and dart:io can produce (a wrapped SocketException) stay in
+// A reply whose body is cut off or never finishes (reply_cut_off / reply_timeout) is in the table;
+// other failures only package:http and dart:io can produce (a wrapped SocketException) stay in
 // flow/flow_runner_test.dart.
 import 'dart:async';
 import 'dart:convert';
@@ -52,7 +52,7 @@ http.Client _client(Map<String, Object?> event) {
         http.StreamedResponse(Stream.value(utf8.encode(event['body'] as String)), event['status'] as int, request: req));
   }
   if (kind == 'timeout') return _Scripted((req) => Completer<http.StreamedResponse>().future); // never answers
-  // SALE-16: the status line came, the body didn't (all of it): cut off part way, or never finishing
+  // The status line came, the body didn't (all of it): cut off part way, or never finishing
   if (kind == 'reply_cut_off') {
     return _Scripted((req) async => http.StreamedResponse(_cutOff(), event['status'] as int, request: req));
   }

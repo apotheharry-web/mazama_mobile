@@ -1,11 +1,14 @@
-# Every function of the shared core that an app calls (specs/core CR-R2), one line each. gen.py writes, from this
+# Every function of the shared core that an app calls, one line each. gen.py writes, from this
 # list, the Rust dispatch table (mazama_core/src/api_table.rs), the Python exports (mazama_core_py/src/exports.rs:
 # mazama_core.<area>_<name>), the C exports (mazama_core_ffi/src/exports.rs: mz_<area>_<name>_json), the phone's
 # Dart wrapper (mazama_mobile/lib/mazama_core.g.dart: CoreFunctions.<areaName>) and the iOS linker list
 # (ios_symbols.txt). Each function is `fn(&str) -> Result<String, mazama_core::api::Error>` at `rust` (a path in
 # the mazama_core crate); its input and output are JSON Schemas in schemas/<area>/<name>.{input,output}.schema.json.
 # To add one: write the Rust function, add its line and its two schemas here, run `python3 mazama_modules/core/gen.py`
-# from the repository root and commit what it writes.
+# from the repository root and commit what it writes. A function of a phone feature not yet released adds
+# `feature: <name>` (a feature of features/features.yaml): its Rust is under mazama_core/src/features/<name>/
+# (rust: "features::<name>::..."), its schemas under schemas/features/<name>/, and the public copy leaves it out
+# (README.md, "A function of a feature not yet released"). Every function stays on one line of its own.
 format: 1
 functions:
   - {area: coa,   name: parse,             rust: "coa::parse_default_json",   what: "CoaText -> CoaParseResult (built-in rules)"}
@@ -18,52 +21,68 @@ functions:
   - {area: scan,  name: closest,           rust: "scan_closest_json",         what: "{texts, packages} -> {guesses}"}
   - {area: records, name: judge,          rust: "records::judge_json",       what: "{records} -> [Judgement] (every record rule, per record)"}
   - {area: records, name: can_transfer,   rust: "records::can_transfer_json", what: "{records, holder_state_id, mode} -> [bool | Raise]"}
-  - {area: records, name: package_keys,  rust: "contracts::package_keys_json", what: "{records} -> [{state_id, pkpr} | {problem}] (SM-21, row 10)"}
-  - {area: records, name: service_centers, rust: "contracts::service_centers_json", what: "{licenses} -> [{state_id, name, license}] (SM-21, row 10)"}
-  - {area: stock, name: filter, rust: "stock::filter_json", what: "{rows, makers} -> {counted, other} (SP-D2, SP-D3)"}
-  - {area: stock, name: summarize, rust: "stock::summarize_json", what: "{rows, mg_mode} -> summary (SP-R2)"}
+  - {area: records, name: package_keys,  rust: "contracts::package_keys_json", what: "{records} -> [{state_id, pkpr} | {problem}] each GetPackagedProducts record's ids, or why it is skipped"}
+  - {area: records, name: service_centers, rust: "contracts::service_centers_json", what: "{licenses} -> [{state_id, name, license}] the GetApplicableLicenses entries that are service centers"}
+  - {area: stock, name: filter, rust: "stock::filter_json", what: "{rows, makers} -> {counted, other} the rows with units, expired and other makers' set apart"}
+  - {area: stock, name: summarize, rust: "stock::summarize_json", what: "{rows, mg_mode} -> summary units and mg by strain and size"}
   - {area: stock, name: pies, rust: "stock::pies_json", what: "{summary} -> {units, mg, rows, more} (charts.stock_view)"}
   - {area: stock, name: par_table, rust: "stock::par_table_json", what: "{summary, levels} -> par table (charts.par_view)"}
-  - {area: stock, name: mix, rust: "stock::mix_json", what: "{rows: [{strain, type, mg}]} -> stock mix (MI-R1)"}
-  - {area: stock, name: mix_cells, rust: "stock::mix_cells_json", what: "{rows} -> [{strain, type, mg}] per strain and type (MI-A2)"}
-  - {area: stock, name: by_type, rust: "stock::by_type_json", what: "{rows, mg_mode} -> {pie: By type pie | null} (WC-D1)"}
-  - {area: stock, name: order_check, rust: "stock_order::check_json", what: "{lines, note, aliases} -> {lines, note} | {refused} (row 9)"}
-  - {area: stock, name: order_form, rust: "stock_order::form_json", what: "{levels} -> [{strain, size, par}] the order form's lines (MI-D7)"}
-  - {area: manufacturing, name: coa_edit, rust: "manufacturing::coa_edit_json", what: "{raw, uid, psilocybin, form, kind} -> {errors, drop, set} a certificate correction (FM-09, row 12)"}
-  - {area: manufacturing, name: coa_number, rust: "manufacturing::coa_number_json", what: "{text, required} -> {value: a mg/g figure | null} (row 12)"}
-  - {area: manufacturing, name: clean_text, rust: "manufacturing::clean_text_json", what: "{text, limit} -> {text} ingredient and allergen text (FM-10, row 12)"}
-  - {area: manufacturing, name: plan, rust: "manufacturing::plan_json", what: "{plans: [{source, dose, qty, coa_tpe}]} -> [Plan] grams per unit for a dose, rounded down (FM-07, row 11)"}
-  - {area: manufacturing, name: serving_table, rust: "manufacturing::serving_table_json", what: "{kind, guid, source, meta, made, package, doses} -> {serv, summary, notes, packages} a sheet's amounts (FM-08, row 11)"}
-  - {area: names, name: product_name, rust: "names::product_name_json", what: "{strain, subtype, kind, product_type} -> {name, why} (FM-11, row 12)"}
-  - {area: flows, name: host_allowed, rust: "flows::host_allowed_json", what: "{url, allowed} -> {allowed} the strict host allowlist (SL-R7, SL-R17, row 13)"}
-  - {area: flows, name: compare_spec_versions, rust: "flows::compare_spec_versions_json", what: "{a, b} -> {order, a_valid, b_valid} YYYY-MM-DD.N ordering (row 13)"}
-  - {area: flows, name: parse_host_list, rust: "flows::parse_host_list_json", what: "{text} -> {valid, version, hosts} a signed host list's text (SL-R18, row 13)"}
-  - {area: flows, name: verify_signature, rust: "flows::verify_signature_json", what: "{payload_b64, signature, public_key} -> {valid} the owner's Ed25519 signature (SL-D13, row 13)"}
-  - {area: flows, name: public_key, rust: "flows::public_key_json", what: "{text} -> {key_b64 | null} a signing.pub text (SL-D13, row 13)"}
-  - {area: flows, name: usable_login_spec, rust: "flows::usable_login_spec_json", what: "{format, reader_format, vars, flows, allowed_hosts, served} -> {usable, spec_version} (SPEC.md 'A usable sign-in spec', row 13)"}
-  - {area: selling, name: sellable, rust: "selling::sellable_json", what: "{checks: [{record, qty}]} -> [{reason, sellable_record}] what may be sold (SM-10, row 4)"}
-  - {area: selling, name: parse_price, rust: "selling::pricing::parse_price_json", what: "{text, max} -> {cents | null} a typed price, total or rate per mg (SM-13, row 6)"}
-  - {area: selling, name: price_cart, rust: "selling::cart::price_cart_json", what: "{mode, lines, total, per_mg, tax, tax_percent, agreement} -> {each, line_errors, error} a cart priced as a whole (SM-14, row 6)"}
-  - {area: selling, name: line_price, rust: "selling::cart::line_price_json", what: "{mode, text, mg} -> {cents, error} one line priced on its own (PRICE-3, row 6)"}
-  - {area: selling, name: group_of, rust: "selling::pricing::group_of_json", what: "{product_type} -> {group} A or B (SM-14, row 6)"}
-  - {area: selling, name: share_total, rust: "selling::pricing::share_total_json", what: "{total_cents, weights} -> {parts} largest remainder (PRICE-4, row 6)"}
-  - {area: selling, name: per_mg_price, rust: "selling::pricing::per_mg_price_json", what: "{rate_cents, mg} -> {cents} (SM-D10, row 6)"}
-  - {area: selling, name: with_tax, rust: "selling::pricing::with_tax_json", what: "{cents, percent} -> {cents} (row 6)"}
-  - {area: selling, name: money, rust: "selling::pricing::money_json", what: "{cents} -> {text} '$1,234.56' (row 6)"}
-  - {area: selling, name: allocate, rust: "selling::cart::allocate_json", what: "{lots, qty} -> {order, positions, takes, take_positions} which lot a unit is drawn from (SM-17, PRICE-6, row 6)"}
-  - {area: selling, name: build_sale, rust: "selling::sale::build_sale_json", what: "{item, price_cents, sale_date, dose, qty} -> {record, refusal} the record CreateSalesRecords is sent (SM-11, SALE-10/12/13, row 7)"}
-  - {area: selling, name: allocate_sale, rust: "selling::sale::allocate_sale_json", what: "{lines, lots} -> {draws, short} one draw across a sale's lines (SALE-4, row 7)"}
-  - {area: selling, name: check_sale, rust: "selling::sale::check_sale_json", what: "{lines, fresh, center, sent?, cap?} -> {refusal} the check on the state's records just before sending (SM-25, SALE-17, row 7)"}
-  - {area: selling, name: parse_sale_date, rust: "selling::sale::parse_sale_date_json", what: "{text, today} -> {date, error} a typed sale date (SM-D6, row 7)"}
-  - {area: selling, name: check_sale_date, rust: "selling::sale::check_sale_date_json", what: "{date, today} -> {date, error} future or more than 365 days back (SALE-1, SALE-18, row 7)"}
-  - {area: selling, name: today, rust: "selling::sale::today_json", what: "{now} -> {date} the Pacific date of now (SALE-2, row 7)"}
-  - {area: selling, name: pacific_midnight, rust: "selling::sale::pacific_midnight_json", what: "{date} -> {utc} Pacific midnight as UTC, the 2007 rule (SALE-1, row 7)"}
-  - {area: selling, name: review_sale_date, rust: "selling::sale::review_sale_date_json", what: "{text} -> {date} a failed sale's own date of sale (row 7)"}
-  - {area: selling, name: sale_outcome, rust: "selling::sale::sale_outcome_json", what: "{event, sent} -> {outcome, sale_number} how a sale's reply ends (SM-12, SALE-5/6/16, row 7)"}
-  - {area: selling, name: sale_proof, rust: "selling::sale::sale_proof_json", what: "{reply, sent} -> {sale_number} what a reply already read proves (SM-D2, SALE-5/6, row 7)"}
-  - {area: selling, name: review_each, rust: "selling::sale::review_each_json", what: "{cost, qty} -> {cents} a reviewed sale's price each (SALE-9, row 7)"}
-  - {area: selling, name: expiry, rust: "selling::sale::expiry_json", what: "{expires, today, fresh_months} -> {expired, words, hue} (SM-18, SALE-11, row 7)"}
-  - {area: selling, name: parse_state_date, rust: "selling::sale::parse_state_date_json", what: "{text} -> {date} a state-site date as ISO (row 7)"}
-  - {area: dose, name: unit_mg, rust: "dose::unit_mg_json", what: "{units: [{record, tpe}]} -> [{tpe_per_g, tpe_mg}] a unit's mg TPE (SM-04, row 5)"}
-  - {area: dose, name: ceil_mg, rust: "dose::ceil_mg_json", what: "{xs} -> [int | null] an mg figure rounded up to a whole mg, forgiving only float noise of a billionth of a mg (SM-D17, row 5)"}
-  - {area: dose, name: sale_limits, rust: "dose::sale_limits_json", what: "{sales: [{lines}]} -> [{psilocybin_mg, allowed, error, session_minutes, session_minutes_initial}] the 50 mg cap and session length (SM-15, row 5)"}
+  - {area: stock, name: mix, rust: "stock::mix_json", what: "{rows: [{strain, type, mg}]} -> stock mix mg by strain and by type, largest first"}
+  - {area: stock, name: mix_cells, rust: "stock::mix_cells_json", what: "{rows} -> [{strain, type, mg}] mg summed per strain and type, rounded to 2 decimals"}
+  - {area: stock, name: by_type, rust: "stock::by_type_json", what: "{rows, mg_mode} -> {pie: By type pie | null} by mg when any row has an mg figure, else by units"}
+  - {area: stock, name: order_check, rust: "stock_order::check_json", what: "{lines, note, aliases} -> {lines, note} | {refused} a center's order checked"}
+  - {area: stock, name: order_form, rust: "stock_order::form_json", what: "{levels} -> [{strain, size, par}] the order form's lines"}
+  - {area: manufacturing, name: coa_edit, rust: "manufacturing::coa_edit_json", what: "{raw, uid, psilocybin, form, kind} -> {errors, drop, set} a certificate correction"}
+  - {area: manufacturing, name: coa_number, rust: "manufacturing::coa_number_json", what: "{text, required} -> {value: a mg/g figure | null}"}
+  - {area: manufacturing, name: clean_text, rust: "manufacturing::clean_text_json", what: "{text, limit} -> {text} ingredient and allergen text"}
+  - {area: manufacturing, name: plan, rust: "manufacturing::plan_json", what: "{plans: [{source, dose, qty, coa}]} -> [Plan] grams per unit = dose / the larger of the state's analyteWeight and the certificate's TPE (unrounded or to 2 places, whichever is higher), rounded down to 0.01 g so a unit never holds more than its dose"}
+  - {area: manufacturing, name: serving_table, rust: "manufacturing::serving_table_json", what: "{kind, guid, source, meta, made, package, doses} -> {serv, summary, notes, packages} a sheet's amounts, mg never shown below what a unit holds"}
+  - {area: manufacturing, name: transfer_items, rust: "manufacturing::transfer_items_json", what: "{items} -> {wanted, problems} the packages a transfer names, each once, ASCII digits only (MP-R15)"}
+  - {area: manufacturing, name: transfer_check, rust: "manufacturing::transfer_check_json", what: "{items, fields, packages, centers, mfr, driver_ids, driver?, today, is_owner} -> {fields, problems, planned, splits, manifest} a transfer's check, with the server's words (FM-13)"}
+  - {area: manufacturing, name: transfer_plan, rust: "manufacturing::transfer_plan_json", what: "{records, items, planned?, manifest?} -> {splits, planned, manifest} what a checked transfer sends: the packages split, the planned transfers, the manifest's fields"}
+  - {area: names, name: product_name, rust: "names::product_name_json", what: "{strain, subtype, kind, product_type} -> {name, why}"}
+  - {area: flows, name: host_allowed, rust: "flows::host_allowed_json", what: "{url, allowed} -> {allowed} the strict host allowlist: https, port 443, an exact listed host"}
+  - {area: flows, name: compare_spec_versions, rust: "flows::compare_spec_versions_json", what: "{a, b} -> {order, a_valid, b_valid} YYYY-MM-DD.N ordering"}
+  - {area: flows, name: parse_host_list, rust: "flows::parse_host_list_json", what: "{text} -> {valid, version, hosts} a signed host list's text"}
+  - {area: flows, name: verify_signature, rust: "flows::verify_signature_json", what: "{payload_b64, signature, public_key} -> {valid} the owner's Ed25519 signature"}
+  - {area: flows, name: public_key, rust: "flows::public_key_json", what: "{text} -> {key_b64 | null} a signing.pub text"}
+  - {area: flows, name: usable_login_spec, rust: "flows::usable_login_spec_json", what: "{format, reader_format, vars, flows, allowed_hosts, served} -> {usable, spec_version} (SPEC.md 'A usable sign-in spec')"}
+  - {area: selling, name: sellable, rust: "selling::sellable_json", what: "{checks: [{record, qty}]} -> [{reason, sellable_record}] what may be sold"}
+  - {area: selling, name: parse_price, rust: "selling::pricing::parse_price_json", what: "{text, max} -> {cents | null} a typed price, total or rate per mg in whole cents, half up, refused over its cap"}
+  - {area: selling, name: price_cart, rust: "selling::cart::price_cart_json", what: "{mode, lines, total, per_mg, tax, tax_percent, agreement} -> {each, line_errors, error} a cart priced as a whole, per unit in whole cents"}
+  - {area: selling, name: line_price, rust: "selling::cart::line_price_json", what: "{mode, text, mg} -> {cents, error} one line priced on its own, within the $10,000 unit cap"}
+  - {area: selling, name: group_of, rust: "selling::pricing::group_of_json", what: "{product_type} -> {group} A (edibles and extracts) or B"}
+  - {area: selling, name: share_total, rust: "selling::pricing::share_total_json", what: "{total_cents, weights} -> {parts} a total shared by weight: parts rounded down, the cents left to the largest remainders"}
+  - {area: selling, name: per_mg_price, rust: "selling::pricing::per_mg_price_json", what: "{rate_cents, mg} -> {cents} rate x mg, half up to the cent"}
+  - {area: selling, name: with_tax, rust: "selling::pricing::with_tax_json", what: "{cents, percent} -> {cents} cents x (100 + percent) / 100, half up to the cent"}
+  - {area: selling, name: money, rust: "selling::pricing::money_json", what: "{cents} -> {text} '$1,234.56'"}
+  - {area: selling, name: allocate, rust: "selling::cart::allocate_json", what: "{lots, qty} -> {order, positions, takes, take_positions} which lot a unit is drawn from: lab lots first, earliest expiry, fewest units, lowest id"}
+  - {area: selling, name: build_sale, rust: "selling::sale::build_sale_json", what: "{item, price_cents, sale_date, dose, qty} -> {record, refusal} the record CreateSalesRecords is sent, the state's values copied unchanged"}
+  - {area: selling, name: allocate_sale, rust: "selling::sale::allocate_sale_json", what: "{lines, lots} -> {draws, short} one draw across a sale's lines"}
+  - {area: selling, name: check_sale, rust: "selling::sale::check_sale_json", what: "{lines, fresh, center, sent?, cap?} -> {refusal} the check on the state's records just before sending"}
+  - {area: selling, name: parse_sale_date, rust: "selling::sale::parse_sale_date_json", what: "{text, today} -> {date, error} a typed sale date"}
+  - {area: selling, name: check_sale_date, rust: "selling::sale::check_sale_date_json", what: "{date, today} -> {date, error} future or more than 365 days back"}
+  - {area: selling, name: today, rust: "selling::sale::today_json", what: "{now} -> {date} the Pacific date of now"}
+  - {area: selling, name: pacific_midnight, rust: "selling::sale::pacific_midnight_json", what: "{date} -> {utc} Pacific midnight as UTC, by the 2007 US daylight-saving rule"}
+  - {area: selling, name: review_sale_date, rust: "selling::sale::review_sale_date_json", what: "{text} -> {date} a failed sale's own date of sale"}
+  - {area: selling, name: sale_outcome, rust: "selling::sale::sale_outcome_json", what: "{event, sent} -> {outcome, sale_number} how a sale's reply ends: recorded, not sent or uncertain"}
+  - {area: selling, name: sale_proof, rust: "selling::sale::sale_proof_json", what: "{reply, sent} -> {sale_number} what a reply already read proves"}
+  - {area: selling, name: review_each, rust: "selling::sale::review_each_json", what: "{cost, qty} -> {cents} a reviewed sale's price each: the total in cents / qty, half up"}
+  - {area: selling, name: expiry, rust: "selling::sale::expiry_json", what: "{expires, today, fresh_months} -> {expired, words, hue} expired from the day after the date"}
+  - {area: selling, name: parse_state_date, rust: "selling::sale::parse_state_date_json", what: "{text} -> {date} a state-site date as ISO"}
+  - {area: dose, name: unit_mg, rust: "dose::unit_mg_json", what: "{units: [{record, tpe}]} -> [{tpe_per_g, tpe_mg}] a unit's mg TPE: weightPerUnit x (the lot's TPE, else the state's analyteWeight), rounded up to a whole mg"}
+  - {area: dose, name: ceil_mg, rust: "dose::ceil_mg_json", what: "{xs} -> [int | null] an mg figure rounded up to a whole mg, forgiving only float noise of a billionth of a mg"}
+  - {area: dose, name: sale_limits, rust: "dose::sale_limits_json", what: "{sales: [{lines}]} -> [{psilocybin_mg, allowed, error, session_minutes, session_minutes_initial}] a sale's raw psilocybin (weightPerUnit x analyteWeight x units, exact), the 50 mg cap and the session length"}
+  - {area: selling, name: cart_total, rust: "selling::cart::cart_total_json", what: "{lines: [{qty, price_cents, group}], sales} -> {line_totals, total, group_totals, units, all_total, all_units} a cart's totals in whole cents, exact, and n sales of it"}
+  - {area: dose, name: highest_lot, rust: "dose::highest_lot_json", what: "{lots: [{weightPerUnit, analyteWeight}]} -> {index} the lot a line its lots can't cover is counted on: a figure that can't be used, then unknown potency, then the largest weightPerUnit x analyteWeight"}
+  - {area: selling, name: sale_date_bounds, rust: "selling::sale::sale_date_bounds_json", what: "{today} -> {earliest, latest} the days a sale may be dated: today back to 365 days before it"}
+  - {area: stock, name: classify, rust: "stock::classify_json", what: "{rows, mg_mode} -> {rows: [{type, word, edible, size_key, mg_per_unit, has_units, type_mg}], type_words} how the stock rules read each row"}
+  - {area: stock, name: record_types, rust: "stock::record_types_json", what: "{records} -> {types: [code | null]} each state record's kind, as Stock.package_code reads a record"}
+  - {area: stock, name: type_words, rust: "stock::type_words_json", what: "{codes} -> {words} the word each kind code's pies show"}
+  - {area: names, name: parse, rust: "names::parse_json", what: "{items: [{text, kind, license}], aliases, formats} -> [{status, strain_raw, strain, dose, dose_text, code, expiry, label, note}] a product's or batch/lot's name read into fields (ok, partial or unparsed, and why)"}
+  - {area: names, name: strains, rust: "names::strains_json", what: "{texts, aliases} -> [{key, spelled, clean, canonical}] a strain's key, its spelling fixed, its safe form and the name it is shown as"}
+  - {area: names, name: code_of, rust: "names::code_of_json", what: "{items: [{description, coa_code}]} -> [code] a product's type code: the one after TPE in its name, else the certificate's, else a word in the name"}
+  - {area: names, name: type_code, rust: "names::type_code_json", what: "{items: [{subtype, product_type}]} -> [code] a certificate subtype's type code, HG for a homogenized product without one"}
+  - {area: records, name: dry_grams, rust: "records::dry_grams_json", what: "{values} -> [grams] a dry weight as every record rule reads it: a number, or text that is a plain number; anything else 0 g"}
+  - {area: records, name: licenses_of_type, rust: "contracts::licenses_of_type_json", what: "{licenses, license_type} -> [{state_id, name, license}] the GetApplicableLicenses entries of one license type (ServiceCenter or Manufacturer)"}
+  - {area: names, name: name_dose, rust: "label::name_dose_json", what: "{name} -> {dose: text | null} the first <n> mg in a product's name as written, read as the label reads a dose from a name"}

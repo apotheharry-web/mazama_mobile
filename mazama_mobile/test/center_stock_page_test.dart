@@ -1,5 +1,5 @@
-// SP-R12, SP-R14: the phone's stock page (lib/center_stock_page.dart): the filter, the pies and their keys, a
-// strain's serving-size pies, the lot table, "Other stock", and no par table (SP-D19: it is the order's first step,
+// The phone's stock page (lib/center_stock_page.dart): the filter, the pies and their keys, a
+// strain's serving-size pies, the lot table, "Other stock", and no par table (it is the order's first step,
 // test/order_par_page_test.dart). Data comes through the
 // injected loaders, as the other pages' tests inject their clients.
 
@@ -66,7 +66,7 @@ Widget _page({
       ),
     );
 
-// SP-D11, SP-D18: a sheet per strain in _rows, one made into two strains, and one whose strain isn't known; their lab
+// A sheet per strain in _rows, one made into two strains, and one whose strain isn't known; their lab
 // figures and types for the lot table.
 const _sheets = [
   ProductSheet(guid: 'HB-gt01', name: 'GT 6.26', product: 'Whole Fungi', tested: 'Aug 27, 2026', path: '/p/lots/mazama/HB-gt01',
@@ -78,7 +78,7 @@ const _sheets = [
   ProductSheet(guid: 'HB-un04', name: 'No name', product: 'Whole Fungi', tested: '', path: '/p/lots/mazama/HB-un04', strains: ['']),
 ];
 
-/// Opens or closes the lot table (SP-D18).
+/// Opens or closes the lot table.
 Future<void> _openLots(WidgetTester tester) =>
     _tap(tester, find.descendant(of: find.byKey(const ValueKey('stock-lot-table')), matching: find.byType(ListTile)).first);
 
@@ -133,7 +133,7 @@ void main() {
 
     final filter = tester.widget<SegmentedButton<String>>(find.byType(SegmentedButton<String>));
     expect(filter.selected, {'all'});
-    // No title bar under the home's tabs: the "Stock" tab label is its title (owner, 2026-10-22).
+    // No title bar under the home's tabs: the "Stock" tab label is its title.
     expect(find.byType(AppBar), findsNothing);
     expect(find.text('Bendable Service Center stock'), findsNothing);
     // Every unexpired package with units, any maker: Golden Teacher 10 + 4, Penis Envy 6.
@@ -254,7 +254,7 @@ void main() {
     expect(find.textContaining('below par'), findsNothing);
   });
 
-  // R87: about the state system only; the app-wide banner says Mazama's server can't be reached.
+  // About the state system only; the app-wide banner says Mazama's server can't be reached.
   testWidgets('nothing reachable and nothing drawn before: the state part of the error, and Retry', (tester) async {
     await tester.pumpWidget(_page(load: () async => throw StockUnavailable()));
     await tester.pumpAndSettle();
@@ -279,7 +279,7 @@ void main() {
     expect(find.text('20 units'), findsOneWidget);
   });
 
-  // R87: the app-wide banner says the server can't be reached; the page has no notice of its own for it.
+  // The app-wide banner says the server can't be reached; the page has no notice of its own for it.
   testWidgets('server unreachable: the psilocybin title, and no notice of its own', (tester) async {
     await tester.pumpWidget(_page(load: () async => const StockLoad(_stateRows, mgMode: 'psilocybin', partial: true)));
     await tester.pumpAndSettle();
@@ -426,7 +426,7 @@ void main() {
     expect(find.text('Units in stock'), findsOneWidget);
     await _swipePies(tester);
     expect(find.text('mg TPE in stock'), findsOneWidget);
-    await _swipePies(tester); // SP-D17: the third pie
+    await _swipePies(tester); // the third pie
     expect(find.text('By type'), findsOneWidget);
     await _swipePies(tester); // already on the last: stays
     expect(find.text('By type'), findsOneWidget);
@@ -475,7 +475,7 @@ void main() {
     expect(_keyText(tester, 'type-key-Dehydrated'), 'Dehydrated 40 mg TPE · 13%');
   });
 
-  // --- SP-D18: the lot table, in place of the product information sheets ----------------------------------------
+  // --- the lot table, in place of the product information sheets ---------------------------------------------------
 
   testWidgets('without a sheets loader there is no lot table', (tester) async {
     await tester.pumpWidget(_page());
@@ -602,7 +602,7 @@ void main() {
     expect(kept.single.$2, now);
   });
 
-  // R87: no notice of the page's own over the kept sheets: the app-wide banner says the server can't be reached.
+  // No notice of the page's own over the kept sheets: the app-wide banner says the server can't be reached.
   testWidgets('unreachable: the kept sheets fill the lot table, with no notice of their own', (tester) async {
     final at = DateTime.utc(2026, 10, 20, 15, 5);
     await tester.pumpWidget(_page(
@@ -618,7 +618,7 @@ void main() {
     expect(_lotRows(tester), contains('Golden Teacher|HB-gt01'));
   });
 
-  // specs/phone-sync phase 2: the copy is the sync engine's sheets dataset.
+  // The copy is the sync engine's sheets dataset.
   testWidgets("the sheets are kept as the dataset, and fill the lot table from it while the server can't be reached",
       (tester) async {
     final dir = Directory.systemTemp.createTempSync('mazama_center_stock_page_test_');
@@ -744,7 +744,7 @@ void main() {
     expect(find.text('Lots did not load: No such service center.'), findsOneWidget);
   });
 
-  // --- specs/phone-sync Task 8b Step 2: the sheets read through the sync engine's sheets dataset ----------------------
+  // --- the sheets read through the sync engine's sheets dataset -----------------------------------------------------
 
   group('the sheets through the engine', () {
     final engines = <SyncEngine>[];

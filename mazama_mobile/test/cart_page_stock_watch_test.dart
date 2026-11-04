@@ -1,7 +1,7 @@
-// specs/phone-sync Task 8b: the cart follows the sync engine's copy of its center's stock (CartPage.watchStock). A newer
+// The cart follows the sync engine's copy of its center's stock (CartPage.watchStock). A newer
 // copy is taken only while the cart has no lines and no sale is being sent; it waits otherwise, and is taken once the
 // cart empties. Taken, it keeps Lane K's stamps: a copy the state answered is confirmed by the state at its own time; a
-// copy of Mazama's server's rows alone makes the next sale read the state first (SM-25).
+// copy of Mazama's server's rows alone makes the next sale read the state first.
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -357,7 +357,7 @@ void main() {
     expect(find.text('Whole Fungi'), findsOneWidget);
   });
 
-  // Task 8b Step 8 (PS-R7, PS-D5): the stock's age is in the app bar's second line, beside the cart's name, so the
+  // The stock's age is in the app bar's second line, beside the cart's name, so the
   // selling screen is no taller than before (a row above the dose summary pushed the lines under Total/Sell).
   testWidgets("the cart shows its stock's age", (tester) async {
     var clock = DateTime.now();

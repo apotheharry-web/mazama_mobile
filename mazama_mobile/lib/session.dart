@@ -14,7 +14,7 @@ import 'login_spec_store.dart' show stateApiHost;
 /// Renew this long before the token would actually stop working, not exactly at the deadline, so there's slack
 /// for the renew call itself plus whatever request it's protecting. The value in use is login.yaml's
 /// `refresh_margin_seconds` (see [refreshMarginOf]), the same var REFRESH_MARGIN in
-/// mazama_sales/src/mazama_sales/state/client.py reads (SM-20); this is only the fallback when a spec has none.
+/// mazama_sales/src/mazama_sales/state/client.py reads; this is only the fallback when a spec has none.
 const defaultRefreshMargin = Duration(seconds: 120);
 
 /// The token refresh margin [spec] (the login spec) declares as `refresh_margin_seconds`, or
@@ -46,7 +46,7 @@ class Session {
   /// token stops working, same instant Azure B2C computed when it returned expires_in.
   final int expiresAtMs;
 
-  /// The demo sign-in's session (guest / guest, specs/demo-mode): never saved, never renewed (DM-D6, DM-R4).
+  /// The demo sign-in's session (guest / guest): never saved, never renewed.
   final bool isDemo;
 
   const Session({required this.accessToken, this.refreshToken, required this.email, required this.expiresAtMs, this.isDemo = false});
@@ -60,7 +60,7 @@ class Session {
         isDemo = true;
 
   /// True once we're [margin] or less from expiry (or already past it) - exactly at the margin is due, as on
-  /// the server, which keeps a token only while `now < expires - REFRESH_MARGIN` (SM-20). Pass the login
+  /// the server, which keeps a token only while `now < expires - REFRESH_MARGIN`. Pass the login
   /// spec's own margin ([refreshMarginOf]). [now] is overridable for tests, same pattern as selling.dart's
   /// parseSaleDate taking `today` rather than reading the clock itself.
   bool needsRenewal({DateTime Function() now = DateTime.now, Duration margin = defaultRefreshMargin}) =>
@@ -99,7 +99,7 @@ class Session {
   /// a renewal (ensureFreshSession below, which already has it on hand).
   ///
   /// Throws [FlowSpecError] when the result holds no access token, or an empty one: a flow that "succeeds" without
-  /// one (a fetched spec missing its token step, say) is not a session (final review C1).
+  /// one (a fetched spec missing its token step, say) is not a session.
   static Session fromFlowResult(Map<String, Object?> result, {required String email, DateTime Function() now = DateTime.now}) {
     final accessToken = result['access_token'];
     if (accessToken is! String || accessToken.isEmpty) {
@@ -129,7 +129,7 @@ class SessionExpired implements Exception {
 
 /// A [SessionExpired] whose cause is the sign-in spec itself, not the state system: running `renew` (or reading the
 /// spec's refresh margin, or the flow's result) threw something other than a [FlowError] - a mistake in a spec the
-/// checks did not foresee (final review I1). Callers that only know [SessionExpired] treat it as one: a real sign-in.
+/// checks did not foresee. Callers that only know [SessionExpired] treat it as one: a real sign-in.
 /// MazamaApp._resolveHome catches it first when the spec in use is one saved from the server, sets that spec aside
 /// (LoginSpecStore.quarantine) and decides again with the bundled one, so a bad download can't lock the phone out.
 class SessionSpecUnusable extends SessionExpired {
@@ -182,7 +182,7 @@ bool _isGenuineRefusal(String message) {
 /// Throws [SessionExpired] only when nothing short of a real sign-in with a password could ever get past it:
 /// no refresh token to try at all, or the state system explicitly refusing the one there is with a 4xx (a
 /// genuinely expired or revoked refresh token) - or its [SessionSpecUnusable] form when the spec itself fails: with
-/// anything but a [FlowError] (I1: never an exception of another type, so no caller is left with an unhandled one), or
+/// anything but a [FlowError] (never an exception of another type, so no caller is left with an unhandled one), or
 /// with a FlowError that involved no request (stage null: an unknown name, a bad regex, ...).
 /// Throws [SessionRenewalUnavailable] instead for everything else the `renew` flow can fail with - the state system being unreachable, erroring, or answering with something
 /// unusable - since none of those say anything about the refresh token itself still being good, and wrongly
@@ -190,10 +190,10 @@ bool _isGenuineRefusal(String message) {
 /// (and briefly leave their cart draft stranded behind that sign-in) for no reason at all.
 ///
 /// The renew's requests go only to [allowedHosts]: by default the phone's own allowlist (login_hosts_store.dart's
-/// currentAllowedHosts, SL-R18).
+/// currentAllowedHosts).
 Future<Session> ensureFreshSession(Session session, FlowSpec spec,
     {required http.Client client, DateTime Function() now = DateTime.now, Iterable<String>? allowedHosts}) async {
-  // DM-R4: a demo session is never renewed: there is no real sign-in behind it to ask.
+  // A demo session is never renewed: there is no real sign-in behind it to ask.
   if (session.isDemo) return session;
   final Duration margin;
   try {
@@ -208,7 +208,7 @@ Future<Session> ensureFreshSession(Session session, FlowSpec spec,
   }
   try {
     final result = await runFlow(spec, 'renew', {'refresh_token': refreshToken},
-        // SL-D16: renewal runs unattended, so it never sends anything to the state's API (a redirect there isn't followed)
+        // Renewal runs unattended, so it never sends anything to the state's API (a redirect there isn't followed)
         client: client, allowedHosts: allowedHosts ?? currentAllowedHosts(), neverRequest: const {stateApiHost});
     return Session.fromFlowResult(result, email: session.email, now: now);
   } on FlowError catch (e) {

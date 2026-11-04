@@ -1,4 +1,4 @@
-// SL-R18: the signed sign-in host list on the phone (login_hosts_store.dart): the text rule, held to the shared vectors
+// The signed sign-in host list on the phone (login_hosts_store.dart): the text rule, held to the shared vectors
 // ../mazama_modules/flows/contracts/host_list_vectors.json (vendored at assets/shared/flows/contracts/ by
 // tool/sync_flows.sh), which the server's login_hosts.py passes too; verification against the bundled key (the
 // vectors' TEST key injected here); the hosts every flow may use; and the saved copy.

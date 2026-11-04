@@ -1,7 +1,7 @@
 // "COA → label (on phone)": a debug-only page that runs a package's whole chain on the phone, step by step, with
 // the same shared code the server uses - the state's inventory, the lot's lab report from the state, its text
 // with pdfium (pdf_text.dart), the shared core's parse and label spec (mazama_core.dart), and a drawn preview
-// (label_preview.dart). Design: specs/coa/08-phone-label-debug.md; plan 08 Task 8.
+// (label_preview.dart).
 //
 // For finding out, at a center, at which step a lot fails to get lab values or a label, without the server: the
 // page calls only the state system (with the worker's own session) and never the Mazama server. Reachable only
@@ -312,7 +312,7 @@ class _DebugCoaLabelPageState extends State<DebugCoaLabelPage> {
           final described = _describeParse(core.parse(jsonEncode(text)));
           throw _StepFailed('The package names no batch/lot (harvestBatchGuid/processLotGuid).\n$described');
         }
-        // AD-19, the shared rule: the lot's own UID, else the batch the report's request pairs it with (a process
+        // the shared rule: the lot's own UID, else the batch the report's request pairs it with (a process
         // lot reported under its harvest batch), else the state's psilocybin
         final reply = core.findLot(text, lot, statePsilocybin: pkg.analyteWeight > 0 ? pkg.analyteWeight : null);
         final parsed = ((reply['result'] as Map?) ?? const {}).cast<String, Object?>();

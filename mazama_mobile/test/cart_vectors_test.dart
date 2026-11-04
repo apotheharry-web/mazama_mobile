@@ -1,9 +1,9 @@
-// SM-14: pricing a whole cart (cart_pricing.dart priceWholeCart, groupOf), held to the cases the server's own Python
+// Pricing a whole cart (cart_pricing.dart priceWholeCart, groupOf), held to the cases the server's own Python
 // computed (../mazama_modules/selling/gen.py -> pricing.py price_cart), vendored here at
 // assets/shared/selling/vectors/cart.json, and the "pricing_modes" rules in assets/shared/selling/rules/rules.yaml.
-// SM-D26: per-mg tax goes on the rate; SM-D27: every unit of a line costs the same; SM-D28: a new cart starts in
-// "total". The rule is the shared core's (specs/core row 6); pricing_cases.json adds the PRICE rows the owner decided
-// (CR-D6, 2026-10-31): an input the core refuses (PRICE-7) is a cart this phone can't price ('core').
+// Per-mg tax goes on the rate; every unit of a line costs the same; a new cart starts in
+// "total". The rule is the shared core's; pricing_cases.json adds the cases the owner decided:
+// an input the core refuses is a cart this phone can't price ('core').
 import 'dart:convert';
 import 'dart:io';
 

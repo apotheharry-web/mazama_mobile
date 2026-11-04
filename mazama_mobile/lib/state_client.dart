@@ -14,9 +14,9 @@
 // One deliberate difference from StateSession.get(): this does NOT retry a 401 itself. The app's session
 // renewal is proactive (SelectCenterPage/CartPage renew the access token on a timer before it expires, not
 // reactively on a failed call), so by the time a call here sees a 401 the caller's own renewal has already
-// failed elsewhere and there's nothing a retry here would fix. This just reports it plainly, the exact "sign
-// in again" message licenses_client.dart/state_packages_client.dart already threw before this refactor, so
-// neither caller's own error handling needed to change.
+// failed elsewhere and there's nothing a retry here would fix. This just reports it plainly, with the same "sign
+// in again" message licenses_client.dart/state_packages_client.dart throw, so
+// neither caller's own error handling has to tell them apart.
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:http/http.dart' as http;
@@ -59,7 +59,7 @@ void resetStateReadsSpec() => _specFuture = null;
 Future<Object?> fetchStateJson(String path, {required String accessToken, http.Client? client, FlowSpec? spec}) =>
     fetchStateFlow('get_json', {'path': path}, accessToken: accessToken, client: client, spec: spec);
 
-/// Runs one read flow from state_reads.yaml ([flow] with its own [inputs]; SM-20) and returns the parsed body - the
+/// Runs one read flow from state_reads.yaml ([flow] with its own [inputs]) and returns the parsed body - the
 /// Dart twin of StateSession._read in mazama_sales/src/mazama_sales/state/client.py. [client] defaults to a
 /// plain `http.Client()`, closed when this call created it; pass one in (a `MockClient`, say) to reuse or
 /// fake it. [spec] overrides the cached assets/flows/state_reads.yaml parse, mainly for tests.
@@ -70,7 +70,7 @@ Future<Object?> fetchStateJson(String path, {required String accessToken, http.C
 /// StateSession raises, from the same shared spec); or a 200 whose body wasn't valid JSON.
 ///
 /// Requests go only to [allowedHosts]: by default the phone's own allowlist (login_hosts_store.dart's
-/// currentAllowedHosts: the built-in hosts plus a saved signed list's, SL-R18).
+/// currentAllowedHosts: the built-in hosts plus a saved signed list's).
 Future<Object?> fetchStateFlow(String flow, Map<String, Object?> inputs,
     {required String accessToken, http.Client? client, FlowSpec? spec, Iterable<String>? allowedHosts}) async {
   final c = client ?? http.Client();

@@ -1,4 +1,4 @@
-// The home-screen widget's half on the Dart side (specs/multi-cart MC-D15): the carts' running session timers, as one
+// The home-screen widget's half on the Dart side: the carts' running session timers, as one
 // small JSON snapshot handed to the native widget over a plain MethodChannel - Android's CartTimersWidget.kt, iOS's
 // CartTimers widget extension. Same reasoning as text_scanner.dart for a hand-written channel rather than a pub.dev
 // plugin: nothing new to fetch from the registry, and each side is a few dozen lines.
@@ -19,7 +19,7 @@ import 'dose.dart' show SessionDose;
 const cartTimerSnapshotVersion = 1;
 
 /// One cart as the widget is told about it: [start] null when its timer isn't running; [dose] what its session is
-/// timed against (its lines, or what it last sold - CartPage._cartSummaries, MC-D14: the core's session length, worked
+/// timed against (its lines, or what it last sold - CartPage._cartSummaries: the core's session length, worked
 /// out once per change), null when there's none.
 typedef CartTimerSource = ({String id, String name, DateTime? start, SessionDose? dose});
 

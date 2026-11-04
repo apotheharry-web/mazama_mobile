@@ -1,9 +1,9 @@
-// SM-17: which lot (state package record) a unit of a product is drawn from (packages_client.dart drawOrder,
+// Which lot (state package record) a unit of a product is drawn from (packages_client.dart drawOrder,
 // allocateLots, PkprGroup), held to the cases the server's own Python computed (../mazama_modules/selling/gen.py ->
-// selling.py draw_order / allocate), vendored here at assets/shared/selling/vectors/allocate.json. SM-D29: the
+// selling.py draw_order / allocate), vendored here at assets/shared/selling/vectors/allocate.json. The
 // earliest expiry first; a lot with no known date after every dated one; then the smaller lot; then the lower id. A
-// quantity beyond every lot is refused, never spilled onto the last lot. The rule is the shared core's (specs/core row
-// 6); pricing_cases.json adds the PRICE rows the owner decided (PRICE-6: whole units decide between lots of one expiry)
+// quantity beyond every lot is refused, never spilled onto the last lot. The rule is the shared core's;
+// pricing_cases.json adds the cases the owner decided (whole units decide between lots of one expiry)
 // and lab lot first (a lot only the state lists after every lab lot).
 import 'dart:convert';
 import 'dart:io';
@@ -23,7 +23,7 @@ List<Package> _lots(Map<String, Object?> c) => [
           id: l['id'] as int,
           weightPerUnit: 1,
           analyteWeight: 1,
-          quantity: (l['quantity'] as num?)?.truncate() ?? 0, // a Package holds whole units (toward zero, PRICE-6)
+          quantity: (l['quantity'] as num?)?.truncate() ?? 0, // a Package holds whole units (toward zero)
           expires: l['expires'] == null ? null : DateTime.parse(l['expires'] as String),
           stateOnly: l['state_only'] == true,
         ),

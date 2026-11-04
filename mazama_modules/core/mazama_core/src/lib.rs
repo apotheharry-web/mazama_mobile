@@ -1,5 +1,6 @@
-//! mazama_core: the rules both apps share, implemented once (specs/core). The lab-report reader is [`coa`]; label
-//! specs, TPE, scan matching, the names table and the id patterns are top-level modules. Bindings: Python
+//! mazama_core: the rules both apps share, implemented once. The lab-report reader is [`coa`]; label
+//! specs, TPE, scan matching, the names table and the id patterns are top-level modules; [`features`] holds the code of
+//! the phone features still being tried (left out of the public copy). Bindings: Python
 //! (`mazama_core_py`, import `mazama_core`) and C for the phone (`mazama_core_ffi`), JSON in and out.
 
 pub mod api;
@@ -7,6 +8,7 @@ mod api_table;
 pub mod coa;
 pub mod dose;
 pub mod contracts;
+pub mod features;
 pub mod flows;
 pub mod id_patterns;
 pub mod label;

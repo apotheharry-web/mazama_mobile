@@ -1,5 +1,5 @@
-// sync/sync_queue.dart: one queue for everything the phone still has to send (specs/phone-sync PS-R4), each kind with
-// today's rules - the cases of server_outbox_test.dart, catch_up_store_test.dart (CatchUpWork) and coa_uploader_test.dart,
+// sync/sync_queue.dart: one queue for everything the phone still has to send, each kind with
+// its own rules - the cases of server_outbox_test.dart, catch_up_store_test.dart and coa_uploader_test.dart,
 // same inputs and outcomes, against the queue itself. Fake clock, fake timers, fake senders: no real time, no network.
 import 'dart:async';
 import 'dart:convert';

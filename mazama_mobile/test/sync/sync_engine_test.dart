@@ -1,5 +1,4 @@
-// sync/sync_engine.dart: the one engine per app (specs/phone-sync PS-R1) - built on the local store, it moves today's
-// queues in (PS-R9), sends what waits when woken, when the server answers again and in the foreground, and gives the
+// sync/sync_engine.dart: the one engine per app - built on the local store, it sends what waits when woken, when the server answers again and in the foreground, and gives the
 // banner its count. Fake clock, timers and senders.
 import 'dart:convert';
 import 'dart:io';
@@ -109,30 +108,30 @@ void main() {
     expect(e.queue.waitingReports, 2);
   });
 
-  test("the engine moves today's queues in when it starts", () async {
+  // An older build's own documents are never read; the queue starts as its tables are.
+  test("an older build's outbox document is not moved in: the queue starts empty and the document stays", () async {
     final store = LocalStore.forDir(dir);
-    store.write(
-        'server_outbox.json',
-        jsonEncode({
-          'pending': [
-            OutboxEntry(
-                    clientId: 'c-9',
-                    kind: OutboxKind.saleLog,
-                    stateId: 231,
-                    workerEmail: 'w',
-                    deviceId: 'd',
-                    request: const [{'n': 1}],
-                    createdAt: DateTime.utc(2026, 10, 29))
-                .toJson(),
-          ],
-        }));
+    final older = jsonEncode({
+      'pending': [
+        OutboxEntry(
+                clientId: 'c-9',
+                kind: OutboxKind.saleLog,
+                stateId: 231,
+                workerEmail: 'w',
+                deviceId: 'd',
+                request: const [{'n': 1}],
+                createdAt: DateTime.utc(2026, 10, 29))
+            .toJson(),
+      ],
+    });
+    store.write('server_outbox.json', older);
     health.markUnreachable();
     final e = engine();
-    expect(e.queue.waitingReports, 1);
-    expect(store.read('server_outbox.json'), isNull);
+    expect(e.queue.waitingReports, 0);
+    expect(store.read('server_outbox.json')!.body, older);
     health.markReachable();
     await pumpEventQueue();
-    expect(sent, ['sale_log:c-9']);
+    expect(sent, isEmpty);
   });
 
   test('dispose: nothing more is sent', () async {

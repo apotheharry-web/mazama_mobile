@@ -1,4 +1,4 @@
-// Whether Mazama's server is answering, one tracker for the whole app (README R56, server_link.dart). Every /p/ call
+// Whether Mazama's server is answering, one tracker for the whole app (server_link.dart). Every /p/ call
 // goes through ServerLinkClient (server_link_client.dart), which tells this tracker how it ended:
 //   - no connection, no answer in time, or a 5xx that isn't the server's own {"detail": ...} reply: offline (from now);
 //   - any reply from the server itself (2xx, 4xx, or a 5xx with its own error envelope): online.
@@ -16,7 +16,7 @@
 // Selling never goes through here: the sale is sent straight to the state system, whatever this tracker says.
 //
 // The app-wide banner (server_link.dart's ServerLinkBanner) can be dismissed for the outage under way
-// ([ServerHealth.dismissBanner], README R87). That is kept here, beside the outage it belongs to, so it holds across
+// ([ServerHealth.dismissBanner]). That is kept here, beside the outage it belongs to, so it holds across
 // every page; it ends with the outage, so the next one shows the banner again.
 import 'dart:async';
 
@@ -79,7 +79,7 @@ class ServerHealth extends ChangeNotifier {
   /// Whether a probe is waiting on its timer.
   bool get probeScheduled => _timer != null;
 
-  /// The worker closed the banner for this outage (README R87); false while online and at the start of every outage.
+  /// The worker closed the banner for this outage; false while online and at the start of every outage.
   bool get bannerDismissed => _offline && _bannerDismissed;
 
   /// The banner's close button: hides it until the server has answered and then stopped answering again. Changes

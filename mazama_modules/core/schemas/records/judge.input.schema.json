@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "records.judge input",
-  "description": "specs/core row 3 (specs/foundations Part A): the records to judge, all of a list in one call (CR-D5).",
+  "description": "The records to judge, all of a list in one call.",
   "type": "object",
   "required": [
     "records"

@@ -6,10 +6,9 @@
 //! - [`closest`]: when no id was found, the packages the rest of the label fits best (net weight, psilocybin, best-by
 //!   date, strain, a lot number a few characters off).
 //!
-//! This was the server's `mazama_sales/src/mazama_sales/ocr.py` (`find_ids`, `closest`) and is a line-for-line port of
-//! it, held to the cases that Python wrote (`mazama_modules/coa/corpus/scan/cases.json`). The server calls it
-//! through the binding; the phone calls it through the FFI when the server can't be reached. Python's own text
-//! rules are kept where they decide an answer: its `str.splitlines` line breaks, its `str.strip` whitespace, its `\d`
+//! Held to the shared cases in `mazama_modules/coa/corpus/scan/cases.json`. The server calls it through the binding
+//! (`ocr.find_ids`, `ocr.closest`); the phone calls it through the FFI when the server can't be reached. Python's
+//! text rules decide an answer where they matter: its `str.splitlines` line breaks, its `str.strip` whitespace, its `\d`
 //! (every Unicode decimal digit, [`DIGIT_ZEROS`]) and its `$`, which also matches before a final newline.
 
 use std::collections::HashMap;

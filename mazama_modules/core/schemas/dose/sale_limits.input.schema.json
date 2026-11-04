@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "dose.sale_limits input",
-  "description": "The sales to answer, in order (CR-D5: a bulk sell's copies in one call): each sale's lines, one per record and dose, with the units it sells.",
+  "description": "The sales to answer, in order (a bulk sell's copies in one call): each sale's lines, one per record and dose, with the units it sells.",
   "type": "object",
   "required": [
     "sales"
@@ -27,10 +27,10 @@
               "properties": {
                 "record": {
                   "type": "object",
-                  "description": "The state's package record the units come from; only weightPerUnit (g) and analyteWeight (mg/g of raw psilocybin) are read. Any JSON value has an answer: a figure that isn't a usable number refuses the sale (DOSE-3, DOSE-4, DOSE-19), one that is null, absent or 0 too (DOSE-5)."
+                  "description": "The state's package record the units come from; only weightPerUnit (g) and analyteWeight (mg/g of raw psilocybin) are read. Any JSON value has an answer: a figure that isn't a usable number (not a number, negative, a billion or more, or more than 6 decimal places) refuses the sale, and one that is null, absent or 0 too."
                 },
                 "qty": {
-                  "description": "The units sold. Any JSON value has an answer: anything but an integer from 0 to a million refuses the sale (DOSE-3)."
+                  "description": "The units sold. Any JSON value has an answer: anything but an integer from 0 to a million refuses the sale."
                 },
                 "dose": {
                   "enum": [

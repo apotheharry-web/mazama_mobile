@@ -1,8 +1,8 @@
-// SM-15 (SM-D11): the per-sale raw psilocybin cap and session length are the shared core's (mazama_core::dose, specs/core
-// row 5; lib/dose.dart's saleLimits), the same rule the server's worker and cart ask. Held to the frozen vectors from
-// this app's vendored copies: selling/vectors/dose_limits.json (the old rule's cases, with the owner's DOSE-5 change)
-// and dose/vectors/dose_cases.json (the DOSE rows as the owner approved them, CR-D6). The phone counts the lots a sale
-// draws, each its own figures (DOSE-1), every bulk copy on its own draw (DOSE-17), and fails closed (DOSE-7).
+// The per-sale raw psilocybin cap and session length are the shared core's (mazama_core::dose;
+// lib/dose.dart's saleLimits), the same rule the server's worker and cart ask. Held to the frozen vectors from
+// this app's vendored copies: selling/vectors/dose_limits.json (with a unit of unknown potency refused)
+// and dose/vectors/dose_cases.json (the DOSE rows as the owner approved them). The phone counts the lots a sale
+// draws, each its own figures, every bulk copy on its own draw, and fails closed.
 import 'dart:convert';
 import 'dart:io';
 
@@ -145,7 +145,7 @@ void main() {
       final copies = drawnSaleLimitLines(draw, ['initial']);
       final counting = _Core((input) => core.doseSaleLimits(input));
       final v = bulkSaleLimits(copies, core: counting);
-      expect(counting.calls, 1); // every copy in one call (CR-D5)
+      expect(counting.calls, 1); // every copy in one call
       expect([for (final c in v) c.psilocybinMg], ['30.00', '72.00']);
       expect([for (final c in v) c.allowed], [false, false]);
       expect(v[1].error, 'This sale would total 72.0 mg psilocybin - more than the 50 mg limit per sale (mg TPE is not subject to this cap).');
@@ -189,7 +189,7 @@ void main() {
         final v = saleLimits(lines, core: _Core(reply)).single;
         expect(identical(v, SaleLimits.failed), isTrue);
         expect((v.allowed, v.error), (false, doseCoreFailedReason));
-        // a timer for it runs the longest session, 6 hours, and says the length can't be worked out (M7)
+        // a timer for it runs the longest session, 6 hours, and says the length can't be worked out
         final dose = sessionDoseOf(v, booster: false);
         expect(dose, (minutes: 360, booster: false, unknown: true));
         expect(sessionTimeLeft(Duration(minutes: dose.minutes!), const Duration(hours: 1), booster: false, unknown: dose.unknown),

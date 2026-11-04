@@ -182,7 +182,7 @@ void main() {
     });
   });
 
-  // The 50 mg cap and the session table are the shared core's now (specs/core row 5): test/dose_limits_test.dart.
+  // The 50 mg cap and the session table are the shared core's now: test/dose_limits_test.dart.
 
   group('formatSessionDuration', () {
     test('minutes under an hour', () {
@@ -213,7 +213,7 @@ void main() {
     });
   });
 
-  // SM-16: the agreement split comes from the server's settings (/p/center-status), not only the built-in 40:90.
+  // The agreement split comes from the server's settings (/p/center-status), not only the built-in 40:90.
   test('priceWholeCart shares a total by the agreement weights it is given', () {
     final r = priceWholeCart(
       mode: CartPricingMode.total,

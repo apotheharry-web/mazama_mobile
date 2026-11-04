@@ -1,26 +1,24 @@
-//! A sale's record, its date, the check just before it is sent and how its reply ends (specs/core row 7, Task 13;
-//! SM-11, SM-12, SM-25, FM-03). One rule for the server (selling.py, expiry.py, salejobs.py and state/client.py's
+//! A sale's record, its date, the check just before it is sent and how its reply ends. One rule for the server (selling.py, expiry.py, salejobs.py and state/client.py's
 //! CreateSalesRecords reply, through the binding) and the phone (selling.dart, sale_outcome.dart, bulk_sale.dart and
 //! cart_page.dart's draw and check, through the FFI), held to mazama_modules/selling/vectors/sale_record.json,
-//! sale_date.json, expiry.json, sale_check.json, flows/contracts/write_outcomes.json (the old rule's cases, unchanged)
-//! and sale_cases.json (the SALE rows as the owner approved them, CR-D6, 2026-10-31).
+//! sale_date.json, expiry.json, sale_check.json, flows/contracts/write_outcomes.json and sale_cases.json.
 //!
-//! "Refuse wins" for sales and dates and "uncertain wins" for outcomes, where the two old copies disagreed:
+//! Where an input is odd, a sale or a date is refused, and an outcome is uncertain rather than recorded or not sent:
 //!
-//! | ID | Input | Answer |
-//! |---|---|---|
-//! | SALE-1, SALE-18 | a sale date more than 365 days back | `too_old` ([`check_sale_date_json`]; the parse itself is unchanged) |
-//! | SALE-1 | Pacific midnight | the 2007 US rule for every year ([`RULE`]), checked against zoneinfo 2007-2099 |
-//! | SALE-2 | "today" | the Pacific date of now ([`today_json`]) |
-//! | SALE-4 | two lines of one product | one draw across the sale ([`allocate_sale_json`]), the check summed per record |
-//! | SALE-5, SALE-6 | a reply's saleNumber | proof only from text with something besides [`TRIM`], or an integer token above 0 |
-//! | SALE-9 | a reviewed sale's typed total | to cents half up |
-//! | SALE-10, SALE-13 | a price each outside $0..$10,000, a quantity outside 1..999, a record lacking a copied value | refused, with the words |
-//! | SALE-12 | the state's values | passed through as given (an integer keeps its digits) |
-//! | SALE-16 | a reply whose body was cut off or didn't arrive in time | uncertain, whatever its status |
-//! | SALE-17 | a copied value that changed since the sale was priced | refused before anything is sent |
-//! | (review M5) | a dose other than initial/secondary; a 200 whose body is NaN/Infinity/broken Unicode; a reviewed date in a form other than `YYYY-MM-DD(T| )HH:MM[:SS[.f]]` with its zone | refused; uncertain; no date |
-//! | (review M2, M4) | arithmetic past i128; a Pacific day outside years 1..9999 | an input error; no date |
+//! | Input | Answer |
+//! |---|---|
+//! | a sale date more than 365 days back | `too_old` ([`check_sale_date_json`]); the pickers offer no such day ([`sale_date_bounds_json`]) |
+//! | Pacific midnight | the 2007 US daylight-saving rule for every year ([`RULE`]), checked against zoneinfo 2007-2099 |
+//! | "today" | the Pacific date of now ([`today_json`]) |
+//! | two lines of one product | one draw across the sale ([`allocate_sale_json`]), the check summed per record |
+//! | a reply's saleNumber | proof only from text with something besides [`TRIM`], or an integer token above 0 |
+//! | a reviewed sale's typed total | to cents half up |
+//! | a price each outside $0..$10,000, a quantity outside 1..999, a record lacking a copied value | refused, with the words |
+//! | the state's values | passed through as given (an integer keeps its digits) |
+//! | a reply whose body was cut off or didn't arrive in time | uncertain, whatever its status |
+//! | a copied value that changed since the sale was priced | refused before anything is sent |
+//! | a dose other than initial/secondary; a 200 whose body is NaN/Infinity/broken Unicode; a reviewed date in a form other than `YYYY-MM-DD(T| )HH:MM[:SS[.f]]` with its zone | refused; uncertain; no date |
+//! | arithmetic past i128; a Pacific day outside years 1..9999 | an input error; no date |
 //!
 //! Dates are civil days (no time-zone library); money is integers; productCost and costEach are the JSON numbers
 //! Python's `cents * qty / 100` and `cents / 100` are. No answer is ever an object whose only key is "error" (that is
@@ -118,7 +116,7 @@ fn in_range(z: i64) -> bool {
     (days(1, 1, 1)..=days(9999, 12, 31)).contains(&z)
 }
 
-fn iso(z: i64) -> String {
+pub(crate) fn iso(z: i64) -> String {
     let (y, m, d) = civil(z);
     format!("{y:04}-{m:02}-{d:02}")
 }
@@ -194,7 +192,7 @@ pub fn pacific_midnight(z: i64) -> String {
     format!("{}T{:02}:00:00.000Z", iso(z), offset_hours(z))
 }
 
-/// The Pacific day of a moment, given as seconds since 1970 UTC, when it is a day of years 1..9999 (review M4: a
+/// The Pacific day of a moment, given as seconds since 1970 UTC, when it is a day of years 1..9999 (a
 /// moment at either end of that range can fall on a Pacific day outside it, which no caller can hold).
 fn pacific_day(secs: i64) -> Option<i64> {
     Some(pacific_day_any(secs)).filter(|z| in_range(*z))
@@ -303,12 +301,13 @@ fn py_text<'a>(f: &str, v: &'a Py, what: &str) -> R<&'a str> {
     }
 }
 
-/// Text with something in it besides [`TRIM`]'s characters (PRICE-2's one set; "blank" otherwise).
+/// Text with something in it besides [`TRIM`]'s characters (the same set a typed price is trimmed of; "blank"
+/// otherwise).
 fn not_blank(s: &str) -> bool {
     s.chars().any(|c| !TRIM.contains(&c))
 }
 
-// --- the record (SALE-3, SALE-10, SALE-12, SALE-13) -----------------------------------------------------------------
+// --- the record ---------------------------------------------------------------------------------------------------
 
 /// What a record lacks, as the refusal's words, or None.
 fn lacks(item: &Py) -> Option<String> {
@@ -339,7 +338,9 @@ fn lacks(item: &Py) -> Option<String> {
 }
 
 /// The record the state system's own web page sends to CreateSalesRecords for `qty` units at `cents` each on day `z`,
-/// or why it can't be built.
+/// or why it can't be built. Its weightPerUnit, analyteWeight, productGuid, productType (as productGroup), id and
+/// serviceCenterId are the state record's own values, copied unchanged; productCost is cents x units / 100 and
+/// costEach cents / 100, in dollars; dateOfSale is Pacific midnight of the sale's day.
 fn build(item: &Py, cents: &Py, z: i64, dose: &Py, qty: &Py) -> Result<String, String> {
     if let Some(why) = lacks(item) {
         return Err(why);
@@ -379,7 +380,7 @@ fn build(item: &Py, cents: &Py, z: i64, dose: &Py, qty: &Py) -> Result<String, S
 
 /// `{"item": object, "price_cents", "sale_date": "YYYY-MM-DD", "dose", "qty"}` -> `{"record": object | null,
 /// "refusal": text | null}` (schemas/selling/build_sale.*): the record as sale_record.json has it, its values passed
-/// through as the state gave them (SALE-12), or the words of why not (SALE-10, SALE-13). The date is not judged here
+/// through as the state gave them, or the words of why not. The date is not judged here
 /// (check_sale_date).
 pub fn build_sale_json(input_json: &str) -> R<String> {
     const F: &str = "selling.build_sale";
@@ -393,10 +394,10 @@ pub fn build_sale_json(input_json: &str) -> R<String> {
     })
 }
 
-// --- dates (SALE-1, SALE-2, SALE-18) ------------------------------------------------------------------------------
+// --- dates --------------------------------------------------------------------------------------------------------
 
 /// `{"text", "today": "YYYY-MM-DD"}` -> `{"date": "YYYY-MM-DD" | null, "error": null | "bad" | "future"}`: the forms
-/// Python's date.fromisoformat reads (SM-D6), "future" after today (sale_date.json, unchanged).
+/// Python's date.fromisoformat reads, "future" after today (sale_date.json).
 pub fn parse_sale_date_json(input_json: &str) -> R<String> {
     const F: &str = "selling.parse_sale_date";
     let m = input(F, input_json)?;
@@ -411,7 +412,7 @@ pub fn parse_sale_date_json(input_json: &str) -> R<String> {
 }
 
 /// `{"date", "today"}` -> `{"date", "error": null | "future" | "too_old"}`: a sale may be dated today or up to 365 days
-/// back (SALE-1), wherever its date comes from (the cart, the single sale, the phone's pickers, a reviewed sale).
+/// back, wherever its date comes from (the cart, the single sale, the phone's pickers, a reviewed sale).
 pub fn check_sale_date_json(input_json: &str) -> R<String> {
     const F: &str = "selling.check_sale_date";
     let m = input(F, input_json)?;
@@ -425,6 +426,20 @@ pub fn check_sale_date_json(input_json: &str) -> R<String> {
         None
     };
     Ok(json!({"date": iso(z), "error": error}).to_string())
+}
+
+/// `{"today": "YYYY-MM-DD"}` -> `{"earliest", "latest"}` (schemas/selling/sale_date_bounds.*): the days a sale may be
+/// dated, as the date pickers offer them: today back to 365 calendar days before it, the bound check_sale_date holds.
+/// An earliest day outside years 1..9999 is an input error.
+pub fn sale_date_bounds_json(input_json: &str) -> R<String> {
+    const F: &str = "selling.sale_date_bounds";
+    let m = input(F, input_json)?;
+    let today = plain_date(F, field(F, &m, "today")?, "today")?;
+    let earliest = today - RULE.backdate_days;
+    if !in_range(earliest) {
+        return Err(format!("{F}: the earliest day falls outside years 1..9999").into());
+    }
+    Ok(json!({"earliest": iso(earliest), "latest": iso(today)}).to_string())
 }
 
 /// `{"date"}` -> `{"utc": "YYYY-MM-DDTHH:00:00.000Z"}`: Pacific midnight of the date as UTC, by the 2007 rule.
@@ -479,7 +494,7 @@ fn moment(text: &str) -> Option<(i64, Option<i64>)> {
     Some((secs, off))
 }
 
-/// `{"now": RFC 3339 UTC}` -> `{"date"}`: the Pacific date of now (SALE-2), for a sale's default date, the date
+/// `{"now": RFC 3339 UTC}` -> `{"date"}`: the Pacific date of now, for a sale's default date, the date
 /// pickers' last day and the check of a date.
 pub fn today_json(input_json: &str) -> R<String> {
     const F: &str = "selling.today";
@@ -560,7 +575,7 @@ pub fn parse_state_date_json(input_json: &str) -> R<String> {
     Ok(json!({"date": day}).to_string())
 }
 
-// --- the draw and the check (SALE-4, SALE-8, SALE-17) ------------------------------------------------------------
+// --- the draw and the check --------------------------------------------------------------------------------------
 
 /// `{"lines": [{"product", "qty", "dose"}], "lots": {product: [lot]}}` -> `{"draws": [[line, lot id, units]] | null,
 /// "short": line | null}`: one draw across the whole sale, line by line, each in draw order (selling.allocate's), every
@@ -638,8 +653,9 @@ fn cap(lines: &[(&Py, &Py, bool)]) -> Option<String> {
 /// `{"lines": [{"record_id", "guid", "qty", "dose"?}], "fresh": [state record], "center"?, "sent"?: [record | null],
 /// "cap"?: bool}` -> `{"refusal": text | null}`: why the sale must not be sent, on the state's records as read just now,
 /// in the sale worker's order: per line the other-center check, then the line's refusal for the units every line asks
-/// of its record together (row 4's rule); then (SALE-17) every value a line's sent record copied must still be the
-/// state's; then (unless `cap` is false: the caller holds the cap itself) row 5's cap on the fresh figures.
+/// of its record together (sellability, [`crate::selling`]); then every value a line's sent record copied must still
+/// be the state's; then (unless `cap` is false: the caller holds the cap itself) the 50 mg cap ([`crate::dose`]) on
+/// the fresh figures.
 pub fn check_sale_json(input_json: &str) -> R<String> {
     const F: &str = "selling.check_sale";
     let v = Py::parse(input_json)?;
@@ -732,7 +748,7 @@ pub fn check_sale_json(input_json: &str) -> R<String> {
     Ok(json!({"refusal": null}).to_string())
 }
 
-// --- outcomes (SALE-5, SALE-6, SALE-7, SALE-14, SALE-16) ------------------------------------------------------------
+// --- outcomes -----------------------------------------------------------------------------------------------------
 
 /// The sale number a reply proves for `sent` records: one object back per record sent, every saleNumber the same text
 /// with something besides [`TRIM`] in it, or the same integer token above 0 (77 and "77" are one sale number); never
@@ -797,10 +813,11 @@ pub fn sale_outcome_json(input_json: &str) -> R<String> {
     }
 }
 
-// --- reviewed sales and expiry (SALE-9, SALE-11) ------------------------------------------------------------------
+// --- reviewed sales and expiry ------------------------------------------------------------------------------------
 
 /// `{"cost": number, "qty"}` -> `{"cents"}`: a reviewed sale's typed line total (productCost) to whole cents, half up
-/// (SALE-9), then the price each, the average rounded half up (SM-D5).
+/// (the float's shortest digits read as an exact decimal), then the price each: that total / qty, rounded half up to
+/// the cent.
 pub fn review_each_json(input_json: &str) -> R<String> {
     const F: &str = "selling.review_each";
     let v = Py::parse(input_json)?;
@@ -841,12 +858,12 @@ pub fn review_each_json(input_json: &str) -> R<String> {
         _ => return Err(format!("{F}: cost must be a finite number").into()),
     };
     let q = i128::from(qty);
-    // review M2: checked, so a cost past i128 is an input error in release builds too, never a wrapped number
+    // checked, so a cost past i128 is an input error in release builds too, never a wrapped number
     let twice = typed.checked_mul(2).and_then(|t| t.checked_add(q)).ok_or_else(|| format!("{F}: cost is too large"))?;
     Ok(json!({"cents": i64::try_from(twice.div_euclid(2 * q)).map_err(|_| format!("{F}: cost is too large"))?}).to_string())
 }
 
-/// `{"expires", "today", "fresh_months"}` -> `{"expired", "words", "hue"}` (expiry.py, SM-18, SM-D12): expired from the
+/// `{"expires", "today", "fresh_months"}` -> `{"expired", "words", "hue"}` (the server's expiry.py): expired from the
 /// day after its date; months left = days / 30.4375; the hue 120 at `fresh_months` (at least 2) or more left, 30 at one
 /// month, 0 at the date, in straight lines, by Python's `round` (half to even).
 pub fn expiry_json(input_json: &str) -> R<String> {

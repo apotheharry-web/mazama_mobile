@@ -1,4 +1,4 @@
-// specs/app-updates AU-R11, AU-R12, AU-D11: the APK download (app_update_download.dart): redirects followed by the
+// The APK download (app_update_download.dart): redirects followed by the
 // phone itself and only to GitHub's download hosts, no app key or cookie, the signed size and SHA-256, nothing left
 // behind on a failure; and Android's reading of the file (a fake installer here) before the installer sees it. The
 // "APK" is a few made-up bytes; release files are signed with the TEST key (app_release_signing.dart).

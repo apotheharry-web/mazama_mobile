@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "selling.build_sale input",
-  "description": "One sale record to build (SM-11).",
+  "description": "One sale record to build.",
   "type": "object",
   "required": [
     "item",

@@ -10,8 +10,8 @@
 // picker; a worker whose account has several does.
 //
 // Runs state_client.dart's fetchStateFlow with the applicable_licenses flow from ../../mazama_modules/flows/state_reads.yaml
-// rather than its own hand-rolled GET - the same request shape as before (Authorization, Accept, Referer,
-// Origin; confirmed against a real captured HAR), now coming from the one spec mazama_sales' state/client.py
+// rather than its own hand-rolled GET - the request shape (Authorization, Accept, Referer,
+// Origin; confirmed against a real captured HAR) comes from the one spec mazama_sales' state/client.py
 // also runs. See state_client.dart's own file comment for why a 401 here isn't retried the way
 // StateSession.get() retries one.
 import 'dart:convert' show JsonUnsupportedObjectError;
@@ -50,7 +50,7 @@ class License {
   bool get isServiceCenter => licenseType == _serviceCenter;
   bool get isManufacturer => licenseType == _manufacturer;
 
-  /// Tolerant of the state's odd values, as the server is (SM-21): an id that isn't a whole number becomes 0
+  /// Tolerant of the state's odd values, as the server is: an id that isn't a whole number becomes 0
   /// (never a center, see [serviceCenters]); names and license ids are trimmed.
   factory License.fromJson(Map<String, Object?> j) => License(
         id: wholeNumber(j['id']) ?? 0,
@@ -71,15 +71,29 @@ List<License> licensesFromJson(List<Object?> body) => [
 Map<String, Object?> _ruleFields(Map<String, Object?> e) =>
     {for (final k in const ['id', 'licenseId', 'licenseName', 'licenseType']) k: e[k]};
 
-/// The service centers in [licenses]: the shared core's rule (records.service_centers,
-/// specs/core row 10, SM-21), the one the server's directory.service_centers asks too -
+/// The service centers in [licenses]: the shared core's rule (records.service_centers), the one the server's directory.service_centers asks too -
 /// licenseType exactly ServiceCenter, an id above 0, the first entry for an id, a blank name shown as
-/// "Service center <id>" - judged on the entries as the state sent them, read by [core] (default: this app's,
+/// "Service center &lt;id&gt;" - judged on the entries as the state sent them, read by [core] (default: this app's,
 /// [MazamaCore.instance]). A core that can't answer lists no center, as the server does.
-List<License> serviceCenters(Iterable<License> licenses, {CoreFunctions? core}) {
+List<License> serviceCenters(Iterable<License> licenses, {CoreFunctions? core}) =>
+    _kept(licenses, _serviceCenter, (reader, input) => reader.recordsServiceCenters(input), core);
+
+/// The licenses of [licenseType] (`ServiceCenter` or `Manufacturer`) in [licenses]: the shared core's rule
+/// (records.licenses_of_type), the service centers' rule for either type - an id above 0, the first entry for an id,
+/// a blank name shown as "Service center &lt;id&gt;" or "Manufacturer &lt;id&gt;". A core that can't answer (or any other type)
+/// lists none.
+List<License> licensesOfType(Iterable<License> licenses, String licenseType, {CoreFunctions? core}) => _kept(
+    licenses,
+    licenseType,
+    (reader, input) => reader.recordsLicensesOfType({...input, 'license_type': licenseType}),
+    core);
+
+/// What [ask] keeps of [licenses] (each as the state sent it), as licenses of [licenseType]; none when the core fails.
+List<License> _kept(Iterable<License> licenses, String licenseType,
+    List<Object?> Function(CoreFunctions reader, Map<String, Object?> input) ask, CoreFunctions? core) {
   final reader = core ?? MazamaCore.instance;
   try {
-    final got = reader.recordsServiceCenters({
+    final got = ask(reader, {
       'licenses': [
         for (final l in licenses)
           _ruleFields(l.raw ?? {'id': l.id, 'licenseId': l.licenseId, 'licenseName': l.licenseName, 'licenseType': l.licenseType})
@@ -92,7 +106,7 @@ List<License> serviceCenters(Iterable<License> licenses, {CoreFunctions? core}) 
               id: c['state_id'] as int,
               licenseId: (c['license'] as String?) ?? '',
               licenseName: c['name'] as String,
-              licenseType: _serviceCenter)
+              licenseType: licenseType)
     ];
   } on MazamaCoreError {
     return const [];

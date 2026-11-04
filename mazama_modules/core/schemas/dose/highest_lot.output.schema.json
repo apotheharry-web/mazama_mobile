@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "dose.highest_lot output",
+  "description": "The index of the lot the line is counted on; null when there are no lots.",
+  "type": "object",
+  "required": [
+    "index"
+  ],
+  "properties": {
+    "index": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    }
+  }
+}

@@ -1,4 +1,4 @@
-// specs/web-charts WC-D1, WC-D10: the phone's center By type pie (lib/stock_mix.dart stockByType) is held to the
+// The phone's center By type pie (lib/stock_mix.dart stockByType) is held to the
 // golden vectors generated from the server's own Python (stockview.by_type, ../mazama_modules/stock/README.md § 6),
 // read from this app's vendored copy, assets/shared/stock/vectors/by_type.json (vendored_test.dart proves it equals the
 // source).

@@ -1,4 +1,4 @@
-// SP-R9: the phone's par client (lib/par_client.dart) against the vendored API examples
+// The phone's par client (lib/par_client.dart) against the vendored API examples
 // (assets/shared/api/examples/par*.json, from ../mazama_modules/api/): it reads the example replies and builds the
 // example request at the paths routes.yaml gives.
 import 'dart:convert';
@@ -35,7 +35,7 @@ void main() {
     expect(req.method, apiRoutes['par']!['method']);
     expect(req.url.toString(), '$apiBaseUrl${parPath(stateId)}');
     if (appApiKey.isNotEmpty) expect(req.headers[appApiKeyHeader], appApiKey);
-    expect(levels.map(_level), ['Bluey|0|3', 'Chocolate|-1|20', 'Golden Teacher|25|4', 'Golden Teacher|5|12']); // -1: Booster (specs/edibles)
+    expect(levels.map(_level), ['Bluey|0|3', 'Chocolate|-1|20', 'Golden Teacher|25|4', 'Golden Teacher|5|12']); // -1: Booster
   });
 
   test('saveParLevels sends the example request and reads the stored levels back', () async {

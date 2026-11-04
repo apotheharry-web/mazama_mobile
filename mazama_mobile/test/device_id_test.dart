@@ -41,10 +41,9 @@ void main() {
     expect(idA, isNot(idB));
   });
 
-  test('an empty file on disk is treated as nothing saved yet, not an error, and a fresh id is written', () async {
+  test('an empty document is treated as nothing saved yet, not an error, and a fresh id is written', () async {
     final s = store();
-    await Directory('${tempDir.path}/nested').create(recursive: true);
-    await File('${tempDir.path}/nested/device_id.txt').writeAsString('');
+    LocalStore.forDir(Directory('${tempDir.path}/nested')).write('device_id.txt', '');
     final id = await s.idOrCreate();
     expect(id, isNotEmpty);
     // The fresh id was actually persisted - a later store reading the same directory sees it too.
@@ -53,10 +52,9 @@ void main() {
     expect(LocalStore.forDir(Directory('${tempDir.path}/nested')).read('device_id.txt')!.body, id);
   });
 
-  test('whitespace-only content on disk is also treated as nothing saved yet', () async {
+  test('whitespace-only content is also treated as nothing saved yet', () async {
     final s = store();
-    await Directory('${tempDir.path}/nested').create(recursive: true);
-    await File('${tempDir.path}/nested/device_id.txt').writeAsString('   \n');
+    LocalStore.forDir(Directory('${tempDir.path}/nested')).write('device_id.txt', '   \n');
     final id = await s.idOrCreate();
     expect(id, isNotEmpty);
   });

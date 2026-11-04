@@ -1,35 +1,36 @@
-//! The record rules (specs/core row 3; specs/foundations Part A, RR-R1..RR-R5): what a state record means, decided
-//! once. A rule takes one state record, the raw JSON object the state system sends (as the server's mirror keeps it,
+//! The record rules: what a state record means, decided once. A rule takes one state record, the raw JSON object the state system sends (as the server's mirror keeps it,
 //! or as a phone uploads it), and answers with a plain value: does it still have stock, which holds does it carry,
 //! can it be made into products or transferred. Sellability (`unsellable_reason`, `sellable_record`) is
-//! [`crate::selling`] (row 4); both read a record with Python's truthiness ([`crate::py`]).
+//! [`crate::selling`]; both read a record with Python's truthiness ([`crate::py`]).
 //!
-//! The rules keep the answers the server's Python gave before they moved (frozen in mazama_modules/records/vectors/),
-//! so they keep Python's semantics over JSON values: truthiness (`0`, `""`, `[]`, `{}`, `null` and `false` are false),
+//! The rules are held to the frozen vectors in mazama_modules/records/vectors/ and follow Python's semantics over
+//! JSON values: truthiness (`0`, `""`, `[]`, `{}`, `null` and `false` are false),
 //! `x or 0`, comparison with 0 (`true` is 1; text, a list or an object can't be compared: TypeError), `float()` of text
-//! (ValueError when it isn't a number), `0 + x` and `==` against an id. Where today's rule raises, the answer is a
+//! (ValueError when it isn't a number), `0 + x` and `==` against an id. Where a rule raises, the answer is a
 //! [`Raise`]: the server raises the same exception class when it reads that answer (a quantity or analyteWeight that
-//! can't be compared with 0). The dry weight is the exception to Python's semantics since the owner decided RD-2
-//! (2026-10-31): every rule reads it through [`dry_grams`], so one that isn't a plain number is none (0 g), never a
-//! raise.
+//! can't be compared with 0). The dry weight is the exception to Python's semantics: every rule reads it through
+//! [`dry_grams`], so one that isn't a plain number is none (0 g), never a raise.
 //!
-//! The drift list (RR-R3; the variants are deliberate, each a named answer):
+//! The rules differ from each other on purpose, each a named answer:
 //!
-//! | ID   | Difference |
-//! |------|------------|
-//! | RD-1 | `units_counted` sums the quantity of every record not zeroOut, so a negative quantity lowers a total; `has_units` leaves it out |
-//! | RD-2 | decided by the owner 2026-10-31: unreadable counts as none. Every rule reads dryWeight through [`dry_grams`]: a dryWeight that isn't a plain number is 0 g (no material, nothing can be planned or sold from it), text that is one is that number; `has_material_strict` is now `has_material` (kept for its callers) |
-//! | RD-3 | `has_material_or_units` (the manufacturer page's list) vs `has_material`: a process lot with units but no dry weight is listed but not counted as material |
-//! | RD-4 | `is_held` never counts a failed test; `holds` names it |
-//! | RD-5 | sellability names a pending transfer first; `source_problem` names locked first |
-//! | RD-6 | a package with failedTest may be sold and transferred (`can_transfer`); a batch/lot with failedTest can't be made into products (`source_problem`) |
-//! | RD-7 | `can_transfer` is sellability's holds and units plus who holds the package |
+//! - `units_counted` sums the quantity of every record not zeroOut, so a negative quantity lowers a total;
+//!   `has_units` leaves it out.
+//! - An unreadable dry weight counts as none: every rule reads dryWeight through [`dry_grams`], so a dryWeight that
+//!   isn't a plain number is 0 g (no material, nothing can be planned or sold from it), and text that is one is that
+//!   number. `has_material_strict` gives the same answer as `has_material` (kept for its callers).
+//! - `has_material_or_units` (the manufacturer page's list) vs `has_material`: a process lot with units but no dry
+//!   weight is listed but not counted as material.
+//! - `is_held` never counts a failed test; `holds` names it.
+//! - Sellability names a pending transfer first; `source_problem` names locked first.
+//! - A package with failedTest may be sold and transferred (`can_transfer`); a batch/lot with failedTest can't be
+//!   made into products (`source_problem`).
+//! - `can_transfer` is sellability's holds and units plus who holds the package.
 use serde::Deserialize;
 use serde_json::{Map, Number, Value, json};
 
 use crate::py::truthy;
 
-/// The exception the server's rule raised for a record (RD-2), which it raises again when it reads the answer.
+/// The exception a rule gives for a record, which the server raises again when it reads the answer.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Raise {
     TypeError,
@@ -64,20 +65,20 @@ pub struct Judgement {
     pub flags: Flags,
     /// A package with units on hand: not zeroOut and quantity > 0.
     pub has_units: Answer<bool>,
-    /// The units a record adds to a units total: its quantity when not zeroOut, else 0; a negative one counts (RD-1).
+    /// The units a record adds to a units total: its quantity when not zeroOut, else 0; a negative one counts.
     pub units_counted: Answer<Number>,
-    /// A batch/lot with material left: not zeroOut and dryWeight > 0, an unreadable dry weight as 0 (RD-2, [`dry_grams`]).
+    /// A batch/lot with material left: not zeroOut and dryWeight > 0, an unreadable dry weight as 0 ([`dry_grams`]).
     pub has_material: bool,
-    /// `has_material`: it raised on a dryWeight that wasn't a number until RD-2 was decided (2026-10-31); never raises now.
+    /// The same answer as `has_material`, as an [`Answer`] for the callers that take one; it never raises.
     pub has_material_strict: Answer<bool>,
-    /// Listed on the manufacturer page: not zeroOut, and dryWeight > 0 or quantity > 0 (RD-3).
+    /// Listed on the manufacturer page: not zeroOut, and dryWeight > 0 or quantity > 0.
     pub has_material_or_units: Answer<bool>,
     /// The state's holds, in one fixed order, only those set: (name, why); a reason without its flag is no hold.
     pub holds: Vec<(&'static str, Value)>,
-    /// Locked, flagged or pending a transfer; a failed test isn't counted (RD-4).
+    /// Locked, flagged or pending a transfer; a failed test isn't counted.
     pub is_held: bool,
-    /// Why nothing can be packaged from this batch/lot (None = fine): locked named before pending transfer (RD-5); a
-    /// failed test stops it (RD-6).
+    /// Why nothing can be packaged from this batch/lot (None = fine): locked named before pending transfer; a
+    /// failed test stops it.
     pub source_problem: Answer<Option<&'static str>>,
 }
 
@@ -144,7 +145,18 @@ fn le0(v: &Value) -> Answer<bool> {
 /// Python's `float(text)`: surrounding whitespace ignored, `_` allowed between digits, `inf`/`infinity`/`nan` in any
 /// case, with an optional sign; anything else is a ValueError.
 pub(crate) fn py_float_text(s: &str) -> Answer<f64> {
-    let t = s.trim();
+    // CPython first writes a non-ASCII space as a space and a non-ASCII decimal digit as its ASCII digit; any other
+    // character that isn't ASCII can't be part of a number (ASCII is kept as it is: U+001C..U+001F are no spaces here)
+    let ascii: String = s
+        .chars()
+        .map(|c| match c {
+            c if c.is_ascii() => c,
+            c if crate::names::py_space(c) => ' ',
+            c if crate::names::is_nd(c) => char::from_digit(crate::names::nd_value(c), 10).unwrap(),
+            _ => '?',
+        })
+        .collect();
+    let t = ascii.trim();
     let chars: Vec<char> = t.chars().collect();
     let mut clean = String::with_capacity(t.len());
     for (i, c) in chars.iter().enumerate() {
@@ -200,8 +212,7 @@ fn decimal(s: &str) -> bool {
     i == b.len()
 }
 
-/// A record's dry weight in grams, as every rule reads it (RD-2, decided by the owner 2026-10-31: unreadable counts as
-/// none). A JSON number is itself (a negative one stays negative); text that is a plain number is that number, read as
+/// A record's dry weight in grams, as every rule reads it (unreadable counts as none). A JSON number is itself (a negative one stays negative); text that is a plain number is that number, read as
 /// Python's `float()` reads it (surrounding whitespace, `_` between digits, an exponent: `"5"`, `" 5 "`, `"5.5"`,
 /// `"1e2"`); anything else (other text, `""`, `"NaN"`, `"inf"`, text too big for a finite number, true/false, a list,
 /// an object, null or absent) is none, 0 g.
@@ -211,6 +222,18 @@ pub fn dry_grams(v: &Value) -> f64 {
         Value::String(s) => py_float_text(s).ok().filter(|f| f.is_finite()).unwrap_or(0.0),
         _ => 0.0,
     }
+}
+
+/// `{values: [dryWeight]}` -> `[grams]`: each record's dry weight in grams as every record rule reads it
+/// ([`dry_grams`]), for the grams the pages show and weigh out.
+pub fn dry_grams_json(input_json: &str) -> Result<String, crate::api::Error> {
+    #[derive(Deserialize)]
+    struct Input {
+        values: Vec<Value>,
+    }
+    let input: Input = serde_json::from_str(input_json)?;
+    let out: Vec<Value> = input.values.iter().map(|v| json!(dry_grams(v))).collect();
+    Ok(Value::Array(out).to_string())
 }
 
 /// `0 + (v or 0)`: an int stays an int, true is 1.
@@ -310,14 +333,14 @@ pub fn judge_one(r: &Value) -> Judgement {
     }
 }
 
-/// Every rule's answer for each record, in order (CR-D5: a whole list in one call).
+/// Every rule's answer for each record, in order: a whole list is judged in one call.
 pub fn judge(records: &[Value]) -> Vec<Judgement> {
     records.iter().map(judge_one).collect()
 }
 
 /// A package that can go on a transfer: held by the org with state id `holder_state_id` (the center for "retrieve",
-/// else the manufacturer, with no center), in stock, not locked, flagged or already in a transfer. RD-6: a failed test
-/// doesn't stop it; RD-7: sellability's holds and units, plus the holder.
+/// else the manufacturer, with no center), in stock, not locked, flagged or already in a transfer. A failed test
+/// doesn't stop it: it is sellability's holds and units, plus the holder.
 pub fn can_transfer_one(p: &Value, holder_state_id: Option<i64>, mode: &str) -> Answer<bool> {
     let mine = if mode == "retrieve" {
         eq_id(get(p, "serviceCenterId"), holder_state_id)

@@ -1,4 +1,4 @@
-// SL-R7: the flow spec's `format`, the order of `spec_version`s and the https host check, through the shared vectors in
+// The flow spec's `format`, the order of `spec_version`s and the https host check, through the shared vectors in
 // assets/shared/flows/contracts/spec_versions.json (vendored from ../mazama_modules/flows/contracts/ by
 // tool/sync_flows.sh), the same ones mazama_sales/tests/state/test_spec_versions.py runs.
 import 'dart:convert';
@@ -37,7 +37,7 @@ void main() {
     expect(supportedFlowFormat, 3);
     expect(defaultAllowedHosts, contains('psilocybin.oregon.gov'));
     expect(hostAllowedUrl('https://oregonpsilocybinprodb2c.b2clogin.com/x'), isTrue);
-    expect(hostAllowedUrl('https://evil.b2clogin.com/x'), isFalse); // SL-R17: no other tenant
+    expect(hostAllowedUrl('https://evil.b2clogin.com/x'), isFalse); // no other tenant
   });
 
   test('a spec with a later format is refused', () {

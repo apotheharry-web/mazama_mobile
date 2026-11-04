@@ -1,5 +1,5 @@
-// MI-R3 (specs/mazama-inventory): the Mazama inventory page - total mg TPE By strain and By type, one pie at a time
-// (MI-D3), a tap for a strain's types or a type's strains (MI-D4), no pull to refresh (MI-D5). The numbers are
+// The Mazama inventory page - total mg TPE By strain and By type, one pie at a time
+// A tap for a strain's types or a type's strains, no pull to refresh. The numbers are
 // stock_mix.dart's, held to the shared vectors in stock_mix_test.dart; here, what the page shows of them.
 import 'dart:async';
 import 'dart:convert';
@@ -57,10 +57,10 @@ void main() {
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
     await tester.pumpAndSettle();
 
-    // No title bar of its own: the home's "Mazama" tab label is its title (owner, 2026-10-22).
+    // No title bar of its own: the home's "Mazama" tab label is its title.
     expect(find.byType(AppBar), findsNothing);
     expect(find.text('Mazama inventory'), findsNothing);
-    // No manufacturer name and no explanation line above the total (owner, 2026-10-22).
+    // No manufacturer name and no explanation line above the total.
     expect(find.text('Mazama Mushrooms LLC'), findsNothing);
     expect(find.textContaining('Harvest batches'), findsNothing);
     expect(find.text('6,000 mg TPE in all'), findsOneWidget);
@@ -268,7 +268,7 @@ void main() {
       expect(opened.last.toString(), want);
     }
     expect(opened, [mazamaGuestLogin, mazamaSignal]);
-    // PA-D6: no email address in the sheet
+    // No email address in the sheet
     await _tap(tester, find.byKey(const ValueKey('contact-button')));
     expect(find.byKey(const ValueKey('contact-email')), findsNothing);
     expect(find.textContaining('@'), findsNothing);
@@ -354,7 +354,7 @@ void main() {
       expect(kept.single.$2, now);
     });
 
-    // R87: no notice of the page's own over the kept mix: the app-wide banner says the server can't be reached.
+    // No notice of the page's own over the kept mix: the app-wide banner says the server can't be reached.
     testWidgets('unreachable: the kept mix shows, with no notice of its own; Order is still there', (tester) async {
       await tester.pumpWidget(MaterialApp(
         home: MazamaInventoryPage(
@@ -373,7 +373,7 @@ void main() {
       expect(find.byKey(const ValueKey('order-button')), findsOneWidget);
     });
 
-    // specs/phone-sync phase 2: the copy is the sync engine's mazama_inventory dataset.
+    // The copy is the sync engine's mazama_inventory dataset.
     testWidgets("the server's mix is kept as the dataset, and shown from it while the server can't be reached",
         (tester) async {
       final dir = Directory.systemTemp.createTempSync('mazama_inventory_page_test_');
@@ -398,7 +398,7 @@ void main() {
       expect(find.textContaining('did not load'), findsNothing);
     });
 
-    // specs/phone-sync PS-R7: local first.
+    // Local first.
     testWidgets('the kept mix shows at once with its age, then the fresh one', (tester) async {
       final gate = Completer<MazamaInventory>();
       final now = at.add(const Duration(minutes: 20));
@@ -428,7 +428,7 @@ void main() {
       expect(find.textContaining("can't be reached"), findsNothing);
     });
 
-    // README R56: the page reads whether the server answers from the app's tracker.
+    // The page reads whether the server answers from the app's tracker.
     testWidgets('showing the kept mix, the page reloads by itself once the server tracker is online again',
         (tester) async {
       final health = ServerHealth(probe: () async => false, startTimer: FakeTimers().start);
@@ -478,7 +478,7 @@ void main() {
       expect(loads, 1);
     });
 
-    // The error's Retry (nothing kept): the notice that had a Retry of its own is gone (R87).
+    // The error's Retry (nothing kept): no separate notice with a Retry of its own.
     testWidgets('Retry asks the server first, then reloads once', (tester) async {
       var probes = 0;
       final health = ServerHealth(probe: () async {
@@ -531,7 +531,7 @@ void main() {
     });
   });
 
-  // --- specs/phone-sync Task 8b Step 2: read through the sync engine's mazama_inventory dataset ------------------------
+  // --- read through the sync engine's mazama_inventory dataset ---------------------------------------------------------
 
   group('through the engine', () {
     final at = DateTime.utc(2026, 10, 20, 15, 5);
@@ -666,7 +666,7 @@ void main() {
       expect(find.textContaining('did not load'), findsNothing);
     });
 
-    // README R87's reload is the engine's for what is watched: the page adds none of its own.
+    // The reload when the server answers again is the engine's for what is watched: the page adds none of its own.
     testWidgets('once the server answers again the engine reads it again, and the page adds no read of its own',
         (tester) async {
       var up = false;

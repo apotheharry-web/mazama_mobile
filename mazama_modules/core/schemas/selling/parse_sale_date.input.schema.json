@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "selling.parse_sale_date input",
-  "description": "A typed sale date (SM-D6).",
+  "description": "A typed sale date.",
   "type": "object",
   "required": [
     "text",

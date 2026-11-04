@@ -1,8 +1,8 @@
 // pacificMidnightUtc's expected values here are ground truth taken directly from Python's real
 // zoneinfo('America/Los_Angeles') via selling.py's own pacific_midnight_utc, not computed by eye - including
 // both DST transition boundary days themselves, where getting the strict-vs-non-strict comparison wrong would
-// show up as an off-by-one-hour error. The hand-rolled DST rule in selling.dart was additionally checked against
-// zoneinfo for every single day across 2024-2028 (0 mismatches) before this file was written.
+// show up as an off-by-one-hour error. The Pacific midnight rule was also checked against
+// zoneinfo for every single day across 2024-2028 (0 mismatches).
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mazama_mobile/selling.dart';
 
@@ -52,7 +52,7 @@ void main() {
       expect(sale['analyteWeight'], 4.5);
       expect(sale['deleted'], false);
       expect(sale['serviceCenterId'], 231);
-      expect(sale['notes'], ''); // SM-D4: never the description
+      expect(sale['notes'], ''); // never the description
       expect(sale['initialDose'], 1);
       expect(sale['secondaryDose'], 0);
       expect(sale['id'], 0);
@@ -111,7 +111,7 @@ void main() {
     });
   });
 
-  // SM-12 / SM-D2: the same three checks as salejobs.py's reply check, every one of them "uncertain" on both sides.
+  // The same three checks as salejobs.py's reply check, every one of them "uncertain" on both sides.
   group('looksLikeConfirmedSale', () {
     test('one record back per record sent, all with the same sale number', () {
       expect(looksLikeConfirmedSale([{'saleNumber': 'S-1'}, {'saleNumber': 'S-1'}], 2), isTrue);

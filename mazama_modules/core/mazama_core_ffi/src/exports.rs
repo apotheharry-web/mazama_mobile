@@ -66,25 +66,25 @@ pub extern "C" fn mz_records_can_transfer_json(input_json: *const c_char) -> *mu
     run(input_json, mazama_core::records::can_transfer_json)
 }
 
-/// records.package_keys: {records} -> [{state_id, pkpr} | {problem}] (SM-21, row 10).
+/// records.package_keys: {records} -> [{state_id, pkpr} | {problem}] each GetPackagedProducts record's ids, or why it is skipped.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_records_package_keys_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::contracts::package_keys_json)
 }
 
-/// records.service_centers: {licenses} -> [{state_id, name, license}] (SM-21, row 10).
+/// records.service_centers: {licenses} -> [{state_id, name, license}] the GetApplicableLicenses entries that are service centers.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_records_service_centers_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::contracts::service_centers_json)
 }
 
-/// stock.filter: {rows, makers} -> {counted, other} (SP-D2, SP-D3).
+/// stock.filter: {rows, makers} -> {counted, other} the rows with units, expired and other makers' set apart.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_stock_filter_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::stock::filter_json)
 }
 
-/// stock.summarize: {rows, mg_mode} -> summary (SP-R2).
+/// stock.summarize: {rows, mg_mode} -> summary units and mg by strain and size.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_stock_summarize_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::stock::summarize_json)
@@ -102,262 +102,358 @@ pub extern "C" fn mz_stock_par_table_json(input_json: *const c_char) -> *mut c_c
     run(input_json, mazama_core::stock::par_table_json)
 }
 
-/// stock.mix: {rows: [{strain, type, mg}]} -> stock mix (MI-R1).
+/// stock.mix: {rows: [{strain, type, mg}]} -> stock mix mg by strain and by type, largest first.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_stock_mix_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::stock::mix_json)
 }
 
-/// stock.mix_cells: {rows} -> [{strain, type, mg}] per strain and type (MI-A2).
+/// stock.mix_cells: {rows} -> [{strain, type, mg}] mg summed per strain and type, rounded to 2 decimals.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_stock_mix_cells_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::stock::mix_cells_json)
 }
 
-/// stock.by_type: {rows, mg_mode} -> {pie: By type pie | null} (WC-D1).
+/// stock.by_type: {rows, mg_mode} -> {pie: By type pie | null} by mg when any row has an mg figure, else by units.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_stock_by_type_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::stock::by_type_json)
 }
 
-/// stock.order_check: {lines, note, aliases} -> {lines, note} | {refused} (row 9).
+/// stock.order_check: {lines, note, aliases} -> {lines, note} | {refused} a center's order checked.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_stock_order_check_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::stock_order::check_json)
 }
 
-/// stock.order_form: {levels} -> [{strain, size, par}] the order form's lines (MI-D7).
+/// stock.order_form: {levels} -> [{strain, size, par}] the order form's lines.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_stock_order_form_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::stock_order::form_json)
 }
 
-/// manufacturing.coa_edit: {raw, uid, psilocybin, form, kind} -> {errors, drop, set} a certificate correction (FM-09, row 12).
+/// manufacturing.coa_edit: {raw, uid, psilocybin, form, kind} -> {errors, drop, set} a certificate correction.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_manufacturing_coa_edit_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::manufacturing::coa_edit_json)
 }
 
-/// manufacturing.coa_number: {text, required} -> {value: a mg/g figure | null} (row 12).
+/// manufacturing.coa_number: {text, required} -> {value: a mg/g figure | null}.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_manufacturing_coa_number_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::manufacturing::coa_number_json)
 }
 
-/// manufacturing.clean_text: {text, limit} -> {text} ingredient and allergen text (FM-10, row 12).
+/// manufacturing.clean_text: {text, limit} -> {text} ingredient and allergen text.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_manufacturing_clean_text_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::manufacturing::clean_text_json)
 }
 
-/// manufacturing.plan: {plans: [{source, dose, qty, coa_tpe}]} -> [Plan] grams per unit for a dose, rounded down (FM-07, row 11).
+/// manufacturing.plan: {plans: [{source, dose, qty, coa}]} -> [Plan] grams per unit = dose / the larger of the state's analyteWeight and the certificate's TPE (unrounded or to 2 places, whichever is higher), rounded down to 0.01 g so a unit never holds more than its dose.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_manufacturing_plan_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::manufacturing::plan_json)
 }
 
-/// manufacturing.serving_table: {kind, guid, source, meta, made, package, doses} -> {serv, summary, notes, packages} a sheet's amounts (FM-08, row 11).
+/// manufacturing.serving_table: {kind, guid, source, meta, made, package, doses} -> {serv, summary, notes, packages} a sheet's amounts, mg never shown below what a unit holds.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_manufacturing_serving_table_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::manufacturing::serving_table_json)
 }
 
-/// names.product_name: {strain, subtype, kind, product_type} -> {name, why} (FM-11, row 12).
+/// manufacturing.transfer_items: {items} -> {wanted, problems} the packages a transfer names, each once, ASCII digits only (MP-R15).
+#[unsafe(no_mangle)]
+pub extern "C" fn mz_manufacturing_transfer_items_json(input_json: *const c_char) -> *mut c_char {
+    run(input_json, mazama_core::manufacturing::transfer_items_json)
+}
+
+/// manufacturing.transfer_check: {items, fields, packages, centers, mfr, driver_ids, driver?, today, is_owner} -> {fields, problems, planned, splits, manifest} a transfer's check, with the server's words (FM-13).
+#[unsafe(no_mangle)]
+pub extern "C" fn mz_manufacturing_transfer_check_json(input_json: *const c_char) -> *mut c_char {
+    run(input_json, mazama_core::manufacturing::transfer_check_json)
+}
+
+/// manufacturing.transfer_plan: {records, items, planned?, manifest?} -> {splits, planned, manifest} what a checked transfer sends: the packages split, the planned transfers, the manifest's fields.
+#[unsafe(no_mangle)]
+pub extern "C" fn mz_manufacturing_transfer_plan_json(input_json: *const c_char) -> *mut c_char {
+    run(input_json, mazama_core::manufacturing::transfer_plan_json)
+}
+
+/// names.product_name: {strain, subtype, kind, product_type} -> {name, why}.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_names_product_name_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::names::product_name_json)
 }
 
-/// flows.host_allowed: {url, allowed} -> {allowed} the strict host allowlist (SL-R7, SL-R17, row 13).
+/// flows.host_allowed: {url, allowed} -> {allowed} the strict host allowlist: https, port 443, an exact listed host.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_flows_host_allowed_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::flows::host_allowed_json)
 }
 
-/// flows.compare_spec_versions: {a, b} -> {order, a_valid, b_valid} YYYY-MM-DD.N ordering (row 13).
+/// flows.compare_spec_versions: {a, b} -> {order, a_valid, b_valid} YYYY-MM-DD.N ordering.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_flows_compare_spec_versions_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::flows::compare_spec_versions_json)
 }
 
-/// flows.parse_host_list: {text} -> {valid, version, hosts} a signed host list's text (SL-R18, row 13).
+/// flows.parse_host_list: {text} -> {valid, version, hosts} a signed host list's text.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_flows_parse_host_list_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::flows::parse_host_list_json)
 }
 
-/// flows.verify_signature: {payload_b64, signature, public_key} -> {valid} the owner's Ed25519 signature (SL-D13, row 13).
+/// flows.verify_signature: {payload_b64, signature, public_key} -> {valid} the owner's Ed25519 signature.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_flows_verify_signature_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::flows::verify_signature_json)
 }
 
-/// flows.public_key: {text} -> {key_b64 | null} a signing.pub text (SL-D13, row 13).
+/// flows.public_key: {text} -> {key_b64 | null} a signing.pub text.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_flows_public_key_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::flows::public_key_json)
 }
 
-/// flows.usable_login_spec: {format, reader_format, vars, flows, allowed_hosts, served} -> {usable, spec_version} (SPEC.md 'A usable sign-in spec', row 13).
+/// flows.usable_login_spec: {format, reader_format, vars, flows, allowed_hosts, served} -> {usable, spec_version} (SPEC.md 'A usable sign-in spec').
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_flows_usable_login_spec_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::flows::usable_login_spec_json)
 }
 
-/// selling.sellable: {checks: [{record, qty}]} -> [{reason, sellable_record}] what may be sold (SM-10, row 4).
+/// selling.sellable: {checks: [{record, qty}]} -> [{reason, sellable_record}] what may be sold.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_selling_sellable_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::selling::sellable_json)
 }
 
-/// selling.parse_price: {text, max} -> {cents | null} a typed price, total or rate per mg (SM-13, row 6).
+/// selling.parse_price: {text, max} -> {cents | null} a typed price, total or rate per mg in whole cents, half up, refused over its cap.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_selling_parse_price_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::selling::pricing::parse_price_json)
 }
 
-/// selling.price_cart: {mode, lines, total, per_mg, tax, tax_percent, agreement} -> {each, line_errors, error} a cart priced as a whole (SM-14, row 6).
+/// selling.price_cart: {mode, lines, total, per_mg, tax, tax_percent, agreement} -> {each, line_errors, error} a cart priced as a whole, per unit in whole cents.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_selling_price_cart_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::selling::cart::price_cart_json)
 }
 
-/// selling.line_price: {mode, text, mg} -> {cents, error} one line priced on its own (PRICE-3, row 6).
+/// selling.line_price: {mode, text, mg} -> {cents, error} one line priced on its own, within the $10,000 unit cap.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_selling_line_price_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::selling::cart::line_price_json)
 }
 
-/// selling.group_of: {product_type} -> {group} A or B (SM-14, row 6).
+/// selling.group_of: {product_type} -> {group} A (edibles and extracts) or B.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_selling_group_of_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::selling::pricing::group_of_json)
 }
 
-/// selling.share_total: {total_cents, weights} -> {parts} largest remainder (PRICE-4, row 6).
+/// selling.share_total: {total_cents, weights} -> {parts} a total shared by weight: parts rounded down, the cents left to the largest remainders.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_selling_share_total_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::selling::pricing::share_total_json)
 }
 
-/// selling.per_mg_price: {rate_cents, mg} -> {cents} (SM-D10, row 6).
+/// selling.per_mg_price: {rate_cents, mg} -> {cents} rate x mg, half up to the cent.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_selling_per_mg_price_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::selling::pricing::per_mg_price_json)
 }
 
-/// selling.with_tax: {cents, percent} -> {cents} (row 6).
+/// selling.with_tax: {cents, percent} -> {cents} cents x (100 + percent) / 100, half up to the cent.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_selling_with_tax_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::selling::pricing::with_tax_json)
 }
 
-/// selling.money: {cents} -> {text} '$1,234.56' (row 6).
+/// selling.money: {cents} -> {text} '$1,234.56'.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_selling_money_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::selling::pricing::money_json)
 }
 
-/// selling.allocate: {lots, qty} -> {order, positions, takes, take_positions} which lot a unit is drawn from (SM-17, PRICE-6, row 6).
+/// selling.allocate: {lots, qty} -> {order, positions, takes, take_positions} which lot a unit is drawn from: lab lots first, earliest expiry, fewest units, lowest id.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_selling_allocate_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::selling::cart::allocate_json)
 }
 
-/// selling.build_sale: {item, price_cents, sale_date, dose, qty} -> {record, refusal} the record CreateSalesRecords is sent (SM-11, SALE-10/12/13, row 7).
+/// selling.build_sale: {item, price_cents, sale_date, dose, qty} -> {record, refusal} the record CreateSalesRecords is sent, the state's values copied unchanged.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_selling_build_sale_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::selling::sale::build_sale_json)
 }
 
-/// selling.allocate_sale: {lines, lots} -> {draws, short} one draw across a sale's lines (SALE-4, row 7).
+/// selling.allocate_sale: {lines, lots} -> {draws, short} one draw across a sale's lines.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_selling_allocate_sale_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::selling::sale::allocate_sale_json)
 }
 
-/// selling.check_sale: {lines, fresh, center, sent?, cap?} -> {refusal} the check on the state's records just before sending (SM-25, SALE-17, row 7).
+/// selling.check_sale: {lines, fresh, center, sent?, cap?} -> {refusal} the check on the state's records just before sending.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_selling_check_sale_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::selling::sale::check_sale_json)
 }
 
-/// selling.parse_sale_date: {text, today} -> {date, error} a typed sale date (SM-D6, row 7).
+/// selling.parse_sale_date: {text, today} -> {date, error} a typed sale date.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_selling_parse_sale_date_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::selling::sale::parse_sale_date_json)
 }
 
-/// selling.check_sale_date: {date, today} -> {date, error} future or more than 365 days back (SALE-1, SALE-18, row 7).
+/// selling.check_sale_date: {date, today} -> {date, error} future or more than 365 days back.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_selling_check_sale_date_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::selling::sale::check_sale_date_json)
 }
 
-/// selling.today: {now} -> {date} the Pacific date of now (SALE-2, row 7).
+/// selling.today: {now} -> {date} the Pacific date of now.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_selling_today_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::selling::sale::today_json)
 }
 
-/// selling.pacific_midnight: {date} -> {utc} Pacific midnight as UTC, the 2007 rule (SALE-1, row 7).
+/// selling.pacific_midnight: {date} -> {utc} Pacific midnight as UTC, by the 2007 US daylight-saving rule.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_selling_pacific_midnight_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::selling::sale::pacific_midnight_json)
 }
 
-/// selling.review_sale_date: {text} -> {date} a failed sale's own date of sale (row 7).
+/// selling.review_sale_date: {text} -> {date} a failed sale's own date of sale.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_selling_review_sale_date_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::selling::sale::review_sale_date_json)
 }
 
-/// selling.sale_outcome: {event, sent} -> {outcome, sale_number} how a sale's reply ends (SM-12, SALE-5/6/16, row 7).
+/// selling.sale_outcome: {event, sent} -> {outcome, sale_number} how a sale's reply ends: recorded, not sent or uncertain.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_selling_sale_outcome_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::selling::sale::sale_outcome_json)
 }
 
-/// selling.sale_proof: {reply, sent} -> {sale_number} what a reply already read proves (SM-D2, SALE-5/6, row 7).
+/// selling.sale_proof: {reply, sent} -> {sale_number} what a reply already read proves.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_selling_sale_proof_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::selling::sale::sale_proof_json)
 }
 
-/// selling.review_each: {cost, qty} -> {cents} a reviewed sale's price each (SALE-9, row 7).
+/// selling.review_each: {cost, qty} -> {cents} a reviewed sale's price each: the total in cents / qty, half up.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_selling_review_each_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::selling::sale::review_each_json)
 }
 
-/// selling.expiry: {expires, today, fresh_months} -> {expired, words, hue} (SM-18, SALE-11, row 7).
+/// selling.expiry: {expires, today, fresh_months} -> {expired, words, hue} expired from the day after the date.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_selling_expiry_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::selling::sale::expiry_json)
 }
 
-/// selling.parse_state_date: {text} -> {date} a state-site date as ISO (row 7).
+/// selling.parse_state_date: {text} -> {date} a state-site date as ISO.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_selling_parse_state_date_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::selling::sale::parse_state_date_json)
 }
 
-/// dose.unit_mg: {units: [{record, tpe}]} -> [{tpe_per_g, tpe_mg}] a unit's mg TPE (SM-04, row 5).
+/// dose.unit_mg: {units: [{record, tpe}]} -> [{tpe_per_g, tpe_mg}] a unit's mg TPE: weightPerUnit x (the lot's TPE, else the state's analyteWeight), rounded up to a whole mg.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_dose_unit_mg_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::dose::unit_mg_json)
 }
 
-/// dose.ceil_mg: {xs} -> [int | null] an mg figure rounded up to a whole mg, forgiving only float noise of a billionth of a mg (SM-D17, row 5).
+/// dose.ceil_mg: {xs} -> [int | null] an mg figure rounded up to a whole mg, forgiving only float noise of a billionth of a mg.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_dose_ceil_mg_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::dose::ceil_mg_json)
 }
 
-/// dose.sale_limits: {sales: [{lines}]} -> [{psilocybin_mg, allowed, error, session_minutes, session_minutes_initial}] the 50 mg cap and session length (SM-15, row 5).
+/// dose.sale_limits: {sales: [{lines}]} -> [{psilocybin_mg, allowed, error, session_minutes, session_minutes_initial}] a sale's raw psilocybin (weightPerUnit x analyteWeight x units, exact), the 50 mg cap and the session length.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_dose_sale_limits_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::dose::sale_limits_json)
+}
+
+/// selling.cart_total: {lines: [{qty, price_cents, group}], sales} -> {line_totals, total, group_totals, units, all_total, all_units} a cart's totals in whole cents, exact, and n sales of it.
+#[unsafe(no_mangle)]
+pub extern "C" fn mz_selling_cart_total_json(input_json: *const c_char) -> *mut c_char {
+    run(input_json, mazama_core::selling::cart::cart_total_json)
+}
+
+/// dose.highest_lot: {lots: [{weightPerUnit, analyteWeight}]} -> {index} the lot a line its lots can't cover is counted on: a figure that can't be used, then unknown potency, then the largest weightPerUnit x analyteWeight.
+#[unsafe(no_mangle)]
+pub extern "C" fn mz_dose_highest_lot_json(input_json: *const c_char) -> *mut c_char {
+    run(input_json, mazama_core::dose::highest_lot_json)
+}
+
+/// selling.sale_date_bounds: {today} -> {earliest, latest} the days a sale may be dated: today back to 365 days before it.
+#[unsafe(no_mangle)]
+pub extern "C" fn mz_selling_sale_date_bounds_json(input_json: *const c_char) -> *mut c_char {
+    run(input_json, mazama_core::selling::sale::sale_date_bounds_json)
+}
+
+/// stock.classify: {rows, mg_mode} -> {rows: [{type, word, edible, size_key, mg_per_unit, has_units, type_mg}], type_words} how the stock rules read each row.
+#[unsafe(no_mangle)]
+pub extern "C" fn mz_stock_classify_json(input_json: *const c_char) -> *mut c_char {
+    run(input_json, mazama_core::stock::classify_json)
+}
+
+/// stock.record_types: {records} -> {types: [code | null]} each state record's kind, as Stock.package_code reads a record.
+#[unsafe(no_mangle)]
+pub extern "C" fn mz_stock_record_types_json(input_json: *const c_char) -> *mut c_char {
+    run(input_json, mazama_core::stock::record_types_json)
+}
+
+/// stock.type_words: {codes} -> {words} the word each kind code's pies show.
+#[unsafe(no_mangle)]
+pub extern "C" fn mz_stock_type_words_json(input_json: *const c_char) -> *mut c_char {
+    run(input_json, mazama_core::stock::type_words_json)
+}
+
+/// names.parse: {items: [{text, kind, license}], aliases, formats} -> [{status, strain_raw, strain, dose, dose_text, code, expiry, label, note}] a product's or batch/lot's name read into fields (ok, partial or unparsed, and why).
+#[unsafe(no_mangle)]
+pub extern "C" fn mz_names_parse_json(input_json: *const c_char) -> *mut c_char {
+    run(input_json, mazama_core::names::parse_json)
+}
+
+/// names.strains: {texts, aliases} -> [{key, spelled, clean, canonical}] a strain's key, its spelling fixed, its safe form and the name it is shown as.
+#[unsafe(no_mangle)]
+pub extern "C" fn mz_names_strains_json(input_json: *const c_char) -> *mut c_char {
+    run(input_json, mazama_core::names::strains_json)
+}
+
+/// names.code_of: {items: [{description, coa_code}]} -> [code] a product's type code: the one after TPE in its name, else the certificate's, else a word in the name.
+#[unsafe(no_mangle)]
+pub extern "C" fn mz_names_code_of_json(input_json: *const c_char) -> *mut c_char {
+    run(input_json, mazama_core::names::code_of_json)
+}
+
+/// names.type_code: {items: [{subtype, product_type}]} -> [code] a certificate subtype's type code, HG for a homogenized product without one.
+#[unsafe(no_mangle)]
+pub extern "C" fn mz_names_type_code_json(input_json: *const c_char) -> *mut c_char {
+    run(input_json, mazama_core::names::type_code_json)
+}
+
+/// records.dry_grams: {values} -> [grams] a dry weight as every record rule reads it: a number, or text that is a plain number; anything else 0 g.
+#[unsafe(no_mangle)]
+pub extern "C" fn mz_records_dry_grams_json(input_json: *const c_char) -> *mut c_char {
+    run(input_json, mazama_core::records::dry_grams_json)
+}
+
+/// records.licenses_of_type: {licenses, license_type} -> [{state_id, name, license}] the GetApplicableLicenses entries of one license type (ServiceCenter or Manufacturer).
+#[unsafe(no_mangle)]
+pub extern "C" fn mz_records_licenses_of_type_json(input_json: *const c_char) -> *mut c_char {
+    run(input_json, mazama_core::contracts::licenses_of_type_json)
+}
+
+/// names.name_dose: {name} -> {dose: text | null} the first <n> mg in a product's name as written, read as the label reads a dose from a name.
+#[unsafe(no_mangle)]
+pub extern "C" fn mz_names_name_dose_json(input_json: *const c_char) -> *mut c_char {
+    run(input_json, mazama_core::label::name_dose_json)
 }
 
 /// A C function of the table.
@@ -391,6 +487,9 @@ pub const EXPORTS: &[(&str, &str, &str, Export)] = &[
     ("manufacturing", "clean_text", "mz_manufacturing_clean_text_json", mz_manufacturing_clean_text_json),
     ("manufacturing", "plan", "mz_manufacturing_plan_json", mz_manufacturing_plan_json),
     ("manufacturing", "serving_table", "mz_manufacturing_serving_table_json", mz_manufacturing_serving_table_json),
+    ("manufacturing", "transfer_items", "mz_manufacturing_transfer_items_json", mz_manufacturing_transfer_items_json),
+    ("manufacturing", "transfer_check", "mz_manufacturing_transfer_check_json", mz_manufacturing_transfer_check_json),
+    ("manufacturing", "transfer_plan", "mz_manufacturing_transfer_plan_json", mz_manufacturing_transfer_plan_json),
     ("names", "product_name", "mz_names_product_name_json", mz_names_product_name_json),
     ("flows", "host_allowed", "mz_flows_host_allowed_json", mz_flows_host_allowed_json),
     ("flows", "compare_spec_versions", "mz_flows_compare_spec_versions_json", mz_flows_compare_spec_versions_json),
@@ -424,4 +523,17 @@ pub const EXPORTS: &[(&str, &str, &str, Export)] = &[
     ("dose", "unit_mg", "mz_dose_unit_mg_json", mz_dose_unit_mg_json),
     ("dose", "ceil_mg", "mz_dose_ceil_mg_json", mz_dose_ceil_mg_json),
     ("dose", "sale_limits", "mz_dose_sale_limits_json", mz_dose_sale_limits_json),
+    ("selling", "cart_total", "mz_selling_cart_total_json", mz_selling_cart_total_json),
+    ("dose", "highest_lot", "mz_dose_highest_lot_json", mz_dose_highest_lot_json),
+    ("selling", "sale_date_bounds", "mz_selling_sale_date_bounds_json", mz_selling_sale_date_bounds_json),
+    ("stock", "classify", "mz_stock_classify_json", mz_stock_classify_json),
+    ("stock", "record_types", "mz_stock_record_types_json", mz_stock_record_types_json),
+    ("stock", "type_words", "mz_stock_type_words_json", mz_stock_type_words_json),
+    ("names", "parse", "mz_names_parse_json", mz_names_parse_json),
+    ("names", "strains", "mz_names_strains_json", mz_names_strains_json),
+    ("names", "code_of", "mz_names_code_of_json", mz_names_code_of_json),
+    ("names", "type_code", "mz_names_type_code_json", mz_names_type_code_json),
+    ("records", "dry_grams", "mz_records_dry_grams_json", mz_records_dry_grams_json),
+    ("records", "licenses_of_type", "mz_records_licenses_of_type_json", mz_records_licenses_of_type_json),
+    ("names", "name_dose", "mz_names_name_dose_json", mz_names_name_dose_json),
 ];

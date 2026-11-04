@@ -72,7 +72,7 @@ void main() {
       expect(find.text('Nothing in the cart yet.'), findsNothing); // the line is still there either way
     });
 
-    // specs/core row 7, SALE-13: a lot whose state record lacks what a sale record copies (here its productType, which
+    // A lot whose state record lacks what a sale record copies (here its productType, which
     // the server never sent) is refused when its records are built, inside the sale's try: nothing is sent, the dialog
     // says not sent with the core's words, and the spinner stops.
     testWidgets('a lot lacking what a sale copies is refused before anything is sent, and the spinner stops', (tester) async {
@@ -103,7 +103,7 @@ void main() {
       expect(find.text('Nothing in the cart yet.'), findsNothing); // the cart waits as it was
     });
 
-    // SM-12: the reported bug. The phone had sent the sale and the connection dropped before the answer came
+    // The reported bug. The phone had sent the sale and the connection dropped before the answer came
     // back; the dialog said "not sent, safe to try again".
     Future<void> sellWith(WidgetTester tester, FakeState fake, Map<String, Object?> login) async {
       await tester.pumpWidget(cartPage(
@@ -170,7 +170,7 @@ void main() {
       expect(find.text('The sale may or may not have been recorded'), findsOneWidget);
       expect(find.textContaining('within 60 s'), findsOneWidget);
       expect(queuedReason, startsWith('[uncertain]'));
-      expect(saleFailureOutcome(queuedReason!), 'uncertain'); // SALE-15: the report's own outcome field
+      expect(saleFailureOutcome(queuedReason!), 'uncertain'); // the report's own outcome field
       await tester.tap(find.widgetWithText(FilledButton, 'OK'));
       await tester.pumpAndSettle();
       expect(find.text('Nothing in the cart yet.'), findsNothing);
@@ -222,7 +222,7 @@ void main() {
       expect((fake.posted.single.$2 as List), hasLength(2));
       expect(find.text('The sale may or may not have been recorded'), findsOneWidget);
       expect(queuedReason, startsWith('[uncertain]'));
-      expect(saleFailureOutcome(queuedReason!), 'uncertain'); // SALE-15: the report's own outcome field
+      expect(saleFailureOutcome(queuedReason!), 'uncertain'); // the report's own outcome field
       await tester.tap(find.widgetWithText(FilledButton, 'OK'));
       await tester.pumpAndSettle();
       expect(find.text('Nothing in the cart yet.'), findsNothing);
@@ -312,7 +312,7 @@ void main() {
       expect(find.widgetWithText(AppBar, 'Mazama sign-in'), findsNothing);
       expect(find.text('The sale was not sent'), findsOneWidget);
       expect(queuedReason, contains('notSent'));
-      expect(saleFailureOutcome(queuedReason!), 'not_sent'); // SALE-15: the report's own outcome field
+      expect(saleFailureOutcome(queuedReason!), 'not_sent'); // the report's own outcome field
 
       await tester.tap(find.widgetWithText(FilledButton, 'OK'));
       await tester.pumpAndSettle();
@@ -322,7 +322,7 @@ void main() {
     // Round 3 A: a renew spec fetched from Mazama's server could capture a token under another name and put it in its
     // error text; the failed-sale report carries a fixed text instead, and the worker still sees the message.
     for (final (status, expected) in [
-      (400, "[notSent] the state's sign-in session expired"), // review M4: expired before anything was sent
+      (400, "[notSent] the state's sign-in session expired"), // expired before anything was sent
       (503, "[notSent] the state's sign-in could not be renewed"),
     ]) {
       testWidgets('a renew error carrying a captured token (HTTP $status) never reaches the failed-sale report',
@@ -416,7 +416,7 @@ flows:
       // not an ordinary refused sale, so it never reaches the state system at all). Starts at a `now` the
       // session reads as fresh (so initState's own immediate _maybeRenewSession check, and the identical check
       // CartPage's constructor-default periodic timer would make, both see "not expired yet" and do nothing) -
-      // moved to "expired" only after the page has loaded, right before Sell is tapped, so the one check inside
+      // turned "expired" only after the page has loaded, right before Sell is tapped, so the one check inside
       // _sell itself is the only one that ever sees it as expired. This is exactly the gap CartPage.now exists
       // to let a test control, since nothing on this page can fast-forward the real wall clock.
       var fakeNow = DateTime.now();
@@ -592,7 +592,7 @@ flows:
       expect(find.textContaining('The other 1 sale was never attempted.'), findsOneWidget);
       expect(reasons, hasLength(1));
       expect(reasons.single, startsWith('[bulk 3 of 4] [notSent]'));
-      expect(saleFailureOutcome(reasons.single), 'not_sent'); // SALE-15: the report's own outcome field
+      expect(saleFailureOutcome(reasons.single), 'not_sent'); // the report's own outcome field
 
       await tester.tap(find.widgetWithText(FilledButton, 'OK'));
       await tester.pumpAndSettle();
@@ -610,7 +610,7 @@ flows:
       expect(find.textContaining(saleLineRefusal(locked, 'PKPR-ab12c', 4)!), findsOneWidget);
     });
 
-    // DOSE-17: PKPR-d00d1 has two lots. Lot 301 is drawn first (no dates, so the smaller lot): 1.0 g x 10 mg/g, 3 units.
+    // PKPR-d00d1 has two lots. Lot 301 is drawn first (no dates, so the smaller lot): 1.0 g x 10 mg/g, 3 units.
     // Lot 302: 2.0 g x [strongerMg] mg/g, 10 units. The cart sells 3 units, 30 mg on the first lot, so copy 1 takes all
     // of lot 301 and copy 2 takes 3 units of lot 302.
     Map<String, Object?> d00d1Record(int id, {required double weightPerUnit, required double analyteWeight, required int quantity}) => {
@@ -619,13 +619,19 @@ flows:
           'flagged': false, 'pendingTransfer': false,
         };
 
+    /// [firstWeight], [firstMg], [firstQuantity]: lot 301's (1.0 g x 10 mg/g, 3 units unless given).
     Future<FakeState> openTwoLotBulk(WidgetTester tester,
-        {required double strongerWeight, required double strongerMg, Future<List<Object?>> Function()? reread}) async {
+        {required double strongerWeight,
+        required double strongerMg,
+        Future<List<Object?>> Function()? reread,
+        double firstWeight = 1.0,
+        double firstMg = 10.0,
+        int firstQuantity = 3}) async {
       final fake = FakeState();
       final login = await runFlow(loginSpec, 'login', {'email': fakeEmail, 'password': fakePassword}, client: fake.client());
       fake.data['CreateSalesRecords/false'] = [{'id': 9001, 'saleNumber': 'S-1'}];
       final lots = [
-        Package(productGuid: 'PKPR-d00d1', productType: 'Extract', id: 301, weightPerUnit: 1.0, analyteWeight: 10.0, strain: 'Golden Teacher', tpeMg: 10, quantity: 3),
+        Package(productGuid: 'PKPR-d00d1', productType: 'Extract', id: 301, weightPerUnit: firstWeight, analyteWeight: firstMg, strain: 'Golden Teacher', tpeMg: 10, quantity: firstQuantity),
         Package(productGuid: 'PKPR-d00d1', productType: 'Extract', id: 302, weightPerUnit: strongerWeight, analyteWeight: strongerMg, strain: 'Golden Teacher', tpeMg: 10, quantity: 10),
       ];
       var loaded = false;
@@ -635,7 +641,7 @@ flows:
           if (!loaded) throw StatePackagesError('not read at load in this test');
           if (reread != null) return reread();
           return [
-            d00d1Record(301, weightPerUnit: 1.0, analyteWeight: 10.0, quantity: 3),
+            d00d1Record(301, weightPerUnit: firstWeight, analyteWeight: firstMg, quantity: firstQuantity),
             d00d1Record(302, weightPerUnit: strongerWeight, analyteWeight: strongerMg, quantity: 10),
           ];
         },
@@ -689,6 +695,35 @@ flows:
       expect(find.text('Nothing in the cart yet.'), findsOneWidget);
       // the client's session is timed by copy 2's 45 mg, not the cart's first-lot 30 mg
       expect(await SessionTimerStore(dataDir: () => tempDir).loadSoldDose(231), (psilocybinMg: 45.0, booster: false));
+    });
+
+    testWidgets('DOSE-1, DOSE-17: a first lot stronger than the lot later copies draw no longer refuses the bulk sell on its '
+        'own figure; each copy sells on its own draw, timed by the largest', (tester) async {
+      // lot 301 (drawn first, the smaller): 2 units of 2.0 g x 10 mg/g = 20 mg; lot 302: 10 mg. 3 units a copy: 60 mg on
+      // the first lot's figure (it counts the lots drawn instead), copy 1 2 x 20 + 10 = 50 mg (at the limit), copy 2
+      // 3 x 10 = 30 mg
+      final fake = await openTwoLotBulk(tester,
+          strongerWeight: 1.0, strongerMg: 10.0, firstWeight: 2.0, firstMg: 10.0, firstQuantity: 2);
+      // the state confirms each copy with one record per record sent (copy 1 sends two: one per lot it draws)
+      fake.override['CreateSalesRecords/false'] = (req) async => http.Response(
+          jsonEncode([
+            for (var i = 0; i < (jsonDecode(req.body) as List).length; i++) {'id': 9001 + i, 'saleNumber': 'S-${fake.posted.length}'},
+          ]),
+          200);
+      expect(find.text('Number of sales'), findsOneWidget); // the dialog opened
+      expect(find.textContaining('mg limit per sale'), findsNothing);
+      await tester.tap(find.widgetWithText(FilledButton, 'Confirm 2 sales'));
+      await tester.pumpAndSettle();
+
+      expect([for (final (_, body) in fake.posted) [for (final r in body) (r['productId'], r['numberSold'], r['analyteWeight'])]], [
+        [(301, 2, 10.0), (302, 1, 10.0)],
+        [(302, 3, 10.0)],
+      ]);
+      expect(find.text('2 sales recorded with the state system.'), findsOneWidget);
+      // the client's session: the largest copy's (50 mg, 6 hours), never the first-lot 60 mg
+      expect(await SessionTimerStore(dataDir: () => tempDir).loadSoldDose(231), (psilocybinMg: 50.0, booster: false));
+      final kept = await SessionTimerStore(dataDir: () => tempDir).loadSoldSession(231);
+      expect((kept?.minutes, kept?.unknown), (360, false));
     });
 
     testWidgets("DOSE-17: the stock check covers a later copy's lot: one found short refuses them all, nothing sent",
@@ -757,7 +792,7 @@ flows:
     expect(kept, [(231, 'HB-aaaa0001', 101, 4.5)]);
   });
 
-  // README R64: the phone fetches a lab report from the state system only when the server has no COA for the lot. A lot
+  // The phone fetches a lab report from the state system only when the server has no COA for the lot. A lot
   // whose COA the server has but whose label it hasn't drawn yet costs no state calls: the server draws the label itself.
   testWidgets('a cart add submits a lab report only for a lot the server has no COA for', (tester) async {
     final submitted = <String>[];

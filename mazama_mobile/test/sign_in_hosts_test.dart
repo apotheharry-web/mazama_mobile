@@ -1,5 +1,5 @@
-// SL-R18: after a failed sign-in, SignInPage asks for the owner's signed host list beside the newer sign-in spec
-// (SL-R10). A list newer than the one in use gives the retry its hosts (the built-in ones plus the list's): the fetched
+// After a failed sign-in, SignInPage asks for the owner's signed host list beside the newer sign-in spec.
+// A list newer than the one in use gives the retry its hosts (the built-in ones plus the list's): the fetched
 // spec is held to them and runFlow runs with them. The list is kept, and put in use for every flow, only after the
 // sign-in it enabled gave a session; the hosts it added are named. The state system is test/flow/fake_state.dart's
 // FakeState through http.runWithClient; the fetches and stores are injected (lists signed with the shared vectors'

@@ -1,17 +1,17 @@
 // Item 3b: once a product is placed in the cart at a CONFIGURED service center and its own PKPR, HB or PL
 // turns out to have no COA (or no label) on file yet - packages_client.dart's Package.coaAvailable/
-// labelAvailable, carried through merged_inventory.dart's merge - CartPage submits that lot's own lab report to
+// labelAvailable, carried through sync/stock_merge.dart's merge - CartPage submits that lot's own lab report to
 // mazama_sales right away, using the exact same three-call pipeline coa_data_resolver.dart already runs for an
 // UNCONFIGURED center's misses (GetPackagedProductInfo -> pick the newest non-deprecated accepted-Potency-test
 // PDF -> downloadStateDocument -> uploadCoaParse): the "already built function" per the user's own request,
 // just reached from a different trigger (a cart add at a configured center, not a whole-inventory load at an
 // unconfigured one).
 //
-// mazama_sales' coa_data_parse route (web/stock_pages.py) keeps the PDF for the COA worker (coajobs.py, SH-R2: the
+// mazama_sales' coa_data_parse route (web/stock_pages.py) keeps the PDF for the COA worker (coajobs.py: the
 // web process never reads one), which joins the result into the shared adhoc_coa table AND the configured
 // pipeline's own coa_dir/CoaFolder (adhoc_coa.py's store_read and write_certificate), making it visible to every
-// service center, configured or not - and, per item 4, queues the lot's labels once the read succeeds
-// (appapply.queue_labels_for_lot). This file only has to get the PDF there; the server does the rest of items 3b/4
+// service center, configured or not - and queues the lot's labels once the read succeeds
+// (appapply.queue_labels_for_lot). This file only has to get the PDF there; the server does the rest
 // on its own, identically whichever trigger reached it.
 //
 // Never blocks a cart add: CartPage calls submitCoaForLot fire-and-forget (see its own _ensureCoaForCartLine),
@@ -32,21 +32,12 @@ import 'server_link_client.dart' show serverClient;
 import 'state_client.dart';
 import 'state_document_client.dart';
 
-class ConfiguredCoaSubmitError implements ServerRequestError {
-  @override
-  final String message;
-
-  /// True when the report couldn't reach Mazama's server (server_error.dart's rule): server_link.dart then keeps the
-  /// lot and submits it again once the server answers. A state-system failure is never this.
-  @override
-  final bool unreachable;
-
-  /// Mazama's server's HTTP status when it answered the upload (CoaDataError.status), null when it didn't or the
-  /// failure was the state system's (coa_uploader.dart, CU-R3).
-  final int? status;
-  ConfiguredCoaSubmitError(this.message, {this.unreachable = false, this.status});
-  @override
-  String toString() => message;
+/// [unreachable]: the report couldn't reach Mazama's server (server_error.dart's rule): server_link.dart then keeps the
+/// lot and submits it again once the server answers. A state-system failure is never this. [status]: Mazama's server's
+/// HTTP status when it answered the upload (CoaDataError.status), null when it didn't or the failure was the state
+/// system's (coa_uploader.dart).
+class ConfiguredCoaSubmitError extends ServerFailure {
+  ConfiguredCoaSubmitError(super.message, {super.status, super.unreachable});
 }
 
 /// Submits [lotGuid]'s own lab report to mazama_sales. [representativePackageId] is any ONE package's own
@@ -69,7 +60,7 @@ Future<CoaData?> submitCoaForLot({
   http.Client? client,
 }) async {
   final c = client ?? http.Client();
-  // The upload to Mazama's server goes through the server link (README R56) unless a client was given; the state
+  // The upload to Mazama's server goes through the server link unless a client was given; the state
   // system's reads never do.
   final server = client ?? serverClient();
   final shouldClose = client == null;

@@ -119,8 +119,8 @@ void main() {
       expect([PkprGroup([s1, joined]).tpeMg, PkprGroup([s1, joined]).mgLabel], [8, 'mg TPE']);
     });
 
-    // The owner, 2026-10-30 ("yes, lab lot first"): a price and dose-cap change where it applies, so the before and
-    // after are both held here. Not merged before the owner's replay against his production snapshot (PS-R5).
+    // Lab lot first: a price and dose-cap change where it applies, so both orders are held here: the
+    // smaller-lot-first order a lot only the state lists would otherwise get, and the lab-lot-first order used.
     test('lab lot first: a lot only the state lists never comes before one with a server figure (before and after)', () {
       Package lot(int id, {required double aw, required int tpeMg, required int quantity, bool stateOnly = false, DateTime? expires}) =>
           Package(productGuid: 'G-1', productType: 'Extract', id: id, weightPerUnit: 5, analyteWeight: aw, tpeMg: tpeMg,

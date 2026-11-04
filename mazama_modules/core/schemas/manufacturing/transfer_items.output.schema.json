@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "manufacturing.transfer_items output",
+  "description": "The packages named once each with a quantity above 0, in record id order, and the problems (a quantity that isn't a whole number, a record named twice).",
+  "type": "object",
+  "required": [
+    "wanted",
+    "problems"
+  ],
+  "properties": {
+    "wanted": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "record_id",
+          "qty"
+        ],
+        "properties": {
+          "record_id": {
+            "type": "integer"
+          },
+          "qty": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    },
+    "problems": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "The server's words, in order; empty when nothing is wrong."
+    }
+  }
+}

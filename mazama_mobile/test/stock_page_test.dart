@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mazama_mobile/enrichment_store.dart';
+import 'package:mazama_mobile/sync/enrichment.dart';
 import 'package:mazama_mobile/licenses_client.dart';
 import 'package:mazama_mobile/packages_client.dart';
 import 'package:mazama_mobile/features.g.dart';
@@ -59,7 +59,7 @@ void main() {
     expect(find.text('10\nin stock'), findsOneWidget);
   });
 
-  // SM-D31: what each row's figure is, and where it came from, when stock was read from the state system alone.
+  // What each row's figure is, and where it came from, when stock was read from the state system alone.
   testWidgets("a state-only product shows mg psilocybin; a filled one mg TPE with whose figure it is", (tester) async {
     final at = DateTime.utc(2026, 10, 21, 15);
     await tester.pumpWidget(_stockPage(fetchPackages: (id) async => [
@@ -203,7 +203,7 @@ void main() {
     });
   });
 
-  // specs/features FR-3: the reconcile page is reached only while reconcile is on for the license's type.
+  // The reconcile page is reached only while reconcile is on for the license's type.
   testWidgets('the reconcile button shows while reconcile is on, and is hidden when it is off', (tester) async {
     await tester.pumpWidget(_stockPage(fetchPackages: (id) async => _inventory));
     await tester.pumpAndSettle();
@@ -215,7 +215,7 @@ void main() {
     expect(find.text('Extract'), findsOneWidget); // the stock list itself is unchanged
   });
 
-  // specs/phone-sync Task 8b Step 8 (PS-R7, PS-D5): the list's age, from when the stock it shows was read (the cart
+  // The list's age, from when the stock it shows was read (the cart
   // passes the center_stock dataset's time), asked again after each download.
   group('the stock list shows its age', () {
     final now = DateTime.utc(2026, 10, 30, 12);

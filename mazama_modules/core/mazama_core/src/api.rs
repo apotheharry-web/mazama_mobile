@@ -1,4 +1,4 @@
-//! The core's one JSON API (specs/core CR-R2): every function the apps call is `fn(&str) -> Result<String, Error>`,
+//! The core's one JSON API: every function the apps call is `fn(&str) -> Result<String, Error>`,
 //! listed once in `mazama_modules/core/functions.yaml`. `gen.py` writes the table below ([`FUNCTIONS`], in
 //! `api_table.rs`) and the Python, C and Dart exports from that list, so they can't disagree.
 

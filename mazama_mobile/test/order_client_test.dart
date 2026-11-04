@@ -1,4 +1,4 @@
-// MI-R5, MI-R6: the phone's order client (lib/order_client.dart) against the vendored API examples
+// The phone's order client (lib/order_client.dart) against the vendored API examples
 // (assets/shared/api/examples/order.*.json, from ../mazama_modules/api/), and how it reports what can go wrong.
 // api_contract_test.dart checks the route, the app key and the 401 / 429 wording.
 import 'dart:convert';
@@ -46,7 +46,7 @@ void main() {
     expect(receipt.id, reply['id']);
     expect(receipt.center, reply['center']);
     expect([for (final l in receipt.lines) l.toJson()], reply['lines']);
-    expect(receipt.note, reply['note']); // MI-D10: the notes go along and come back
+    expect(receipt.note, reply['note']); // the notes go along and come back
   });
 
   test('an order without notes sends an empty note', () async {

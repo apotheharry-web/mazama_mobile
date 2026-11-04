@@ -1,4 +1,4 @@
-// R56: the clients of the writes the outbox and catch-up work send say when Mazama's server couldn't be reached (their
+// The clients of the writes the outbox and catch-up work send say when Mazama's server couldn't be reached (their
 // `unreachable`, server_error.dart's rule) and the status when it answered, so a refusal is kept as a dead letter and
 // an outage is waited out.
 import 'dart:io';

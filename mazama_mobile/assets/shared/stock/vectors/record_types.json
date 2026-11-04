@@ -1,0 +1,283 @@
+[
+ {
+  "name": "the code after TPE in the name",
+  "records": [
+   {
+    "description": "GT 5 mg TPE CH (2027-02-03)",
+    "id": 1,
+    "productGuid": "PKPR-0001",
+    "quantity": 1
+   },
+   {
+    "description": "PE 25 mg TPE FD",
+    "id": 1,
+    "productGuid": "PKPR-0001",
+    "productType": "Dehydrated",
+    "quantity": 1
+   },
+   {
+    "description": "x TPE  ZZ y",
+    "id": 1,
+    "productGuid": "PKPR-0001",
+    "quantity": 1
+   },
+   {
+    "description": "x TPECH",
+    "id": 1,
+    "productGuid": "PKPR-0001",
+    "quantity": 1
+   },
+   {
+    "description": "x tpe ch",
+    "id": 1,
+    "productGuid": "PKPR-0001",
+    "quantity": 1
+   },
+   {
+    "description": "TPE CHX",
+    "id": 1,
+    "productGuid": "PKPR-0001",
+    "quantity": 1
+   }
+  ],
+  "types": [
+   "CH",
+   "FD",
+   "ZZ",
+   null,
+   null,
+   null
+  ]
+ },
+ {
+  "name": "an edible or extract word in the name",
+  "records": [
+   {
+    "description": "Bluey Gummies",
+    "id": 1,
+    "productGuid": "PKPR-0001",
+    "quantity": 1
+   },
+   {
+    "description": "dark CHOC bar",
+    "id": 1,
+    "productGuid": "PKPR-0001",
+    "quantity": 1
+   },
+   {
+    "description": "Bluey chocolate",
+    "id": 1,
+    "productGuid": "PKPR-0001",
+    "quantity": 1
+   },
+   {
+    "description": "honey stick",
+    "id": 1,
+    "productGuid": "PKPR-0001",
+    "quantity": 1
+   },
+   {
+    "description": "Avery extract",
+    "id": 1,
+    "productGuid": "PKPR-0001",
+    "quantity": 1
+   },
+   {
+    "description": "gumm chocolate",
+    "id": 1,
+    "productGuid": "PKPR-0001",
+    "quantity": 1
+   }
+  ],
+  "types": [
+   "GM",
+   "CH",
+   "CH",
+   "HN",
+   "EX",
+   "GM"
+  ]
+ },
+ {
+  "name": "a kind word in the name or product type",
+  "records": [
+   {
+    "description": "Bluey freeze dried caps",
+    "id": 1,
+    "productGuid": "PKPR-0001",
+    "quantity": 1
+   },
+   {
+    "description": "Bluey",
+    "id": 1,
+    "productGuid": "PKPR-0001",
+    "productType": "Dehydrated Psilocybin Mushrooms",
+    "quantity": 1
+   },
+   {
+    "description": "Bluey HOMOGENIZED",
+    "id": 1,
+    "productGuid": "PKPR-0001",
+    "quantity": 1
+   },
+   {
+    "id": 1,
+    "productGuid": "PKPR-0001",
+    "productType": "Freeze-dried",
+    "quantity": 1
+   },
+   {
+    "description": "Bluey",
+    "id": 1,
+    "productGuid": "PKPR-0001",
+    "productType": "homogen dehydrat",
+    "quantity": 1
+   }
+  ],
+  "types": [
+   "FD",
+   "DH",
+   "HG",
+   "FD",
+   "DH"
+  ]
+ },
+ {
+  "name": "what it was made from",
+  "records": [
+   {
+    "description": "Bluey 25 mg",
+    "harvestBatchGuid": "HB-0a1b2",
+    "id": 1,
+    "productGuid": "PKPR-0001",
+    "quantity": 1
+   },
+   {
+    "description": "Bluey 25 mg",
+    "id": 1,
+    "processLotGuid": "PL-ABCDEF12",
+    "productGuid": "PKPR-0001",
+    "quantity": 1
+   },
+   {
+    "description": "Bluey",
+    "harvestBatchGuid": "HB-123",
+    "id": 1,
+    "processLotGuid": "PL-12345",
+    "productGuid": "PKPR-0001",
+    "quantity": 1
+   },
+   {
+    "description": "Bluey",
+    "harvestBatchGuid": "hb-12345",
+    "id": 1,
+    "productGuid": "PKPR-0001",
+    "quantity": 1
+   },
+   {
+    "description": "Bluey",
+    "harvestBatchGuid": "HB-123456789",
+    "id": 1,
+    "processLotGuid": "PL-1234g",
+    "productGuid": "PKPR-0001",
+    "quantity": 1
+   },
+   {
+    "description": "Bluey",
+    "harvestBatchGuid": 12345,
+    "id": 1,
+    "processLotGuid": "PL-99999",
+    "productGuid": "PKPR-0001",
+    "quantity": 1
+   },
+   {
+    "description": "Bluey",
+    "harvestBatchGuid": "HB-12345",
+    "id": 1,
+    "productGuid": "PKPR-0001",
+    "productType": "Whole Fungi",
+    "quantity": 1
+   }
+  ],
+  "types": [
+   "DH",
+   "HG",
+   "HG",
+   null,
+   null,
+   "HG",
+   "DH"
+  ]
+ },
+ {
+  "name": "whole fungi, and nothing",
+  "records": [
+   {
+    "description": "Bluey",
+    "id": 1,
+    "productGuid": "PKPR-0001",
+    "productType": "Whole fungi",
+    "quantity": 1
+   },
+   {
+    "description": "Bluey",
+    "id": 1,
+    "productGuid": "PKPR-0001",
+    "productType": "WHOLE FUNGI dried",
+    "quantity": 1
+   },
+   {
+    "description": "Bluey",
+    "id": 1,
+    "productGuid": "PKPR-0001",
+    "productType": "Fungi",
+    "quantity": 1
+   },
+   {
+    "id": 1,
+    "productGuid": "PKPR-0001",
+    "quantity": 1
+   },
+   {
+    "description": "",
+    "id": 1,
+    "productGuid": "PKPR-0001",
+    "quantity": 1
+   },
+   {
+    "description": "   ",
+    "id": 1,
+    "productGuid": "PKPR-0001",
+    "productType": "  ",
+    "quantity": 1
+   },
+   {
+    "description": 25,
+    "id": 1,
+    "productGuid": "PKPR-0001",
+    "productType": true,
+    "quantity": 1
+   },
+   {
+    "id": 1,
+    "productGuid": "PKPR-0001",
+    "quantity": 1
+   }
+  ],
+  "types": [
+   "WF",
+   "WF",
+   null,
+   null,
+   null,
+   null,
+   null,
+   null
+  ]
+ },
+ {
+  "name": "no records",
+  "records": [],
+  "types": []
+ }
+]

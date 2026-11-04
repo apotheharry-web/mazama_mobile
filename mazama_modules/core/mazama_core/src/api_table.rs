@@ -13,53 +13,69 @@ pub const FUNCTIONS: &[(&str, &str, crate::api::Function)] = &[
     ("scan", "closest", crate::scan_closest_json),  // {texts, packages} -> {guesses}
     ("records", "judge", crate::records::judge_json),  // {records} -> [Judgement] (every record rule, per record)
     ("records", "can_transfer", crate::records::can_transfer_json),  // {records, holder_state_id, mode} -> [bool | Raise]
-    ("records", "package_keys", crate::contracts::package_keys_json),  // {records} -> [{state_id, pkpr} | {problem}] (SM-21, row 10)
-    ("records", "service_centers", crate::contracts::service_centers_json),  // {licenses} -> [{state_id, name, license}] (SM-21, row 10)
-    ("stock", "filter", crate::stock::filter_json),  // {rows, makers} -> {counted, other} (SP-D2, SP-D3)
-    ("stock", "summarize", crate::stock::summarize_json),  // {rows, mg_mode} -> summary (SP-R2)
+    ("records", "package_keys", crate::contracts::package_keys_json),  // {records} -> [{state_id, pkpr} | {problem}] each GetPackagedProducts record's ids, or why it is skipped
+    ("records", "service_centers", crate::contracts::service_centers_json),  // {licenses} -> [{state_id, name, license}] the GetApplicableLicenses entries that are service centers
+    ("stock", "filter", crate::stock::filter_json),  // {rows, makers} -> {counted, other} the rows with units, expired and other makers' set apart
+    ("stock", "summarize", crate::stock::summarize_json),  // {rows, mg_mode} -> summary units and mg by strain and size
     ("stock", "pies", crate::stock::pies_json),  // {summary} -> {units, mg, rows, more} (charts.stock_view)
     ("stock", "par_table", crate::stock::par_table_json),  // {summary, levels} -> par table (charts.par_view)
-    ("stock", "mix", crate::stock::mix_json),  // {rows: [{strain, type, mg}]} -> stock mix (MI-R1)
-    ("stock", "mix_cells", crate::stock::mix_cells_json),  // {rows} -> [{strain, type, mg}] per strain and type (MI-A2)
-    ("stock", "by_type", crate::stock::by_type_json),  // {rows, mg_mode} -> {pie: By type pie | null} (WC-D1)
-    ("stock", "order_check", crate::stock_order::check_json),  // {lines, note, aliases} -> {lines, note} | {refused} (row 9)
-    ("stock", "order_form", crate::stock_order::form_json),  // {levels} -> [{strain, size, par}] the order form's lines (MI-D7)
-    ("manufacturing", "coa_edit", crate::manufacturing::coa_edit_json),  // {raw, uid, psilocybin, form, kind} -> {errors, drop, set} a certificate correction (FM-09, row 12)
-    ("manufacturing", "coa_number", crate::manufacturing::coa_number_json),  // {text, required} -> {value: a mg/g figure | null} (row 12)
-    ("manufacturing", "clean_text", crate::manufacturing::clean_text_json),  // {text, limit} -> {text} ingredient and allergen text (FM-10, row 12)
-    ("manufacturing", "plan", crate::manufacturing::plan_json),  // {plans: [{source, dose, qty, coa_tpe}]} -> [Plan] grams per unit for a dose, rounded down (FM-07, row 11)
-    ("manufacturing", "serving_table", crate::manufacturing::serving_table_json),  // {kind, guid, source, meta, made, package, doses} -> {serv, summary, notes, packages} a sheet's amounts (FM-08, row 11)
-    ("names", "product_name", crate::names::product_name_json),  // {strain, subtype, kind, product_type} -> {name, why} (FM-11, row 12)
-    ("flows", "host_allowed", crate::flows::host_allowed_json),  // {url, allowed} -> {allowed} the strict host allowlist (SL-R7, SL-R17, row 13)
-    ("flows", "compare_spec_versions", crate::flows::compare_spec_versions_json),  // {a, b} -> {order, a_valid, b_valid} YYYY-MM-DD.N ordering (row 13)
-    ("flows", "parse_host_list", crate::flows::parse_host_list_json),  // {text} -> {valid, version, hosts} a signed host list's text (SL-R18, row 13)
-    ("flows", "verify_signature", crate::flows::verify_signature_json),  // {payload_b64, signature, public_key} -> {valid} the owner's Ed25519 signature (SL-D13, row 13)
-    ("flows", "public_key", crate::flows::public_key_json),  // {text} -> {key_b64 | null} a signing.pub text (SL-D13, row 13)
-    ("flows", "usable_login_spec", crate::flows::usable_login_spec_json),  // {format, reader_format, vars, flows, allowed_hosts, served} -> {usable, spec_version} (SPEC.md 'A usable sign-in spec', row 13)
-    ("selling", "sellable", crate::selling::sellable_json),  // {checks: [{record, qty}]} -> [{reason, sellable_record}] what may be sold (SM-10, row 4)
-    ("selling", "parse_price", crate::selling::pricing::parse_price_json),  // {text, max} -> {cents | null} a typed price, total or rate per mg (SM-13, row 6)
-    ("selling", "price_cart", crate::selling::cart::price_cart_json),  // {mode, lines, total, per_mg, tax, tax_percent, agreement} -> {each, line_errors, error} a cart priced as a whole (SM-14, row 6)
-    ("selling", "line_price", crate::selling::cart::line_price_json),  // {mode, text, mg} -> {cents, error} one line priced on its own (PRICE-3, row 6)
-    ("selling", "group_of", crate::selling::pricing::group_of_json),  // {product_type} -> {group} A or B (SM-14, row 6)
-    ("selling", "share_total", crate::selling::pricing::share_total_json),  // {total_cents, weights} -> {parts} largest remainder (PRICE-4, row 6)
-    ("selling", "per_mg_price", crate::selling::pricing::per_mg_price_json),  // {rate_cents, mg} -> {cents} (SM-D10, row 6)
-    ("selling", "with_tax", crate::selling::pricing::with_tax_json),  // {cents, percent} -> {cents} (row 6)
-    ("selling", "money", crate::selling::pricing::money_json),  // {cents} -> {text} '$1,234.56' (row 6)
-    ("selling", "allocate", crate::selling::cart::allocate_json),  // {lots, qty} -> {order, positions, takes, take_positions} which lot a unit is drawn from (SM-17, PRICE-6, row 6)
-    ("selling", "build_sale", crate::selling::sale::build_sale_json),  // {item, price_cents, sale_date, dose, qty} -> {record, refusal} the record CreateSalesRecords is sent (SM-11, SALE-10/12/13, row 7)
-    ("selling", "allocate_sale", crate::selling::sale::allocate_sale_json),  // {lines, lots} -> {draws, short} one draw across a sale's lines (SALE-4, row 7)
-    ("selling", "check_sale", crate::selling::sale::check_sale_json),  // {lines, fresh, center, sent?, cap?} -> {refusal} the check on the state's records just before sending (SM-25, SALE-17, row 7)
-    ("selling", "parse_sale_date", crate::selling::sale::parse_sale_date_json),  // {text, today} -> {date, error} a typed sale date (SM-D6, row 7)
-    ("selling", "check_sale_date", crate::selling::sale::check_sale_date_json),  // {date, today} -> {date, error} future or more than 365 days back (SALE-1, SALE-18, row 7)
-    ("selling", "today", crate::selling::sale::today_json),  // {now} -> {date} the Pacific date of now (SALE-2, row 7)
-    ("selling", "pacific_midnight", crate::selling::sale::pacific_midnight_json),  // {date} -> {utc} Pacific midnight as UTC, the 2007 rule (SALE-1, row 7)
-    ("selling", "review_sale_date", crate::selling::sale::review_sale_date_json),  // {text} -> {date} a failed sale's own date of sale (row 7)
-    ("selling", "sale_outcome", crate::selling::sale::sale_outcome_json),  // {event, sent} -> {outcome, sale_number} how a sale's reply ends (SM-12, SALE-5/6/16, row 7)
-    ("selling", "sale_proof", crate::selling::sale::sale_proof_json),  // {reply, sent} -> {sale_number} what a reply already read proves (SM-D2, SALE-5/6, row 7)
-    ("selling", "review_each", crate::selling::sale::review_each_json),  // {cost, qty} -> {cents} a reviewed sale's price each (SALE-9, row 7)
-    ("selling", "expiry", crate::selling::sale::expiry_json),  // {expires, today, fresh_months} -> {expired, words, hue} (SM-18, SALE-11, row 7)
-    ("selling", "parse_state_date", crate::selling::sale::parse_state_date_json),  // {text} -> {date} a state-site date as ISO (row 7)
-    ("dose", "unit_mg", crate::dose::unit_mg_json),  // {units: [{record, tpe}]} -> [{tpe_per_g, tpe_mg}] a unit's mg TPE (SM-04, row 5)
-    ("dose", "ceil_mg", crate::dose::ceil_mg_json),  // {xs} -> [int | null] an mg figure rounded up to a whole mg, forgiving only float noise of a billionth of a mg (SM-D17, row 5)
-    ("dose", "sale_limits", crate::dose::sale_limits_json),  // {sales: [{lines}]} -> [{psilocybin_mg, allowed, error, session_minutes, session_minutes_initial}] the 50 mg cap and session length (SM-15, row 5)
+    ("stock", "mix", crate::stock::mix_json),  // {rows: [{strain, type, mg}]} -> stock mix mg by strain and by type, largest first
+    ("stock", "mix_cells", crate::stock::mix_cells_json),  // {rows} -> [{strain, type, mg}] mg summed per strain and type, rounded to 2 decimals
+    ("stock", "by_type", crate::stock::by_type_json),  // {rows, mg_mode} -> {pie: By type pie | null} by mg when any row has an mg figure, else by units
+    ("stock", "order_check", crate::stock_order::check_json),  // {lines, note, aliases} -> {lines, note} | {refused} a center's order checked
+    ("stock", "order_form", crate::stock_order::form_json),  // {levels} -> [{strain, size, par}] the order form's lines
+    ("manufacturing", "coa_edit", crate::manufacturing::coa_edit_json),  // {raw, uid, psilocybin, form, kind} -> {errors, drop, set} a certificate correction
+    ("manufacturing", "coa_number", crate::manufacturing::coa_number_json),  // {text, required} -> {value: a mg/g figure | null}
+    ("manufacturing", "clean_text", crate::manufacturing::clean_text_json),  // {text, limit} -> {text} ingredient and allergen text
+    ("manufacturing", "plan", crate::manufacturing::plan_json),  // {plans: [{source, dose, qty, coa}]} -> [Plan] grams per unit = dose / the larger of the state's analyteWeight and the certificate's TPE (unrounded or to 2 places, whichever is higher), rounded down to 0.01 g so a unit never holds more than its dose
+    ("manufacturing", "serving_table", crate::manufacturing::serving_table_json),  // {kind, guid, source, meta, made, package, doses} -> {serv, summary, notes, packages} a sheet's amounts, mg never shown below what a unit holds
+    ("manufacturing", "transfer_items", crate::manufacturing::transfer_items_json),  // {items} -> {wanted, problems} the packages a transfer names, each once, ASCII digits only (MP-R15)
+    ("manufacturing", "transfer_check", crate::manufacturing::transfer_check_json),  // {items, fields, packages, centers, mfr, driver_ids, driver?, today, is_owner} -> {fields, problems, planned, splits, manifest} a transfer's check, with the server's words (FM-13)
+    ("manufacturing", "transfer_plan", crate::manufacturing::transfer_plan_json),  // {records, items, planned?, manifest?} -> {splits, planned, manifest} what a checked transfer sends: the packages split, the planned transfers, the manifest's fields
+    ("names", "product_name", crate::names::product_name_json),  // {strain, subtype, kind, product_type} -> {name, why}
+    ("flows", "host_allowed", crate::flows::host_allowed_json),  // {url, allowed} -> {allowed} the strict host allowlist: https, port 443, an exact listed host
+    ("flows", "compare_spec_versions", crate::flows::compare_spec_versions_json),  // {a, b} -> {order, a_valid, b_valid} YYYY-MM-DD.N ordering
+    ("flows", "parse_host_list", crate::flows::parse_host_list_json),  // {text} -> {valid, version, hosts} a signed host list's text
+    ("flows", "verify_signature", crate::flows::verify_signature_json),  // {payload_b64, signature, public_key} -> {valid} the owner's Ed25519 signature
+    ("flows", "public_key", crate::flows::public_key_json),  // {text} -> {key_b64 | null} a signing.pub text
+    ("flows", "usable_login_spec", crate::flows::usable_login_spec_json),  // {format, reader_format, vars, flows, allowed_hosts, served} -> {usable, spec_version} (SPEC.md 'A usable sign-in spec')
+    ("selling", "sellable", crate::selling::sellable_json),  // {checks: [{record, qty}]} -> [{reason, sellable_record}] what may be sold
+    ("selling", "parse_price", crate::selling::pricing::parse_price_json),  // {text, max} -> {cents | null} a typed price, total or rate per mg in whole cents, half up, refused over its cap
+    ("selling", "price_cart", crate::selling::cart::price_cart_json),  // {mode, lines, total, per_mg, tax, tax_percent, agreement} -> {each, line_errors, error} a cart priced as a whole, per unit in whole cents
+    ("selling", "line_price", crate::selling::cart::line_price_json),  // {mode, text, mg} -> {cents, error} one line priced on its own, within the $10,000 unit cap
+    ("selling", "group_of", crate::selling::pricing::group_of_json),  // {product_type} -> {group} A (edibles and extracts) or B
+    ("selling", "share_total", crate::selling::pricing::share_total_json),  // {total_cents, weights} -> {parts} a total shared by weight: parts rounded down, the cents left to the largest remainders
+    ("selling", "per_mg_price", crate::selling::pricing::per_mg_price_json),  // {rate_cents, mg} -> {cents} rate x mg, half up to the cent
+    ("selling", "with_tax", crate::selling::pricing::with_tax_json),  // {cents, percent} -> {cents} cents x (100 + percent) / 100, half up to the cent
+    ("selling", "money", crate::selling::pricing::money_json),  // {cents} -> {text} '$1,234.56'
+    ("selling", "allocate", crate::selling::cart::allocate_json),  // {lots, qty} -> {order, positions, takes, take_positions} which lot a unit is drawn from: lab lots first, earliest expiry, fewest units, lowest id
+    ("selling", "build_sale", crate::selling::sale::build_sale_json),  // {item, price_cents, sale_date, dose, qty} -> {record, refusal} the record CreateSalesRecords is sent, the state's values copied unchanged
+    ("selling", "allocate_sale", crate::selling::sale::allocate_sale_json),  // {lines, lots} -> {draws, short} one draw across a sale's lines
+    ("selling", "check_sale", crate::selling::sale::check_sale_json),  // {lines, fresh, center, sent?, cap?} -> {refusal} the check on the state's records just before sending
+    ("selling", "parse_sale_date", crate::selling::sale::parse_sale_date_json),  // {text, today} -> {date, error} a typed sale date
+    ("selling", "check_sale_date", crate::selling::sale::check_sale_date_json),  // {date, today} -> {date, error} future or more than 365 days back
+    ("selling", "today", crate::selling::sale::today_json),  // {now} -> {date} the Pacific date of now
+    ("selling", "pacific_midnight", crate::selling::sale::pacific_midnight_json),  // {date} -> {utc} Pacific midnight as UTC, by the 2007 US daylight-saving rule
+    ("selling", "review_sale_date", crate::selling::sale::review_sale_date_json),  // {text} -> {date} a failed sale's own date of sale
+    ("selling", "sale_outcome", crate::selling::sale::sale_outcome_json),  // {event, sent} -> {outcome, sale_number} how a sale's reply ends: recorded, not sent or uncertain
+    ("selling", "sale_proof", crate::selling::sale::sale_proof_json),  // {reply, sent} -> {sale_number} what a reply already read proves
+    ("selling", "review_each", crate::selling::sale::review_each_json),  // {cost, qty} -> {cents} a reviewed sale's price each: the total in cents / qty, half up
+    ("selling", "expiry", crate::selling::sale::expiry_json),  // {expires, today, fresh_months} -> {expired, words, hue} expired from the day after the date
+    ("selling", "parse_state_date", crate::selling::sale::parse_state_date_json),  // {text} -> {date} a state-site date as ISO
+    ("dose", "unit_mg", crate::dose::unit_mg_json),  // {units: [{record, tpe}]} -> [{tpe_per_g, tpe_mg}] a unit's mg TPE: weightPerUnit x (the lot's TPE, else the state's analyteWeight), rounded up to a whole mg
+    ("dose", "ceil_mg", crate::dose::ceil_mg_json),  // {xs} -> [int | null] an mg figure rounded up to a whole mg, forgiving only float noise of a billionth of a mg
+    ("dose", "sale_limits", crate::dose::sale_limits_json),  // {sales: [{lines}]} -> [{psilocybin_mg, allowed, error, session_minutes, session_minutes_initial}] a sale's raw psilocybin (weightPerUnit x analyteWeight x units, exact), the 50 mg cap and the session length
+    ("selling", "cart_total", crate::selling::cart::cart_total_json),  // {lines: [{qty, price_cents, group}], sales} -> {line_totals, total, group_totals, units, all_total, all_units} a cart's totals in whole cents, exact, and n sales of it
+    ("dose", "highest_lot", crate::dose::highest_lot_json),  // {lots: [{weightPerUnit, analyteWeight}]} -> {index} the lot a line its lots can't cover is counted on: a figure that can't be used, then unknown potency, then the largest weightPerUnit x analyteWeight
+    ("selling", "sale_date_bounds", crate::selling::sale::sale_date_bounds_json),  // {today} -> {earliest, latest} the days a sale may be dated: today back to 365 days before it
+    ("stock", "classify", crate::stock::classify_json),  // {rows, mg_mode} -> {rows: [{type, word, edible, size_key, mg_per_unit, has_units, type_mg}], type_words} how the stock rules read each row
+    ("stock", "record_types", crate::stock::record_types_json),  // {records} -> {types: [code | null]} each state record's kind, as Stock.package_code reads a record
+    ("stock", "type_words", crate::stock::type_words_json),  // {codes} -> {words} the word each kind code's pies show
+    ("names", "parse", crate::names::parse_json),  // {items: [{text, kind, license}], aliases, formats} -> [{status, strain_raw, strain, dose, dose_text, code, expiry, label, note}] a product's or batch/lot's name read into fields (ok, partial or unparsed, and why)
+    ("names", "strains", crate::names::strains_json),  // {texts, aliases} -> [{key, spelled, clean, canonical}] a strain's key, its spelling fixed, its safe form and the name it is shown as
+    ("names", "code_of", crate::names::code_of_json),  // {items: [{description, coa_code}]} -> [code] a product's type code: the one after TPE in its name, else the certificate's, else a word in the name
+    ("names", "type_code", crate::names::type_code_json),  // {items: [{subtype, product_type}]} -> [code] a certificate subtype's type code, HG for a homogenized product without one
+    ("records", "dry_grams", crate::records::dry_grams_json),  // {values} -> [grams] a dry weight as every record rule reads it: a number, or text that is a plain number; anything else 0 g
+    ("records", "licenses_of_type", crate::contracts::licenses_of_type_json),  // {licenses, license_type} -> [{state_id, name, license}] the GetApplicableLicenses entries of one license type (ServiceCenter or Manufacturer)
+    ("names", "name_dose", crate::label::name_dose_json),  // {name} -> {dose: text | null} the first <n> mg in a product's name as written, read as the label reads a dose from a name
 ];

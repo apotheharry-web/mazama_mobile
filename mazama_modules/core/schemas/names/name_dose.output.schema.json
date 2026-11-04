@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "names.name_dose output",
+  "description": "The first '<n> mg' in the name, n as the name writes it (1 to 4 digits, up to 2 decimals), found as the label finds a dose in a name; null when the name has none.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "dose"
+  ],
+  "properties": {
+    "dose": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[0-9]{1,4}(\\.[0-9]{1,2})?$"
+    }
+  }
+}

@@ -1,7 +1,7 @@
-// SL-R13: the question a sign-in spec's `await_input` step asks the worker (an MFA code the state sent, say), shown by
+// The question a sign-in spec's `await_input` step asks the worker (an MFA code the state sent, say), shown by
 // SignInPage (main.dart) as the `ask` it hands runFlow. Continue, or the keyboard's "done", answers the text typed
 // without leading or trailing spaces and line breaks (a code pasted from a text or an email often brings one), and does
-// nothing while that is empty: a code that hasn't arrived yet is not a cancelled sign-in (final review Important 1).
+// nothing while that is empty: a code that hasn't arrived yet is not a cancelled sign-in.
 // Cancel, a tap outside the dialog or the back button answer null, which runFlow turns into reason `cancelled` before
 // anything more is sent. Never shown during renew: renew runs with nobody there to ask.
 import 'package:flutter/material.dart';

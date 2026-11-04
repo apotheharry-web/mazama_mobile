@@ -1,4 +1,4 @@
-// How the phone words a failed /p/ request, the same way for every route (SM-23). Every /p/ error reply from
+// How the phone words a failed /p/ request, the same way for every route. Every /p/ error reply from
 // mazama_sales is {"detail": "..."} (../mazama_modules/api/schemas/error.schema.json, web/__init__.py show_error);
 // two statuses get their own words because what the worker should do about them is different:
 //   401 - the server refused this build's app key: retrying never helps, the app has to be updated.
@@ -7,7 +7,7 @@
 // And whether a failure means Mazama's server couldn't be reached at all, one rule for every client (the pages then
 // show the copy kept on the phone, sync/server_read.dart, or ask the worker to try again later): no connection, no
 // answer in time, or a 5xx (the server, or the proxy in front of it, is down or broken). A 4xx is the server's own
-// answer (a bad app key, an unknown center, a refused value, a rate limit) and is shown as an error, as before.
+// answer (a bad app key, an unknown center, a refused value, a rate limit) and is shown as an error.
 import 'dart:async' show TimeoutException;
 import 'dart:convert';
 import 'dart:io' show SocketException;
@@ -37,7 +37,7 @@ String describeServerError(int status, String body) {
 }
 
 /// Whether a reply with [status] means "not now" rather than an answer: 429 (this phone's per-minute budget, or the
-/// server busy) or 408 (the server gave up reading the request's body, 30 s, server-hardening review C1). Nothing was
+/// server busy) or 408 (the server gave up reading the request's body, 30 s). Nothing was
 /// taken either way; the same request may be sent again after a wait.
 bool isNotNowStatus(int? status) => status == 429 || status == 408;
 
@@ -52,6 +52,25 @@ abstract interface class ServerRequestError implements Exception {
 
   /// True when Mazama's server couldn't be reached: no connection, no answer in time, or a 5xx.
   bool get unreachable;
+}
+
+/// The one shape of a client's [ServerRequestError]: each client keeps a class of its own (`SheetsError`, `ParError`,
+/// ...) as a one-line subclass, so a caller can still tell whose request failed. Its constructor is the error factory
+/// server_request.dart takes (`SheetsError.new`).
+class ServerFailure implements ServerRequestError {
+  @override
+  final String message;
+
+  @override
+  final bool unreachable;
+
+  /// The server's HTTP status when it answered, null when it couldn't be reached (or nothing was sent).
+  final int? status;
+
+  ServerFailure(this.message, {this.status, this.unreachable = false});
+
+  @override
+  String toString() => message;
 }
 
 /// Whether [error] means Mazama's server couldn't be reached (see this file's comment). A client's own error says so

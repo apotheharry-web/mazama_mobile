@@ -12,14 +12,10 @@
 // PUBLIC and keyed by stateId, no per-worker login, for the same reason as packages_client.dart/
 // label_client.dart: no worker ever signs in to this server, only to the state system. It still sends the
 // whole-app shared secret every /p/ call sends (app_api_key.dart).
-import 'dart:convert';
-
 import 'package:http/http.dart' as http;
 
 import 'api_contract.g.dart';
-import 'app_api_key.dart';
-import 'server_error.dart';
-import 'server_link_client.dart' show serverClient;
+import 'server_request.dart';
 
 class ScanMatchError implements Exception {
   final String message;
@@ -103,48 +99,35 @@ Future<ScanMatchResult> scanMatch(
   bool typed = false,
   String baseUrl = apiBaseUrl,
   http.Client? client,
-}) async {
-  final c = client ?? serverClient();
-  final shouldClose = client == null;
-  try {
-    final uri = Uri.parse('$baseUrl${scanMatchPath(stateId)}');
-    http.Response resp;
-    try {
-      resp = await c.post(uri, headers: {...appApiKeyHeaders, 'Content-Type': 'application/json'},
-                         // The server reads only the first scanMatchMaxLines lines, scanMatchMaxLineChars characters
-                         // of each (routes.yaml): send no more than that.
-                         body: jsonEncode({
-                           'lines': [
-                             for (final l in lines.take(scanMatchMaxLines))
-                               l.length > scanMatchMaxLineChars ? l.substring(0, scanMatchMaxLineChars) : l
-                           ],
-                           'typed': typed,
-                         }));
-    } catch (ex) {
-      throw ScanMatchError('cannot reach ${uri.host}: ${ex.runtimeType}');
-    }
-    if (resp.statusCode != 200) {
-      throw ScanMatchError(describeServerError(resp.statusCode, resp.body), status: resp.statusCode);
-    }
-    final Object? body;
-    try {
-      body = jsonDecode(resp.body);
-    } on FormatException {
-      throw ScanMatchError('the server did not answer with JSON');   // a proxy's error page, say (SM-22)
-    }
-    if (body is! Map<String, Object?>) throw ScanMatchError('the server sent back something unexpected.');
-    final matches = (body['matches'] as List? ?? [])
-        .whereType<Map>()
-        .map((m) => ScanMatch.fromJson(Map<String, Object?>.from(m)))
-        .whereType<ScanMatch>()
-        .toList();
-    final guesses = (body['guesses'] as List? ?? [])
-        .whereType<Map>()
-        .map((g) => ScanGuess.fromJson(Map<String, Object?>.from(g)))
-        .whereType<ScanGuess>()
-        .toList();
-    return ScanMatchResult(matches: matches, guesses: guesses);
-  } finally {
-    if (shouldClose) c.close();
-  }
-}
+}) =>
+    serverRequest('$baseUrl${scanMatchPath(stateId)}',
+        method: 'POST',
+        // The server reads only the first scanMatchMaxLines lines, scanMatchMaxLineChars characters of each
+        // (routes.yaml): send no more than that.
+        json: {
+          'lines': [
+            for (final l in lines.take(scanMatchMaxLines))
+              l.length > scanMatchMaxLineChars ? l.substring(0, scanMatchMaxLineChars) : l
+          ],
+          'typed': typed,
+        },
+        error: _scanMatchError,
+        client: client, read: (resp) {
+      final body = serverJson(resp, _scanMatchError); // not JSON: a proxy's error page, say
+      if (body is! Map<String, Object?>) throw ScanMatchError('the server sent back something unexpected.');
+      final matches = (body['matches'] as List? ?? [])
+          .whereType<Map>()
+          .map((m) => ScanMatch.fromJson(Map<String, Object?>.from(m)))
+          .whereType<ScanMatch>()
+          .toList();
+      final guesses = (body['guesses'] as List? ?? [])
+          .whereType<Map>()
+          .map((g) => ScanGuess.fromJson(Map<String, Object?>.from(g)))
+          .whereType<ScanGuess>()
+          .toList();
+      return ScanMatchResult(matches: matches, guesses: guesses);
+    });
+
+// A ScanMatchError keeps only the status (none when the server couldn't be reached: serverUnavailable).
+ScanMatchError _scanMatchError(String message, {int? status, bool unreachable = false}) =>
+    ScanMatchError(message, status: status);

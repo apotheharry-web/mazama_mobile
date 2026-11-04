@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "names.product_name input",
-  "description": "specs/core row 12 (FM-11): the name a finished product is given from its strain and subtype.",
+  "description": "The name a finished product is given from its strain and subtype.",
   "type": "object",
   "required": [
     "strain",

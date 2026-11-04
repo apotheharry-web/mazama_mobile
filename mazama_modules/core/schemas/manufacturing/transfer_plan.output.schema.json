@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "manufacturing.transfer_plan output",
+  "description": "The packages to split, the planned transfers (null unless asked) and the manifest's fields (null unless given what it is written from).",
+  "type": "object",
+  "required": [
+    "splits",
+    "planned",
+    "manifest"
+  ],
+  "properties": {
+    "splits": {
+      "type": "array",
+      "description": "The packages only partly moved: split first into a record of qty units.",
+      "items": {
+        "type": "object",
+        "required": [
+          "record_id",
+          "qty"
+        ],
+        "properties": {
+          "record_id": {
+            "type": "integer"
+          },
+          "qty": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "planned": {
+      "oneOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "productId",
+              "productType",
+              "description",
+              "quantity",
+              "weightEach",
+              "analyteEach",
+              "productWeight",
+              "packagedProductId"
+            ],
+            "properties": {
+              "productWeight": {
+                "type": "number",
+                "description": "round(weightPerUnit x quantity, 2)"
+              }
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "manifest": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "id",
+            "originatingLicense",
+            "destinationLicense",
+            "originatingAddress",
+            "destinationAddress",
+            "salePrice",
+            "testing",
+            "dateOfDeparture",
+            "estimatedDepartureTime",
+            "generalRoute",
+            "dateOfArrival",
+            "estimatedArrivalTime",
+            "driverName",
+            "driverPhoneNumber",
+            "driverWorkerPermit",
+            "driverSignature",
+            "representativeName",
+            "representativePhoneNumber",
+            "representativeWorkerPermit",
+            "representativeSignature",
+            "vehicleMake",
+            "vehicleModel",
+            "vehiclePlateNumber",
+            "overnightStop",
+            "overnightAddress",
+            "estimatedOvernightDuration",
+            "overnightStopPurpose"
+          ],
+          "description": "The planned manifest (the state's dates are Pacific midnights as UTC; salePrice = price_cents / 100).",
+          "properties": {
+            "salePrice": {
+              "type": "number"
+            },
+            "dateOfDeparture": {
+              "type": "string"
+            },
+            "dateOfArrival": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  }
+}

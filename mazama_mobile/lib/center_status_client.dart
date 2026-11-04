@@ -1,18 +1,16 @@
-// What the server says about a service center before the cart opens (SM-16): whether it is configured there, and
+// What the server says about a service center before the cart opens: whether it is configured there, and
 // the cart's live settings - the tax a cart can add, the manufacturer agreement split, how many units one line may
-// hold and how long a cart lives - which the server's nix sets (/p/center-status/{state_id}, C4 in
+// hold and how long a cart lives - which the server's nix sets (/p/center-status/{state_id} in
 // mazama_modules/api/routes.yaml). The defaults both sides start from are mazama_modules/selling/rules.yaml ("cart");
 // [CartSettings.fallback] is this app's copy of them, held to the vendored rules by test/center_status_client_test.dart:
 // what the cart shows when neither the server nor a kept answer can say, without adding tax or splitting a total on
-// them (PRICE-9, [fetchCartSettings]); an older server that sends no cart object gets them too.
+// them ([fetchCartSettings]); an older server that sends no cart object gets them too.
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
 import 'api_contract.g.dart';
-import 'app_api_key.dart';
-import 'server_error.dart';
-import 'server_link_client.dart' show serverClient;
+import 'server_request.dart';
 import 'sync/sync_datasets.dart' show Dataset, Datasets, centerStatusFromBody, sourceServer;
 
 class CenterStatusError implements Exception {
@@ -88,8 +86,8 @@ class CenterStatus {
   final bool configured;
   final CartSettings cart;
 
-  /// SP-R8: the manufacturer license ids that count as Mazama's (lower-case, sorted), so the stock page can tell
-  /// Mazama's product apart in state-only data when the server can't be reached (SP-R13). Empty from an older server.
+  /// The manufacturer license ids that count as Mazama's (lower-case, sorted), so the stock page can tell
+  /// Mazama's product apart in state-only data when the server can't be reached. Empty from an older server.
   final List<String> mazamaLicenses;
 
   const CenterStatus({required this.configured, required this.cart, this.mazamaLicenses = const []});
@@ -112,32 +110,18 @@ List<String> _licenses(Object? json) {
 
 /// GETs /p/center-status/{stateId}. Throws [CenterStatusError] on a network problem, a non-200 reply or a reply
 /// that isn't the expected object; a caller that only needs the cart settings uses [CartSettings.fallback] then.
-Future<CenterStatus> fetchCenterStatus(int stateId, {String baseUrl = apiBaseUrl, http.Client? client}) async {
-  final c = client ?? serverClient();
-  final shouldClose = client == null;
-  try {
-    final uri = Uri.parse('$baseUrl${centerStatusPath(stateId)}');
-    http.Response resp;
-    try {
-      resp = await c.get(uri, headers: appApiKeyHeaders);
-    } catch (ex) {
-      throw CenterStatusError('cannot reach ${uri.host}: ${ex.runtimeType}');
-    }
-    if (resp.statusCode != 200) throw CenterStatusError(describeServerError(resp.statusCode, resp.body));
-    Object? body;
-    try {
-      body = jsonDecode(resp.body);
-    } on FormatException {
-      throw CenterStatusError('the server did not answer with JSON');
-    }
-    if (body is! Map || body['configured'] is! bool) throw CenterStatusError('unexpected response shape');
-    return CenterStatus.fromJson(Map<String, Object?>.from(body));
-  } finally {
-    if (shouldClose) c.close();
-  }
-}
+Future<CenterStatus> fetchCenterStatus(int stateId, {String baseUrl = apiBaseUrl, http.Client? client}) =>
+    serverRequest('$baseUrl${centerStatusPath(stateId)}', error: _centerStatusError, client: client, read: (resp) {
+      final body = serverJson(resp, _centerStatusError);
+      if (body is! Map || body['configured'] is! bool) throw CenterStatusError('unexpected response shape');
+      return CenterStatus.fromJson(Map<String, Object?>.from(body));
+    });
 
-/// The cart settings for [stateId] - what CartPage uses (PRICE-9, specs/core row 6): the server's, kept in [datasets]
+// A CenterStatusError keeps only its words.
+CenterStatusError _centerStatusError(String message, {int? status, bool unreachable = false}) =>
+    CenterStatusError(message);
+
+/// The cart settings for [stateId] - what CartPage uses: the server's, kept in [datasets]
 /// as the sync engine's center_status (the same body its refresher keeps); when the server can't say, the last answer
 /// kept. With none kept (or no [datasets]) it throws [CenterStatusError]: the cart then shows the built-in
 /// [CartSettings.fallback] but adds no tax and splits no total on them.

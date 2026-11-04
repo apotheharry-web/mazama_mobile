@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "dose.highest_lot input",
+  "description": "A product's lots, with the figures the cap reads (a figure that isn't a number, e.g. the text 'NaN', can't be used).",
+  "type": "object",
+  "required": [
+    "lots"
+  ],
+  "properties": {
+    "lots": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "weightPerUnit": {},
+          "analyteWeight": {}
+        }
+      }
+    }
+  }
+}

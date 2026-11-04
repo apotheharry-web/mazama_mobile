@@ -1,4 +1,4 @@
-// The sign-in page's link to this app's published source (specs/public-app PA-R6): a worker about to type their state
+// The sign-in page's link to this app's published source: a worker about to type their state
 // password can read, or have someone check, exactly where it goes (SIGN-IN-SECURITY.md in that repository). Opens
 // outside the app, in the phone's browser; it carries nothing typed on the page.
 import 'package:flutter/material.dart';
@@ -47,7 +47,7 @@ class OpenSourceLink extends StatelessWidget {
   }
 }
 
-/// The app's privacy policy, published with its source (specs/public-app PA-R8).
+/// The app's privacy policy, published with its source.
 final privacyPolicyUrl = Uri.parse('https://github.com/apotheharry-web/mazama_mobile/blob/main/PRIVACY.md');
 
 const privacyPolicyLabel = 'Privacy policy';

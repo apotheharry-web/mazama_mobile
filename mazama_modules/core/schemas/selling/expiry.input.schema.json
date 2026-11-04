@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "selling.expiry input",
-  "description": "A package's expiry date (SM-18).",
+  "description": "A package's expiry date.",
   "type": "object",
   "required": [
     "expires",

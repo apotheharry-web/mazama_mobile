@@ -1,7 +1,7 @@
-// The one age line a page shows for what it shows (specs/phone-sync PS-R7, PS-D5): "Updated just now", "Updated 2 min
+// The one age line a page shows for what it shows: "Updated just now", "Updated 2 min
 // ago", "Updated 8:05" (today), "Updated Oct 28, 14:05" (before), from the datasets' fetched_at_ms, the oldest of them
 // when a page shows several. It is shown whether or not the server can be reached: it is not an outage notice (the
-// app-wide banner is the only one, README R87). A time in the future (the phone's clock moved back) reads as just now,
+// app-wide banner is the only one). A time in the future (the phone's clock moved back) reads as just now,
 // never as a negative age.
 import 'package:flutter/material.dart';
 
@@ -20,8 +20,7 @@ String updatedLine(DateTime fetchedAt, DateTime now) {
   return 'Updated ${_months[at.month - 1]} ${at.day}, $time';
 }
 
-/// [at] in the phone's own time, as the banner writes it (server_link.dart): "Oct 21, 2026 at 6:05 AM". (Moved here
-/// from server_offline.dart, specs/phone-sync Task 10.)
+/// [at] in the phone's own time, as the banner writes it (server_link.dart): "Oct 21, 2026 at 6:05 AM".
 String formatAsOf(DateTime at) {
   final t = at.toLocal();
   final hour = t.hour % 12 == 0 ? 12 : t.hour % 12;

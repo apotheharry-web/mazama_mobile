@@ -21,7 +21,7 @@ import java.io.File
 import java.security.MessageDigest
 import java.util.concurrent.Executors
 
-// specs/app-updates AU-R12, AU-R13: the channel `mazama/app_installer` (lib/app_installer.dart).
+// The channel `mazama/app_installer` (lib/app_installer.dart).
 //   installed                    the installed app's versionName, versionCode, the phone's API level, the SHA-256 of
 //                                each signing certificate, and whether "install unknown apps" is on for the app
 //   inspect {path}               the same for a downloaded APK, read by Android from the file before any installer
@@ -42,7 +42,7 @@ import java.util.concurrent.Executors
 class AppInstaller(private val activity: Activity) : MethodChannel.MethodCallHandler {
 
     companion object {
-        // one background thread for the process, whatever activities come and go (review N2)
+        // one background thread for the process, whatever activities come and go
         private val background = Executors.newSingleThreadExecutor()
     }
 
@@ -90,7 +90,7 @@ class AppInstaller(private val activity: Activity) : MethodChannel.MethodCallHan
         try {
             val value = work()
             main.post { result.success(value) }
-        } catch (e: Throwable) { // an Error too, so the Dart call never waits for ever (review N6)
+        } catch (e: Throwable) { // an Error too, so the Dart call never waits for ever
             val name = e.javaClass.simpleName
             main.post { result.error("failed", name, null) }
         }
@@ -158,7 +158,7 @@ class AppInstaller(private val activity: Activity) : MethodChannel.MethodCallHan
             ?: return mapOf("package" to "", "versionCode" to 0L, "versionName" to "", "signers" to emptyList<String>())
         var found = signers(info)
         if (found.isEmpty() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            // M3: some releases leave signingInfo empty for an archive; the older flag still reads its certificates
+            // Some releases leave signingInfo empty for an archive; the older flag still reads its certificates
             found = legacySigners(archiveInfo(path, signaturesFlag))
         }
         return mapOf(
@@ -280,7 +280,7 @@ class AppInstallReceiver : BroadcastReceiver() {
         val status = intent.getIntExtra(PackageInstaller.EXTRA_STATUS, PackageInstaller.STATUS_FAILURE)
         if (status == PackageInstaller.STATUS_SUCCESS) return
         if (status == PackageInstaller.STATUS_FAILURE_ABORTED) {
-            // the worker said no on Android's own screen (review N5): plain words, not Android's code
+            // the worker said no on Android's own screen: plain words, not Android's code
             AppInstallStatus.put("The update was not installed: it was cancelled on Android's screen. Tap Install to try again.")
             return
         }
@@ -293,7 +293,7 @@ class AppInstallReceiver : BroadcastReceiver() {
         } else {
             @Suppress("DEPRECATION") intent.getParcelableExtra(Intent.EXTRA_INTENT)
         }
-        // Android 10 and later send CONFIRM_INSTALL, Android 9 and older CONFIRM_PERMISSIONS (review N1); either way it
+        // Android 10 and later send CONFIRM_INSTALL, Android 9 and older CONFIRM_PERMISSIONS; either way it
         // must open a system app (the phone's own package installer), checked before it is started
         val confirmActions = setOf("android.content.pm.action.CONFIRM_INSTALL", "android.content.pm.action.CONFIRM_PERMISSIONS")
         if (confirm == null || confirm.action !in confirmActions || !opensSystemApp(context, confirm)) {

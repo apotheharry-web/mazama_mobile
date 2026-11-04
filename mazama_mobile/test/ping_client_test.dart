@@ -1,4 +1,4 @@
-// ping_client.dart: C15 GET /p/ping, the server tracker's probe (README R56).
+// ping_client.dart: GET /p/ping, the server tracker's probe.
 import 'dart:convert';
 import 'dart:io';
 

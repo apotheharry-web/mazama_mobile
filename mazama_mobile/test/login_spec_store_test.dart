@@ -1,4 +1,4 @@
-// SL-R9: the saved sign-in spec beside the bundled one (login_spec_store.dart). The newer valid one wins; a saved file
+// The saved sign-in spec beside the bundled one (login_spec_store.dart). The newer valid one wins; a saved file
 // that is corrupt, of a later format or names a host the app won't talk to never replaces the bundled one.
 import 'dart:convert';
 import 'dart:io';
@@ -182,7 +182,7 @@ void main() {
     expect(usableLoginSpec(example['yaml'] as String)?.specVersion, example['specVersion']);
   });
 
-  // Final review I2: the server's login_spec_source.usable gives every one of these answers too.
+  // The server's login_spec_source.usable gives every one of these answers too.
   final validity =
       jsonDecode(File('assets/shared/flows/contracts/login_spec_validity.json').readAsStringSync()) as Map<String, Object?>;
   final cases = (validity['cases'] as List).cast<Map<String, Object?>>();
@@ -192,14 +192,14 @@ void main() {
   });
   for (final c in cases) {
     test('shared validity vector: ${c['name']}', () {
-      // a case with "served" is asked in that served mode (SL-R19); one without, in none
+      // a case with "served" is asked in that served mode; one without, in none
       final served = c['served'] == null ? null : ServedAs.values.byName(c['served'] as String);
       expect(usableLoginSpec(c['yaml'] as String, served: served) != null, c['usable'] as bool,
           reason: c['why'] as String);
     });
   }
 
-  // review-core-row13 M4: a lone surrogate (YAML "\uD800") in a form key or value makes the spec unusable, as the
+  // A lone surrogate (YAML "\uD800") in a form key or value makes the spec unusable, as the
   // server's Python refuses it. Were it handed to the core as U+FFFD, two different keys could become one in the
   // core's view and a hidden {{password}} could pass its checks.
   group('a lone surrogate in a form', () {

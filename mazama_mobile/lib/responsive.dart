@@ -4,7 +4,7 @@
 // screen, lots of unused horizontal space). This wraps a page's body in a column capped at a sane reading
 // width on anything wider, and is a complete no-op everywhere narrower - every phone, and an iPad in portrait
 // (744-834pt, depending on model, still under the cap) - so this never changes how the app renders on the
-// devices it was originally built and tested against.
+// phones it is laid out for.
 //
 // maxWidth is chosen specifically to sit above Flutter's default widget-test surface size (800x600 logical
 // pixels) so none of this project's existing widget tests ever cross the threshold and start rendering a

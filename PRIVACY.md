@@ -99,7 +99,7 @@ reach Mazama's server. Uninstalling the app deletes everything it stored on the 
   but Google's library may send Google its own usage statistics, under Google's terms. On iPhone, Apple's on-device
   Vision framework is used.
 - Taking the label photo on Android uses your phone's camera app.
-- The in-app web pages (the state's sign-in page, and Mazama's inventory portal) use your phone's own web engine,
+- The in-app web page (the state's sign-in page) uses your phone's own web engine,
   which may follow your phone's settings for things like safe-browsing checks.
 - Links you choose to open (Mazama's website, Signal, a product sheet, this repository) open in your browser or
   those apps, under their own policies.

@@ -5,15 +5,11 @@
 // state-system session wouldn't already show on the label itself"). The app never authenticates as a worker
 // with the server - it only ever sends the whole-app shared secret every /p/ call sends (see
 // app_api_key.dart), never a per-worker credential.
-import 'dart:convert';
-
 import 'package:http/http.dart' as http;
 
 import 'api_contract.g.dart';
-import 'app_api_key.dart';
 import 'mazama_core.dart';
-import 'server_error.dart';
-import 'server_link_client.dart' show serverClient;
+import 'server_request.dart';
 import 'stock_summary.dart';
 
 class PackagesError implements Exception {
@@ -26,7 +22,7 @@ class PackagesError implements Exception {
   String toString() => message;
 }
 
-/// Which figure a package's [Package.tpeMg] is (SM-D31): its mg TPE (the server's, or one kept on the phone, from the
+/// Which figure a package's [Package.tpeMg] is: its mg TPE (the server's, or one kept on the phone, from the
 /// server or from the phone's own mazama_core reading of the lab report), or - for a package read from the state system
 /// with neither - only the state's psilocybin (weightPerUnit x analyteWeight, rounded up), which the screens must call
 /// "mg psilocybin", never "mg TPE".
@@ -35,8 +31,8 @@ enum MgFigure { tpe, psilocybin }
 /// How a screen names [f]: "mg TPE" or "mg psilocybin".
 String mgFigureLabel(MgFigure f) => f == MgFigure.psilocybin ? 'mg psilocybin' : 'mg TPE';
 
-/// Where the figures filled into a state-system read came from (enrichment_store.dart): Mazama's server's last answer
-/// for the package, or this phone's own mazama_core reading of the package's lab report (phone_label.dart, SM-D31).
+/// Where the figures filled into a state-system read came from (sync/enrichment.dart): Mazama's server's last answer
+/// for the package, or this phone's own mazama_core reading of the package's lab report (phone_label.dart).
 enum EnrichmentSource { server, phone }
 
 /// One row of /p/packages/{state_id}: a packaged product this service center can sell, matched by its state
@@ -66,7 +62,7 @@ class Package {
   final int quantity;
 
   /// The quantity exactly as the server or the state sent it (a number, not always whole), as the server's stock
-  /// pages count it (SP-D9); [quantity] when it wasn't given.
+  /// pages count it; [quantity] when it wasn't given.
   num get exactQuantity => _exactQuantity ?? quantity;
   final num? _exactQuantity;
 
@@ -91,60 +87,60 @@ class Package {
   final bool labelAvailable;
 
   /// This record's expiry date (/p/packages' `expires`: the date in its name, else its certificate's date + shelf
-  /// life), or null when not known - a reply from an older server, or a package read straight from the state system.
-  /// A sale draws from the record that expires first (SM-D29, [drawOrder]).
+  /// life), or null when not known - a reply without it, or a package read straight from the state system.
+  /// A sale draws from the record that expires first ([drawOrder]).
   final DateTime? expires;
 
-  /// SP-R7 (the stock page): made by Mazama as the server decides it (Stock.made_by_us), expired as of the server's
-  /// today (SM-18), the exact mg TPE of one unit the charts use (null when unknown; tpeMg is the rounded-up dose),
-  /// and the product's name, which carries its serving size. False / null / '' from an older server.
+  /// Made by Mazama as the server decides it (Stock.made_by_us), expired as of the server's
+  /// today, the exact mg TPE of one unit the charts use (null when unknown; tpeMg is the rounded-up dose),
+  /// and the product's name, which carries its serving size. False / null / '' when the server doesn't send them.
   final bool mazama;
   final bool expired;
   final double? unitMgTpe;
   final String description;
 
   /// The kind code the server's charts read for it (FD, DH, HG, CH, GM, HN, ...; '' unknown): what makes it an edible,
-  /// counted under its product (specs/edibles ED-R2). null from an older server: the stock rules read it from the name.
+  /// counted under its product. null when the server doesn't send it: the stock rules read it from the name.
   final String? type;
 
   /// Set only on a package read straight from the state system (lib/sync/center_stock.dart) whose strain, tpeMg
-  /// and expires were filled in from what Mazama's server last sent for this very package (enrichment_store.dart):
+  /// and expires were filled in from what Mazama's server last sent for this very package (sync/enrichment.dart):
   /// when that server answer was received. Null everywhere else, including on every row the server itself sends.
   final DateTime? enrichedAt;
 
-  /// Who [enrichedAt]'s figures came from: Mazama's server, or this phone's reading of the lab report (SM-D31). Null
+  /// Who [enrichedAt]'s figures came from: Mazama's server, or this phone's reading of the lab report. Null
   /// when [enrichedAt] is.
   final EnrichmentSource? enrichedBy;
 
   /// True only on a package read straight from the state system that could NOT be filled in from figures kept on the
-  /// phone (enrichment_store.dart): its strain is only what its name says and its tpeMg is only the state's psilocybin
+  /// phone (sync/enrichment.dart): its strain is only what its name says and its tpeMg is only the state's psilocybin
   /// (state_packages_client.dart), which the screens call mg psilocybin ([mgFigure]). False everywhere else.
   final bool stateEstimate;
 
-  /// Which figure [tpeMg] is (SM-D31): only the state's psilocybin for a [stateEstimate] package, its mg TPE otherwise.
+  /// Which figure [tpeMg] is: only the state's psilocybin for a [stateEstimate] package, its mg TPE otherwise.
   MgFigure get mgFigure => stateEstimate ? MgFigure.psilocybin : MgFigure.tpe;
 
-  /// specs/phone-sync PS-R5: true only on a record only the state listed, in a read where Mazama's server answered and
+  /// True only on a record only the state listed, in a read where Mazama's server answered and
   /// joined another record of the same product (sync/stock_merge.dart). Its [tpeMg] is only the state's psilocybin, but
-  /// it is not a [stateEstimate]: its product is shown, priced and capped by its first lot's figure as before, and
-  /// only notes these units and their own figure ([PkprGroup.stateOnlyNote], the owner's choice of 2026-10-30).
+  /// it is not a [stateEstimate]: its product is shown and priced by its first lot's figure (its cap counts the lots a
+  /// sale draws, each its own figures), and only notes these units and their own figure ([PkprGroup.stateOnlyNote]).
   final bool stateOnly;
 
-  /// README R64: mazama_core's LabelInput for this record as the server builds it for its own labels (/p/packages'
+  /// Mazama_core's LabelInput for this record as the server builds it for its own labels (/p/packages'
   /// `labelInput`), without `today`. phone_label.dart draws the label from it with no call to the state system. Null when
-  /// the server has no certificate for the lot, for an older server, and for a record only the state system sent.
+  /// the server has no certificate for the lot, when the server doesn't send it, and for a record only the state system sent.
   final Map<String, Object?>? labelInput;
 
-  /// DOSE-8 (specs/core row 5, I10): false only on a row /p/packages marks unconfirmed - its figures are only an approved
+  /// False only on a row /p/packages marks unconfirmed - its figures are only an approved
   /// phone's upload, which the server's own sync hasn't seen. Before a sale the phone reads every lot the sale draws from
   /// the state again whenever any of them is unconfirmed, whatever the age of its stock. True everywhere else (a state
-  /// read, an older server that doesn't send it).
+  /// read, a reply without it).
   final bool confirmed;
 
-  /// SALE-12 (specs/core row 7): what a sale record copies of this record (productGuid, productType, id, weightPerUnit,
+  /// What a sale record copies of this record (productGuid, productType, id, weightPerUnit,
   /// analyteWeight), exactly as it was received - a whole-number weight stays 1, never 1.0, and a value that is missing
-  /// stays missing, so the core refuses the sale (SALE-13) instead of sending "" or 0. Kept through CartStore ('sale');
-  /// a draft an older build saved has none, and its typed values are used ([toSaleItem]).
+  /// stays missing, so the core refuses the sale instead of sending "" or 0. Kept through CartStore ('sale');
+  /// a saved draft without it has its typed values used instead ([toSaleItem]).
   final Map<String, Object?>? saleValues;
 
   Package({
@@ -206,7 +202,7 @@ class Package {
         saleValues: j['sale'] is Map ? Map<String, Object?>.from(j['sale'] as Map) : saleValuesOf(j),
       );
 
-  /// This package as the stock rules see it (stock_summary.dart, SP-R2): the server's own figures.
+  /// This package as the stock rules see it (stock_summary.dart): the server's own figures.
   StockRow toStockRow() => StockRow(
         productGuid: productGuid,
         id: id,
@@ -256,7 +252,7 @@ class Package {
         'unitMgTpe': unitMgTpe,
         'description': description,
         if (type != null) 'type': type,
-        // Provenance of a state-only read (enrichment_store.dart), kept so a cached copy still says where its strain
+        // Provenance of a state-only read (sync/enrichment.dart), kept so a cached copy still says where its strain
         // and TPE came from. Never sent by the server; written only when set.
         if (enrichedAt != null) 'enrichedAtMs': enrichedAt!.millisecondsSinceEpoch,
         if (enrichedAt != null && enrichedBy == EnrichmentSource.phone) 'enrichedBy': 'phone',
@@ -268,7 +264,7 @@ class Package {
       };
 }
 
-/// What a sale record copies of a state record, as received (SALE-12): only the keys it has.
+/// What a sale record copies of a state record, as received: only the keys it has.
 const saleKeys = ['productGuid', 'productType', 'id', 'weightPerUnit', 'analyteWeight'];
 
 /// [r]'s [saleKeys], exactly as they are in it.
@@ -277,37 +273,20 @@ Map<String, Object?> saleValuesOf(Map<Object?, Object?> r) => {
         if (r.containsKey(k)) k: r[k],
     };
 
-/// GETs [apiBaseUrl]/p/packages/{stateId} (C1, routes.yaml) and returns this service center's current
+/// GETs [apiBaseUrl]/p/packages/{stateId} (routes.yaml) and returns this service center's current
 /// packaged products. Throws PackagesError on anything but a clean 200 JSON list - including a 404 (no such
 /// service center), which is the server's answer for a wrong/unconfigured stateId, not a network problem.
-Future<List<Package>> fetchPackages(int stateId, {String baseUrl = apiBaseUrl, http.Client? client}) async {
-  final c = client ?? serverClient();
-  final shouldClose = client == null;
-  try {
-    final uri = Uri.parse('$baseUrl${packagesPath(stateId)}');
-    http.Response resp;
-    try {
-      resp = await c.get(uri, headers: appApiKeyHeaders);
-    } catch (ex) {
-      throw PackagesError('cannot reach ${uri.host}: ${ex.runtimeType}');
-    }
-    if (resp.statusCode == 404) {
-      throw PackagesError('no service center with id $stateId', status: 404);
-    }
-    if (resp.statusCode != 200) {
-      throw PackagesError(describeServerError(resp.statusCode, resp.body), status: resp.statusCode);
-    }
-    List<Object?> list;
-    try {
-      list = jsonDecode(resp.body) as List<Object?>;
-    } on FormatException {
-      throw PackagesError('the server did not answer with JSON');
-    }
-    return list.map((e) => Package.fromJson(e as Map<String, Object?>)).toList();
-  } finally {
-    if (shouldClose) c.close();
-  }
-}
+Future<List<Package>> fetchPackages(int stateId, {String baseUrl = apiBaseUrl, http.Client? client}) =>
+    serverRequest('$baseUrl${packagesPath(stateId)}',
+        error: _packagesError, ok: (status) => status == 200 || status == 404, client: client, read: (resp) {
+      if (resp.statusCode == 404) throw PackagesError('no service center with id $stateId', status: 404);
+      final list = serverJson(resp, _packagesError) as List<Object?>;
+      return list.map((e) => Package.fromJson(e as Map<String, Object?>)).toList();
+    });
+
+// A PackagesError keeps only the status: it says nothing of its own about the server being unreachable.
+PackagesError _packagesError(String message, {int? status, bool unreachable = false}) =>
+    PackagesError(message, status: status);
 
 /// One PKPR as a worker should ever see it. /p/packages/{stateId} sends one row per underlying state-system
 /// lot/transfer (see mazama_sales' public_packages docstring - its own "shared id" tag on /c/{slug}/inventory
@@ -327,11 +306,11 @@ DateTime? _dateOrNull(Object? v) {
 String _dayText(DateTime d) =>
     '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
-/// The records ("lots") of one product in the order a sale draws units from them (SM-17, SM-D29): a lot only the state
+/// The records ("lots") of one product in the order a sale draws units from them: a lot only the state
 /// lists ([Package.stateOnly], which the server's rows never are) after every lot with a server figure, so a product's
-/// figure ([PkprGroup.tpeMg]), price and dose cap are always its lab lot's (specs/phone-sync PS-R5, "lab lot first");
+/// figure ([PkprGroup.tpeMg]), price and dose cap are always its lab lot's ("lab lot first");
 /// then the earliest [Package.expires], a lot with no known date after every dated one, the fewer units, the lower id.
-/// The shared core's rule (mazama_core::selling::cart::allocate, specs/core row 6), the server's selling.draw_order
+/// The shared core's rule (mazama_core::selling::cart::allocate), the server's selling.draw_order
 /// too; held to assets/shared/selling/vectors/allocate.json and pricing_cases.json (test/lot_draw_vectors_test.dart).
 /// Throws StateError when the core can't order them (it can't be sold from a list it couldn't order).
 List<Package> drawOrder(List<Package> lots, {CoreFunctions? core}) {
@@ -381,7 +360,7 @@ List<(Package, int)>? allocateLots(List<Package> lots, int qty, {CoreFunctions? 
 }
 
 class PkprGroup {
-  /// The product's records, in [drawOrder] (SM-D29); as given when the core couldn't order them ([drawRefused]).
+  /// The product's records, in [drawOrder]; as given when the core couldn't order them ([drawRefused]).
   final List<Package> lots;
 
   /// True when the shared core couldn't order this product's lots ([drawOrder] threw): the product is still listed, so
@@ -408,7 +387,7 @@ class PkprGroup {
   String get strain => lots.first.strain;
   int get tpeMg => lots.first.tpeMg;
 
-  /// README R64: the server's label input of the first record, in draw order, that has one (null when none has): what
+  /// The server's label input of the first record, in draw order, that has one (null when none has): what
   /// the phone draws this product's label from without its lab report.
   Map<String, Object?>? get labelInput {
     for (final l in lots) {
@@ -417,17 +396,18 @@ class PkprGroup {
     return null;
   }
 
-  /// Which figure [tpeMg] is (SM-D31): only the state's psilocybin when any lot's is (enrichment_store.dart's
+  /// Which figure [tpeMg] is: only the state's psilocybin when any lot's is (sync/enrichment.dart's
   /// applyEnrichment then leaves every lot of the product on the state's figures), mg TPE otherwise.
   MgFigure get mgFigure => lots.any((l) => l.mgFigure == MgFigure.psilocybin) ? MgFigure.psilocybin : MgFigure.tpe;
 
   /// "mg TPE" or "mg psilocybin" ([mgFigure]), for every screen that shows [tpeMg].
   String get mgLabel => mgFigureLabel(mgFigure);
 
-  /// specs/phone-sync PS-R5 (the owner, 2026-10-30): when some of this product's lots are known only by the state
+  /// When some of this product's lots are known only by the state
   /// ([Package.stateOnly]), how many units they hold and their own figure, the state's psilocybin - "includes 2 unit(s)
   /// known only by the state: 6 mg psilocybin each" ("5 or 6 mg" when they differ). Null when there are none. A note
-  /// only: [tpeMg], the price and the dose cap stay the first lot's, which is never one of these ([drawOrder]).
+  /// only: [tpeMg] and the price stay the first lot's, which is never one of these ([drawOrder]); the dose cap counts
+  /// whichever lots a sale draws, these included, each its own figures.
   String? get stateOnlyNote {
     final only = lots.where((l) => l.stateOnly).toList();
     if (only.isEmpty) return null;
@@ -446,7 +426,7 @@ class PkprGroup {
   bool get labelAvailable => lots.every((l) => l.labelAvailable);
 }
 
-/// Why a product whose lots the shared core couldn't order ([PkprGroup.drawRefused]) isn't sold (review M6).
+/// Why a product whose lots the shared core couldn't order ([PkprGroup.drawRefused]) isn't sold.
 String drawRefusedText(String productGuid) => "$productGuid can't be sold here: the shared core couldn't order its lots.";
 
 /// Groups a /p/packages/{stateId} response by productGuid - see PkprGroup's own comment for why. Every group

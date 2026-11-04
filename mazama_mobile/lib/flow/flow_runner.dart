@@ -10,9 +10,9 @@
 // `authorize` that later steps are expected to send back. Dart's package:http does nothing of the kind, so this
 // file carries its own small cookie jar (see _mergeSetCookies/_cookieHeader below), scoped to one runFlow call,
 // to match that behavior rather than silently dropping it. Unlike httpx's, this jar is not scoped by host: every
-// cookie it holds is sent on every request and redirect hop of the run (all of them on allowed hosts, SL-R8).
+// cookie it holds is sent on every request and redirect hop of the run (all of them on allowed hosts).
 //
-// Redirects (SL-R8): every request is sent with followRedirects off and the runner follows redirects itself, so
+// Redirects: every request is sent with followRedirects off and the runner follows redirects itself, so
 // each hop's URL is checked against the host allowlist before it is sent and each hop's Set-Cookie lands in the
 // jar. Only GET and HEAD are followed; the rules are redirectRules below, the twin of flowspec.py's _redirect_rules.
 import 'dart:async';
@@ -27,7 +27,7 @@ import 'flow_spec.dart';
 
 const defaultSecretKeys = {'password', 'email', 'access_token', 'refresh_token'};
 
-/// Where a request step failed (SM-12) - what a caller needs to tell "nothing was sent" from "it may have been",
+/// Where a request step failed - what a caller needs to tell "nothing was sent" from "it may have been",
 /// without reading the message. The same three values as flowspec.py's FlowError.stage.
 enum FlowStage {
   /// The connection never opened (host lookup failed, connection refused, network unreachable, TLS handshake
@@ -67,7 +67,7 @@ class FlowError implements Exception {
   final String? reason;
 
   /// True when an answer's status arrived but its body was cut off or didn't finish arriving in time ([FlowStage.response]
-  /// with [status] set): the status alone proves nothing about what the server did (SALE-16, specs/core row 7).
+  /// with [status] set): the status alone proves nothing about what the server did.
   final bool bodyIncomplete;
 
   FlowError(this.message, {this.stage, this.status, this.step, this.reason, this.bodyIncomplete = false});
@@ -75,7 +75,7 @@ class FlowError implements Exception {
   String toString() => message;
 }
 
-/// SM-D1: used when a spec has no `timeout_seconds` var - never "no timeout".
+/// Used when a spec has no `timeout_seconds` var - never "no timeout".
 const defaultRequestTimeout = Duration(seconds: 60);
 
 /// The per-request timeout: [ctx]'s `timeout_seconds` (spec var or input; fractions allowed), else
@@ -455,7 +455,7 @@ String? _stepId(Map<Object?, Object?> step) {
   return id is String ? id : null;
 }
 
-/// An extract rule's `regex`: one pattern, or (format 2, SL-R11) a non-empty list of them tried in order. Anything
+/// An extract rule's `regex`: one pattern, or (format 2) a non-empty list of them tried in order. Anything
 /// else, or a pattern that doesn't compile or leaves the shared syntax ([sharedRegexSyntax]), is a spec mistake: a
 /// [FlowError] naming the step (flowspec.py's regex_patterns).
 List<RegExp> regexPatterns(Object? value, [String? step]) {
@@ -467,7 +467,7 @@ List<RegExp> regexPatterns(Object? value, [String? step]) {
       step: step, reason: 'structure');
 }
 
-/// A `when` (SL-R12) as its parts: exactly {var}, {var, equals} or {var, matches}, all text, and a `matches` that
+/// A `when` as its parts: exactly {var}, {var, equals} or {var, matches}, all text, and a `matches` that
 /// compiles. Anything else is a spec mistake (a [FlowError] naming the step), even when the var is unset
 /// (flowspec.py's _when_form).
 ({String name, String? equals, RegExp? matches}) _whenForm(Object? when, String? step) {
@@ -514,7 +514,7 @@ bool whenHolds(Object? when, Map<String, Object?> ctx, [String? step]) {
   return text.isNotEmpty;
 }
 
-/// An `await_input` step (SL-R13) has text `into` and `prompt`, and `secret` true/false or absent; otherwise throws a
+/// An `await_input` step has text `into` and `prompt`, and `secret` true/false or absent; otherwise throws a
 /// [FlowError] naming the step (flowspec.py's check_await_input).
 void checkAwaitInput(Map<Object?, Object?> step) {
   final sid = _stepId(step);
@@ -525,7 +525,7 @@ void checkAwaitInput(Map<Object?, Object?> step) {
   }
 }
 
-/// An `open_browser` step (SL-R16) has text `url` (with no `?`: a query goes in `params`) and `until`, `params` a
+/// An `open_browser` step has text `url` (with no `?`: a query goes in `params`) and `until`, `params` a
 /// mapping or absent, `then_require` a list or absent, no `require` or `capture_on_fail` (nothing answers them), and
 /// `extract` absent or a list of rules each with a text `var`, a `source` of url_fragment or url_query, and a text
 /// `name`; otherwise throws a [FlowError] naming the step (flowspec.py's check_open_browser).
@@ -662,15 +662,15 @@ void _extract(List<Map<String, Object?>>? rules, Map<String, Object?> ctx, http.
 /// failed check. Every request is sent with followRedirects off; a step's own `follow_redirects` (default true)
 /// decides whether the runner follows a 3xx itself, so a plain `http.Client()` (or a fake standing in for the state
 /// system in tests) is all [client] needs to be. Every request and every redirect hop must pass
-/// [hostAllowedUrl] against [allowedHosts] before it is sent (SL-R8); one that doesn't is never sent and fails
+/// [hostAllowedUrl] against [allowedHosts] before it is sent; one that doesn't is never sent and fails
 /// with reason `not_allowed`.
 ///
-/// A step whose `when` doesn't hold is skipped (SL-R12). An `await_input` step (SL-R13) calls [ask] with its
+/// A step whose `when` doesn't hold is skipped. An `await_input` step calls [ask] with its
 /// templated prompt and whether the answer is secret: without [ask] the flow fails with reason `needs_person`, and a
 /// null or empty answer with reason `cancelled`, both before anything more is sent; a `secret` answer is scrubbed
 /// from every later error like a password; the prompt [ask] gets has every secret value scrubbed.
 ///
-/// An `open_browser` step (SL-R16) calls [browse] with the start URL and `until` once both pass the allowlist:
+/// An `open_browser` step calls [browse] with the start URL and `until` once both pass the allowlist:
 /// without [browse] the flow fails with `needs_person`, a null answer with `cancelled`, and an answer that doesn't
 /// start with `until` with `structure`. A [FlowError] thrown by [ask] or [browse] passes through (its step filled in
 /// when it names none); anything else they throw is reason `structure`.
@@ -681,7 +681,7 @@ Future<Map<String, Object?>> runFlow(FlowSpec spec, String flowName, Map<String,
     Set<String> neverRequest = const {},
     Future<String?> Function(String prompt, bool secret)? ask,
     Future<String?> Function(String url, String until)? browse}) async {
-  // [neverRequest]: allowed hosts this run must not send anything to (SL-D16: a sign-in or renewal run never reaches
+  // [neverRequest]: allowed hosts this run must not send anything to (a sign-in or renewal run never reaches
   // the state's API). A step's own url there is refused like one off the allowlist; a redirect there is not followed
   // (the 3xx comes back as the answer, as with `follow_redirects: false`). An open_browser's `until` may still name
   // one: it is matched, never requested.
@@ -753,7 +753,7 @@ Future<bool> _runAwaitInput(Map<String, Object?> step, Map<String, Object?> ctx,
   return secret;
 }
 
-/// Hands the sign-in page to a person (SL-R16): the start URL is built from `url` and `params` as a request step's is,
+/// Hands the sign-in page to a person: the start URL is built from `url` and `params` as a request step's is,
 /// and it and `until` must pass the allowlist before [browse] sees either. The URL [browse] returns is read by the
 /// step's url_fragment/url_query extracts and is never put in an error (it can carry the authorization code); its
 /// `then_require` checks (the returned state, say) run after them. flowspec.py's _run_open_browser is the twin.
@@ -831,13 +831,13 @@ String _comparedHost(Uri uri) {
 /// follow. Only a GET or HEAD answered 301/302/303/307/308 is followed, with the same method and no body; at most
 /// [maxRedirects] hops. Any other method's 3xx comes back as it is, whatever `follow_redirects` says: a POST that was
 /// answered has reached the state system and may have been recorded (a sale, say), and following it would let a
-/// later hop's failure (a connect error, a 4xx) read as "not sent" to classifySaleFailure (SL-R8 review ruling).
+/// later hop's failure (a connect error, a 4xx) read as "not sent" to classifySaleFailure.
 bool redirectRules(int status, String method) =>
     _followedMethods.contains(method.toUpperCase()) && _redirectStatuses.contains(status);
 
 /// Reason `not_allowed`. A step's own url off the list is the spec's mistake (stage null: nothing was sent); a
 /// redirect hop off the list is the state's answer, so [status] is the 3xx that sent it there and the stage is
-/// `response` (final review Minor 1; flowspec.py's _blocked is the twin).
+/// `response` (flowspec.py's _blocked is the twin).
 FlowError _blocked(String url, Map<String, Object?> ctx, Set<String> secretKeys, String? sid, {int? status}) =>
     _fail('the flow tried to reach ${url.split('?')[0].split('#')[0]}, which is not an allowed https address', ctx,
         secretKeys, status: status, step: sid, reason: 'not_allowed');
@@ -881,7 +881,7 @@ http.Request _hopRequest(http.Request prev, Uri next, Map<String, String> cookie
   return req;
 }
 
-/// Sends one request (one hop) and reads its answer in full. SM-12: one deadline for the whole hop - sending it,
+/// Sends one request (one hop) and reads its answer in full. One deadline for the whole hop - sending it,
 /// waiting for the answer, and reading the body - and the failure says which of those it got to (FlowStage),
 /// because that decides whether a write may have reached the server. The two phases are awaited separately for
 /// exactly that reason: client.send completes once the answer's status and headers are in, so anything after it is
@@ -931,7 +931,7 @@ Future<void> _runRequest(Map<String, Object?> step, Map<String, Object?> ctx, ht
   final jsonVarName = step['json_var'] as String?;
   final jsonBody = jsonVarName != null ? ctx[jsonVarName] : null;
   final followRedirects = (step['follow_redirects'] as bool?) ?? true;
-  // SL-R8: the url as written is checked before Uri.parse can throw on it or normalise it, and the built url
+  // The url as written is checked before Uri.parse can throw on it or normalise it, and the built url
   // (params added) again below; nothing is sent to a host off the list.
   if (!hostAllowedUrl(url, allowed: allowedHosts)) throw _blocked(url, ctx, secretKeys, sid);
   var uri = Uri.parse(url);
@@ -952,7 +952,7 @@ Future<void> _runRequest(Map<String, Object?> step, Map<String, Object?> ctx, ht
     req.body = jsonEncode(jsonBody);
   }
 
-  // The timeout (SM-12) applies to each hop on its own, as httpx's does to each request it sends.
+  // The timeout applies to each hop on its own, as httpx's does to each request it sends.
   final timeout = flowRequestTimeout(ctx);
   var hops = 0;
   http.Response resp;
@@ -975,7 +975,7 @@ Future<void> _runRequest(Map<String, Object?> step, Map<String, Object?> ctx, ht
       throw _blocked((_resolve(req.url, location) ?? location).toString(), ctx, secretKeys, sid,
           status: resp.statusCode);
     }
-    if (neverRequest.contains(_comparedHost(next))) break; // SL-D16: not followed; the 3xx is the answer
+    if (neverRequest.contains(_comparedHost(next))) break; // not followed; the 3xx is the answer
     req = _hopRequest(req, next, cookies);
   }
 

@@ -35,16 +35,16 @@
 # {{path}} did not return JSON" should say, can tell "absent" apart from "present but empty."
 
 vars:
-  # Per-request limit, seconds (SM-D1, specs/shared-modules/decisions.md). See ../SPEC.md "Timeouts".
+  # Per-request limit, seconds. See ../SPEC.md "Timeouts".
   timeout_seconds: 60
   site: "https://psilocybin.oregon.gov/"
   site_origin: "https://psilocybin.oregon.gov"
   api: "{{site}}api/private/ProductTracking/"
-  # Sent on every state-system request both apps make (SM-20): these reads, sale.yaml, and the hand-written
+  # Sent on every state-system request both apps make: these reads, sale.yaml, and the hand-written
   # writes and DownloadDocument, which read this var instead of keeping their own copy.
   user_agent: "Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0"
 
-# One named flow per endpoint both apps read (SM-20), plus get_json for any other path. Each is the same single
+# One named flow per endpoint both apps read, plus get_json for any other path. Each is the same single
 # step with its own url and error text; test_state_reads_flowspec.py fails if their headers or checks drift
 # apart. Each also captures `url`, so a caller can name the path in its own messages.
 flows:

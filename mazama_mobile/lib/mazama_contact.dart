@@ -1,11 +1,11 @@
-// specs/mazama-inventory MI-D19: the Mazama page's Contact button, at the top left across from Order. It opens a sheet
+// The Mazama page's Contact button, at the top left across from Order. It opens a sheet
 // with two ways to reach Mazama: its guest login site in the browser and a Signal message (no email address: the owner
-// publishes none, specs/public-app PA-D6). Each opens
+// publishes none). Each opens
 // outside the app (the browser, Signal, the mail app); a link that can't be opened says so.
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-/// The guest login to Mazama's site (owner, 2026-10-22: a shared guest account, given out on purpose).
+/// The guest login to Mazama's site (a shared guest account, given out on purpose).
 final mazamaGuestLogin = Uri.parse('https://guest:ahealingjourney@login.mazamamushrooms.com');
 
 /// Mazama's Signal username link.

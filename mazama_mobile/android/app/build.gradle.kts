@@ -94,8 +94,8 @@ android {
     }
 
     // A build signed with a debug key is its own app: com.mazamamushrooms.mobile.debug, named "mazama_mobile (debug)".
-    // Android refuses to install over an app with another signature ("App not installed", 2026-10-31: a phone that
-    // had a debug build couldn't take the 0.2.5 release), so a debug build now installs beside the release instead of
+    // Android refuses to install over an app with another signature ("App not installed": a phone that
+    // has a debug build can't take a release), so a debug build installs beside the release instead of
     // in its place, and neither blocks the other. Only builds signed with the owner's upload key are
     // com.mazamamushrooms.mobile (lib/app_installer.dart's appPackageName, the in-app updater's check).
     buildTypes {
@@ -118,7 +118,7 @@ android {
          implementation("com.google.mlkit:text-recognition:16.0.0")
      }
 
-    // The shared core, compiled by buildMazamaCoreFfi below (SM-02; specs/core CR-R3)
+    // The shared core, compiled by buildMazamaCoreFfi below
     sourceSets {
         getByName("main") {
             jniLibs.srcDir(coreJniLibs)
@@ -130,7 +130,7 @@ android {
 // For each ABI below, `cargo build --release --target <triple>` of ../../mazama_modules/core/mazama_core_ffi with the
 // NDK's clang as linker, copied to build/coreJniLibs/<abi>/libmazama_core_ffi.so, which the app packs (sourceSets
 // above). Nothing is written to the source tree. When cargo or a Rust Android target is missing, or the build fails,
-// the BUILD FAILS with the fix: the core is part of every build (specs/core CR-D2), and an app without it can't start.
+// the BUILD FAILS with the fix: the core is part of every build, and an app without it can't start.
 // Install once: rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android.
 // ios/build_mazama_core_ffi.sh is the iOS twin. armeabi-v7a is for 32-bit-only phones, which otherwise install the app
 // (Flutter packs its own armeabi-v7a libraries) and then show "This build is missing a part".

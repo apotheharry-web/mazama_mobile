@@ -1,4 +1,4 @@
-// SM-22: every phone client of a /p/ route builds the example request and reads the example reply
+// Every phone client of a /p/ route builds the example request and reads the example reply
 // (../mazama_modules/api/examples/<route>.<part>.json, vendored here at assets/shared/api/examples/ by
 // tool/sync_flows.sh), at the path routes.yaml gives, through lib/api_contract.g.dart (generated from routes.yaml,
 // apiRoutes included). The server's side is mazama_sales/tests/web/test_api_contract.py.
@@ -13,6 +13,7 @@ import 'package:mazama_mobile/api_contract.g.dart';
 import 'package:mazama_mobile/app_api_key.dart';
 import 'package:mazama_mobile/coa_data_client.dart';
 import 'package:mazama_mobile/coa_uploader.dart' show coaUploadStartInterval;
+import 'package:mazama_mobile/features.g.dart';
 import 'package:mazama_mobile/flow/flow_runner.dart' show FlowStage;
 import 'package:mazama_mobile/flow/flow_spec.dart' show supportedFlowFormat;
 import 'package:mazama_mobile/inventory_upload_client.dart';
@@ -60,7 +61,35 @@ void _sameRoute(http.BaseRequest req, String route, String path) {
 
 Object? _jsonBody(http.BaseRequest req) => jsonDecode((req as http.Request).body);
 
+/// The routes only features not yet released use (FR-11; none in the public copy, which leaves them out with the
+/// features' folders): their calls are held to the contract by the tests in those folders (`test/features/<name>/`).
+Set<String> _unreleasedOnlyRoutes() {
+  bool unreleased(Feature f) => f.onPhone.isEmpty && f.onPhoneDebug.isNotEmpty;
+  final released = {
+    for (final f in features.values)
+      if (!unreleased(f)) ...f.uses
+  };
+  return {
+    for (final e in apiRoutes.entries)
+      if (!released.contains('${e.value['method']} ${e.value['path']}') &&
+          features.values.any((f) => unreleased(f) && f.uses.contains('${e.value['method']} ${e.value['path']}')))
+        e.key
+  };
+}
+
 void main() {
+  test("a route only unreleased features use is called in a feature folder's tests", () {
+    final folder = Directory('test/features');
+    for (final name in _unreleasedOnlyRoutes()) {
+      final held = folder.existsSync() &&
+          folder
+              .listSync(recursive: true)
+              .whereType<File>()
+              .any((f) => f.path.endsWith('_test.dart') && f.readAsStringSync().contains("apiRoutes['$name']"));
+      expect(held, isTrue, reason: '$name: a test under test/features/ calls it and checks apiRoutes[\'$name\']');
+    }
+  });
+
   test('every route in routes.yaml has a path function and the generated paths match it', () {
     final generated = {
       'packages': packagesPath(225),
@@ -86,7 +115,7 @@ void main() {
       'app_latest': appLatestPath(),
       'app_apk': appApkPath(26103001),
     };
-    expect(generated.keys.toSet(), apiRoutes.keys.toSet());
+    expect(generated.keys.toSet(), apiRoutes.keys.toSet().difference(_unreleasedOnlyRoutes()));
     for (final e in generated.entries) {
       final path = apiRoutes[e.key]!['path'] as String;
       expect(e.value,
@@ -115,8 +144,8 @@ void main() {
     expect(png, [0x89, 0x50, 0x4e, 0x47]);
   });
 
-  // specs/phone-sync Task 8b Step 6 (PS-D7): the inventory snapshot goes to C20's `packaged` dataset, with C3's body
-  // (C20's request schema is C3's). C3 stays on the server for older builds (CW-D5); this build calls it nowhere.
+  // The inventory snapshot goes to C20's `packaged` dataset, with C3's body
+  // (C20's request schema is C3's). The server still accepts C3; this app calls it nowhere.
   test('C20 ingest (packaged): sends the C3 example request to the ingest route, reads the example reply', () async {
     final req = _example('inventory', 'request') as Map<String, Object?>;
     final (client, seen) = _serve(_example('inventory', 'response'));
@@ -172,7 +201,7 @@ void main() {
     expect(_jsonBody(seen.single), req);
     expect(out.keys.toSet(), {'HB-9bc7d118', 'PL-DE20657A'}); // as asked, matched case-insensitively
     expect(out['HB-9bc7d118']!.strain, 'Golden Teacher');
-    // SM-08: the rules file's analyte names, aeruginascin included (null in the example: not known)
+    // The rules file's analyte names, aeruginascin included (null in the example: not known)
     expect(out['HB-9bc7d118']!.baeocystin, 0.21);
     expect(out['HB-9bc7d118']!.aeruginascin, isNull);
   });
@@ -241,7 +270,7 @@ void main() {
         deviceId: req['deviceId'] as String,
         request: (req['request'] as List).cast<Map<String, Object?>>(),
         response: req['response'],
-        clientId: req['clientId'] as String, // README R56: the outbox's id, so a repeat is recorded once
+        clientId: req['clientId'] as String, // the outbox's id, so a repeat is recorded once
         client: client);
     _sameRoute(seen.single, 'sale_log', saleLogPath(225));
     expect(_jsonBody(seen.single), req);
@@ -402,12 +431,12 @@ void main() {
     }
   });
 
-  // SM-23: every client reports a 401 or a 429 the same way, through describeServerError.
+  // Every client reports a 401 or a 429 the same way, through describeServerError.
   group('every client reports 401 and 429 the same way', () {
     final calls = <String, Future<Object?> Function(http.Client)>{
       'packages': (c) => fetchPackages(225, client: c),
       'label': (c) => fetchLabel(225, 'PKPR-aaaa0001', client: c),
-      // C3: no client of this build calls it (older builds do; the server keeps it, CW-D5). The packaged upload, its
+      // No client of this build calls it (older builds do; the server keeps it). The packaged upload, its
       // successor on C20, stands in, so its 401/429 are still held to the same wording.
       'inventory': (c) => uploadInventorySnapshot(225, const [], workerEmail: 'w', deviceId: 'd', client: c),
       'ingest': (c) => uploadSalesSnapshot(225, const [], workerEmail: 'w', deviceId: 'd', client: c),
@@ -432,7 +461,7 @@ void main() {
       'app_apk': (c) => requestServerApk(26103001, client: c),
     };
     test('there is a call for every route', () {
-      expect(calls.keys.toSet(), apiRoutes.keys.toSet());
+      expect(calls.keys.toSet(), apiRoutes.keys.toSet().difference(_unreleasedOnlyRoutes()));
     });
     for (final status in [401, 429]) {
       for (final e in calls.entries) {

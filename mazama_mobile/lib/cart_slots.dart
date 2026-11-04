@@ -1,4 +1,4 @@
-// Several carts at one center (specs/multi-cart): which carts a center has, what each is called, and which one the
+// Several carts at one center: which carts a center has, what each is called, and which one the
 // Cart screen is showing. Each cart's lines and timer are kept by CartStore/SessionTimerStore under the cart's id
 // (cartFileName, the name of each one's document); this file keeps only the list itself, as the carts.json document
 // beside them, scoped to a center the same way the cart draft is (a list saved at another center is never shown here).
@@ -11,13 +11,13 @@ import 'local_store.dart';
 import 'session_store.dart' show defaultSessionDataDir;
 
 /// The first cart's id. Its files keep the names the single cart always had (cart.json, session_timer.json), so a
-/// draft saved before there were several carts comes back as the first cart (MC-D2).
+/// draft saved before there were several carts comes back as the first cart.
 const defaultCartId = 'main';
 
-/// MC-D3: how many carts one center may have at once.
+/// How many carts one center may have at once.
 const maxCartsPerCenter = 10;
 
-/// MC-D3: the longest a cart's name may be, after trimming.
+/// The longest a cart's name may be, after trimming.
 const maxCartNameLength = 30;
 
 /// A cart id is only ever made by [CartSlots.withNew]: lower-case letters and digits, so it is safe in a file name.
@@ -65,7 +65,7 @@ class CartSlots {
 
   bool get canAdd => carts.length < maxCartsPerCenter;
 
-  /// MC-D5: the last cart can't be deleted.
+  /// The last cart can't be deleted.
   bool get canRemove => carts.length > 1;
 
   CartSlot? byId(String id) {
@@ -85,7 +85,7 @@ class CartSlots {
     return 'Cart $n';
   }
 
-  /// Why [name] can't be the name of cart [forId] (null: a new cart), or null when it can (MC-D3).
+  /// Why [name] can't be the name of cart [forId] (null: a new cart), or null when it can.
   String? nameError(String name, {String? forId}) {
     final trimmed = name.trim();
     if (trimmed.isEmpty) return 'Enter a name.';

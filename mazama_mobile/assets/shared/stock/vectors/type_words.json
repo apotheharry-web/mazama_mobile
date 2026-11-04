@@ -1,0 +1,49 @@
+[
+ {
+  "codes": [
+   "FD",
+   "DH",
+   "HG",
+   "CH",
+   "EX",
+   "HN",
+   "GM",
+   "LOT",
+   "WF",
+   ""
+  ],
+  "name": "every listed code",
+  "words": [
+   "Freeze dried",
+   "Dehydrated",
+   "Homogenized",
+   "Chocolate",
+   "Extract",
+   "Honey",
+   "Gummy",
+   "Process lot",
+   "Whole fungi",
+   "Other type"
+  ]
+ },
+ {
+  "codes": [
+   "XX",
+   "fd",
+   "Other type",
+   " FD"
+  ],
+  "name": "codes not listed show as themselves",
+  "words": [
+   "XX",
+   "fd",
+   "Other type",
+   " FD"
+  ]
+ },
+ {
+  "codes": [],
+  "name": "no codes",
+  "words": []
+ }
+]

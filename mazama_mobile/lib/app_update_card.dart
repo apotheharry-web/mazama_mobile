@@ -1,4 +1,4 @@
-// specs/app-updates AU-R10, AU-R13, AU-D10: the offer of a newer release, as a card (never a dialog) on the license
+// The offer of a newer release, as a card (never a dialog) on the license
 // picker (SelectCenterPage) and above the tabs of the center home (CenterHomePage), only while no cart holds a line: on
 // the center home, the draft cart showing and every saved cart of that center; on the picker, every saved cart of every
 // listed center (a sale only runs on a cart's lines, so none runs either). One attempt at a time: a second tap on
@@ -140,10 +140,10 @@ class _AppUpdateCardState extends State<AppUpdateCard> with WidgetsBindingObserv
   }
 
   /// True from the tap on Install until that attempt ends: set before anything is awaited, so a second tap does
-  /// nothing (review I1).
+  /// nothing.
   bool _busy = false;
 
-  /// The APK handed to Android's installer, waiting for a refusal Android may still report (review M4).
+  /// The APK handed to Android's installer, waiting for a refusal Android may still report.
   bool _handedOver = false;
 
   Future<void> _install() async {
@@ -183,13 +183,13 @@ class _AppUpdateCardState extends State<AppUpdateCard> with WidgetsBindingObserv
         if (mounted) setState(() => _got = got);
       }, cancel.future);
       _cancel = null;
-      // review I2: a card gone (its page left) or a cancel during the last step hands nothing over
+      // A card gone (its page left) or a cancel during the last step hands nothing over
       if (!mounted || cancel.isCompleted) {
         deleteUpdateFile(path);
         if (mounted) setState(() => _phase = _Phase.offer);
         return;
       }
-      // AU-R13: a cart line added during the download stops the hand-over
+      // A cart line added during the download stops the hand-over
       if (!await widget.cartsEmpty() || !mounted) {
         deleteUpdateFile(path);
         if (mounted) {
@@ -201,7 +201,7 @@ class _AppUpdateCardState extends State<AppUpdateCard> with WidgetsBindingObserv
         return;
       }
       // Android copies (and hashes) the bytes into its session, which takes a while; the carts and the card are
-      // checked again before the session is committed (review N3)
+      // checked again before the session is committed
       final staged = await installer.stage(path, sha256: offer.file.sha256, size: offer.file.size);
       deleteUpdateFile(path); // the session holds its own copy of the bytes
       if (staged.startsWith('refused:')) {
@@ -262,7 +262,7 @@ class _AppUpdateCardState extends State<AppUpdateCard> with WidgetsBindingObserv
     }
   }
 
-  /// Back from Android's installer: a refusal it reported after the hand-over is shown in its words (review M4).
+  /// Back from Android's installer: a refusal it reported after the hand-over is shown in its words.
   Future<void> _afterHandOver() async {
     if (!_handedOver) return;
     final words = await widget.checker.installer.takeStatus();

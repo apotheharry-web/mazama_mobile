@@ -1,0 +1,193 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "manufacturing.transfer_check output",
+  "description": "The parsed fields, the problems (the server's words), and when there are none the planned transfers, the packages to split and (given a driver) the planned manifest.",
+  "type": "object",
+  "required": [
+    "fields",
+    "problems",
+    "planned",
+    "splits",
+    "manifest"
+  ],
+  "properties": {
+    "fields": {
+      "type": "object",
+      "required": [
+        "mode",
+        "dest",
+        "driver",
+        "dep",
+        "dep_time",
+        "arr",
+        "arr_time",
+        "route",
+        "price_cents",
+        "sign",
+        "items"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "send",
+            "retrieve",
+            ""
+          ]
+        },
+        "dest": {
+          "type": "string"
+        },
+        "driver": {
+          "type": "integer",
+          "description": "int() of the typed id, 0 when it isn't one (any size)."
+        },
+        "dep": {
+          "type": "string",
+          "description": "YYYY-MM-DD, or \"\" when it isn't a date"
+        },
+        "dep_time": {
+          "type": "string",
+          "description": "\"5 am\", \"9:30 pm\", or \"\""
+        },
+        "arr": {
+          "type": "string"
+        },
+        "arr_time": {
+          "type": "string"
+        },
+        "route": {
+          "type": "string"
+        },
+        "price_cents": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000000
+        },
+        "sign": {
+          "type": "boolean"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "record_id",
+              "guid",
+              "description",
+              "qty",
+              "stock"
+            ],
+            "properties": {
+              "record_id": {
+                "type": "integer"
+              },
+              "qty": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    },
+    "problems": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "The server's words, in order; empty when nothing is wrong."
+    },
+    "planned": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "productId",
+          "productType",
+          "description",
+          "quantity",
+          "weightEach",
+          "analyteEach",
+          "productWeight",
+          "packagedProductId"
+        ],
+        "properties": {
+          "productWeight": {
+            "type": "number",
+            "description": "round(weightPerUnit x quantity, 2)"
+          }
+        }
+      }
+    },
+    "splits": {
+      "type": "array",
+      "description": "The packages only partly moved: split first into a record of qty units.",
+      "items": {
+        "type": "object",
+        "required": [
+          "record_id",
+          "qty"
+        ],
+        "properties": {
+          "record_id": {
+            "type": "integer"
+          },
+          "qty": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "manifest": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "id",
+            "originatingLicense",
+            "destinationLicense",
+            "originatingAddress",
+            "destinationAddress",
+            "salePrice",
+            "testing",
+            "dateOfDeparture",
+            "estimatedDepartureTime",
+            "generalRoute",
+            "dateOfArrival",
+            "estimatedArrivalTime",
+            "driverName",
+            "driverPhoneNumber",
+            "driverWorkerPermit",
+            "driverSignature",
+            "representativeName",
+            "representativePhoneNumber",
+            "representativeWorkerPermit",
+            "representativeSignature",
+            "vehicleMake",
+            "vehicleModel",
+            "vehiclePlateNumber",
+            "overnightStop",
+            "overnightAddress",
+            "estimatedOvernightDuration",
+            "overnightStopPurpose"
+          ],
+          "description": "The planned manifest (the state's dates are Pacific midnights as UTC; salePrice = price_cents / 100).",
+          "properties": {
+            "salePrice": {
+              "type": "number"
+            },
+            "dateOfDeparture": {
+              "type": "string"
+            },
+            "dateOfArrival": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  }
+}

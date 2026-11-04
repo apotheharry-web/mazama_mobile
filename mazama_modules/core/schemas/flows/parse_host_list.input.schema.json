@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "flows.parse_host_list input",
-  "description": "specs/core row 13 (SL-R18): the text of a signed host list.",
+  "description": "The text of a signed host list.",
   "type": "object",
   "required": [
     "text"

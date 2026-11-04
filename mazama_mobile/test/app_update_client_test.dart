@@ -1,4 +1,4 @@
-// specs/app-updates AU-R5, AU-R9, AU-D9: the phone asks C21 for the newest signed release file through the server
+// The phone asks GET /p/app/latest for the newest signed release file through the server
 // link and, only when the server can't answer, reads it from GitHub; either way it verifies it itself. Release files
 // are signed with the TEST key (app_release_signing.dart).
 import 'dart:async';

@@ -1,12 +1,11 @@
-//! Order lines (specs/core row 9; specs/mazama-inventory MI-D6..D9, MI-D16, MI-D17, specs/edibles ED-A6): the server's
-//! check of a center's order (`check`, held to mazama_modules/stock/vectors/order_check.json, frozen from the server's
-//! Python `store.order_lines`) and the lines the phone's order form starts from (`form`, held to
-//! mazama_modules/stock/order_form/cases.json, frozen from the phone's Dart).
+//! Order lines: the server's check of a center's order (`check`, held to the frozen vectors in
+//! mazama_modules/stock/vectors/order_check.json) and the lines the phone's order form starts from (`form`, held to
+//! mazama_modules/stock/order_form/cases.json).
 //!
-//! Known limits: in a refused line's description a list or an object is shown as compact JSON, where the server's
-//! Python showed its repr, and an int beyond 64 bits in a line's strain as a float (the server's layer hands one in a
-//! size, type or quantity over as its digits, so those read as Python's did) — only an error message; the phone sends
-//! typed lines. Python's whitespace (U+001C..U+001F included) is the check's; the form uses Dart's (U+FEFF included).
+//! Known limits: in a refused line's description a list or an object is shown as compact JSON, and an int beyond 64
+//! bits in a line's strain as a float (the server's layer hands one in a size, type or quantity over as its digits)
+//! — only an error message; the phone sends typed lines. Python's whitespace (U+001C..U+001F included) is the
+//! check's; the form uses Dart's (U+FEFF included).
 use std::collections::HashMap;
 
 use serde::Deserialize;

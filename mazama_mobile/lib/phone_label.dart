@@ -4,9 +4,9 @@
 // report from the state, the report's text (pdfium), mazama_core's lot finder and label spec (mazama_core.dart). Every
 // number comes from mazama_core, the same rules the server's labels use (labelspec.py); the phone only gathers the
 // input. Drawn by LabelPreview (label_preview.dart): black text on white, like the server's label for a package
-// Mazama didn't make (AD-L18).
+// Mazama didn't make.
 //
-// README R64: when /p/packages sent the package's `labelInput` (Package.labelInput: mazama_core's LabelInput exactly as the
+// When /p/packages sent the package's `labelInput` (Package.labelInput: mazama_core's LabelInput exactly as the
 // server builds it for its own labels, its shelf life, subtype and strain included), the label is drawn from that with
 // the phone's own today and nothing else: no call to the state system, no lab report, nothing kept. The chain below runs
 // only for a package the server has no certificate for.
@@ -16,17 +16,18 @@
 // its strain alias table (the strain the server's COA data gave the package is passed when there is one). Only the
 // best-by of a package whose name carries no date depends on the shelf life.
 //
-// What the phone keeps from it (SM-D31, amending SM-D15): once mazama_core has read the lot's report and given a label,
+// What the phone keeps from it: once mazama_core has read the lot's report and given a label,
 // every record of this product at the center on the same lot gets mazama_core's own label answer for its own weight and
 // state figure, and its TPE (LabelSpec tpe_mg_per_g: mazama_core::tpe to 2 places, the server's coa.tpe figure), psilocin
 // per unit and per-unit mg TPE (unit weight x that TPE rounded up, dose.dart - what /p/packages sends as tpeMg; never
-// the label's printed dose, which prefers the name's) are saved in the enrichment store (enrichment_store.dart's
-// rememberPhone), so a later read from the state system alone can show them. Nothing is saved when no label can be
+// the label's printed dose, which prefers the name's) are saved in the enrichment dataset (sync/enrichment.dart's
+// rememberPhoneReadings), so a later read from the state system alone can show them. Nothing is saved when no label can be
 // drawn, and a failed save never stops the label.
 import 'dart:typed_data';
 
 import 'dose.dart';
-import 'enrichment_store.dart';
+import 'sync/enrichment.dart';
+import 'sync/sync_datasets.dart' show Datasets;
 import 'mazama_core.dart';
 import 'package_ids.dart';
 import 'packages_client.dart' show EnrichmentSource;
@@ -56,8 +57,8 @@ String _isoDay(DateTime d) =>
 /// be none: the package or its lot can't be found, the lot has no lab report on file, the report doesn't name the
 /// lot, or the core blocks the label (every reason, joined). [core] defaults to this app's ([MazamaCore.instance]).
 /// [strain] is the strain the server already knows for the package (its COA data), used before the name's.
-/// [enrichment] is where the phone's reading is kept (see this file's comment; CartPage passes its own store); null
-/// keeps nothing. [labelInput] is the server's (README R64): when given, the label comes from it alone, with no state
+/// [enrichment] is the datasets the phone's reading is kept in (see this file's comment; CartPage passes its own);
+/// null keeps nothing. [labelInput] is the server's: when given, the label comes from it alone, with no state
 /// call, no report and nothing kept.
 Future<Map<String, Object?>> drawPhoneLabelSpec(
   int stateId,
@@ -72,7 +73,7 @@ Future<Map<String, Object?>> drawPhoneLabelSpec(
   Future<Uint8List> Function(int docId, {required String accessToken}) downloadDocument =
       state_document_client.downloadStateDocument,
   Future<Map<String, Object?>> Function(Uint8List pdf) extractText = extractCoaText,
-  EnrichmentStore? enrichment,
+  Datasets? enrichment,
   Map<String, Object?>? labelInput,
 }) async {
   final lib = core ?? MazamaCore.instance;
@@ -108,7 +109,7 @@ Future<Map<String, Object?>> drawPhoneLabelSpec(
   final pdf = await downloadDocument(doc.docId, accessToken: accessToken);
   final text = await extractText(pdf);
 
-  // AD-19: the lot's own UID, else the batch its report's request pairs it with, else the state's psilocybin
+  // The lot's own UID, else the batch its report's request pairs it with, else the state's psilocybin
   final reply = lib.findLot(text, lot, statePsilocybin: analyteWeight > 0 ? analyteWeight : null);
   final sections = (((reply['result'] as Map?) ?? const {})['sections'] as List? ?? const []);
   final found = reply['found'];
@@ -128,7 +129,7 @@ Future<Map<String, Object?>> drawPhoneLabelSpec(
         'section': sections[at],
         'settings': phoneLabelSettings,
         'today': _isoDay(today),
-        // SM-D18, as the server: best-by counts from the state's test-completed date
+        // as on the server: best-by counts from the state's test-completed date
         if (doc.date != null) 'test_date': doc.date,
       });
   final result = _specOf(labelFor(record));
@@ -143,7 +144,7 @@ Future<Map<String, Object?>> drawPhoneLabelSpec(
         final reading = s == null ? null : phoneReading(r, id, s, today);
         if (reading != null) readings.add(reading);
       }
-      if (readings.isNotEmpty) await store.rememberPhone(readings, today);
+      if (readings.isNotEmpty) rememberPhoneReadings(store, readings, today);
     } catch (_) {
       // nothing kept this time; the label stands
     }
@@ -162,9 +163,9 @@ Map<String, Object?> _specOf(Map<String, Object?> out) {
   return spec.cast<String, Object?>();
 }
 
-/// What the phone keeps (SM-D31) from mazama_core's label [spec] for the state [record] whose record id is [id], read at
+/// What the phone keeps from mazama_core's label [spec] for the state [record] whose record id is [id], read at
 /// [at]; null when mazama_core gave no TPE or the record has no unit weight. The TPE is mazama_core's own (tpe_mg_per_g);
-/// tpeMg is the unit's mg TPE as the server works it out (weight x TPE, rounded up: dose.dart, SM-D16/SM-D17).
+/// tpeMg is the unit's mg TPE as the server works it out (weight x TPE, rounded up: dose.dart).
 PackageEnrichment? phoneReading(Map<String, Object?> record, int id, Map<String, Object?> spec, DateTime at) {
   final key = packagedProductKey(record);
   final tpe = spec['tpe_mg_per_g'];

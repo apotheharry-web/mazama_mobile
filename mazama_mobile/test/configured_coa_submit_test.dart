@@ -1,6 +1,6 @@
 // configured_coa_submit.dart: a configured center's cart-add COA submission (GetPackagedProductInfo -> newest
-// accepted Potency PDF -> DownloadDocument -> /p/coa-data/parse). Had no test of its own until SM-22, which found
-// it didn't send state_psilocybin while the adhoc path (coa_data_resolver.dart) did.
+// accepted Potency PDF -> DownloadDocument -> /p/coa-data/parse), held to sending state_psilocybin as the adhoc
+// path (coa_data_resolver.dart) does.
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -89,7 +89,7 @@ void main() {
     expect(seen.whereType<http.MultipartRequest>(), isEmpty);
   });
 
-  // CU-R3, CU-R4: the background uploader (coa_uploader.dart) tells the server's replies apart by their status.
+  // The background uploader (coa_uploader.dart) tells the server's replies apart by their status.
   for (final (status, body, unreachable) in [
     (202, {'queued': true}, false),
     (429, {'detail': 'Too many requests'}, false),

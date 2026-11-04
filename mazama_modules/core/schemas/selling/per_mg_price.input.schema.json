@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "selling.per_mg_price input",
-  "description": "One unit at a rate per mg (SM-D10).",
+  "description": "One unit at a rate per mg.",
   "type": "object",
   "required": [
     "rate_cents",
@@ -17,7 +17,7 @@
         "string",
         "integer"
       ],
-      "description": "A whole number, or a plain decimal of at most two places, 0 or more (PRICE-7)."
+      "description": "A whole number, or a plain decimal of at most two places, 0 or more."
     }
   }
 }

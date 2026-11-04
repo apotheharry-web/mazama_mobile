@@ -55,7 +55,7 @@ void main() {
     );
   });
 
-  // SALE-15: the report says, as a field of its own, whether the sale was surely not sent. The cart builds every
+  // The report says, as a field of its own, whether the sale was surely not sent. The cart builds every
   // reason with its SaleOutcome as a leading tag ('[notSent] ...', '[bulk 2 of 3] [uncertain] ...'); only a leading
   // notSent tag counts, anything else (no tag, a tag later in the text) is uncertain, as the server reads a report
   // without one.

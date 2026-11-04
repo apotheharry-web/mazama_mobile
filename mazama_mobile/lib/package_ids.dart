@@ -1,12 +1,12 @@
-// The phone's id checks (SM-09), using the patterns generated into id_patterns.g.dart from
+// The phone's id checks, using the patterns generated into id_patterns.g.dart from
 // ../mazama_modules/ids/ids.yaml - the same ones the server (idpatterns.py) and mazama_core use. Held to the server's
 // own answers by test/package_ids_test.dart (../mazama_modules/ids/vectors/ids.json).
 import 'id_patterns.g.dart';
 
-/// A harvest batch or process lot id: HB- or PL- and 5 to 8 hex digits, either case (SM-D7).
+/// A harvest batch or process lot id: HB- or PL- and 5 to 8 hex digits, either case.
 bool isLotId(String s) => lotIdPattern.hasMatch(s);
 
-/// A packaged product id: PKPR- and 4 to 16 letters or digits (SM-D8).
+/// A packaged product id: PKPR- and 4 to 16 letters or digits.
 bool isPackageId(String s) => packageIdPattern.hasMatch(s);
 
 /// The batch/lot a package was made from, as the state's own record names it: the first of harvestBatchGuid,

@@ -1,4 +1,4 @@
-// specs/app-updates AU-R12, AU-R13: the Dart side of the `mazama/app_installer` channel (app_installer.dart), against
+// The Dart side of the `mazama/app_installer` channel (app_installer.dart), against
 // a mock channel (AppInstaller.kt is Android's side).
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';

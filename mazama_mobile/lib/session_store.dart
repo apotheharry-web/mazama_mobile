@@ -1,8 +1,8 @@
 // Persists the worker's session (access/refresh token + expiry) across app restarts, so they don't have to type their
 // email and password again every time the app is closed. Kept by a SecretStore (secret_store.dart): Keychain/Keystore
-// on Android and iOS, never mazama.db or a file there (specs/foundations LS-R4); elsewhere (flutter test, the desktop
+// on Android and iOS, never mazama.db or a file there; elsewhere (flutter test, the desktop
 // builds) the data folder's `session` document. Builds before that wrote session.json in the data folder: the first
-// call moves it into the secret store and deletes it (never renames it: it holds the tokens, LS-R5). The data folder
+// call moves it into the secret store and deletes it (never renames it: it holds the tokens). The data folder
 // itself comes from path_provider (see initAppDataDir below), which is the correct way to ask each platform for this
 // app's own sandboxed storage location - plain dart:io has no portable way to answer that on Android/iOS.
 import 'dart:convert';
@@ -78,12 +78,12 @@ class SessionStore {
   /// The data folder's non-secret install marker, a LocalStore document (never the tokens). iOS keeps Keychain items
   /// after the app is deleted, where session.json went with the app; mazama.db goes with the app on every platform. So
   /// a folder without the marker is a fresh install (or a set-aside database), and a session kept from before it is not
-  /// this install's: it is deleted, and the worker signs in (final review I-2). On the update launch the Keychain is
+  /// this install's: it is deleted, and the worker signs in. On the update launch the Keychain is
   /// empty anyway (older builds never wrote it), and session.json is moved after the marker is written.
   static const installMarker = 'session_install';
 
   /// Opening a folder (the marker, the session.json move) in progress, by folder: concurrent calls share one, so a
-  /// save racing the first launch's move can't be overwritten by it (final review M-2).
+  /// save racing the first launch's move can't be overwritten by it.
   static final Map<String, Future<bool>> _opening = {};
 
   const SessionStore({Directory Function()? dataDir, SecretStore Function(Directory dir)? secrets})
@@ -91,9 +91,9 @@ class SessionStore {
         secrets = secrets ?? secretStoreFor;
 
   /// Saves [session]. When the secret store can't keep it (a locked keychain, a restored Android backup), nothing is
-  /// kept and the worker signs in again next launch (LS-R4): never a fallback to a plain file, and no throw. A save
+  /// kept and the worker signs in again next launch: never a fallback to a plain file, and no throw. A save
   /// that replaced what the store held writes the [installMarker] too when its opening could not: what is kept is now
-  /// this install's, so a later opening must not delete it (re-review N-1).
+  /// this install's, so a later opening must not delete it.
   Future<void> save(Map<String, Object?> session) async {
     final (store, thisInstalls) = await _open();
     try {
@@ -148,11 +148,11 @@ class SessionStore {
   }
 
   /// A fresh install's folder first loses any session kept from before it ([installMarker]); then an older build's
-  /// session.json is moved in (LS-R5): written to the secret store unless one is kept already (it is newer), and the
+  /// session.json is moved in: written to the secret store unless one is kept already (it is newer), and the
   /// file deleted whatever happened, readable or not, so the tokens never stay in a plain file. False when a session
   /// from before this install could not be deleted (the secret store failing), or when the marker can't be read at all
   /// (mazama.db busy, read-only or not openable: whose session it is can't be told): it is then never loaded, and the
-  /// worker signs in again. Never throws (re-review N-2): main.dart awaits [load] at start-up.
+  /// worker signs in again. Never throws: main.dart awaits [load] at start-up.
   static Future<bool> _openFolder(Directory dir, SecretStore store) async {
     var thisInstalls = true;
     try {

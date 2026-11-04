@@ -1,6 +1,6 @@
-// The http.Client every call to Mazama's server (/p/ routes) goes through (README R56). It keeps each client's own
-// shape - packages_client.dart, par_client.dart, sale_log_client.dart and the rest still build their requests and read
-// their replies as before - and adds the one shared rule about the server being down (server_health.dart):
+// The http.Client every call to Mazama's server (/p/ routes) goes through: the one the shared request skeleton
+// (server_request.dart, which packages_client.dart, par_client.dart, sale_log_client.dart and the rest use) opens when
+// its caller gives none. It adds the one shared rule about the server being down (server_health.dart):
 //   - while the tracker says offline, a request fails at once with [ServerOfflineException] (an http.ClientException,
 //     which every client already reports as "cannot reach ..." and server_error.dart counts as unreachable): no
 //     network call, so a page's fallback shows at once instead of after a timeout;
@@ -87,5 +87,5 @@ class ServerLinkClient extends http.BaseClient {
 }
 
 /// The client a /p/ client function uses when its caller passes none: a fresh plain client wrapped with the app's own
-/// tracker (server_link.dart's [serverLink]). Closed by the function that made it, as before.
+/// tracker (server_link.dart's [serverLink]). Closed by the function that made it.
 http.Client serverClient() => ServerLinkClient(http.Client(), health: serverLink.health);

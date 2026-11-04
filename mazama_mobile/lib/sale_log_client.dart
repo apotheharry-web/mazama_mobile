@@ -11,26 +11,16 @@
 // STATE system (sale.yaml), never as a field inside a sale record, so there's nothing to strip here - the
 // server scrubs anything that looks like a credential anyway as a backstop (audit.scrub, server-side) in case
 // that ever stops being true on either end.
-import 'dart:convert';
-
 import 'package:http/http.dart' as http;
 
 import 'api_contract.g.dart';
-import 'app_api_key.dart';
 import 'server_error.dart';
-import 'server_link_client.dart' show serverClient;
+import 'server_request.dart';
 
-class SaleLogError implements ServerRequestError {
-  @override
-  final String message;
-
-  /// The server's HTTP status when it answered, null when it couldn't be reached (the outbox keeps the log then).
-  final int? status;
-  @override
-  final bool unreachable;
-  SaleLogError(this.message, {this.status, this.unreachable = false});
-  @override
-  String toString() => message;
+/// [status]: the server's HTTP status when it answered, null when it couldn't be reached (the outbox keeps the log
+/// then).
+class SaleLogError extends ServerFailure {
+  SaleLogError(super.message, {super.status, super.unreachable});
 }
 
 /// POSTs [apiBaseUrl]/p/sale-log/{stateId} with [workerEmail], [deviceId] (see
@@ -47,36 +37,21 @@ Future<void> postSaleLog(
   required String deviceId,
   required List<Map<String, Object?>> request,
   required Object? response,
-  /// The outbox's id for this log (server_outbox.dart): a repeat of it is recorded once by the server (README R56).
+  /// The outbox's id for this log (server_outbox.dart): a repeat of it is recorded once by the server.
   String? clientId,
   String baseUrl = apiBaseUrl,
   http.Client? client,
-}) async {
-  final c = client ?? serverClient();
-  final shouldClose = client == null;
-  try {
-    final uri = Uri.parse('$baseUrl${saleLogPath(stateId)}');
-    http.Response resp;
-    try {
-      resp = await c.post(
-        uri,
-        headers: {...appApiKeyHeaders, 'Content-Type': 'application/json'},
-        body: jsonEncode({
+}) =>
+    serverRequest('$baseUrl${saleLogPath(stateId)}',
+        method: 'POST',
+        json: {
           'workerEmail': workerEmail,
           'deviceId': deviceId,
           'request': request,
           'response': response,
           if (clientId != null) 'clientId': clientId,
-        }),
-      );
-    } catch (ex) {
-      throw SaleLogError('cannot reach ${uri.host}: ${ex.runtimeType}', unreachable: true);
-    }
-    if (resp.statusCode < 200 || resp.statusCode >= 300) {
-      throw SaleLogError(describeServerError(resp.statusCode, resp.body),
-          status: resp.statusCode, unreachable: isUnreachableStatus(resp.statusCode));
-    }
-  } finally {
-    if (shouldClose) c.close();
-  }
-}
+        },
+        ok: isSuccessStatus,
+        error: SaleLogError.new,
+        client: client,
+        read: (_) {});

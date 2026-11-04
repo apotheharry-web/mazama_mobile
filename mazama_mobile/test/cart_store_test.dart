@@ -92,18 +92,14 @@ void main() {
     await s.clear(); // must not throw even though there is nothing left to delete
   });
 
-  // A file an older build wrote is imported when the store first opens the folder (local_store_import.dart), so these
-  // write it before the store is first used there (plan P-D5).
-  test('a corrupted file on disk reads back as null, not a crash', () async {
-    await Directory('${tempDir.path}/nested').create(recursive: true);
-    await File('${tempDir.path}/nested/cart.json').writeAsString('not json{{{');
+  test('a damaged document reads back as null, not a crash', () async {
+    LocalStore.forDir(Directory('${tempDir.path}/nested')).write('cart.json', 'not json{{{');
     expect(await store().load(231), isNull);
   });
 
   test('a line missing a required field reads back as null for the whole cart, not a partial list', () async {
-    await Directory('${tempDir.path}/nested').create(recursive: true);
-    await File('${tempDir.path}/nested/cart.json').writeAsString(
-        '{"centerId": 231, "lines": [{"lots": [{"productGuid": "PKPR-x"}], "qty": 1}]}'); // no priceCentsEach, no dose
+    LocalStore.forDir(Directory('${tempDir.path}/nested')).write(
+        'cart.json', '{"centerId": 231, "lines": [{"lots": [{"productGuid": "PKPR-x"}], "qty": 1}]}'); // no priceCentsEach, no dose
     expect(await store().load(231), isNull);
   });
 
@@ -114,7 +110,7 @@ void main() {
     expect(await b.load(231), isNull);
   });
 
-  // SM-16: a draft nobody has changed for the cart's life (rules.yaml cart.minutes, or the server's live value) is
+  // A draft nobody has changed for the cart's life (rules.yaml cart.minutes, or the server's live value) is
   // not restored, as the server empties a cart nobody has changed for that long.
   group('cart life', () {
     final t0 = DateTime.utc(2026, 10, 21, 9);
@@ -129,11 +125,11 @@ void main() {
       final s = store();
       await s.save(231, [line], now: () => t0);
       expect(await s.load(231, now: () => t0.add(const Duration(days: 30))), hasLength(1));
-      // The same draft without its time, as an older build's cart.json in a folder the store hasn't opened yet.
+      // The same draft without its time, as a draft saved before drafts carried one.
       final saved = LocalStore.forDir(Directory('${tempDir.path}/nested')).read('cart.json')!.body;
       final old = jsonDecode(saved) as Map<String, Object?>..remove('savedAtMs');
-      final olderBuild = Directory('${tempDir.path}/older')..createSync();
-      File('${olderBuild.path}/cart.json').writeAsStringSync(jsonEncode(old));
+      final olderBuild = Directory('${tempDir.path}/older');
+      LocalStore.forDir(olderBuild).write('cart.json', jsonEncode(old));
       expect(
           await CartStore(dataDir: () => olderBuild)
               .load(231, maxAge: const Duration(minutes: 1), now: () => t0.add(const Duration(days: 30))),

@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "records.dry_grams output",
+  "description": "Each dry weight in grams: a finite number, or text that is a plain number, is that number; anything else is 0.",
+  "type": "array",
+  "items": {
+    "type": "number"
+  }
+}

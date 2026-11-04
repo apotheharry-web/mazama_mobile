@@ -1,8 +1,8 @@
-// SP-D8, SP-R11, MI-D1: the Mazama inventory | Stock | Cart home (lib/center_home_page.dart): opens on Stock, swipes
+// The Mazama inventory | Stock | Cart home (lib/center_home_page.dart): opens on Stock, swipes
 // and tab taps switch, the Cart label shows the draft's count. The pages are stand-ins here
 // (mazama_inventory_page_test.dart covers the Mazama inventory page; (cart_page_*_test.dart covers
 // CartPage.onDraftCountChanged; center_stock_page_test.dart the stock page; select_center_page_test.dart the wiring).
-// specs/phone-sync Task 8b Step 2: opening it asks the sync engine once for each dataset its pages read through it.
+// Opening it asks the sync engine once for each dataset its pages read through it.
 import 'dart:convert';
 import 'dart:io';
 
@@ -105,7 +105,7 @@ void main() {
     expect(find.text('the cart', skipOffstage: false), findsOneWidget);
     expect(find.text('Stock'), findsOneWidget);
     expect(find.text('Cart'), findsOneWidget);
-    // MI-D1: Mazama inventory is the first tab, labelled just "Mazama" (owner, 2026-10-22), built beside Stock too.
+    // Mazama inventory is the first tab, labelled just "Mazama", built beside Stock too.
     expect(find.text('Mazama'), findsOneWidget);
     expect(find.text('Mazama inventory'), findsNothing);
     expect(find.text('the mazama stock'), findsNothing);
@@ -198,7 +198,7 @@ void main() {
     expect(find.text('Cart (2)'), findsOneWidget); // the same cart, not a fresh one
   });
 
-  // specs/features FR-3: the tabs follow the feature registry.
+  // The tabs follow the feature registry.
   testWidgets('default table shows Mazama, Stock, Cart and Sales, opening on Stock', (tester) async {
     await tester.pumpWidget(_home());
     await tester.pumpAndSettle();
@@ -235,7 +235,7 @@ void main() {
     expect(find.text('the cart'), findsOneWidget);
   });
 
-  // specs/center-web CW-R10 (T13): Sales is the fourth tab, right of Cart, while recent_sales is on for the license.
+  // Sales is the fourth tab, right of Cart, while recent_sales is on for the license.
   testWidgets('the Sales tab sits right of Cart and opens its page', (tester) async {
     await tester.pumpWidget(_home());
     await tester.pumpAndSettle();
@@ -248,7 +248,7 @@ void main() {
     expect(find.text('the cart'), findsOneWidget);
   });
 
-  // Review I-1: the pages beside the visible one are built ahead (allowImplicitScrolling), but Sales reads the whole
+  // The pages beside the visible one are built ahead (allowImplicitScrolling), but Sales reads the whole
   // sales history: it must not start while the worker is on the Cart, only once its own tab is opened.
   testWidgets('Sales is not built while the worker opens the Cart, only when its tab is opened', (tester) async {
     final started = <int>[];
@@ -287,7 +287,7 @@ void main() {
     expect(find.text('Nothing in this app is on for this license.'), findsOneWidget);
   });
 
-  // --- specs/phone-sync Task 8b Step 2 ---------------------------------------------------------------------------
+  // --- the pages read through the sync engine -------------------------------------------------------------------
 
   group('the datasets its pages read through the engine', () {
     final engines = <SyncEngine>[];

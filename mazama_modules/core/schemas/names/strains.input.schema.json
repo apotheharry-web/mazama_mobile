@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "names.strains input",
+  "description": "Strain names, and the Strains page's (spelling, name shown) pairs.",
+  "type": "object",
+  "required": [
+    "texts"
+  ],
+  "properties": {
+    "texts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "aliases": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "prefixItems": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "string"
+          }
+        ],
+        "minItems": 2,
+        "maxItems": 2
+      }
+    }
+  }
+}

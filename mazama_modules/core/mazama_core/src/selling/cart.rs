@@ -1,19 +1,16 @@
-//! A cart priced as a whole, a line priced on its own, and which lot a unit is drawn from (specs/core row 6, Task 12;
-//! SM-14, SM-17, SM-D29). One rule for the server (pricing.price_cart, carts.build_cart's lines, selling.draw_order /
+//! A cart priced as a whole, a line priced on its own, and which lot a unit is drawn from. One rule for the server (pricing.price_cart, carts.build_cart's lines, selling.draw_order /
 //! allocate, through the binding) and the phone (cart_pricing.dart's priceWholeCart, the cart's line dialog,
 //! packages_client.dart's drawOrder / allocateLots, through the FFI), held to mazama_modules/selling/vectors/cart.json,
 //! allocate.json and pricing_cases.json.
 //!
-//! The owner's decisions of 2026-10-31 (CR-D6) where the old copies disagreed:
+//! | Input | Answer |
+//! |---|---|
+//! | a line priced at a rate per mg that comes to over $10,000 a unit | refused, `unit_cap` |
+//! | a total shared over lines whose remainders are equal | the earlier line gets the cent ([`super::pricing::share_total`]) |
+//! | two lots of one expiry whose quantities differ only below a unit | whole units (toward zero) decide, then the lower id |
+//! | a line's mg that isn't a whole number of 0 or more, a quantity outside 1..999, a group not A or B | an input error |
 //!
-//! | ID | Input | Answer |
-//! |---|---|---|
-//! | PRICE-3 | a line priced at a rate per mg that comes to over $10,000 a unit | refused, `unit_cap` (the phone's dialog sold it) |
-//! | PRICE-4 | a total shared over lines whose remainders are equal | the earlier line gets the cent ([`super::pricing::share_total`]) |
-//! | PRICE-6 | two lots of one expiry whose quantities differ only below a unit | whole units (toward zero) decide, then the lower id |
-//! | PRICE-7 | a line's mg that isn't a whole number of 0 or more, a quantity outside 1..999, a group not A or B | an input error |
-//!
-//! A lot only the state lists (`state_only`) never comes before a lab lot ("lab lot first", feature/lab-lot-first).
+//! A lot only the state lists (`state_only`, with no lab report of its own) never comes before a lab lot.
 use std::cmp::Ordering;
 
 use serde_json::{Value, json};
@@ -58,11 +55,16 @@ fn refused(n: usize, error: &str) -> Value {
     json!({"each": null, "line_errors": vec![Value::Null; n], "error": error})
 }
 
-/// One price per unit for every line of a cart priced as a whole (SM-14), or why it can't be.
-/// - total: the total (plus tax, half up, when asked) is split between groups A and B by the agreement when the cart has
-///   both; each group's part is shared over its lines by mg x quantity (by quantity when any line's mg is unknown); a
-///   unit costs its line's share / its quantity, half up (SM-D27).
-/// - per_mg: the rate is whole cents, plus tax half up to whole cents (SM-D26), times each unit's mg.
+/// One price per unit for every line of a cart priced as a whole, or why it can't be.
+/// - total: the typed total in cents (plus tax, half up, when asked) is split between groups A (edibles and extracts)
+///   and B (the rest) by the agreement's two weights when the cart has both ([`share_total`]: parts rounded down, the
+///   cents left to the largest remainders); each group's part is shared the same way over its lines by mg x quantity
+///   (by quantity alone when any line's mg is unknown); a unit costs its line's share / its quantity, half up to the
+///   cent.
+/// - per_mg: the typed rate is read into whole cents, tax added and rounded half up to whole cents first, then times
+///   each unit's whole mg.
+///
+/// Any unit over $10,000 refuses the whole cart (`unit_cap`).
 #[allow(clippy::too_many_arguments)]
 fn price_cart(mode: &str, ls: &[Line], total: &str, per_mg: &str, tax: bool, pct: i64, agreement: [i64; 2]) -> R<Value> {
     let n = ls.len();
@@ -143,8 +145,57 @@ pub fn price_cart_json(input_json: &str) -> R<String> {
     Ok(price_cart(mode, &ls, total, per_mg, tax, pct, agreement)?.to_string())
 }
 
+/// A whole number of the cart's totals: within 64 bits, else an input error (never a wrapped total).
+fn total64(f: &str, x: i128) -> R<i64> {
+    i64::try_from(x).map_err(|_| format!("{f}: a total doesn't fit 64 bits").into())
+}
+
+/// `{"lines": [{"qty", "price_cents", "group": "A" | "B" | null}], "sales": n}` -> `{"line_totals": [int], "total",
+/// "group_totals": {"A", "B"}, "units", "all_total", "all_units"}` (schemas/selling/cart_total.*): each line's quantity x
+/// its price each, their sum, the sum per group (a line of no group in neither), the units, and n sales of the cart, in
+/// whole cents, exact. The figures are taken as given (what may be sold is held by the line dialog and build_sale); a
+/// figure that isn't a 64-bit integer, n below 1 or an answer past 64 bits is an input error.
+pub fn cart_total_json(input_json: &str) -> R<String> {
+    const F: &str = "selling.cart_total";
+    let m = input(F, input_json)?;
+    let Value::Array(items) = field(F, &m, "lines")? else { return Err(format!("{F}: lines must be a list").into()) };
+    let sales = int(F, field(F, &m, "sales")?, "sales")?;
+    if sales < 1 {
+        return Err(format!("{F}: sales must be 1 or more").into());
+    }
+    let (mut each, mut total, mut a, mut b, mut units) = (Vec::with_capacity(items.len()), 0i128, 0i128, 0i128, 0i128);
+    for (i, l) in items.iter().enumerate() {
+        let Value::Object(l) = l else { return Err(format!("{F}: line {i} must be an object").into()) };
+        let qty = i128::from(int(F, field(F, l, "qty")?, "a line's qty")?);
+        let price = i128::from(int(F, field(F, l, "price_cents")?, "a line's price_cents")?);
+        let line = total64(F, qty * price)?; // two 64-bit factors fit i128; the line's total must fit 64 bits
+        let wide = i128::from(line);
+        match field(F, l, "group")? {
+            Value::Null => {}
+            Value::String(g) if g == "A" => a += wide,
+            Value::String(g) if g == "B" => b += wide,
+            _ => return Err(format!("{F}: line {i}'s group must be A, B or null").into()),
+        }
+        each.push(line);
+        total += wide;
+        units += qty;
+    }
+    // sums of 64-bit figures stay within i128 for any list that fits in memory; n x a 64-bit total does too
+    let (total, units) = (total64(F, total)?, total64(F, units)?);
+    let out = json!({
+        "line_totals": each,
+        "total": total,
+        "group_totals": {"A": total64(F, a)?, "B": total64(F, b)?},
+        "units": units,
+        "all_total": total64(F, i128::from(sales) * i128::from(total))?,
+        "all_units": total64(F, i128::from(sales) * i128::from(units))?,
+    });
+    Ok(out.to_string())
+}
+
 /// `{"mode": "each" | "per_mg", "text", "mg"}` -> `{"cents": int | null, "error": null | "price" | "rate" | "no_mg" |
-/// "unit_cap"}`: a price each, or a rate per mg times the line's whole mg, within the $10,000 unit cap (PRICE-3).
+/// "unit_cap"}`: a price each, or a rate per mg times the line's whole mg, within the $10,000 unit cap (over it is
+/// refused, never sold).
 pub fn line_price_json(input_json: &str) -> R<String> {
     const F: &str = "selling.line_price";
     let m = input(F, input_json)?;
@@ -202,7 +253,7 @@ pub(crate) fn is_date(s: &str) -> bool {
     y >= 1 && (1..=days).contains(&d)
 }
 
-/// A lot's whole units: its quantity toward zero (PRICE-6), null as 0; a figure past 64 bits is held at the 64-bit end.
+/// A lot's whole units: its quantity toward zero, null as 0; a figure past 64 bits is held at the 64-bit end.
 fn units(f: &str, v: &Value) -> R<i64> {
     match v {
         Value::Null => Ok(0),

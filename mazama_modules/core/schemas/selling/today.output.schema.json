@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "selling.today output",
-  "description": "The Pacific date of now (SALE-2).",
+  "description": "The Pacific date of now.",
   "type": "object",
   "required": [
     "date"

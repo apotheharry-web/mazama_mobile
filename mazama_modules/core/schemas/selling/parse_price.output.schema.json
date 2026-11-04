@@ -12,7 +12,7 @@
         "integer",
         "null"
       ],
-      "description": "Whole cents, rounded half up; null when it isn't a price or is over the cap (PRICE-1: compared digit by digit, never overflowing)."
+      "description": "Whole cents, rounded half up; null when it isn't a price or is over the cap (compared digit by digit, never overflowing)."
     }
   }
 }

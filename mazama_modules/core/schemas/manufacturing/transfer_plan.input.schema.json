@@ -1,0 +1,171 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "manufacturing.transfer_plan input",
+  "description": "A checked transfer (a queued job's): the records as read now, its items, whether to work out the planned transfers, and what its manifest is written from.",
+  "type": "object",
+  "required": [
+    "records",
+    "items"
+  ],
+  "properties": {
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "description": "A package record as the server holds it: id, productGuid, description, quantity, and for the planned transfers productType, weightPerUnit and analyteWeight (echoed as they are).",
+        "properties": {
+          "id": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "record_id",
+          "qty"
+        ],
+        "properties": {
+          "record_id": {
+            "type": "integer"
+          },
+          "qty": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "planned": {
+      "type": "boolean"
+    },
+    "manifest": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "src",
+            "dst",
+            "fields",
+            "driver"
+          ],
+          "properties": {
+            "src": {
+              "type": "object",
+              "required": [
+                "license",
+                "address"
+              ],
+              "properties": {
+                "license": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "address": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            },
+            "dst": {
+              "type": "object",
+              "required": [
+                "license",
+                "address"
+              ],
+              "properties": {
+                "license": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "address": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            },
+            "driver": {
+              "type": "object",
+              "required": [
+                "name",
+                "phone",
+                "permit",
+                "make",
+                "model",
+                "plate"
+              ],
+              "description": "The driver's details as confirmed (the phone number's last ten decimal digits are written).",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "phone": {
+                  "type": "string"
+                },
+                "permit": {
+                  "type": "string"
+                },
+                "make": {
+                  "type": "string"
+                },
+                "model": {
+                  "type": "string"
+                },
+                "plate": {
+                  "type": "string"
+                }
+              }
+            },
+            "fields": {
+              "type": "object",
+              "required": [
+                "dep",
+                "dep_time",
+                "arr",
+                "arr_time",
+                "route",
+                "price_cents"
+              ],
+              "properties": {
+                "dep": {
+                  "type": "string"
+                },
+                "arr": {
+                  "type": "string"
+                },
+                "dep_time": {
+                  "type": "string"
+                },
+                "arr_time": {
+                  "type": "string"
+                },
+                "route": {
+                  "type": "string"
+                },
+                "price_cents": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  }
+}

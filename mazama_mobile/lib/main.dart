@@ -51,8 +51,8 @@ Future<void> main() async {
   await initAppDataDir();
   // Where a build-specific offline-resilience tweak goes (resilience_options.dart's own file comment) - e.g.
   // `const MazamaApp(resilienceOptions: ResilienceOptions(cacheMaxAge: Duration(days: 1)))` for a build that
-  // wants a tighter cache window. Left at the default here, same as every call site before this existed.
-  // CR-R3: the shared core is loaded once, here, before the first frame; without it the app shows MissingCoreApp
+  // wants a tighter cache window. Left at the default here.
+  // The shared core is loaded once, here, before the first frame; without it the app shows MissingCoreApp
   runApp(startWidgetFor());
 }
 
@@ -60,13 +60,13 @@ Future<void> main() async {
 /// SelectCenterPage and CartPage use when ensureFreshSession gives up (no refresh token, or the state system
 /// refused the one there was). Pulling this all the way out to the top means neither page has to duplicate the
 /// "clear storage, replace the whole nav stack" sequence or risk leaving it half-done.
-/// DM-D2: the demo sign-in is user `guest` (trimmed, any case) with password `guest` exactly.
+/// The demo sign-in is user `guest` (trimmed, any case) with password `guest` exactly.
 bool isDemoSignIn(String email, String password) => email.trim().toLowerCase() == 'guest' && password == 'guest';
 
 Future<void> goToSignIn(BuildContext context,
     {required FlowSpec spec, required SessionStore sessionStore, String? message}) async {
   await sessionStore.clear();
-  // A signed-out phone shows no center's carts on its home screen (MC-D15), however it came to be signed out.
+  // A signed-out phone shows no center's carts on its home screen, however it came to be signed out.
   unawaited(const CartTimerWidget().clear());
   if (!context.mounted) return;
   Navigator.of(context).pushAndRemoveUntil(
@@ -85,7 +85,7 @@ class MazamaApp extends StatefulWidget {
   /// doesn't have to know this field exists.
   final ResilienceOptions resilienceOptions;
 
-  /// The app's one link to Mazama's server (server_link.dart, README R56): the server tracker behind the banner above
+  /// The app's one link to Mazama's server (server_link.dart): the server tracker behind the banner above
   /// every page, the outbox and the catch-up work. Null (the app) builds the real one in [sessionStore]'s folder;
   /// tests pass their own.
   final ServerLink? serverLink;
@@ -103,7 +103,7 @@ class _MazamaAppState extends State<MazamaApp> with WidgetsBindingObserver {
   /// The app's server link, made the app-wide one ([useServerLink]) before any page can call a /p/ route.
   late final ServerLink _link;
 
-  /// specs/app-updates AU-R8: the app's update checker ([useAppUpdateChecker]), checking at start-up and whenever the
+  /// The app's update checker ([useAppUpdateChecker]), checking at start-up and whenever the
   /// app comes back to the foreground (at most every 6 hours, Android only, never in the demo), unawaited.
   late final AppUpdateChecker _updates;
 
@@ -116,7 +116,7 @@ class _MazamaAppState extends State<MazamaApp> with WidgetsBindingObserver {
     _link.wake(); // anything a previous run left waiting, if the server answers
     _updates = AppUpdateChecker(store: AppUpdateStore(dataDir: widget.sessionStore.dataDir));
     useAppUpdateChecker(_updates);
-    // AU-D11: a download a previous run left behind is deleted (none on a phone that never updated)
+    // A download a previous run left behind is deleted (none on a phone that never updated)
     if (Platform.isAndroid) unawaited(getTemporaryDirectory().then(clearUpdates).catchError((Object _) {}));
     unawaited(_updates.check());
   }
@@ -127,7 +127,7 @@ class _MazamaAppState extends State<MazamaApp> with WidgetsBindingObserver {
       _link.onForeground();
       unawaited(_updates.check());
     } else if (state == AppLifecycleState.paused || state == AppLifecycleState.hidden) {
-      _link.onBackground(); // specs/phone-sync PS-D6: no refresh in the background
+      _link.onBackground(); // no refresh in the background
     }
   }
 
@@ -146,7 +146,7 @@ class _MazamaAppState extends State<MazamaApp> with WidgetsBindingObserver {
   /// other case (nothing stored, or ensureFreshSession gives up) falls back to a real sign-in, after clearing
   /// whatever unusable session was on disk so the next launch doesn't repeat the same failed renew attempt.
   ///
-  /// Final review I1: never throws (a throw would leave the FutureBuilder's spinner up for good). When the spec in use
+  /// Never throws (a throw would leave the FutureBuilder's spinner up for good). When the spec in use
   /// is one saved from the server and deciding with it fails any other way than the two Session exceptions (or with
   /// SessionSpecUnusable, the spec's own failure), that spec is set aside (LoginSpecStore.quarantine) and the decision
   /// made again with the bundled one; whatever else goes wrong lands on the sign-in page.
@@ -155,10 +155,10 @@ class _MazamaAppState extends State<MazamaApp> with WidgetsBindingObserver {
     final String bundledYaml;
     final ({FlowSpec spec, bool saved}) choice;
     try {
-      // SL-R18: the saved signed host list (verified again; none, the built-in hosts only, when there is none or it no
+      // The saved signed host list (verified again; none, the built-in hosts only, when there is none or it no
       // longer verifies) is put in use before any spec is checked or flow run: the saved spec, renew, every read.
       useLoginHosts(await LoginHostsStore(dataDir: widget.sessionStore.dataDir).load());
-      // SL-R9: the newer valid one of the bundled spec and one saved from the server (login_spec_store.dart).
+      // The newer valid one of the bundled spec and one saved from the server (login_spec_store.dart).
       bundledYaml = await rootBundle.loadString(bundledLoginSpecAsset);
       choice = await specStore.choose(bundledYaml);
     } catch (e) {
@@ -247,14 +247,14 @@ class _MazamaAppState extends State<MazamaApp> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Mazama',
-      // DM-R5: "Demo: nothing here is real" above every page while the demo is open; under it, while Mazama's server
-      // can't be reached (and never in the demo), the server link's banner (README R56).
+      // "Demo: nothing here is real" above every page while the demo is open; under it, while Mazama's server
+      // can't be reached (and never in the demo), the server link's banner.
       builder: (context, child) => demoBannerBuilder(context, ServerLinkBanner(link: _link, child: child ?? const SizedBox.shrink())),
       home: FutureBuilder<Widget>(
         future: _homeFuture,
         builder: (context, snapshot) {
           if (snapshot.hasData) return snapshot.data!;
-          // "Still loading". _resolveHome never throws (every failure inside it becomes a page: final review I1).
+          // "Still loading". _resolveHome never throws (every failure inside it becomes a page).
           return const Scaffold(body: Center(child: CircularProgressIndicator()));
         },
       ),
@@ -262,20 +262,20 @@ class _MazamaAppState extends State<MazamaApp> with WidgetsBindingObserver {
   }
 }
 
-/// SL-R5: what the sign-in page shows when the state's sign-in page no longer looks the way login.yaml expects
+/// What the sign-in page shows when the state's sign-in page no longer looks the way login.yaml expects
 /// (a check with reason `structure` failed), instead of the check's own technical message.
 const stateSigninChangedMessage = "The state's sign-in has changed. Mazama has been told.";
 
-/// SL-R13: what the sign-in page shows when the worker cancelled (or left empty) a question the sign-in spec asked
+/// What the sign-in page shows when the worker cancelled (or left empty) a question the sign-in spec asked
 /// (reason `cancelled`). Not reported, and no newer spec is looked for: nothing went wrong.
 const signInCancelledMessage = 'Sign-in cancelled.';
 
-/// SL-R16: what the sign-in page shows when the sign-in on the state's own page didn't end with a session for a
+/// What the sign-in page shows when the sign-in on the state's own page didn't end with a session for a
 /// reason that isn't the worker's or the state page's own refusal (the page answered another sign-in, returned no
-/// code, the token request gave no token). Not reported; a newer browser spec is looked for first (SL-R19).
+/// code, the token request gave no token). Not reported; a newer browser spec is looked for first.
 const browserSigninUnfinishedMessage = "The state's page didn't finish signing in. Try again, or tell Mazama.";
 
-/// SL-R16: added under the message when a password sign-in failed because the state's sign-in has changed
+/// Added under the message when a password sign-in failed because the state's sign-in has changed
 /// (`structure`) or needs a person (`needs_person`), the cases the sign-in on the state's own page is for.
 const browserSigninSuggestion = "You can sign in on the state's page instead.";
 
@@ -285,16 +285,16 @@ const browserSigninSuggestion = "You can sign in on the state's page instead.";
 const emailRequiredMessage = 'Enter your email';
 const browserEmailRequiredMessage = 'Enter an email address to receive notifications';
 
-/// SL-R18: the note over the next page after a sign-in that a signed host list just fetched from Mazama's server
+/// The note over the next page after a sign-in that a signed host list just fetched from Mazama's server
 /// enabled: the list is kept, and the hosts it adds to the app's own are allowed from now on, so a host the owner
-/// didn't sign is seen (SL-D13's mitigation). Worded as what is allowed, not what was used: the retry may not have
+/// didn't sign is seen. Worded as what is allowed, not what was used: the retry may not have
 /// needed every host the list adds.
 String newSigninHostsMessage(List<String> hosts) => "Sign-in now also allows: ${hosts.join(', ')}";
 
-/// SL-R18: shown under a failed retry that ran with the hosts a newly fetched list adds (nothing was kept).
+/// Shown under a failed retry that ran with the hosts a newly fetched list adds (nothing was kept).
 String retrySigninHostsMessage(List<String> hosts) => "The retry also allowed: ${hosts.join(', ')}";
 
-/// SL-R5: told about every failed sign-in except a wrong email or password (reason `credentials`), with the login
+/// Told about every failed sign-in except a wrong email or password (reason `credentials`), with the login
 /// spec's `spec_version`. SignInPage calls it fire-and-forget: whatever it does, returns or throws never delays or
 /// changes what the page shows.
 typedef SigninFailureReporter = Future<void> Function(FlowError error, String? specVersion);
@@ -327,63 +327,63 @@ class SignInPage extends StatefulWidget {
   /// other call site.
   final ResilienceOptions resilienceOptions;
 
-  /// SL-R5: told about failed sign-ins (see SigninFailureReporter); null means defaultSigninFailureReporter.
+  /// Told about failed sign-ins (see SigninFailureReporter); null means defaultSigninFailureReporter.
   /// Injected by tests so nothing is posted or written to disk.
   final SigninFailureReporter? reportSigninFailure;
 
-  /// SL-R10: asks for the newest sign-in spec after a failed sign-in (not `credentials`); null means requestLoginSpec
+  /// Asks for the newest sign-in spec after a failed sign-in (not `credentials`); null means requestLoginSpec
   /// (Mazama's server, through the server link). Answers null when there is none to be had.
   final Future<FetchedSpec?> Function()? fetchSpec;
 
-  /// SL-R10: where a newer spec that just signed in is kept; null means a LoginSpecStore in the session store's
+  /// Where a newer spec that just signed in is kept; null means a LoginSpecStore in the session store's
   /// folder, the one MazamaApp._resolveHome reads at start-up.
   final LoginSpecStore? specStore;
 
-  /// SL-R18: asks for the owner's signed host list, alongside [fetchSpec], and answers it only when it verifies
+  /// Asks for the owner's signed host list, alongside [fetchSpec], and answers it only when it verifies
   /// against the bundled key; null means requestLoginHosts and verifiedLoginHostsReply (Mazama's server, through the server link). Answers null
   /// when there is none to be had.
   final Future<HostList?> Function()? fetchHosts;
 
-  /// SL-R18: where a host list that just enabled a sign-in is kept; null means a LoginHostsStore in the session
+  /// Where a host list that just enabled a sign-in is kept; null means a LoginHostsStore in the session
   /// store's folder, the one MazamaApp._resolveHome reads at start-up.
   final LoginHostsStore? hostsStore;
 
-  /// SL-R13: answers a sign-in spec's `await_input` question (prompt, secret) - an MFA code, say - or null when the
-  /// worker cancelled; null means askSignInValue's dialog. Handed to runFlow on the first attempt and on the SL-D11
+  /// Answers a sign-in spec's `await_input` question (prompt, secret) - an MFA code, say - or null when the
+  /// worker cancelled; null means askSignInValue's dialog. Handed to runFlow on the first attempt and on the one
   /// retry, never to renew (nobody is there to ask).
   final Future<String?> Function(String prompt, bool secret)? ask;
 
-  /// SL-R16: shows the state's own sign-in page at a URL and answers the URL it ended at (starting with `until`), or
+  /// Shows the state's own sign-in page at a URL and answers the URL it ended at (starting with `until`), or
   /// null when the worker closed it; null means openBrowserSignIn (the webview page). Injected by tests.
   final Future<String?> Function(String url, String until)? browse;
 
-  /// SL-R16: the browser sign-in spec; null means loadBrowserLoginSpec (the newer of the bundled assets/flows_phone/
-  /// copy and one kept in [browserSpecStore], SL-R19).
+  /// The browser sign-in spec; null means loadBrowserLoginSpec (the newer of the bundled assets/flows_phone/
+  /// copy and one kept in [browserSpecStore]).
   final Future<FlowSpec> Function()? browserSpec;
 
-  /// SL-R19: asks for the newest browser sign-in spec after a failed browser sign-in (not `cancelled`/`credentials`);
+  /// Asks for the newest browser sign-in spec after a failed browser sign-in (not `cancelled`/`credentials`);
   /// null means requestBrowserLoginSpec (Mazama's server, through the server link). Answers null when there is none.
   final Future<FetchedSpec?> Function()? fetchBrowserSpec;
 
-  /// SL-R19: where a newer browser spec that just signed in is kept; null means a LoginSpecStore.browser in the
+  /// Where a newer browser spec that just signed in is kept; null means a LoginSpecStore.browser in the
   /// session store's folder (login_browser_spec.yaml, apart from login_spec.yaml).
   final LoginSpecStore? browserSpecStore;
 
-  /// PA-R6: opens the link to this app's published source; null means the phone's browser. Injected by tests.
+  /// Opens the link to this app's published source; null means the phone's browser. Injected by tests.
   final Future<bool> Function(Uri uri)? openLink;
 
-  /// specs/app-updates AU-R17: whether Mazama's server can't answer (the server link counts it offline); null means
+  /// Whether Mazama's server can't answer (the server link counts it offline); null means
   /// the app's server link. Asked only after a fetch above answered nothing.
   final bool Function()? serverOffline;
 
-  /// AU-R17: the signed sign-in spec read from GitHub when the server can't answer, given the attempt's hosts; null
+  /// The signed sign-in spec read from GitHub when the server can't answer, given the attempt's hosts; null
   /// means github_signin_files.dart's githubLoginSpec (login.yaml). Injected by tests.
   final Future<FetchedSpec?> Function(Iterable<String> allowedHosts)? githubFetchSpec;
 
-  /// AU-R17: as [githubFetchSpec], for the browser sign-in (login_browser.yaml).
+  /// As [githubFetchSpec], for the browser sign-in (login_browser.yaml).
   final Future<FetchedSpec?> Function(Iterable<String> allowedHosts)? githubFetchBrowserSpec;
 
-  /// AU-R17: the signed host list read from GitHub when the server can't answer; null means githubHostList.
+  /// The signed host list read from GitHub when the server can't answer; null means githubHostList.
   final Future<HostList?> Function()? githubFetchHosts;
 
   const SignInPage({
@@ -422,14 +422,14 @@ class _SignInPageState extends State<SignInPage> {
   bool _submitting = false;
   String? _error;
 
-  /// SL-R16: [browserSigninSuggestion] is shown under [_error] (set with it by [_showFailure]).
+  /// [browserSigninSuggestion] is shown under [_error] (set with it by [_showFailure]).
   bool _suggestBrowser = false;
 
   /// Set while "Sign in on the state's page" checks the Email field, so an empty one asks with
   /// [browserEmailRequiredMessage]; the password sign-in asks with [emailRequiredMessage].
   bool _emailForBrowser = false;
 
-  /// SL-R18: the hosts a newly fetched list added that the failed retry used; named under [_error].
+  /// The hosts a newly fetched list added that the failed retry used; named under [_error].
   List<String> _newHosts = const [];
 
   @override
@@ -438,7 +438,7 @@ class _SignInPageState extends State<SignInPage> {
     setDemoMode(false); // the sign-in page is never part of the demo (signing out of it lands here)
   }
 
-  /// DM-R3: guest / guest opens the demo center built into the app; nothing is saved (DM-D6) or sent (DM-D1).
+  /// Guest / guest opens the demo center built into the app; nothing is saved or sent.
   Future<void> _openDemo() async {
     try {
       final demo = await DemoBackend.load(rootBundle);
@@ -469,10 +469,10 @@ class _SignInPageState extends State<SignInPage> {
     unawaited(Future<void>.sync(() => report(e, specVersion)).catchError((Object _) {}));
   }
 
-  /// SL-R10: the newest sign-in spec to be had, or null - a fetch that fails or throws (even before returning a
+  /// The newest sign-in spec to be had, or null - a fetch that fails or throws (even before returning a
   /// Future) counts as none. The default fetch holds the reply to [allowedHosts] (the hosts of this attempt).
   ///
-  /// AU-R17: when that answers nothing and the server can't answer, the owner's signed login.yaml from GitHub
+  /// When that answers nothing and the server can't answer, the owner's signed login.yaml from GitHub
   /// (verified with the bundled key, usable under [allowedHosts]); when the server answers, GitHub is not asked.
   Future<FetchedSpec?> _fetchSpec(Iterable<String> allowedHosts) async {
     final Future<FetchedSpec?> Function() fetch =
@@ -485,8 +485,8 @@ class _SignInPageState extends State<SignInPage> {
   }
 
   /// [fetch]'s answer (null when it fails or throws, even before returning a Future), and whether it failed for want
-  /// of any answer from the server (no connection, a timeout): AU-R17 then asks GitHub, whatever the server link has
-  /// noticed yet (review I1: the link counts the server offline only after its own, longer, read timeout).
+  /// of any answer from the server (no connection, a timeout): GitHub is then asked, whatever the server link has
+  /// noticed yet (the link counts the server offline only after its own, longer, read timeout).
   Future<(T?, bool)> _tryFetch<T>(Future<T?> Function() fetch) async {
     try {
       return (await Future<T?>.sync(fetch), false);
@@ -510,7 +510,7 @@ class _SignInPageState extends State<SignInPage> {
     }
   }
 
-  /// AU-R17: Mazama's server can't answer (the server link counts it offline).
+  /// Mazama's server can't answer (the server link counts it offline).
   bool _serverOffline() {
     try {
       return (widget.serverOffline ?? () => serverLink.health.offline)();
@@ -519,7 +519,7 @@ class _SignInPageState extends State<SignInPage> {
     }
   }
 
-  /// SL-R19: the newest browser sign-in spec to be had, or null, as [_fetchSpec]; the default fetch holds the reply to
+  /// The newest browser sign-in spec to be had, or null, as [_fetchSpec]; the default fetch holds the reply to
   /// [allowedHosts] and to the browser served mode.
   Future<FetchedSpec?> _fetchBrowserSpec(Iterable<String> allowedHosts) async {
     final Future<FetchedSpec?> Function() fetch =
@@ -534,7 +534,7 @@ class _SignInPageState extends State<SignInPage> {
   LoginSpecStore get _browserSpecStore =>
       widget.browserSpecStore ?? LoginSpecStore.browser(dataDir: widget.sessionStore.dataDir);
 
-  /// SL-R18: the signed host list fetched after a failure, when it is newer than the one in use and adds a host: the
+  /// The signed host list fetched after a failure, when it is newer than the one in use and adds a host: the
   /// candidate for the retry, kept only after a sign-in it enabled. One that only removes hosts ([onlyRemovesHosts]) is
   /// kept and put in use at once instead (it widens nothing), and null is returned. Null too when there is none newer.
   Future<HostList?> _newerHostList() async {
@@ -553,9 +553,9 @@ class _SignInPageState extends State<SignInPage> {
     return fetched;
   }
 
-  /// SL-R18: the signed host list to be had (verified), or null - a fetch that fails or throws counts as none.
+  /// The signed host list to be had (verified), or null - a fetch that fails or throws counts as none.
   ///
-  /// AU-R17: when that answers nothing and the server can't answer, the owner's signed hosts.json from GitHub
+  /// When that answers nothing and the server can't answer, the owner's signed hosts.json from GitHub
   /// (verified with the bundled key; kept as any list is, only when newer and after a sign-in it enabled).
   Future<HostList?> _fetchHosts() async {
     final Future<HostList?> Function() fetch =
@@ -567,9 +567,9 @@ class _SignInPageState extends State<SignInPage> {
 
   /// FlowError's own message is already scrubbed of email/password/tokens (see flow_runner.dart's defaultSecretKeys)
   /// before it ever reaches here, so it's safe to show directly - except when the state's sign-in page itself has
-  /// changed, where the worker gets a plain sentence instead of the failed check (SL-R5), and a question the worker
-  /// cancelled (SL-R13).
-  /// SL-R16: a `structure` or `needs_person` failure also suggests the sign-in on the state's own page.
+  /// changed, where the worker gets a plain sentence instead of the failed check, and a question the worker
+  /// cancelled.
+  /// A `structure` or `needs_person` failure also suggests the sign-in on the state's own page.
   void _showFailure(FlowError e) {
     if (!mounted) return;
     setState(() {
@@ -582,8 +582,8 @@ class _SignInPageState extends State<SignInPage> {
     });
   }
 
-  /// SL-R16: how a failed sign-in on the state's own page is shown. B2C's own refusal (`credentials`) and anything
-  /// else show the FlowError's (scrubbed) message; never reported (SL-R19's one retry with a fetched spec comes first).
+  /// How a failed sign-in on the state's own page is shown. B2C's own refusal (`credentials`) and anything
+  /// else show the FlowError's (scrubbed) message; never reported (the one retry with a fetched spec comes first).
   void _showBrowserFailure(FlowError e) {
     if (!mounted) return;
     setState(() {
@@ -622,31 +622,31 @@ class _SignInPageState extends State<SignInPage> {
       final email = _emailController.text.trim();
       final inputs = <String, Object?>{'email': email, 'password': _passwordController.text};
       var spec = widget.spec;
-      // SL-R18: the hosts this attempt may use. The first try uses the phone's own (built-in plus the saved list's).
+      // The hosts this attempt may use. The first try uses the phone's own (built-in plus the saved list's).
       final before = currentAllowedHosts();
       var hosts = before;
-      String? newerYaml; // set when signed in with a newer spec than widget.spec (SL-R10)
-      HostList? newerHosts; // set when that sign-in used a host list fetched just now (SL-R18)
+      String? newerYaml; // set when signed in with a newer spec than widget.spec
+      HostList? newerHosts; // set when that sign-in used a host list fetched just now
       Session session;
       try {
         session = await _attempt(spec, inputs, email, client, allowedHosts: hosts);
       } on FlowError catch (e) {
-        // SL-R5, SL-D7: a wrong email or password is the worker's to fix, and a question they cancelled (SL-R13) is
+        // A wrong email or password is the worker's to fix, and a question they cancelled is
         // their choice: no report, no newer spec looked for.
         if (e.reason == 'credentials' || e.reason == 'cancelled') {
           _showFailure(e);
           return;
         }
-        // SL-R5: everything else is reported, transport failures (no reason) included, fire-and-forget.
+        // Everything else is reported, transport failures (no reason) included, fire-and-forget.
         _reportFailure(e, spec);
-        // SL-R18: the owner's signed host list, verified with the bundled key. One newer than the list in use gives
+        // The owner's signed host list, verified with the bundled key. One newer than the list in use gives
         // the hosts of this attempt: the built-in ones plus its own (the newer list wins, as on the server).
         final candidate = await _newerHostList();
         final retryHosts = allowedHostsWith(candidate ?? loginHostsInUse);
-        // SL-R10 / SL-D11: one more try, only with a spec newer than the one that just failed; never a second fetch.
+        // One more try, only with a spec newer than the one that just failed; never a second fetch.
         // Held here too, whatever the fetcher did (as the browser path is): its text (what is saved after a session)
         // a usable sign-in spec under the attempt's hosts, served as login.yaml, so never one that opens the state's
-        // page (SL-R19's served mode); and the spec it runs on those hosts.
+        // page (the login served mode); and the spec it runs on those hosts.
         final fetched = await _fetchSpec(retryHosts);
         if (fetched == null ||
             compareSpecVersions(fetched.spec.specVersion, spec.specVersion) <= 0 ||
@@ -661,11 +661,11 @@ class _SignInPageState extends State<SignInPage> {
         try {
           session = await _attempt(spec, inputs, email, client, allowedHosts: hosts);
         } on FlowError catch (retryError) {
-          // Reported with the newer spec's version unless it's the worker's password or a question they cancelled
-          // (SL-R13). The worker sees the retry's own failure, except when the newer spec itself couldn't be run, used a
-          // name nothing set (FlowUnknownName, reason `structure`) or gave no token (C1, I1): then the original. Nothing
+          // Reported with the newer spec's version unless it's the worker's password or a question they cancelled.
+          // The worker sees the retry's own failure, except when the newer spec itself couldn't be run, used a
+          // name nothing set (FlowUnknownName, reason `structure`) or gave no token: then the original. Nothing
           // is saved (spec or host list); widget.spec and the hosts in use stay as they were. The hosts a new list
-          // added are named under the failure (SL-R18).
+          // added are named under the failure.
           if (retryError.reason != 'credentials' && retryError.reason != 'cancelled') _reportFailure(retryError, spec);
           _showFailure(retryError is SignInSpecFailure || retryError is FlowUnknownName ? e : retryError);
           if (mounted && retryAdded.isNotEmpty) setState(() => _newHosts = retryAdded);
@@ -682,7 +682,7 @@ class _SignInPageState extends State<SignInPage> {
           specStore: widget.specStore ?? LoginSpecStore(dataDir: widget.sessionStore.dataDir));
       await _signedIn(session, spec);
     } catch (e) {
-      // I1: whatever else went wrong (the session couldn't be stored, say), the worker is told; never a silent stop.
+      // Whatever else went wrong (the session couldn't be stored, say), the worker is told; never a silent stop.
       if (mounted) setState(() => _error = 'Signing in did not finish (${e.runtimeType}). Please try again.');
     } finally {
       client.close();
@@ -690,7 +690,7 @@ class _SignInPageState extends State<SignInPage> {
     }
   }
 
-  /// SL-R10/R18/R19: what a sign-in that gave a session keeps, and only then. [newerHosts], a host list fetched for the
+  /// What a sign-in that gave a session keeps, and only then. [newerHosts], a host list fetched for the
   /// retry, is saved and put in use from now on (reads, the sale, renew, the webview), even when it can't be written
   /// (the next start-up then goes back to the saved one). [newerYaml] (parsed: [newerSpec]), the fetched spec the retry
   /// signed in with, is saved in [specStore], checked under the hosts now in use; but not when the host list it needs
@@ -724,7 +724,7 @@ class _SignInPageState extends State<SignInPage> {
     if (added.isNotEmpty) _announceNewHosts(added);
   }
 
-  /// SL-R18: names the hosts a new list added over the next page (the app's messenger outlives this page's route).
+  /// Names the hosts a new list added over the next page (the app's messenger outlives this page's route).
   void _announceNewHosts(List<String> added) {
     if (!mounted) return;
     ScaffoldMessenger.maybeOf(context)
@@ -748,16 +748,16 @@ class _SignInPageState extends State<SignInPage> {
     );
   }
 
-  /// SL-R16: the sign-in on the state's own page. The worker types their email and password into the state's page
+  /// The sign-in on the state's own page. The worker types their email and password into the state's page
   /// (the app never sees the password); the email field is still needed here, because nothing the state sends back
   /// names the worker and the session carries the email for Mazama's own records (Session.email, sale logs), as a
   /// password sign-in's does. Runs the browser spec's `login` with [_browse], no question asked; a session goes the
   /// same way as a password sign-in's ([_signedIn]), renewing with [SignInPage.spec] (whose `renew` the browser spec's
   /// is a copy of). Failures are shown ([_showBrowserFailure]) and never reported.
   ///
-  /// SL-R19: after any failure, `cancelled` and `credentials` included (a stuck page the worker closed, or B2C's own
+  /// After any failure, `cancelled` and `credentials` included (a stuck page the worker closed, or B2C's own
   /// error, are how a moved host or a changed policy shows on this path), the signed host list and the newest browser
-  /// spec are fetched, as after a failed password sign-in (SL-R10, SL-R18), and the sign-in is tried once more (the
+  /// spec are fetched, as after a failed password sign-in, and the sign-in is tried once more (the
   /// state's page opens again) only when that spec is newer than the one that failed and usable as a browser spec under
   /// the hosts of the retry; otherwise the original failure is shown as it is. Spec and list are kept only after a
   /// session.
@@ -783,11 +783,11 @@ class _SignInPageState extends State<SignInPage> {
         return;
       }
       Session session;
-      // The state's page and the flow are held to the phone's own hosts (built-in plus the saved list's, SL-R18).
+      // The state's page and the flow are held to the phone's own hosts (built-in plus the saved list's).
       final before = currentAllowedHosts();
-      String? newerYaml; // set when signed in with a newer browser spec than the one loaded (SL-R19)
+      String? newerYaml; // set when signed in with a newer browser spec than the one loaded
       FlowSpec? newerSpec;
-      HostList? newerHosts; // set when that sign-in used a host list fetched just now (SL-R18)
+      HostList? newerHosts; // set when that sign-in used a host list fetched just now
       try {
         session = await _attempt(spec, const <String, Object?>{}, email, client,
             allowedHosts: before, browse: (url, until) => _browse(url, until, before));
@@ -829,7 +829,7 @@ class _SignInPageState extends State<SignInPage> {
           specStore: _browserSpecStore);
       await _signedIn(session, widget.spec);
     } catch (e) {
-      // I1, as for a password sign-in.
+      // As for a password sign-in: whatever else went wrong, the worker is told; never a silent stop.
       if (mounted) setState(() => _error = 'Signing in did not finish (${e.runtimeType}). Please try again.');
     } finally {
       client.close();
@@ -837,8 +837,8 @@ class _SignInPageState extends State<SignInPage> {
     }
   }
 
-  /// SL-R16: the state's page for the browser spec's `open_browser` step: [SignInPage.browse] when given, else the
-  /// webview page, its navigations held to [allowedHosts] (the flow's own, SL-R18). Null (so reason `cancelled`) if
+  /// The state's page for the browser spec's `open_browser` step: [SignInPage.browse] when given, else the
+  /// webview page, its navigations held to [allowedHosts] (the flow's own). Null (so reason `cancelled`) if
   /// this page has gone away meanwhile.
   Future<String?> _browse(String url, String until, Iterable<String> allowedHosts) async {
     final browse = widget.browse;
@@ -849,14 +849,14 @@ class _SignInPageState extends State<SignInPage> {
   }
 
   /// One sign-in attempt with [spec] (sign_in_attempt.dart's [attemptSignIn]): a failure is always a FlowError,
-  /// reported, shown, and never saved (final review C1, I1). With [browse] (the sign-in on the state's own page, SL-R16)
-  /// the flow gets that and no [_ask]. Every request (and the state's page) is held to [allowedHosts] (SL-R8, SL-R18).
+  /// reported, shown, and never saved. With [browse] (the sign-in on the state's own page)
+  /// the flow gets that and no [_ask]. Every request (and the state's page) is held to [allowedHosts].
   Future<Session> _attempt(FlowSpec spec, Map<String, Object?> inputs, String email, http.Client client,
           {required Iterable<String> allowedHosts, Future<String?> Function(String url, String until)? browse}) =>
       attemptSignIn(spec, inputs, email, client,
           allowedHosts: allowedHosts, ask: browse == null ? _ask : null, browse: browse);
 
-  /// SL-R13: the worker's answer to a sign-in spec's question: [SignInPage.ask] when given, else the dialog. Null (so
+  /// The worker's answer to a sign-in spec's question: [SignInPage.ask] when given, else the dialog. Null (so
   /// reason `cancelled`) if the page has gone away meanwhile, so nothing is shown on a context that is no longer here.
   Future<String?> _ask(String prompt, bool secret) async {
     final ask = widget.ask;

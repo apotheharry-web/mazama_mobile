@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "selling.parse_price input",
-  "description": "A typed price, total or rate per mg (SM-13, SM-D9; PRICE-1, PRICE-2).",
+  "description": "A typed price, total or rate per mg.",
   "type": "object",
   "required": [
     "text",
@@ -10,7 +10,7 @@
   "properties": {
     "text": {
       "type": "string",
-      "description": "A figure typed by a person: digits with at most one '.' or ',' as the decimal mark, nothing else, after trimming what both apps' trims remove (PRICE-2: tab, line breaks, spaces, U+0085, U+00A0, U+1680, U+2000..U+200A, U+2028, U+2029, U+202F, U+205F, U+3000; never U+001C..U+001F or U+FEFF)."
+      "description": "A figure typed by a person: digits with at most one '.' or ',' as the decimal mark, nothing else, after trimming what Python's and Dart's trims both remove (tab, line breaks, spaces, U+0085, U+00A0, U+1680, U+2000..U+200A, U+2028, U+2029, U+202F, U+205F, U+3000; never U+001C..U+001F or U+FEFF)."
     },
     "max": {
       "enum": [

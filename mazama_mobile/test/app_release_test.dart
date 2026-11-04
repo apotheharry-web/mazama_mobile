@@ -1,4 +1,4 @@
-// specs/app-updates AU-R1, AU-R2: the signed release file on the phone (app_release.dart), held to the shared vectors
+// The signed release file on the phone (app_release.dart), held to the shared vectors
 // ../mazama_modules/flows/contracts/app_release_vectors.json (vendored at assets/shared/flows/contracts/ by
 // tool/sync_flows.sh), which the server's app_release.py passes too. The vectors' key is the TEST key, injected here.
 import 'dart:convert';

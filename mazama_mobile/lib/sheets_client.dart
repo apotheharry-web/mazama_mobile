@@ -1,29 +1,20 @@
 // The product information sheets of a center's stock, for the stock page's "Product information sheets" bar
-// (specs/stock-page SP-D11, SP-R16): GET /p/sheets/{state_id} (C13), the same list as the center's public page on the
+// GET /p/sheets/{state_id}, the same list as the center's public page on the
 // server, each with the path of its public sheet page and the strains of the center's packages made from it.
 // Contract: ../mazama_modules/api/routes.yaml, schema sheets.response, vendored example at assets/shared/api/examples/
 // (test/sheets_client_test.dart).
-import 'dart:convert';
-
 import 'package:http/http.dart' as http;
 
 import 'api_contract.g.dart';
-import 'app_api_key.dart';
 import 'mazama_inventory_client.dart';
 import 'server_error.dart';
-import 'server_link_client.dart' show serverClient;
+import 'server_request.dart';
 import 'stock_summary.dart';
 
 /// A sheets request that failed; [message] is the server's own `detail` when it sent one. [unreachable]: the server
 /// couldn't be reached (server_error.dart's rule).
-class SheetsError implements ServerRequestError {
-  @override
-  final String message;
-  @override
-  final bool unreachable;
-  SheetsError(this.message, {this.unreachable = false});
-  @override
-  String toString() => message;
+class SheetsError extends ServerFailure {
+  SheetsError(super.message, {super.status, super.unreachable});
 }
 
 /// One harvest batch's or process lot's product information sheet.
@@ -40,14 +31,14 @@ class ProductSheet {
   final List<String> strains;
 
   /// Its lab figures in mg per gram, null when unknown, and the minor analytes found (the stock page's lot table,
-  /// SP-D18); a server from before SP-D18 sends none.
+  /// when the server's reply has them); a server that doesn't send them gives none.
   final num? tpe;
   final num? psilocybin;
   final num? psilocin;
   final List<String> detected;
 
   /// The type codes of the center's in-stock packages made from it (FD, DH, CH, ..., '' unknown), for the By type
-  /// pie's filter (SP-D18).
+  /// pie's filter.
   final List<String> types;
 
   const ProductSheet({
@@ -114,8 +105,8 @@ class ProductSheet {
   Uri? url({String baseUrl = apiBaseUrl}) => path == null ? null : Uri.parse('$baseUrl$path');
 }
 
-/// SP-D18: the stock page's lot table rows, one per sheet and name it is counted under on the stock pies: an edible
-/// lot under its product ("Chocolate", as the pies name edibles, ED-D1), anything else under each of its strains ("" =
+/// The stock page's lot table rows, one per sheet and name it is counted under on the stock pies: an edible
+/// lot under its product ("Chocolate", as the pies name edibles), anything else under each of its strains ("" =
 /// Unknown). A lot made into a strain and an edible is a row under each. Sorted by name, then lot id.
 List<MazamaLot> sheetLotRows(List<ProductSheet> sheets) {
   final rows = <MazamaLot>[];
@@ -152,31 +143,12 @@ List<MazamaLot> sheetLotRows(List<ProductSheet> sheets) {
   return rows;
 }
 
-/// The center's sheets (C13). Throws [SheetsError].
-Future<List<ProductSheet>> fetchProductSheets(int stateId, {String baseUrl = apiBaseUrl, http.Client? client}) async {
-  final c = client ?? serverClient();
-  final shouldClose = client == null;
-  try {
-    final uri = Uri.parse('$baseUrl${sheetsPath(stateId)}');
-    http.Response resp;
-    try {
-      resp = await c.get(uri, headers: appApiKeyHeaders).timeout(serverReadTimeout);
-    } catch (ex) {
-      throw SheetsError('cannot reach ${uri.host}: ${ex.runtimeType}', unreachable: true);
-    }
-    if (resp.statusCode != 200) {
-      throw SheetsError(describeServerError(resp.statusCode, resp.body), unreachable: isUnreachableStatus(resp.statusCode));
-    }
-    Object? body;
-    try {
-      body = jsonDecode(resp.body);
-    } on FormatException {
-      throw SheetsError('the server did not answer with JSON');
-    }
-    final sheets = body is Map ? body['sheets'] : null;
-    if (sheets is! List || sheets.any((s) => s is! Map)) throw SheetsError('unexpected response shape');
-    return [for (final s in sheets) ProductSheet.fromJson(Map<String, Object?>.from(s as Map))];
-  } finally {
-    if (shouldClose) c.close();
-  }
-}
+/// The center's sheets. Throws [SheetsError].
+Future<List<ProductSheet>> fetchProductSheets(int stateId, {String baseUrl = apiBaseUrl, http.Client? client}) =>
+    serverRequest('$baseUrl${sheetsPath(stateId)}', error: SheetsError.new, timeout: serverReadTimeout, client: client,
+        read: (resp) {
+      final body = serverJson(resp, SheetsError.new);
+      final sheets = body is Map ? body['sheets'] : null;
+      if (sheets is! List || sheets.any((s) => s is! Map)) throw SheetsError('unexpected response shape');
+      return [for (final s in sheets) ProductSheet.fromJson(Map<String, Object?>.from(s as Map))];
+    });

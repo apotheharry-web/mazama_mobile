@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "manufacturing.transfer_items input",
+  "description": "The packages a transfer request names, in the request's order (MP-R15).",
+  "type": "object",
+  "required": [
+    "items"
+  ],
+  "properties": {
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "record_id",
+          "qty"
+        ],
+        "properties": {
+          "record_id": {
+            "type": "integer",
+            "description": "The package record's id (the web form's qty_<id> key, ASCII digits; the phone's JSON integer)."
+          },
+          "qty": {
+            "description": "The quantity as the form has it (text) or the phone's whole number; blank text names nothing, anything but 1 to 6 ASCII digits is refused."
+          }
+        }
+      }
+    }
+  }
+}

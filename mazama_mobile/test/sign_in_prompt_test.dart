@@ -1,4 +1,4 @@
-// SL-R13: askSignInValue, the dialog the sign-in page shows when a sign-in spec's `await_input` step needs a value from
+// AskSignInValue, the dialog the sign-in page shows when a sign-in spec's `await_input` step needs a value from
 // the worker (an MFA code, say). Continue (or the keyboard's "done") answers the text typed, trimmed, and does nothing
 // while that is empty; Cancel, a tap outside the dialog or the back button answer null, which the flow runner turns
 // into reason `cancelled`.
@@ -111,8 +111,8 @@ void main() {
     expect(tester.widget<TextField>(_field).obscureText, isFalse);
   });
 
-  // Final review Important 1: an empty Continue used to cancel the sign-in (and, on the SL-D11 retry, cost two more
-  // password posts and two more codes); a pasted code's stray space or line break reached the state as part of it.
+  // An empty Continue must not cancel the sign-in (and, on the retry with a newer spec, cost two more
+  // password posts and two more codes); a pasted code's stray space or line break must not reach the state as part of it.
   testWidgets('Continue is disabled while nothing but spaces has been typed', (tester) async {
     final answer = await _open(tester);
     FilledButton continueButton() => tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'Continue'));

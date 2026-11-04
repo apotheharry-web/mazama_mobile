@@ -1,10 +1,13 @@
-// G3b of specs/core Task 11 (row 5): the phone's cap after the move, measured for the replay diff
+// The phone's cap, measured for the replay diff
 // (specs/core/replay/replay_dose.py --phone-new-dump). Over the replay's generated grid (test/fixtures/dose_grid.json.gz,
 // written by `replay_dose.py --write-grid`: generated values only, no production data) every sale is answered the way
 // the phone sells it: each lot through Package.fromJson (a lot it can't read fails the list, so the product is refused
-// whatever it draws: DOSE-18), the sale drawn with allocateBulkSales over its lines and `copies` copies (a draw that
+// whatever it draws), the sale drawn with allocateBulkSales over its lines and `copies` copies (a draw that
 // can't cover them is the phone's own stock refusal), drawnSaleLimitLines, then saleLimits (one copy) or bulkSaleLimits
-// (DOSE-17), one verdict per copy as the replay writes it ({total, error, minutes, minutes_initial}). The replay requires
+// (every copy on its own draw), one verdict per copy as the replay writes it ({total, error, minutes, minutes_initial}),
+// through the cart's
+// own cartDrawLimits (the lots a sale draws, each its own figures), so the dump measures what decides Sell,
+// the bulk sell dialog and the timer. The replay requires
 // `phone-new (G3b dump) differs from proposed: 0` (a total compared by its value: the phone holds its figures as doubles,
 // so an integer figure 10 reaches the core as 10.0).
 //
@@ -47,19 +50,25 @@ Map<String, Object?> _refused(String why) => {'total': null, 'error': why, 'minu
 
 /// One grid sale ([products], each `{lots, qty, dose}`, sold [copies] times) as the phone answers it: a verdict per copy.
 List<Map<String, Object?>> answer(List<Map<String, Object?>> products, int copies) {
-  final lines = <BulkLine>[];
+  final lines = <DoseLine>[];
   try {
     for (final p in products) {
-      lines.add((lots: [for (final l in p['lots'] as List) Package.fromJson((l as Map).cast<String, Object?>())], qty: p['qty'] as int));
+      // a line's lots, units and dose (the draw orders the lots itself: the cart's PkprGroup order changes nothing)
+      lines.add((
+        lots: [for (final l in p['lots'] as List) Package.fromJson((l as Map).cast<String, Object?>())],
+        qty: p['qty'] as int,
+        dose: p['dose'] as String,
+      ));
     }
   } catch (_) {
-    return List.filled(copies, _refused(_unusable)); // DOSE-18: the product list fails, nothing of it sells
+    return List.filled(copies, _refused(_unusable)); // the product list fails, nothing of it sells
   }
-  final draw = allocateBulkSales(lines, copies).perSale;
-  if (draw == null) return List.filled(copies, _refused(_short));
-  final sales = drawnSaleLimitLines(draw, [for (final p in products) p['dose'] as String]);
-  final verdicts = copies == 1 ? saleLimits(sales) : bulkSaleLimits(sales);
-  return [for (final v in verdicts) v.toVerdict()];
+  // the cart's own decision (cartDrawLimits: the draw and the core's verdicts Sell and the timer go by, the bulk sell
+  // dialog's per-copy check the same); a draw that can't
+  // cover the cart is refused by the cart's stock check before the cap (_saleRefusal, the bulk dialog's count check)
+  final check = cartDrawLimits(lines, copies);
+  if (check.perSale == null) return List.filled(copies, _refused(_short));
+  return [for (final v in check.limits) v.toVerdict()];
 }
 
 void main() {

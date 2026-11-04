@@ -1,11 +1,11 @@
-// specs/app-updates AU-R1, AU-R2: the signed Android release file `latest.json` on the phone.
+// The signed Android release file `latest.json` on the phone.
 //
-// The owner signs latest.json with the sign-in files' key (AU-D3) and publishes it, with its .sig, at the public
-// repository's root (AU-D7). The phone reads it from Mazama's server (C21, app_update_client.dart) or, when the server
+// The owner signs latest.json with the sign-in files' key and publishes it, with its .sig, at the public
+// repository's root. The phone reads it from Mazama's server (app_update_client.dart) or, when the server
 // can't answer, from GitHub (github_files.dart), and counts it only when its signature verifies against the bundled
 // signing.pub (signing.dart) and its text passes the rule below. The server is not trusted to have checked.
 //
-// The rule is written twice, here and in the server's mazama_sales/app_release.py, and both are held to the shared
+// The rule is written twice, here and in the server's mazama_sales/admin/app_release.py, and both are held to the shared
 // vectors assets/shared/flows/contracts/app_release_vectors.json (vendored from ../mazama_modules/flows/contracts/):
 // at most 4096 bytes of UTF-8 JSON, one object with exactly
 //   kind     "mazama-mobile-release";
@@ -33,7 +33,7 @@ const maxReleaseFileBytes = 4096;
 /// The largest APK a release file may name (300 MiB).
 const maxApkBytes = 314572800;
 
-/// Where every APK a release file names lives: the public repository's GitHub releases (AU-R1).
+/// Where every APK a release file names lives: the public repository's GitHub releases.
 const apkPrefix = 'https://github.com/apotheharry-web/mazama_mobile/releases/download/';
 
 const _keys = {'kind', 'version', 'build', 'apk', 'sha256', 'size', 'minSdk'};
@@ -80,7 +80,7 @@ DateTime? buildDate(int build) {
   return date;
 }
 
-/// True when [apk] is exactly the pinned release address for [version] and [build] (AU-R1's `apk` rule).
+/// True when [apk] is exactly the pinned release address for [version] and [build] (the release file's `apk` rule).
 bool apkAddressOk(String apk, String version, int build) {
   if (!apk.startsWith(apkPrefix)) return false;
   final rest = apk.substring(apkPrefix.length).split('/');
@@ -92,7 +92,7 @@ bool apkAddressOk(String apk, String version, int build) {
 }
 
 /// (version, build, apk, sha256, size, minSdk) of a release file's [text]; throws [FormatException], naming no part of
-/// the text, when it breaks AU-R1. [today] is the checker's date for the build's date bound (its UTC calendar day);
+/// the text, when it breaks the release file's rules. [today] is the checker's date for the build's date bound (its UTC calendar day);
 /// null skips that bound (a file read back from the phone's record). app_release.py's parse is the twin.
 (String, int, String, String, int, int) parseReleaseFile(String text, {DateTime? today}) {
   if (utf8.encode(text).length > maxReleaseFileBytes) throw const FormatException('over the size limit');
@@ -129,7 +129,7 @@ bool apkAddressOk(String apk, String version, int build) {
 }
 
 /// The release file in [text] when [signature] (a `.sig` text) is a good signature of exactly its UTF-8 bytes under
-/// [publicKey] (a `signing.pub` text; the bundled one, read from [bundle], when null) and the text passes AU-R1 with
+/// [publicKey] (a `signing.pub` text; the bundled one, read from [bundle], when null) and the text passes the release file's rules with
 /// [today]'s date bound (none when null); otherwise null. Never throws.
 Future<ReleaseFile?> verifiedReleaseFile(String text, String signature,
     {DateTime? today, String? publicKey, AssetBundle? bundle}) async {

@@ -1,19 +1,16 @@
-// The sync engine's datasets (specs/phone-sync PS-R3): what the phone knows, one row per page's worth (a center's par
+// The sync engine's datasets: what the phone knows, one row per page's worth (a center's par
 // levels, its product information sheets, Mazama's stock), each with where it came from and when it was read
 // (sync_tables.dart's sync_dataset). Pages read them, and watch them for changes ([Datasets.watch]); the engine
 // refreshes them (sync_engine.dart's register/refresh) and writes each refresh here; a failed refresh records only the
-// try and its error, leaving the body as it was (PS-R1: nothing is thrown into a page).
+// try and its error, leaving the body as it was (nothing is thrown into a page).
 //
 // [Datasets] is the stored side, over one folder's database: the engine's own (its tables), or a page's handle on a
 // folder ([Datasets.forDir]: the app's, or the demo's own). Writes through any handle on the same database reach every
-// watcher of it. The first handle on a database moves the reply store's kept par levels, sheets and Mazama stock in
-// (sync_migration.dart's migrateReplies), so nothing an older build kept is lost.
+// watcher of it.
 //
-// The server's reads (phase 2): [parDataset], [sheetsDataset] and [mazamaInventoryDataset] are the keep/kept pairs the
+// The server's reads: [parDataset], [sheetsDataset] and [mazamaInventoryDataset] are the keep/kept pairs the
 // pages read with (server_read.dart's readWithCache: the server's reply when it answers, else the kept copy with
-// its time; README R87, no notice of the page's own), replacing the reply store's for those reads; a copy an older
-// build kept (the reply store, stock_cache_<id>.json, mazama_inventory_cache.json; their classes removed in Task 10) is
-// moved here on the database's first open (sync_migration.dart).
+// its time; no notice of the page's own).
 // [serverReadRefreshers] are the engine's refreshers for them and for center_status and coa_data, each body in the
 // same JSON the keepers read.
 import 'dart:async';
@@ -29,10 +26,9 @@ import '../mazama_inventory_client.dart' show MazamaInventory;
 import 'server_read.dart';
 import '../sheets_client.dart' show ProductSheet;
 import '../stock_summary.dart' show ParLevel;
-import 'sync_migration.dart' show migrateReplies, migrateStockCaches;
 import 'sync_tables.dart';
 
-/// PS-R3's datasets, by their stored names.
+/// The sync engine's datasets, by their stored names.
 enum Dataset {
   licenses('licenses'),
   centerStatus('center_status'),
@@ -45,9 +41,13 @@ enum Dataset {
   recentSales('recent_sales'),
   stockRows('stock_rows'),
 
-  /// A center's Mazama manufacturer licenses (/p/center-status's list, SP-R8), kept for drawing state-only stock
-  /// (stock_rows.dart; Task 10: before, stock_cache_store.dart's).
-  mazamaLicenses('mazama_licenses');
+  /// A center's Mazama manufacturer licenses (/p/center-status's list), kept for drawing state-only stock
+  /// (stock_rows.dart).
+  mazamaLicenses('mazama_licenses'),
+
+  /// What the phone keeps for a manufacturer license, from Mazama's server: each key names one read and the license's
+  /// state id (written by the page that reads it, shown with its age while the server can't be reached).
+  manufacturer('manufacturer');
 
   const Dataset(this.stored);
 
@@ -82,14 +82,6 @@ class Datasets {
   /// The watchers of each database, by dataset and key; any handle's write tells them.
   static final _watchers = Expando<Map<String, Set<void Function()>>>('dataset watchers');
 
-  /// How many times each database's older copies have been moved in this run ([moveTriesMax] once every move worked):
-  /// a move that failed (logged by sync_migration.dart, the document kept) is tried again at the next open, so what an
-  /// older build kept isn't missing for the rest of the run, up to [moveTriesMax] times, not at every read.
-  static final _moveTries = Expando<int>('older copies moved');
-
-  /// The most tries of the moves per database and run (Task 10 review, minor 1).
-  static const moveTriesMax = 3;
-
   static String _id(Dataset d, String key) => '${d.stored}\u0000$key';
 
   /// Watchers that started while the database couldn't be opened: attached on this handle's next good open.
@@ -99,13 +91,6 @@ class Datasets {
     final SyncTables t;
     try {
       t = _tables();
-      final tries = _moveTries[t.store] ?? 0;
-      if (tries < moveTriesMax) {
-        _moveTries[t.store] = tries + 1; // counted first: a move that throws counts too
-        final replies = migrateReplies(t.store, t);
-        final stock = migrateStockCaches(t.store, t);
-        if (replies && stock) _moveTries[t.store] = moveTriesMax;
-      }
     } catch (e) {
       debugPrint('the datasets could not be opened: $e');
       return null;
@@ -119,10 +104,6 @@ class Datasets {
     }
     return t;
   }
-
-  /// Opens the database, which on its first open moves in what an older build kept (sync_migration.dart), and nothing
-  /// else: for a store beside the datasets that reads a document the move writes (par_columns.dart).
-  void moveOlderCopies() => _open();
 
   /// [d]'s copy for [key]; null when none is stored, or the database can't be read.
   DatasetRow? read(Dataset d, String key) {
@@ -281,7 +262,7 @@ class DatasetKeeper<T> {
     final row = datasets.read(dataset, key);
     if (row != null) {
       try {
-        // a copy moved in without a recorded time is stored at the epoch: no time known, as before (Task 8b)
+        // a copy stored at the epoch has no time known
         final at = row.fetchedAt.millisecondsSinceEpoch == 0 ? null : row.fetchedAt;
         return ServerRead.cached(_decode(jsonDecode(row.body)), at);
       } catch (_) {
@@ -292,7 +273,7 @@ class DatasetKeeper<T> {
   }
 }
 
-// --- the server's reads (phase 2) ------------------------------------------------------------------------------------
+// --- the server's reads ------------------------------------------------------------------------------------------------
 
 Object? _encodePar(List<ParLevel> levels) => [for (final l in levels) l.toJson()];
 List<ParLevel> _decodePar(Object? json) =>
@@ -311,15 +292,15 @@ List<ProductSheet> sheetsFromJson(Object? json) => _decodeSheets(json);
 /// A `mazama_inventory` body's JSON read back (dataset_feed.dart's mazamaInventoryFeed); throws when it isn't one.
 MazamaInventory mazamaInventoryFromJson(Object? json) => _decodeInventory(json);
 
-/// A center's par levels (route C10), kept as the `par` dataset.
+/// A center's par levels (GET /p/par/{state_id}), kept as the `par` dataset.
 DatasetKeeper<List<ParLevel>> parDataset(Datasets datasets, int stateId) =>
     datasets.keeper<List<ParLevel>>(Dataset.par, '$stateId', encode: _encodePar, decode: _decodePar);
 
-/// A center's product information sheets (route C13), kept as the `sheets` dataset.
+/// A center's product information sheets (GET /p/sheets/{state_id}), kept as the `sheets` dataset.
 DatasetKeeper<List<ProductSheet>> sheetsDataset(Datasets datasets, int stateId) =>
     datasets.keeper<List<ProductSheet>>(Dataset.sheets, '$stateId', encode: _encodeSheets, decode: _decodeSheets);
 
-/// Mazama's stock (route C12), kept as the `mazama_inventory` dataset (one copy, key '').
+/// Mazama's stock (GET /p/mazama-inventory), kept as the `mazama_inventory` dataset (one copy, key '').
 DatasetKeeper<MazamaInventory> mazamaInventoryDataset(Datasets datasets) =>
     datasets.keeper<MazamaInventory>(Dataset.mazamaInventory, '', encode: _encodeInventory, decode: _decodeInventory);
 
@@ -344,7 +325,7 @@ CoaData? coaDataFromBody(String lotGuid, String body) {
   }
 }
 
-/// The engine's refreshers for the server's reads (phase 2): `par`, `sheets` and `center_status` by center (the key
+/// The engine's refreshers for the server's reads: `par`, `sheets` and `center_status` by center (the key
 /// is the state id), `mazama_inventory` (key ''), `coa_data` by lot (the key is the lot id, lower-case; the body is
 /// `null` when the server has no figures for it). Each fetch is today's client, through the server link.
 Map<Dataset, Refresher> serverReadRefreshers({

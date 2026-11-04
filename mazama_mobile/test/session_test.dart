@@ -39,7 +39,7 @@ void main() {
     expect(session.needsRenewal(now: () => fixedNow), false);
     // Just under 58 minutes in: a moment more than the 2-minute margin from expiry - not yet due.
     expect(session.needsRenewal(now: () => fixedNow.add(const Duration(minutes: 58, milliseconds: -1))), false);
-    // Exactly 58 minutes in: exactly the margin from expiry - due, as on the server (SM-20: StateSession keeps a
+    // Exactly 58 minutes in: exactly the margin from expiry - due, as on the server (StateSession keeps a
     // token only while now < expiry - margin).
     expect(session.needsRenewal(now: () => fixedNow.add(const Duration(minutes: 58))), true);
     // 59 minutes in: only 1 minute from expiry - inside the 2-minute margin, due for renewal.
@@ -48,7 +48,7 @@ void main() {
     expect(session.needsRenewal(now: () => fixedNow.add(const Duration(hours: 2))), true);
   });
 
-  // SM-20: the margin is login.yaml's refresh_margin_seconds, the same var the server's REFRESH_MARGIN reads.
+  // The margin is login.yaml's refresh_margin_seconds, the same var the server's REFRESH_MARGIN reads.
   test('the refresh margin comes from the login spec, 120 s, and is the built-in default', () {
     expect(refreshMarginOf(spec), const Duration(seconds: 120));
     expect(defaultRefreshMargin, const Duration(seconds: 120));
@@ -175,7 +175,7 @@ void main() {
       }
     });
 
-    // Final review Minor 1: a redirect off the allowlist is the state's answer (stage response, the 3xx), not the
+    // A redirect off the allowlist is the state's answer (stage response, the 3xx), not the
     // spec's mistake, so it neither signs the worker out nor sets a saved spec aside.
     test('SL-D16: renewal never reaches the state API, by its own url or by a redirect', () async {
       Future<int> renewWith(String url, http.Response Function(http.Request) answer) async {
@@ -241,7 +241,7 @@ void main() {
       expect(calls, 1); // the hop itself was never sent
     });
 
-    // Final review I1: whatever the spec does wrong, the caller gets one of the two Session exceptions.
+    // Whatever the spec does wrong, the caller gets one of the two Session exceptions.
     test('a spec whose refresh margin is unusable gives SessionSpecUnusable (a SessionExpired), not a FlowSpecError',
         () async {
       final bad = FlowSpec({...spec.vars, 'refresh_margin_seconds': '2m'}, spec.flows);

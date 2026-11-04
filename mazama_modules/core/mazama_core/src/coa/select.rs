@@ -1,4 +1,4 @@
-//! Which lab-report documents to read for a lot (SM-06; COA-R1, COA-D9, COA-D12), from the state system's
+//! Which lab-report documents to read for a lot, from the state system's
 //! GetPackagedProductInfo reply: every non-deprecated .pdf document of an accepted Potency test, not already
 //! fetched, newest test first (undated last; equal dates keep the reply's order), each document once, at its newest
 //! test's date. Held to corpus/select/cases.json, which the server (through the binding) and the

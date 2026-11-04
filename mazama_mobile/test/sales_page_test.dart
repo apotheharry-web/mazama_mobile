@@ -1,7 +1,7 @@
-// sales_page.dart (specs/center-web CW-R10 phone half, CW-D14): the center's sales of the last 30 days, newest first,
+// sales_page.dart: the center's sales of the last 30 days, newest first,
 // read from the state system; every record read goes to Mazama's server for invoicing without the page waiting on it
-// (never in the demo). A failed read shows the copy kept from the last good one with no notice of its own (sales
-// README R87) and Retry; with none kept, the error and Retry.
+// (never in the demo). A failed read shows the copy kept from the last good one with no notice of its own (the
+// app-wide banner says so) and Retry; with none kept, the error and Retry.
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -112,7 +112,7 @@ void main() {
     expect(find.text('Too old'), findsNothing);
     expect(find.text(r'$1,250.00'), findsOneWidget);
     expect(uploads, [_records]); // all records read, not only the 30 days shown
-    expect(keptRecords(), _records); // the recent_sales dataset (specs/phone-sync phase 4)
+    expect(keptRecords(), _records); // the recent_sales dataset
     expect(datasets().read(Dataset.recentSales, '231')!.source, sourceState);
     expect(find.text('Updated just now'), findsOneWidget);
     expect(find.byKey(const ValueKey('sales-retry')), findsNothing);
@@ -189,7 +189,7 @@ void main() {
     expect(find.text('No sales in the last 30 days.'), findsOneWidget);
   });
 
-  // specs/phone-sync PS-R7: local first.
+  // Local first.
   testWidgets('shows the stored copy at once with its age, then the fresh read', (tester) async {
     datasets().put(Dataset.recentSales, '231', jsonEncode([_records[2]]), source: sourceState,
         at: _now.subtract(const Duration(minutes: 20)));
@@ -249,17 +249,5 @@ void main() {
     await tester.fling(find.byKey(const ValueKey('sale-number')).first, const Offset(0, 400), 1000);
     await tester.pumpAndSettle();
     expect(reads, 2);
-  });
-
-  testWidgets("an older build's kept read (the reply store) shows at once", (tester) async {
-    // as reply_store.dart (removed in Task 10) kept it: server_replies/<route/params, URI-encoded>.json
-    LocalStore.forDir(_dir).write('server_replies/${Uri.encodeComponent('state_sales/231')}.json',
-        jsonEncode({'atMs': _now.toUtc().millisecondsSinceEpoch, 'value': _records}));
-    final gate = Completer<List<Object?>>();
-    await tester.pumpWidget(_page(load: () => gate.future));
-    await tester.pump();
-    expect(_shownNumbers(tester), ['S-0004', 'S-0003', 'S-0002']);
-    gate.complete(_records);
-    await tester.pumpAndSettle();
   });
 }

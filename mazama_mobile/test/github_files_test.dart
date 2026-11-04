@@ -1,4 +1,4 @@
-// specs/app-updates AU-R16: the GitHub file addresses and the APK hosts (github_files.dart), held apart from the
+// The GitHub file addresses and the APK hosts (github_files.dart), held apart from the
 // sign-in allowlist (currentAllowedHosts, the flow runner, the sign-in webview's navigation check).
 import 'dart:async';
 import 'dart:convert';

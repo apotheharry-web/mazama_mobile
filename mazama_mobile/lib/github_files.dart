@@ -1,11 +1,11 @@
-// specs/app-updates AU-R16: the only code on the phone that talks to GitHub, and its own two host sets.
+// The only code on the phone that talks to GitHub, and its own two host sets.
 //
 // - The signed files: exactly [githubFilesBase] followed by one of [githubFileNames], with or without `.sig` (the
-//   owner's signed sign-in files and the release file at the public repository's root, AU-D7, AU-D8). GET only, no
+//   owner's signed sign-in files and the release file at the public repository's root). GET only, no
 //   redirect followed (a 3xx is a failure), the file at most [githubFileMaxBytes], a `.sig` at most
 //   [githubSigMaxBytes], [githubFileTimeout] each ([fetchSignedGithubFile]). Nothing here checks a signature: the
 //   callers do (app_update_client.dart, and the sign-in fallback), with the bundled signing.pub.
-// - The APK download: a start address passing AU-R1's `apk` rule ([apkStartUrlAllowed]), then redirect hops only to
+// - The APK download: a start address passing the release file's `apk` rule ([apkStartUrlAllowed]), then redirect hops only to
 //   `https` on port 443 at exactly one of [apkRedirectHosts] ([apkHopAllowed]; a query is allowed on hops, which carry
 //   GitHub's signed download parameters). The server's APK worker holds the same hosts (app_release.py's APK_HOSTS).
 //
@@ -19,13 +19,13 @@ import 'package:http/http.dart' as http;
 
 import 'app_release.dart' show apkPrefix;
 
-/// The folder of the public repository's `main` branch the signed files are read from (AU-D8).
+/// The folder of the public repository's `main` branch the signed files are read from.
 const githubFilesBase = 'https://raw.githubusercontent.com/apotheharry-web/mazama_mobile/main/';
 
 /// The signed files the phone may read from GitHub (each with its `.sig`).
 const githubFileNames = {'login.yaml', 'login_browser.yaml', 'hosts.json', 'latest.json'};
 
-/// The hosts an APK download may be redirected to (AU-R16), exactly.
+/// The hosts an APK download may be redirected to, exactly.
 const apkRedirectHosts = {'github.com', 'release-assets.githubusercontent.com', 'objects.githubusercontent.com'};
 
 /// The longest signed file read from GitHub.
@@ -49,7 +49,7 @@ bool githubFileUrlAllowed(Uri u) {
   return githubFileNames.contains(base);
 }
 
-/// True for an APK start address of AU-R1's shape: [apkPrefix] + `v<x.y.z>+<8 digits>/<asset>.apk` (`+` may be
+/// True for an APK start address of the release file's `apk` shape: [apkPrefix] + `v<x.y.z>+<8 digits>/<asset>.apk` (`+` may be
 /// `%2B`), nothing else (app_release.dart's [apkAddressOk] also ties the tag to a file's own version and build).
 bool apkStartUrlAllowed(Uri u) {
   final s = u.toString();

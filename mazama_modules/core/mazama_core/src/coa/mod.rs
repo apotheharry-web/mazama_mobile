@@ -1,6 +1,6 @@
 //! The lab-report reader (certificates of analysis): input is `CoaText` (a platform's extracted words, [`text`]);
 //! output is `CoaParseResult` ([`result`]); the reading rules are data ([`rules`], embedded from
-//! `mazama_modules/coa/rules/coa_rules.yaml`). Design: specs/coa/03-architecture.md and 04-parsing.md.
+//! `mazama_modules/coa/rules/coa_rules.yaml`). Described in specs/coa/README.md.
 
 pub mod lines;
 pub mod lot;
@@ -27,7 +27,7 @@ pub fn parse_json(coa_text_json: &str, rules_yaml: Option<&str>) -> Result<Strin
     Ok(serde_json::to_string(&parse(&text, &rules))?)
 }
 
-/// AD-19 on JSON, for bindings (SM-07): `{"coa_text": CoaText, "lot": "PL-...", "state_psilocybin": 5.25 | null}` in,
+/// The section that is a lot's value of record ([`lot::find_lot`]) on JSON, for bindings: `{"coa_text": CoaText, "lot": "PL-...", "state_psilocybin": 5.25 | null}` in,
 /// `{"result": CoaParseResult, "found": {"section": i, "uid": "HB-...", "via": "own" | "request" | "state_psilocybin"} | null}`
 /// out, with the embedded rules.
 pub fn find_lot_json(request_json: &str) -> Result<String, crate::api::Error> {
@@ -46,7 +46,7 @@ pub fn find_lot_json(request_json: &str) -> Result<String, crate::api::Error> {
     Ok(serde_json::json!({"result": result, "found": found}).to_string())
 }
 
-/// Which documents to read for a lot, on JSON, for bindings (SM-06): a GetPackagedProductInfo reply and a JSON list
+/// Which documents to read for a lot, on JSON, for bindings: a GetPackagedProductInfo reply and a JSON list
 /// of document ids already fetched in, `[{"doc_id": 12, "date": "2026-03-04"}, ...]` out.
 pub fn select_documents_json(info_json: &str, already_have_json: &str) -> Result<String, crate::api::Error> {
     let info: serde_json::Value = serde_json::from_str(info_json)?;

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "names.strains output",
+  "description": "Per text: its key (lower case, other characters one space), its spelling fixed, its safe form (at most 30 characters) and the name it is shown as.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "key",
+      "spelled",
+      "clean",
+      "canonical"
+    ],
+    "properties": {
+      "key": {
+        "type": "string"
+      },
+      "spelled": {
+        "type": "string"
+      },
+      "clean": {
+        "type": "string"
+      },
+      "canonical": {
+        "type": "string"
+      }
+    }
+  }
+}

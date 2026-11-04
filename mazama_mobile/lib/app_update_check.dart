@@ -1,13 +1,13 @@
-// specs/app-updates AU-R8, AU-R9, AU-R14, AU-R15: whether a newer release is offered on this phone.
+// Whether a newer release is offered on this phone.
 //
 // [offerFor] is the rule, pure: a release file (already verified: a ReleaseFile is only ever made by
 // app_release.dart's verifiedReleaseFile) is offered only when its build is above the installed versionCode, not below
 // the phone's record (app_update_store.dart), not refused before, its minSdk is at most the phone's API level, and the
 // installed app's signing certificates could be read.
 //
-// [AppUpdateChecker] runs it: on Android only, never in demo mode (DM-D1), only while `app_updates` is on
+// [AppUpdateChecker] runs it: on Android only, never in demo mode, only while `app_updates` is on
 // (features.g.dart), at start-up and when the app returns to the foreground, at most once every [checkInterval],
-// unawaited by its callers (MazamaApp). Every failure is quiet (AU-R15): nothing on screen, no banner, no report; only
+// unawaited by its callers (MazamaApp). Every failure is quiet: nothing on screen, no banner, no report; only
 // the kind of failure is logged. GitHub's requests don't go through the server link, so the server's health is never
 // touched by them.
 import 'dart:io' show Platform;
@@ -25,7 +25,7 @@ import 'features.g.dart';
 /// The least time between two checks.
 const checkInterval = Duration(hours: 6);
 
-/// The app's fetch: C21 (then GitHub), reporting the installed build and the install id (AU-R22).
+/// The app's fetch: GET /p/app/latest (then GitHub), reporting the installed build and the install id.
 Future<ReleaseFile?> _defaultFetch(InstalledApp app) async {
   String? id;
   try {
@@ -131,7 +131,7 @@ class AppUpdateChecker extends ChangeNotifier {
     _notify();
   }
 
-  /// [build]'s APK was refused (AU-R12): it is not offered again.
+  /// [build]'s APK was refused: it is not offered again.
   Future<void> refused(int build) async {
     await store.refuse(build);
     if (_offer?.build == build) _setOffer(null);

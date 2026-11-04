@@ -1,7 +1,7 @@
-// SM-06: which lab-report documents the phone reads for a lot (COA-R1), held to the shared cases
+// Which lab-report documents the phone reads for a lot, held to the shared cases
 // (assets/shared/coa/corpus/select/cases.json, vendored from mazama_modules/coa/corpus/select/), the same ones
-// mazama_core and the server run. The rule is the core's (coa.select_documents, specs/core row 2): the phone only
-// calls it. And the one 2 MB size cap (SM-D23).
+// mazama_core and the server run. The rule is the core's (coa.select_documents): the phone only
+// calls it. And the one 2 MB size cap.
 import 'dart:convert';
 import 'dart:io';
 

@@ -1,4 +1,4 @@
-// SP-R13, SP-D6: the stock page's rows from the state alone (stockRowsFromState) and the order the page's data
+// The stock page's rows from the state alone (stockRowsFromState) and the order the page's data
 // comes in: the server, else the state (partial, mg psilocybin), else the last rows drawn here (lib/stock_rows.dart).
 import 'dart:convert';
 import 'dart:io';
@@ -84,7 +84,7 @@ void main() {
         rec(6, 'GT 3.5g'), // no source: whole fungi
         rec(7, 'GT 3.5g', type: ''), // nothing at all: unknown
       ], {'mf-1e72fc8f'}, _today);
-      expect(rows.map(stockTypeOf), ['DH', 'HG', 'FD', 'CH', 'FD', 'WF', '']);
+      expect(rows.map((r) => r.type), ['DH', 'HG', 'FD', 'CH', 'FD', 'WF', null]); // the core's stock.record_types
     });
 
     test('name date decides expired', () {
@@ -159,7 +159,7 @@ void main() {
         fetchServerPackages: () async => [served('PKPR-a', 1), served('PKPR-gone', 2)],
         fetchStateRecords: () async => [
           _record(id: 1, guid: 'PKPR-a', quantity: 3.5), // the state's quantity wins, fraction and all
-          _record(id: 9, guid: 'PKPR-locked'), // a lot the server left out (SP-D9): not counted
+          _record(id: 9, guid: 'PKPR-locked'), // a lot the server left out: not counted
         ],
         fetchMazamaLicenses: () async => ['mf-1e72fc8f'],
         datasets: datasets(),
@@ -173,6 +173,14 @@ void main() {
       final saved = keptStockRows(datasets(), 231)!;
       expect(saved.rows.single.productGuid, 'PKPR-a');
       expect(saved.at, DateTime.utc(2026, 10, 21, 9));
+      // SP-D20: the join is kept as the center's stock (the center_stock dataset), as the cart's load keeps it: every
+      // record the state listed, the one the server didn't send included
+      final stock = datasets().read(Dataset.centerStock, '231')!;
+      expect([stock.source, stock.fetchedAt], [sourceMerged, DateTime.utc(2026, 10, 21, 9)]);
+      final kept = (jsonDecode(stock.body) as Map)['packages'] as List;
+      expect([for (final k in kept) '${(k as Map)['productGuid']} ${k['quantity']} ${k['coaAvailable']}'],
+          ['PKPR-a 3.5 true', 'PKPR-locked 10 false']);
+      expect((jsonDecode(stock.body) as Map)['source'], sourceMerged);
     });
 
     test('the state unreachable: the server\'s own rows and quantities', () async {
@@ -185,6 +193,7 @@ void main() {
       );
       expect([load.mgMode, load.partial], ['tpe', false]);
       expect(load.rows.single.quantity, 7);
+      expect(datasets().read(Dataset.centerStock, '231')!.source, sourceServer); // kept as the server's alone
     });
 
     test('the server unreachable: the state\'s records, partial, in mg psilocybin, with the kept licenses', () async {
@@ -201,6 +210,7 @@ void main() {
       expect(load.rows.map((r) => r.mazama), [true, false]);
       expect(keptStockRows(datasets(), 231)!.mgMode, 'psilocybin');
       expect(keptMazamaLicenses(datasets(), 231), ['mf-1e72fc8f']); // a failed fetch keeps the last list
+      expect(datasets().read(Dataset.centerStock, '231'), isNull); // the cart's own state-only load keeps that one
     });
 
     test("a center the server hasn't set up (404) is not 'unreachable', and its licenses are still fetched", () async {
@@ -316,7 +326,7 @@ void main() {
       final fresh = await loadCenterPar(stateId: 231, fetchPar: () async => levels, datasets: datasets(), now: () => at);
       expect(fresh.value.single.par, 12);
       expect(fresh.fromCache, isFalse);
-      expect(datasets().read(Dataset.par, '231')!.fetchedAt, at); // the engine's par dataset (specs/phone-sync phase 2)
+      expect(datasets().read(Dataset.par, '231')!.fetchedAt, at); // the engine's par dataset
 
       final offline = await loadCenterPar(
           stateId: 231, fetchPar: () async => throw ParError('cannot reach x: SocketException', unreachable: true), datasets: datasets());
@@ -328,20 +338,6 @@ void main() {
         loadCenterPar(stateId: 183, fetchPar: () async => throw ParError('down', unreachable: true), datasets: datasets()),
         throwsA(isA<ParError>()),
       );
-    });
-
-    test("unreachable with only an older build's copy (stock_cache_store.dart, removed): that copy, with its time", () async {
-      final at = DateTime.utc(2026, 10, 20, 8);
-      // as the older build kept it; moved into the par dataset on the folder's first open (sync_migration.dart)
-      LocalStore.forDir(_dir).write(
-          'stock_cache_231.json',
-          jsonEncode({
-            'par': [const ParLevel(strain: 'Golden Teacher', size: 25, par: 12).toJson()],
-            'parAtMs': at.millisecondsSinceEpoch,
-          }));
-      final offline = await loadCenterPar(
-          stateId: 231, fetchPar: () async => throw ParError('down', unreachable: true), datasets: datasets());
-      expect([offline.value.single.par, offline.fromCache, offline.cachedAt], [12, true, at]);
     });
 
     test("the server's own refusal (4xx) is an error even with a copy kept", () async {

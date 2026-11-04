@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "stock.record_types input",
+  "type": "object",
+  "required": [
+    "records"
+  ],
+  "properties": {
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "description": "A GetPackagedProducts record; description, productType, harvestBatchGuid and processLotGuid are read."
+      }
+    }
+  }
+}

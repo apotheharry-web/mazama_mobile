@@ -16,7 +16,7 @@ void main() {
     final client = http_testing.MockClient((req) async {
       expect(req.url.toString(), 'https://psilocybin.oregon.gov/api/private/ProductTracking/GetApplicableLicenses');
       expect(req.headers['Authorization'], 'Bearer TEST-TOKEN');
-      expect(req.headers['User-Agent'], startsWith('Mozilla/5.0')); // SM-20: state_reads.yaml's user_agent
+      expect(req.headers['User-Agent'], startsWith('Mozilla/5.0')); // state_reads.yaml's user_agent
       // The exact shape confirmed in a real captured HAR: one account with a manufacturer license and
       // several service-center licenses, not just one.
       return http.Response(
@@ -50,7 +50,7 @@ void main() {
     );
   });
 
-  // SM-21: the same rule as the server's directory.service_centers.
+  // The same rule as the server's directory.service_centers.
   test('serviceCenters keeps usable ServiceCenter entries once each, and a string id or a junk entry is no crash', () async {
     final client = http_testing.MockClient((req) async => http.Response(
           jsonEncode([

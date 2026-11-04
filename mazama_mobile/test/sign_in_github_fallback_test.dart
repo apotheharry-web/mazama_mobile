@@ -1,4 +1,4 @@
-// specs/app-updates AU-R17, AU-D6: after a failed sign-in, when Mazama's server can't answer, SignInPage reads the
+// After a failed sign-in, when Mazama's server can't answer, SignInPage reads the
 // owner's signed sign-in files from GitHub (github_signin_files.dart) and holds them to the same rules as the server's:
 // the signature verified with the bundled key (the TEST key injected here), usable in its served mode under the
 // attempt's hosts, strictly newer than the spec that failed, one retry, saved only after a session. When the server
@@ -234,7 +234,7 @@ void main() {
           fetchHosts: () async => null,
           browse: (url, until) async {
             asked.add(url);
-            return null; // the worker closed the page: `cancelled`, which still fetches (SL-R19)
+            return null; // the worker closed the page: `cancelled`, which still fetches
           },
           browserSpec: () async => _bundledBrowser,
           fetchBrowserSpec: () async => null,

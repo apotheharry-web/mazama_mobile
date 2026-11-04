@@ -1,4 +1,4 @@
-// specs/app-updates AU-R12, AU-R14: the phone's update record (app_update_store.dart), in its LocalStore. Release
+// The phone's update record (app_update_store.dart), in its LocalStore. Release
 // files are signed with the TEST key (app_release_signing.dart), injected as the store's key.
 import 'dart:io';
 

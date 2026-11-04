@@ -1,19 +1,20 @@
-//! Which state records and licenses the apps can use (specs/core row 10, SM-21), held to the frozen vectors in
-//! mazama_modules/contracts/vectors/ (the server's own Python under CPython 3.14, the reference):
+//! Which state records and licenses the apps can use, held to the frozen vectors in
+//! mazama_modules/contracts/vectors/:
 //!
-//! - [`package_keys`]: the state id and PKPR of each GetPackagedProducts record, or the server's reason for skipping
-//!   it (`state/mapping.packaged_product`'s first lines).
+//! - [`package_keys`]: the state id and PKPR of each GetPackagedProducts record, or the reason for skipping it
+//!   (the server's `state/mapping.packaged_product` uses it).
 //! - [`service_centers`]: which GetApplicableLicenses entries are service centers, with id, name and license
-//!   (`directory.service_centers`).
+//!   (the server's `directory.service_centers` uses it).
+//! - [`licenses_of_type`]: the same rule for a license type named by the caller, `ServiceCenter` or `Manufacturer`
+//!   (the phone's license picker lists a manufacturer's licenses with it).
 //!
-//! The readings are Python's: an id is `Decimal(str(v))` taken as a whole number, text is `str(v).strip()`. Known
-//! limits, each a documented ruling rather than the reference's behaviour:
+//! The readings are Python's: an id is `Decimal(str(v))` taken as a whole number, text is `str(v).strip()`, with
+//! these limits:
 //!
 //! - an id is kept only while it fits in 64 bits (`1e100`, `9223372036854775808`); beyond that the record is skipped
-//!   as having no numeric id, where Python would hand a number no column could hold;
-//! - only ASCII digits count, where `Decimal` also reads other scripts' decimal digits (`١٢٣`);
-//! - a list or an object as an id, a PKPR, a name or a license id counts as blank, where Python's `str()` would show
-//!   its repr (both apps read one today under different texts; the core won't invent one).
+//!   as having no numeric id, since no column could hold it;
+//! - only ASCII digits count, not other scripts' decimal digits (`١٢٣`);
+//! - a list or an object as an id, a PKPR, a name or a license id counts as blank, never as its printed form.
 use serde_json::{Value, json};
 
 use crate::api::Error;
@@ -173,15 +174,22 @@ pub fn package_keys(records: &[Value]) -> Result<Vec<Value>, Error> {
         .collect()
 }
 
-/// The ServiceCenter entries of a GetApplicableLicenses answer, in the order given: `licenseType` exactly
-/// `ServiceCenter`, a whole-number id above 0, the first entry for an id, a blank name shown as
-/// "Service center &lt;id&gt;", a blank license id `null`. Anything else is skipped.
-pub fn service_centers(licenses: &[Value]) -> Vec<Value> {
+/// The license types [`licenses_of_type`] takes, each with the words a blank name is shown under.
+const LICENSE_TYPES: [(&str, &str); 2] = [("ServiceCenter", "Service center"), ("Manufacturer", "Manufacturer")];
+
+/// The entries of a GetApplicableLicenses answer of `license_type` (`ServiceCenter` or `Manufacturer`), in the
+/// order given: `licenseType` exactly that type, a whole-number id above 0, the first entry for an id, a blank name
+/// shown as "Service center &lt;id&gt;" or "Manufacturer &lt;id&gt;", a blank license id `null`. Anything else is
+/// skipped. Any other license type is refused.
+pub fn licenses_of_type(licenses: &[Value], license_type: &str) -> Result<Vec<Value>, Error> {
+    let Some((_, blank)) = LICENSE_TYPES.iter().find(|(t, _)| *t == license_type) else {
+        return Err(format!("license_type: {license_type:?} is not ServiceCenter or Manufacturer").into());
+    };
     let mut seen: std::collections::HashSet<i64> = std::collections::HashSet::new();
     let mut out = Vec::new();
     for entry in licenses {
         let Some(license) = entry.as_object() else { continue };
-        if license.get("licenseType").and_then(Value::as_str) != Some("ServiceCenter") {
+        if license.get("licenseType").and_then(Value::as_str) != Some(license_type) {
             continue;
         }
         let field = |k: &str| license.get(k).unwrap_or(&Value::Null).clone();
@@ -189,10 +197,15 @@ pub fn service_centers(licenses: &[Value]) -> Vec<Value> {
         if state_id <= 0 || !seen.insert(state_id) {
             continue;
         }
-        let name = py_text(&field("licenseName")).unwrap_or_else(|| format!("Service center {state_id}"));
+        let name = py_text(&field("licenseName")).unwrap_or_else(|| format!("{blank} {state_id}"));
         out.push(json!({"state_id": state_id, "name": name, "license": py_text(&field("licenseId"))}));
     }
-    out
+    Ok(out)
+}
+
+/// The ServiceCenter entries of a GetApplicableLicenses answer: [`licenses_of_type`] for `ServiceCenter`.
+pub fn service_centers(licenses: &[Value]) -> Vec<Value> {
+    licenses_of_type(licenses, "ServiceCenter").unwrap_or_default()
 }
 
 /// `{"records": [object]}` -> `[{"state_id", "pkpr"} | {"problem"}]`.
@@ -213,4 +226,15 @@ pub fn service_centers_json(input: &str) -> Result<String, Error> {
     }
     let i: Input = serde_json::from_str(input)?;
     Ok(Value::Array(service_centers(&i.licenses)).to_string())
+}
+
+/// `{"licenses": [any], "license_type": "ServiceCenter" | "Manufacturer"}` -> `[{"state_id", "name", "license"}]`.
+pub fn licenses_of_type_json(input: &str) -> Result<String, Error> {
+    #[derive(serde::Deserialize)]
+    struct Input {
+        licenses: Vec<Value>,
+        license_type: String,
+    }
+    let i: Input = serde_json::from_str(input)?;
+    Ok(Value::Array(licenses_of_type(&i.licenses, &i.license_type)?).to_string())
 }

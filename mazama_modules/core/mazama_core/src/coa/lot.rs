@@ -1,4 +1,4 @@
-//! AD-19 (specs/coa/decisions.md; SM-07): which section is a lot's value of record, when the report may have printed
+//! Which section is a lot's value of record, when the report may have printed
 //! another id. The state links a document to a lot; a lab sometimes prints the batch the lot was made from as the
 //! UID (document 3092: PL-de20657a submitted as HB-597a95ef). Held to corpus/lots/cases.json.
 
@@ -19,9 +19,9 @@ pub enum Via {
     Own,
     /// The report's own request / chain of custody pairs the lot with the one batch whose UID it printed.
     Request,
-    /// The report's chain of custody names the lot on the line numbered like the section's sample (AD-21).
+    /// The report's chain of custody names the lot on the line numbered like the section's sample.
     CustodyOrder,
-    /// A section with no id whose sample name is the request item that carries the lot (AD-22).
+    /// A section with no id whose sample name is the request item that carries the lot.
     RequestName,
     /// The one primary section whose psilocybin equals the state's figure at 3 significant figures.
     StatePsilocybin,
@@ -98,7 +98,7 @@ fn is_client(id: &str, rules: &Rules) -> bool {
     rules.anchor.client_prefixes.iter().any(|p| id.len() > p.len() && id[..p.len()].eq_ignore_ascii_case(p) && id[p.len()..].starts_with('-'))
 }
 
-/// AD-21: the (batch slot, lot slot) id pairs of the report's request items, any kind of id in either slot: "Batch
+/// The (batch slot, lot slot) id pairs of the report's request items, any kind of id in either slot: "Batch
 /// ID/METRC ID" then "Harvest Lot/Process Lot Number", each id on its label's line or the next. An empty slot is
 /// None, never the previous item's id.
 fn request_pairs(all: &[Line], rules: &Rules, id_re: &Regex) -> Vec<(Option<String>, Option<String>)> {
@@ -131,7 +131,7 @@ fn request_pairs(all: &[Line], rules: &Rules, id_re: &Regex) -> Vec<(Option<Stri
     out
 }
 
-/// AD-21: the section printed under a client's own id (HL-, CB-) that the report's request pairs with `lot`: the
+/// The section printed under a client's own id (HL-, CB-) that the report's request pairs with `lot`: the
 /// one client id paired with it, when that id's value of record is a primary.
 fn by_client_request(all: &[Line], result: &CoaParseResult, lot: &str, rules: &Rules, id_re: &Regex) -> Option<usize> {
     let mut paired: BTreeSet<String> = BTreeSet::new();
@@ -151,7 +151,7 @@ fn by_client_request(all: &[Line], result: &CoaParseResult, lot: &str, rules: &R
     (!result.sections[i].is_fd).then_some(i)
 }
 
-/// AD-21: the section the chain of custody names `lot` for by number: "#N  Client Batch ID: HB-..." is the report's
+/// The section the chain of custody names `lot` for by number: "#N  Client Batch ID: HB-..." is the report's
 /// Nth sample (work-order number ...-0N). Only when the custody lines are numbered 1..K, the report has exactly K
 /// sections and prints their work-order numbers ...-01..-K in order, every custody line naming the lot is a section
 /// under the same client id, and that id's value of record is a primary.
@@ -205,7 +205,7 @@ fn name_key(s: &str) -> String {
     s.split_whitespace().collect::<Vec<_>>().join(" ").to_lowercase()
 }
 
-/// AD-22: the report's request items as (name, ids): "Item/Strain Name" with the name on the next line (running
+/// The report's request items as (name, ids): "Item/Strain Name" with the name on the next line (running
 /// headers and footers skipped: a page break can fall between them), then every id printed until the next item.
 fn request_items(all: &[Line], rules: &Rules, id_re: &Regex) -> Vec<(String, BTreeSet<String>)> {
     let mut out: Vec<(String, BTreeSet<String>)> = Vec::new();
@@ -228,7 +228,7 @@ fn request_items(all: &[Line], rules: &Rules, id_re: &Regex) -> Vec<(String, BTr
     out
 }
 
-/// AD-22: the section with no id (its UID blank or not an id) whose sample name is the name of the one request item
+/// The section with no id (its UID blank or not an id) whose sample name is the name of the one request item
 /// carrying `lot`, when no other request item has that name and no other primary section has it.
 fn by_request_name(all: &[Line], result: &CoaParseResult, lot: &str, rules: &Rules, id_re: &Regex) -> Option<usize> {
     let items = request_items(all, rules, id_re);
@@ -250,14 +250,14 @@ fn sig3(x: f64) -> f64 {
     format!("{x:.2e}").parse().unwrap_or(x)
 }
 
-/// The section that is `lot`'s value of record in this report, or None (AD-19): its own UID first; else the one
+/// The section that is `lot`'s value of record in this report, or None: its own UID first; else the one
 /// batch the report pairs it with, when that batch's section is a primary; else the one primary section (one UID)
 /// whose psilocybin equals `state_psilocybin` (mg/g, ignored unless above 0) at 3 significant figures.
 pub fn find_lot(t: &CoaText, result: &CoaParseResult, lot: &str, state_psilocybin: Option<f64>, rules: &Rules) -> Option<LotMatch> {
     let id_re = Regex::new(&format!("^(?i:{})$", rules.anchor.id)).expect("checked when the rules were loaded");
     let want = normalize_id(lot.trim(), rules, &id_re).map(|(id, _)| id)?;
     if !want.starts_with("HB-") && !want.starts_with("PL-") {
-        return None; // only a state id is a lot; a client's own id (AD-21) never is
+        return None; // only a state id is a lot; a client's own id never is
     }
     let at = |i: usize, via: Via| LotMatch { section: i, uid: result.sections[i].uid.clone(), via };
     if let Some(&i) = result.of_record.get(&want.to_lowercase()) {

@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "selling.check_sale input",
-  "description": "A sale's lines against the state's records as read just now (SM-25, SALE-17).",
+  "description": "A sale's lines against the state's records as read just now.",
   "type": "object",
   "required": [
     "lines",

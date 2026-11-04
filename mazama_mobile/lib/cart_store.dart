@@ -38,7 +38,7 @@ class CartStore {
 
   LocalStore get _store => LocalStore.forDir(dataDir());
 
-  /// One document per cart (specs/multi-cart MC-D2): the first cart keeps cart.json, so a draft saved before there
+  /// One document per cart: the first cart keeps cart.json, so a draft saved before there
   /// were several carts comes back as the first one.
   String _name(String cartId) => cartFileName('cart', cartId);
 
@@ -46,7 +46,7 @@ class CartStore {
   /// (every line removed by hand, short of an actual sale or discard) is itself real state worth persisting
   /// exactly as the worker left it, not silently dropped back to "nothing saved".
   ///
-  /// Saving stamps the draft with [now], so [load] can tell how long nobody has changed it (SM-16).
+  /// Saving stamps the draft with [now], so [load] can tell how long nobody has changed it.
   Future<void> save(int centerId, List<CartLine> lines,
       {DateTime Function() now = DateTime.now, String cartId = defaultCartId}) async {
     final name = _name(cartId); // an id that isn't a cart id throws here, before anything is written
@@ -63,7 +63,7 @@ class CartStore {
   /// business reappearing at another one, even on the same device, so that's treated exactly like "nothing
   /// saved" rather than surfaced as an error the worker has to deal with.
   ///
-  /// With [maxAge] (the cart's life, SM-16: the server empties a cart nobody has changed for that long), a draft
+  /// With [maxAge] (the cart's life: the server empties a cart nobody has changed for that long), a draft
   /// saved longer ago than that is not restored either. A draft saved before drafts carried a time is restored.
   Future<List<CartLine>?> load(int centerId,
       {Duration? maxAge, DateTime Function() now = DateTime.now, String cartId = defaultCartId}) async {

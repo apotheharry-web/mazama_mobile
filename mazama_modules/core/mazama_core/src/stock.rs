@@ -1,17 +1,14 @@
-//! The stock page's shared rules (specs/core row 8; specs/stock-page SP-R1..SP-R3, specs/edibles ED-D1..D3,
-//! specs/mazama-inventory MI-R1, specs/web-charts WC-D1): which rows are counted, the summary by strain and size, its
-//! pies, the par table, the stock mix by strain and type, and a center's By type pie. Held to
-//! mazama_modules/stock/vectors/ (frozen from the server's Python, which was the reference): the numbers keep
-//! Python's own arithmetic (an int stays an int through sums, `round(x, 2)` and percents half to even on the exact
-//! binary value, `f"{x:g}"`), so both apps show the same figures. The constants are mazama_modules/stock/rules.yaml's
-//! (tests/stock_cases.rs holds them equal).
+//! The stock page's shared rules: which rows are counted, the summary by strain and size, its pies, the par table,
+//! the stock mix by strain and type, and a center's By type pie. Held to the frozen vectors in
+//! mazama_modules/stock/vectors/: the numbers follow Python's arithmetic (an int stays an int through sums,
+//! `round(x, 2)` and percents half to even on the exact binary value, `f"{x:g}"`), so both apps show the same
+//! figures. The constants are mazama_modules/stock/rules.yaml's (tests/stock_cases.rs holds them equal).
 //!
-//! Known limits (specs/core Task 14 review): an object's key order isn't kept (`sizes` / `mg_sizes` come back sorted
-//! by key, not in SIZE_ORDER; nothing reads them in order, every reader goes by SIZE_ORDER / PAR_COLUMNS itself);
-//! `\b` in the name patterns is Rust's Unicode word boundary, which unlike Python's doesn't count numeric symbols such as
-//! `²` or `½` as word characters (no real description has them); a mg figure (`unitMgTpe`, `weightPerUnit`,
-//! `analyteWeight`) given as text counts as 0 where Python raised TypeError; a quantity that isn't a number is an input
-//! error (ValueError) where Python raised TypeError.
+//! Known limits: an object's key order isn't kept (`sizes` / `mg_sizes` come back sorted by key, not in SIZE_ORDER;
+//! nothing reads them in order, every reader goes by SIZE_ORDER / PAR_COLUMNS itself); `\b` in the name patterns is
+//! Rust's Unicode word boundary, which unlike Python's doesn't count numeric symbols such as `²` or `½` as word
+//! characters (no real description has them); a mg figure (`unitMgTpe`, `weightPerUnit`, `analyteWeight`) given as
+//! text counts as 0; a quantity that isn't a number is an input error.
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::hash::Hash;
@@ -42,6 +39,12 @@ pub const ALL_STRAINS: &str = "All strains";
 pub const MIX_TYPE_WORDS: [(&str, &str); 10] = [("FD", "Freeze dried"), ("DH", "Dehydrated"), ("HG", "Homogenized"),
     ("CH", "Chocolate"), ("EX", "Extract"), ("HN", "Honey"), ("GM", "Gummy"), ("LOT", "Process lot"), ("WF", "Whole fungi"),
     ("", "Other type")];
+
+/// A kind word in a record's name or state product type -> its code (mazama_modules/names/names.yaml kind_keywords).
+pub const KIND_KEYWORDS: [(&str, &str); 3] = [("freeze", "FD"), ("dehydrat", "DH"), ("homogen", "HG")];
+/// What a package nothing else names was made from -> its kind, by the owner's rule (the server's
+/// stockdata.SOURCE_KIND): a harvest batch is dehydrated, a process lot homogenized.
+pub const SOURCE_KINDS: [(&str, &str); 2] = [("HB-", "DH"), ("PL-", "HG")];
 
 fn mg_title(mode: &str) -> &'static str {
     if mode == "tpe" { "Total mg TPE" } else { "Total mg psilocybin" }
@@ -121,7 +124,7 @@ impl Num {
     }
 }
 
-/// CPython 3.14's `sum()` (`builtin_sum_impl`, the server's Python): ints add exactly while every item is an int; the
+/// CPython 3.14's `sum()` (`builtin_sum_impl`): ints add exactly while every item is an int; the
 /// first float is added plainly to that int sum, and from there every item, float or int (as the nearest double), goes
 /// through the compensated sum (Neumaier, `cs_add`), the compensation added at the end when it is finite and not 0.
 /// So `sum([1e100, 1, -1e100])` is 1.0 (3.12 and 3.13 added an int in float mode plainly and gave 0.0).
@@ -249,12 +252,16 @@ pub fn type_of(r: &Value) -> Result<String, Error> {
     if !t.is_empty() {
         return Ok(t.to_string());
     }
-    let desc = text(get(r, "description"))?;
+    Ok(named_type(text(get(r, "description"))?))
+}
+
+/// The kind a name says: the code after "TPE" in it, else the first name keyword it contains, else "".
+fn named_type(desc: &str) -> String {
     if let Some(m) = NAME_CODE_RE.captures(desc) {
-        return Ok(m[1].to_string());
+        return m[1].to_string();
     }
     let low = desc.to_lowercase();
-    Ok(NAME_KEYWORDS.iter().find(|(w, _)| low.contains(w)).map_or("", |(_, c)| c).to_string())
+    NAME_KEYWORDS.iter().find(|(w, _)| low.contains(w)).map_or("", |(_, c)| c).to_string()
 }
 
 fn edible_of(r: &Value) -> Result<Option<&'static str>, Error> {
@@ -331,7 +338,8 @@ impl<K: Eq + Hash + Clone, V> Ordered<K, V> {
 
 // --- filter ---------------------------------------------------------------------------------------------------
 
-/// `{"counted": [row], "other": [{"row", "reason": "expired" | "other_maker"}]}` (SP-D2, SP-D3).
+/// `{"counted": [row], "other": [{"row", "reason": "expired" | "other_maker"}]}`: a row with no units is left out; an
+/// expired row, or (for `makers` "mazama") one Mazama didn't make, goes to `other` with its reason; the rest is counted.
 pub fn filter(rows: &[Value], makers: &str) -> Result<Value, Error> {
     if !FILTERS.contains(&makers) {
         return Err(format!("makers must be one of all, mazama, not {makers:?}").into());
@@ -531,7 +539,7 @@ pub(crate) fn is_all(name: &str) -> bool {
     name.split(py_space).filter(|w| !w.is_empty()).collect::<Vec<_>>().join(" ").to_lowercase() == ALL_STRAINS.to_lowercase()
 }
 
-/// The par/order sizes a row takes (ED-A6): a product Booster, Microdose and Other; a strain 25…5 and Other.
+/// The par/order sizes a row takes: a product Booster, Microdose and Other; a strain 25…5 and Other.
 pub(crate) fn sizes_for(name: &str) -> Vec<i64> {
     let product = is_product(name);
     PAR_COLUMNS.iter().copied().filter(|d| ((*d == -1 || *d == -2 || *d == 0) == product) || *d == 0).collect()
@@ -665,7 +673,8 @@ fn breakdown(pairs: Vec<(String, Num)>, total: Num) -> Value {
     json!({"total": total.json(), "slices": slices})
 }
 
-/// The stock mix by strain and by type (MI-R1; stockview.mix).
+/// The stock mix by strain and by type: each row's mg summed per strain, per type and per (strain, type), ranked
+/// largest first (ties by name), with a pie per strain and per type.
 pub fn mix(rows: &[Value]) -> Result<Value, Error> {
     let clean = clean_mix(rows)?;
     let total = py_sum(clean.iter().map(|(_, _, m)| *m));
@@ -717,7 +726,7 @@ pub fn mix(rows: &[Value]) -> Result<Value, Error> {
     }))
 }
 
-/// The mix rows summed per (strain, type), first-seen order, mg rounded to 2 decimals (route C12, MI-A2).
+/// The mix rows summed per (strain, type), first-seen order, mg rounded to 2 decimals.
 pub fn mix_cells(rows: &[Value]) -> Result<Value, Error> {
     let mut cells: Ordered<(String, String), Num> = Ordered::default();
     for (s, c, mg) in clean_mix(rows)? {
@@ -727,21 +736,107 @@ pub fn mix_cells(rows: &[Value]) -> Result<Value, Error> {
     Ok(Value::Array(cells.items.iter().map(|((s, c), mg)| json!({"strain": s, "type": c, "mg": round2(*mg).json()})).collect()))
 }
 
-/// A center's By type pie (WC-D1): by mg when the rows have any mg figure, else by units; null when nothing is left.
-pub fn by_type(rows: &[Value], mode: &str) -> Result<Value, Error> {
+/// What each row weighs on the By type pie: `quantity x mg per unit` when the rows have any mg figure (summarize's
+/// mg_total above 0), else its quantity; None for a row with no units on hand.
+fn type_weights(rows: &[Value], mode: &str) -> Result<Vec<Option<Num>>, Error> {
     let by_mg = Num::of(get(&summarize(rows, mode)?, "mg_total")).is_some_and(Num::gt0);
-    let mut cells = Vec::new();
+    let mut out = Vec::with_capacity(rows.len());
     for r in rows {
         if !has_units(r)? {
+            out.push(None);
             continue;
         }
         let q = get(r, "quantity");
         let q = if truthy(q) { Num::of(q).ok_or("stock: a row's quantity isn't a number")? } else { Num::ZERO };
-        let mg = q.mul(if by_mg { mg_per_unit(r, mode) } else { Num::I(1) });
-        cells.push(json!({"strain": "", "type": type_of(r)?, "mg": mg.json()}));
+        out.push(Some(q.mul(if by_mg { mg_per_unit(r, mode) } else { Num::I(1) })));
+    }
+    Ok(out)
+}
+
+/// A center's By type pie: by mg when the rows have any mg figure, else by units; null when nothing is left.
+pub fn by_type(rows: &[Value], mode: &str) -> Result<Value, Error> {
+    let mut cells = Vec::new();
+    for (r, w) in rows.iter().zip(type_weights(rows, mode)?) {
+        if let Some(mg) = w {
+            cells.push(json!({"strain": "", "type": type_of(r)?, "mg": mg.json()}));
+        }
     }
     let pie = mix(&cells)?;
     Ok(if Num::of(get(&pie, "total")).is_some_and(Num::gt0) { pie["by_type"].clone() } else { Value::Null })
+}
+
+/// How the stock rules read each row, one entry per row in order: its kind code (`type`), the word its pies show
+/// (`word`), the edible product it is counted under (`edible`, null for a strain's), its size key, its mg per unit in
+/// `mode` (0 when not known), whether it has units on hand, and what it weighs on the By type pie (`type_mg`, null
+/// with no units on hand); `type_words` are the words of every type weighing above 0, first seen first (the types a
+/// pick on that pie can name, those folded into "Other (n)" included).
+pub fn classify(rows: &[Value], mode: &str) -> Result<Value, Error> {
+    check_mode(mode)?;
+    let weights = type_weights(rows, mode)?;
+    let mut out = Vec::with_capacity(rows.len());
+    let mut words: Vec<String> = Vec::new();
+    for (r, w) in rows.iter().zip(weights) {
+        let t = type_of(r)?;
+        let word = mix_word(&t);
+        if w.is_some_and(Num::gt0) && !words.contains(&word) {
+            words.push(word.clone());
+        }
+        out.push(json!({
+            "type": t, "word": word, "edible": edible_of(r)?, "size_key": size_key(r, mode)?,
+            "mg_per_unit": mg_per_unit(r, mode).json(), "has_units": has_units(r)?,
+            "type_mg": w.map_or(Value::Null, Num::json),
+        }));
+    }
+    Ok(json!({"rows": out, "type_words": words}))
+}
+
+/// A record's field as text the way the phone read it (`toString()`): a string itself, null "", any other value its
+/// JSON text (no number or true/false holds a letter a kind rule looks for).
+fn field_text(v: &Value) -> String {
+    match v {
+        Value::Null => String::new(),
+        Value::String(s) => s.clone(),
+        other => other.to_string(),
+    }
+}
+
+static LOT_ID_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(crate::id_patterns::LOT_ID).unwrap());
+
+/// A state record's kind code, the server's `Stock.package_code` as far as the record says: the code or an edible
+/// word in its name; else a kind word in its name or state product type; else what it was made from (the first of
+/// harvestBatchGuid, processLotGuid that is a batch or lot id: HB- dehydrated, PL- homogenized); else WF for a whole
+/// fungi product type; else None (unknown).
+pub fn record_type(r: &Value) -> Option<String> {
+    let name = field_text(get(r, "description"));
+    let named = named_type(&name);
+    if !named.is_empty() {
+        return Some(named);
+    }
+    let product_type = field_text(get(r, "productType"));
+    let text = format!("{name} {product_type}").to_lowercase();
+    if let Some((_, c)) = KIND_KEYWORDS.iter().find(|(w, _)| text.contains(w)) {
+        return Some(c.to_string());
+    }
+    let source = ["harvestBatchGuid", "processLotGuid"].iter()
+        .find_map(|k| get(r, k).as_str().filter(|s| LOT_ID_RE.is_match(s)));
+    if let Some(src) = source {
+        let head = src[..3].to_uppercase();
+        if let Some((_, c)) = SOURCE_KINDS.iter().find(|(p, _)| *p == head) {
+            return Some(c.to_string());
+        }
+    }
+    product_type.to_lowercase().contains("whole fungi").then(|| "WF".to_string())
+}
+
+/// Each record's [`record_type`], in order.
+pub fn record_types(records: &[Value]) -> Value {
+    Value::Array(records.iter().map(|r| record_type(r).map_or(Value::Null, Value::String)).collect())
+}
+
+/// The word a kind code's pies show (`mix_type_words`; a code not listed shows as itself), for each code.
+pub fn type_words(codes: &[Value]) -> Result<Value, Error> {
+    codes.iter().map(|c| c.as_str().map(|c| Value::String(mix_word(c))).ok_or_else(|| "stock: every code must be text".into()))
+        .collect::<Result<Vec<_>, Error>>().map(Value::Array)
 }
 
 // --- JSON entry points ----------------------------------------------------------------------------------------
@@ -798,4 +893,23 @@ pub fn mix_cells_json(s: &str) -> Result<String, Error> {
 pub fn by_type_json(s: &str) -> Result<String, Error> {
     let v = input(s)?;
     Ok(json!({"pie": by_type(list(&v, "rows")?, word(&v, "mg_mode")?)?}).to_string())
+}
+
+/// `{"rows", "mg_mode"}` in, `{"rows": [...], "type_words": [...]}` out.
+pub fn classify_json(s: &str) -> Result<String, Error> {
+    let v = input(s)?;
+    Ok(classify(list(&v, "rows")?, word(&v, "mg_mode")?)?.to_string())
+}
+
+/// `{"records"}` in, `{"types": [code | null]}` out.
+pub fn record_types_json(s: &str) -> Result<String, Error> {
+    let v = input(s)?;
+    Ok(json!({"types": record_types(list(&v, "records")?)}).to_string())
+}
+
+/// `{"codes"}` in, `{"words"}` out.
+pub fn type_words_json(s: &str) -> Result<String, Error> {
+    let v = input(s)?;
+    let codes = v.get("codes").and_then(Value::as_array).ok_or("stock: codes must be a list")?;
+    Ok(json!({"words": type_words(codes)?}).to_string())
 }

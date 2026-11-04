@@ -1,7 +1,7 @@
 // Runs before every test file (and every test bundle, tool/gen_test_bundle.dart): loads the shared core as the
 // app's main() does (missing_core_app.dart), so code that uses MazamaCore.instance finds it. Without
 // MAZAMA_CORE_FFI_LIB nothing is loaded here, and every test that reaches the core fails, naming the variable
-// (support/core.dart; specs/core CR-R3).
+// (support/core.dart).
 import 'dart:async';
 import 'dart:io';
 

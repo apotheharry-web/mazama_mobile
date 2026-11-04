@@ -1,4 +1,4 @@
-// Test helper (not a test file): release files (specs/app-updates AU-R1) signed with the shared vectors' TEST key
+// Test helper (not a test file): release files signed with the shared vectors' TEST key
 // (host_list_signing.dart's; never Mazama's key), so the update tests can verify files the way the app does, with
 // that TEST public key injected.
 import 'dart:convert';
@@ -16,7 +16,7 @@ int buildOn(DateTime day, [int n = 1]) {
   return int.parse('${two(d.year % 100)}${two(d.month)}${two(d.day)}${two(n)}');
 }
 
-/// The text of a release file, keys in AU-R1's order; [over] replaces fields (a null value removes the key).
+/// The text of a release file, keys in the release file's order; [over] replaces fields (a null value removes the key).
 String releaseText({
   String version = '0.2.4',
   required int build,

@@ -6,22 +6,22 @@
 # check its presence, not its truthiness.
 #
 # The two saves (UpdateServiceCenterData, UpdateClientData) are writes and stay hand-written, like every write but
-# CreateSalesRecords (SPEC.md "What stays out of the spec"). Endpoints and bodies were read off a HAR of the state
-# site's own page on 2026-10-22; see ../../specs/sb303/README.md.
+# CreateSalesRecords (SPEC.md "What stays out of the spec"). Endpoints and bodies are as the state site's own page
+# sends them (read off a HAR of it); see ../../specs/sb303/README.md.
 #
 # CreateSB303Report/<license> is deliberately NOT here: despite being a GET it makes a NEW report every time it is
-# called (seen 2026-10-22: three open reports for the same window after three calls). Reports are started on the
+# called (three calls leave three open reports for the same window). Reports are started on the
 # state's page; we only find an existing open one in `licenses` and read it with `record`.
 #
 # Inputs: access_token, plus report_id for record. Outputs: status, url, result (as state_reads.yaml).
 
 vars:
-  # Per-request limit, seconds (SM-D1, specs/shared-modules/decisions.md). See ../SPEC.md "Timeouts".
+  # Per-request limit, seconds. See ../SPEC.md "Timeouts".
   timeout_seconds: 60
   site: "https://psilocybin.oregon.gov/"
   site_origin: "https://psilocybin.oregon.gov"
   sb303_api: "{{site}}api/private/SB303/"
-  # Kept equal to state_reads.yaml's (a test checks), so every state request sends the same User-Agent (SM-20).
+  # Kept equal to state_reads.yaml's (a test checks), so every state request sends the same User-Agent.
   user_agent: "Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0"
 
 flows:

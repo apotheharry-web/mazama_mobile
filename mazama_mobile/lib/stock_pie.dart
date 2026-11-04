@@ -1,10 +1,10 @@
-// SP-R12: a pie of the slices stock_summary.dart's pies() gives ({"name", "value", "slot", "pct"}), drawn with a
+// A pie of the slices stock_summary.dart's pies() gives ({"name", "value", "slot", "pct"}), drawn with a
 // CustomPainter (no chart package) the way the server's charts.pie_svg draws them: from the top, clockwise, one
 // full circle when there is a single slice, coloured by slot exactly as the server's
 // mazama_sales/src/mazama_sales/web/static/app.css .f-* classes.
 //
 // Slots: s1..s7 (a strain by rank), oth ("Other (n strains)"), and a strain's serving-size pie's d25..d5, db / dm
-// (an edible's Booster / Microdose, specs/edibles), dx (other size) and c (one size only). The size slots are shades of their strain's colour, as app.css's
+// (an edible's Booster / Microdose), dx (other size) and c (one size only). The size slots are shades of their strain's colour, as app.css's
 // `.strainrow` color-mix rules make them, so they need that strain's slot ([strainSlot]).
 import 'dart:math' as math;
 
@@ -173,4 +173,118 @@ class StockPie extends StatelessWidget {
           );
     return Semantics(label: label, image: true, child: SizedBox.square(dimension: size, child: child));
   }
+}
+
+// ---- the pie cards' shared pieces (the stock page and the Mazama page draw their key lines and cards with these) ----
+
+/// A slot's colour square, beside a key line's name or a card's title.
+class StockSwatch extends StatelessWidget {
+  const StockSwatch(this.slot, {super.key, this.strainSlot = 's1'});
+
+  final String slot;
+  final String strainSlot;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        width: 12,
+        height: 12,
+        margin: const EdgeInsets.only(right: 8),
+        decoration: BoxDecoration(
+          color: stockSlotColor(slot, strainSlot: strainSlot, brightness: Theme.of(context).brightness),
+          borderRadius: BorderRadius.circular(2),
+        ),
+      );
+}
+
+/// One key line, as the server's: the slice's swatch and name, and [value] at the right ("1,234 mg · 45%").
+class StockKeyLine extends StatelessWidget {
+  const StockKeyLine({super.key, required this.slice, required this.value, this.onTap, this.strainSlot = 's1'});
+
+  final Map<String, Object?> slice;
+  final String value;
+  final VoidCallback? onTap;
+  final String strainSlot;
+
+  @override
+  Widget build(BuildContext context) => InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 3),
+          child: Row(
+            children: [
+              StockSwatch(slice['slot'] as String, strainSlot: strainSlot),
+              Expanded(child: Text(slice['name'] as String)),
+              Text(value),
+            ],
+          ),
+        ),
+      );
+}
+
+/// A main pie in its card: [title], the pie (tapping a slice is [onPick]), a key line per slice (keyed
+/// '$keyPrefix-key-<name>', its value [valueOf], a tap on it [onPick] too) and [hint] under them.
+class StockPieCard extends StatelessWidget {
+  const StockPieCard({
+    super.key,
+    required this.title,
+    required this.slices,
+    required this.label,
+    required this.keyPrefix,
+    required this.valueOf,
+    required this.onPick,
+    required this.hint,
+  });
+
+  final String title;
+  final List<Map<String, Object?>> slices;
+
+  /// The pie's words for a screen reader.
+  final String label;
+  final String keyPrefix;
+  final String Function(Map<String, Object?> slice) valueOf;
+  final void Function(String name) onPick;
+  final String hint;
+
+  @override
+  Widget build(BuildContext context) => Card(
+        margin: const EdgeInsets.symmetric(vertical: 6),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(title, style: Theme.of(context).textTheme.titleSmall),
+              const SizedBox(height: 8),
+              Center(child: StockPie(slices: slices, size: 160, onTapSlice: onPick, label: label)),
+              const SizedBox(height: 8),
+              for (final s in slices)
+                StockKeyLine(
+                    key: ValueKey('$keyPrefix-key-${s['name']}'),
+                    slice: s,
+                    value: valueOf(s),
+                    onTap: () => onPick(s['name'] as String)),
+              const SizedBox(height: 4),
+              Text(hint, style: Theme.of(context).textTheme.bodySmall),
+            ],
+          ),
+        ),
+      );
+}
+
+/// A breakdown card's title row: the swatch of [slot], [title] and a Close button ([onClose]).
+class StockCardTitle extends StatelessWidget {
+  const StockCardTitle({super.key, required this.slot, required this.title, required this.onClose});
+
+  final String slot;
+  final String title;
+  final VoidCallback onClose;
+
+  @override
+  Widget build(BuildContext context) => Row(
+        children: [
+          StockSwatch(slot),
+          Expanded(child: Text(title, style: Theme.of(context).textTheme.titleSmall)),
+          IconButton(tooltip: 'Close', icon: const Icon(Icons.close), onPressed: onClose),
+        ],
+      );
 }

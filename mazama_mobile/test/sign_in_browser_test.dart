@@ -1,8 +1,8 @@
-// SL-R16: "Sign in on the state's page" on SignInPage. The browser sign-in spec is the bundled asset file read from
+// "Sign in on the state's page" on SignInPage. The browser sign-in spec is the bundled asset file read from
 // disk (run tool/sync_flows.sh first if it is missing); the webview is replaced by an injected `browse` that answers as
 // the state's page would; the state system is test/flow/fake_state.dart's FakeState through http.runWithClient
 // (SignInPage builds its own http.Client()); the failure reporter and the newer-spec fetches are injected spies, so
-// nothing reaches Mazama's server and the only files written are in a temp folder. The SL-R19 retry with a fetched
+// nothing reaches Mazama's server and the only files written are in a temp folder. The retry with a fetched
 // browser spec is sign_in_browser_retry_test.dart's; here the fetch finds none.
 import 'dart:async';
 import 'dart:io';
@@ -51,7 +51,7 @@ class _Spies {
 
 Finder get _browserButton => find.widgetWithText(TextButton, signInOnStatePageLabel);
 
-/// A password sign-in spec whose login only asks a question (SL-R13's `await_input`): with an `ask` that throws, its
+/// A password sign-in spec whose login only asks a question (an `await_input`): with an `ask` that throws, its
 /// FlowError comes through as it is (flow_runner.dart's _callBack); with one that answers null, reason `cancelled`.
 final FlowSpec _askingSpec = FlowSpec({..._login.vars}, {
   ..._login.flows,
@@ -73,12 +73,12 @@ Widget _app(_Spies spies,
       reportSigninFailure: (e, v) async => spies.reports.add(e),
       fetchSpec: () async {
         spies.fetches += 1;
-        return null; // no newer spec (SL-R10 is sign_in_retry_test.dart's)
+        return null; // no newer spec (the newer-spec retry is sign_in_retry_test.dart's)
       },
-      fetchHosts: () async => null, // nor a host list (SL-R18 is sign_in_hosts_test.dart's)
+      fetchHosts: () async => null, // nor a host list (the host list is sign_in_hosts_test.dart's)
       fetchBrowserSpec: () async {
         spies.browserFetches += 1;
-        return null; // nor a newer browser spec (SL-R19 is sign_in_browser_retry_test.dart's)
+        return null; // nor a newer browser spec (that retry is sign_in_browser_retry_test.dart's)
       },
       browserSpecStore: LoginSpecStore.browser(dataDir: () => _dir),
       ask: ask,
@@ -114,7 +114,7 @@ Future<SelectCenterPage?> _signInOnPage(WidgetTester tester, FakeState fake, _Sp
   return opened;
 }
 
-/// A password sign-in as the fake's worker (SL-R16's suggestion line follows some of its failures).
+/// A password sign-in as the fake's worker (the browser sign-in suggestion line follows some of its failures).
 Future<void> _passwordSignIn(WidgetTester tester, FakeState fake, _Spies spies,
     {Future<String?> Function(String, bool)? ask, FlowSpec? spec, _Browse? browse}) async {
   await http.runWithClient(() async {
@@ -172,7 +172,7 @@ void main() {
     expect(tester.getTopLeft(_browserButton).dy, greaterThan(tester.getTopLeft(find.byType(FilledButton)).dy));
     expect(find.descendant(of: find.byType(Form), matching: _browserButton), findsNothing);
     final screenHeight = tester.view.physicalSize.height / tester.view.devicePixelRatio;
-    // the bottom bar: only the two small links (open source, privacy policy, PA-R6/R8) sit under it
+    // the bottom bar: only the two small links (open source, privacy policy) sit under it
     expect(tester.getBottomLeft(_browserButton).dy, greaterThan(screenHeight - 160));
     final privacy = find.byKey(const ValueKey('privacy-policy-link'));
     expect(tester.getBottomLeft(privacy).dy, greaterThan(screenHeight - 40));
@@ -242,7 +242,7 @@ void main() {
     expect(find.text(browserSigninSuggestion), findsNothing);
     expect(spies.reports, isEmpty);
     expect(spies.fetches, 0);
-    expect(spies.browserFetches, 1); // a stuck page may be a moved host: looked for, none here (SL-R19)
+    expect(spies.browserFetches, 1); // a stuck page may be a moved host: looked for, none here
     expect(fake.log, isEmpty);
     expect(find.byType(SignInPage), findsOneWidget);
   });
@@ -259,7 +259,7 @@ void main() {
     expect(find.text(browserSigninSuggestion), findsNothing);
     expect(spies.reports, isEmpty);
     expect(spies.fetches, 0); // never the password sign-in's spec
-    expect(spies.browserFetches, 1); // SL-R19: none to be had here, so no retry
+    expect(spies.browserFetches, 1); // none to be had here, so no retry
     expect(fake.log, isEmpty); // no token asked for
   });
 
@@ -320,7 +320,7 @@ void main() {
 
       expect(find.text(stateSigninChangedMessage), findsOneWidget);
       expect(find.text(browserSigninSuggestion), findsOneWidget);
-      expect(spies.reports, hasLength(1)); // still reported as before (SL-R5)
+      expect(spies.reports, hasLength(1)); // still reported as before
       expect(spies.fetches, 1);
     });
 

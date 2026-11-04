@@ -1,18 +1,20 @@
-//! Prices in whole cents (specs/core row 6, Task 12; SM-13): a typed price, total or rate per mg read into cents, tax
-//! on top, a rate per mg times a unit's mg, a total shared over weights, money as the pages show it, and a product's
-//! cart group. One rule for the server (pricing.py, selling.group_of, through the binding) and the phone
-//! (lib/pricing.dart, lib/cart_pricing.dart, through the FFI), held to mazama_modules/selling/vectors/pricing.json,
-//! cart.json and pricing_cases.json.
+//! Prices in whole cents: a typed price, total or rate per mg read into cents, tax on top, a rate per mg times a
+//! unit's mg, a total shared over weights, money as the pages show it, and a product's cart group. One rule for the
+//! server (pricing.py, selling.group_of, through the binding) and the phone (lib/pricing.dart, lib/cart_pricing.dart,
+//! through the FFI), held to mazama_modules/selling/vectors/pricing.json, cart.json and pricing_cases.json.
 //!
-//! It is the server's old rule with the owner's decisions of 2026-10-31 (CR-D6) where the two old copies disagreed,
-//! "refuse wins":
+//! - A typed figure: dollars with at most one '.' or ',' as the decimal mark, read exactly and rounded half up to the
+//!   cent; over its cap (per unit $10,000, per mg $1,000, a cart's total $10,000,000) it is refused.
+//! - Tax: cents x (100 + percent) / 100, rounded half up to the cent.
+//! - A unit at a rate per mg: rate (cents per mg) x the unit's mg (to two decimals), rounded half up to the cent.
+//! - A total shared over weights: each part rounded down, the cents left over to the largest remainders.
 //!
-//! | ID | Input | Answer |
-//! |---|---|---|
-//! | PRICE-1 | a typed figure of 17-19 digits or more | compared with its cap digit by digit, never overflowing: over every cap, refused |
-//! | PRICE-2 | a character only one app trimmed (U+001C..U+001F: Python; U+FEFF: Dart) | only what both trim is trimmed ([`TRIM`]); the rest is refused |
-//! | PRICE-4 | a total shared over weights whose remainders are equal | exact integers, the cent to the earlier weight |
-//! | PRICE-7 | an mg of more than two decimals in [`per_mg_price_json`] | an input error |
+//! | Input | Answer |
+//! |---|---|
+//! | a typed figure of 17-19 digits or more | compared with its cap digit by digit, never overflowing: over every cap, refused |
+//! | a character only one of the two languages' trims takes (U+001C..U+001F, U+FEFF) | not trimmed ([`TRIM`]), so the figure is refused |
+//! | a total shared over weights whose remainders are equal | exact integers, the cent to the earlier weight |
+//! | an mg of more than two decimals in [`per_mg_price_json`] | an input error |
 //!
 //! Integers only: products are worked in `i128`, and a result that wouldn't fit 64 bits is an error, never a wrapped price.
 use serde_json::{Map, Value, json};
@@ -28,8 +30,9 @@ pub const MAX_TOTAL_CENTS: i64 = MAX_UNIT_CENTS * 1000;
 /// The words of a product type that put it in group A, any case (`pricing_modes.group_a_words`).
 pub const GROUP_A_WORDS: [&str; 2] = ["edible", "extract"];
 
-/// What is trimmed from both ends of a typed figure (PRICE-2): what both old apps trimmed, Dart's `String.trim` without
-/// U+FEFF (Python's `str.strip` also took U+001C..U+001F; neither is trimmed here, so a figure with one is refused).
+/// What is trimmed from both ends of a typed figure: what Python's `str.strip` and Dart's `String.trim` both trim
+/// (Dart's set without U+FEFF; Python's also takes U+001C..U+001F; neither is trimmed here, so a figure with one is
+/// refused).
 pub const TRIM: [char; 25] = [
     '\u{9}', '\u{a}', '\u{b}', '\u{c}', '\u{d}', ' ', '\u{85}', '\u{a0}', '\u{1680}', '\u{2000}', '\u{2001}', '\u{2002}',
     '\u{2003}', '\u{2004}', '\u{2005}', '\u{2006}', '\u{2007}', '\u{2008}', '\u{2009}', '\u{200a}', '\u{2028}', '\u{2029}',
@@ -72,7 +75,7 @@ fn fits(f: &str, x: i128) -> R<i64> {
 
 /// A figure typed by a person -> whole cents, rounded half up, or None when it isn't a plain decimal (digits with at
 /// most one '.' or ',' as the mark, at least one digit) or its exact value is over `max_cents`. Read digit by digit:
-/// any number of digits is refused or read without overflow (PRICE-1).
+/// any number of digits is refused or read without overflow.
 pub fn parse_price(text: &str, max_cents: i64) -> Option<i64> {
     let t = text.trim_matches(|c| TRIM.contains(&c));
     let (whole, frac) = match t.find(['.', ',']) {
@@ -125,7 +128,7 @@ pub fn per_mg_price(rate: i64, mg_hundredths: i64) -> R<i64> {
 }
 
 /// A total shared in proportion to `weights`, to the cent, the parts adding up to exactly the total: every part rounded
-/// down, the cents left over to the largest remainders, equal remainders to the earlier weight (PRICE-4). A weight of 0
+/// down, the cents left over to the largest remainders, equal remainders to the earlier weight. A weight of 0
 /// or less anywhere: shared equally. `total` is 0 or more.
 pub fn share_total(total: i64, weights: &[i64]) -> Vec<i64> {
     let w: Vec<i128> = weights.iter().map(|x| i128::from(*x)).collect();
@@ -172,7 +175,8 @@ pub fn group_of(product_type: &str) -> &'static str {
     if GROUP_A_WORDS.iter().any(|w| t.contains(w)) { "A" } else { "B" }
 }
 
-/// An mg of at most two decimals, 0 or more (a JSON integer, or text of plain digits): in hundredths (PRICE-7).
+/// An mg of at most two decimals, 0 or more (a JSON integer, or text of plain digits): in hundredths. More decimals
+/// is an input error, never rounded.
 fn mg_hundredths(f: &str, v: &Value) -> R<i64> {
     let bad = || -> Error { format!("{f}: mg is a whole number or a plain decimal of at most two places, 0 or more").into() };
     match v {

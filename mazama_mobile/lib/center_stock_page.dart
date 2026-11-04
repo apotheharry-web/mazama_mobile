@@ -1,26 +1,27 @@
-// SP-R12: a center's stock page on the phone, the same content as the server's center page (SP-D7): the All /
-// Mazama only filter (SP-D3), the units pie and the mg pie with their keys, the serving-size pies of the strain a
+// A center's stock page on the phone, the same content as the server's center page: the All /
+// Mazama only filter, the units pie and the mg pie with their keys, the serving-size pies of the strain a
 // worker taps, the lot table, and "Other stock" with the reason each package is left out (collapsed at first,
-// SP-D16). The par table is no longer here (SP-D19): it is the first step of an order (par_levels_editor.dart,
-// order_par_page.dart, MI-D21). Every number comes from stock_summary.dart (the shared rules, held to the server's
+// collapsed at first). The par table is the first step of an order (par_levels_editor.dart,
+// order_par_page.dart). Every number comes from stock_summary.dart (the shared rules, held to the server's
 // vectors); this file only lays them out and formats texts as the server's templates do (formatG for Python's {x:g}).
 //
 // Data comes through injected loaders, so the page is testable without a network and whoever hosts it decides
-// where rows come from (center_home_page.dart). Rows come as a StockLoad (stock_rows.dart): partial ones (SP-R13, the
-// server unreachable) get the mg pie in mg psilocybin when they say so (SP-D6); the last rows drawn on this phone
+// where rows come from (center_home_page.dart). Rows come as a StockLoad (stock_rows.dart): partial ones (the
+// server unreachable) get the mg pie in mg psilocybin when they say so; the last rows drawn on this phone
 // (the state system unreachable too) say how old they are. The lot table's product information sheets, while
 // Mazama's server can't be reached, are the copy kept on the phone (sync/server_read.dart). Neither has a notice of its
-// own that the server can't be reached: the app-wide banner says so (server_link.dart, README R87), and the page
+// own that the server can't be reached: the app-wide banner says so (server_link.dart), and the page
 // reloads by itself once the server answers again.
 //
 // The units pie and the mg pie share one spot, one at a time: a horizontal swipe on it (or a tap on the dots below
 // it) shows the other; a picked strain's Quantity and mg serving-size pies work the same way. At either end the
 // swipe goes on to the Stock / Cart pages (center_home_page.dart), so the pie never traps a worker on this page.
-// specs/phone-sync Task 8b Step 2: in the app (and the demo) the sheets are read through the sync engine instead
+// In the app (and the demo) the sheets are read through the sync engine instead
 // ([CenterStockPage.sheetsFeed], sync/dataset_feed.dart): the sheets dataset, its read on open the one the center home
 // asks for as it opens (joined, never a second), reloaded by the engine when the server answers again. The rows still
-// read for themselves on open (the server's packages and the state's records, stock_rows.dart): no engine refresher
-// draws them, and the center_stock read they would come from is the cart's own (center_home_page.dart).
+// read for themselves on open (the server's packages and the state's records, stock_rows.dart), joined by the
+// center_stock dataset's rule and kept there, as the cart's load keeps it; no engine refresher draws them. The reload
+// when the server answers again, and Retry, are server_reload.dart's; the pie cards and key lines stock_pie.dart's.
 //
 // There is no pull to refresh here: the owner's rule is that only the PKPR list (stock_page.dart) re-downloads the
 // inventory by pulling down.
@@ -33,6 +34,7 @@ import 'licenses_client.dart';
 import 'mazama_lot_table.dart';
 import 'responsive.dart';
 import 'server_health.dart';
+import 'server_reload.dart';
 import 'sync/dataset_feed.dart';
 import 'sync/server_read.dart';
 import 'sync/sync_tables.dart' show DatasetRow;
@@ -82,7 +84,7 @@ class CenterStockPage extends StatefulWidget {
   /// Takes the worker to sign in again when the state's sign-in has expired (a "Sign in again" button shows).
   final void Function(BuildContext context)? onSignInAgain;
 
-  /// SP-D11: the product information sheets of the center's stock (route C13); no bar when null.
+  /// The product information sheets of the center's stock (GET /p/sheets/{state_id}); no bar when null.
   final Future<List<ProductSheet>> Function()? loadSheets;
 
   /// Opens a sheet's page; by default in the in-app browser. Overridable for tests.
@@ -102,8 +104,8 @@ class CenterStockPage extends StatefulWidget {
 
   bool get _hasSheets => loadSheets != null || sheetsFeed != null;
 
-  /// The app's server tracker (server_health.dart, README R56): while the page shows the copy kept on the phone (or
-  /// partial stock), it reloads by itself once the server answers again (README R87), and Retry asks the server first.
+  /// The app's server tracker (server_health.dart): while the page shows the copy kept on the phone (or
+  /// partial stock), it reloads by itself once the server answers again, and Retry asks the server first.
   /// Null: neither (tests, the demo).
   final ServerHealth? health;
 
@@ -111,10 +113,10 @@ class CenterStockPage extends StatefulWidget {
   State<CenterStockPage> createState() => _CenterStockPageState();
 }
 
-class _CenterStockPageState extends State<CenterStockPage> {
+class _CenterStockPageState extends State<CenterStockPage> with ServerReload<CenterStockPage> {
   List<StockRow>? _rows;
 
-  /// From the last StockLoad: 'tpe' or 'psilocybin' (SP-D6); drawn without the server (SP-R13); and when the rows
+  /// From the last StockLoad: 'tpe' or 'psilocybin'; drawn without the server; and when the rows
   /// are the last ones drawn on this phone, when that was.
   String _mgMode = 'tpe';
   bool _partial = false;
@@ -127,20 +129,20 @@ class _CenterStockPageState extends State<CenterStockPage> {
   String _makers = stockFilters.first;
   String? _strain;
 
-  /// SP-D17: the type picked on the By type pie (its word, "Dehydrated"); one pick at a time with [_strain].
+  /// The type picked on the By type pie (its word, "Dehydrated"); one pick at a time with [_strain].
   String? _type;
 
-  /// "Other stock" starts collapsed (owner, 2026-10-22): its title and count always show; the explanation and
+  /// "Other stock" starts collapsed: its title and count always show; the explanation and
   /// the list only once opened.
   bool _otherOpen = false;
 
-  /// Which main pie shows: units, mg (when there are mg figures), By type (SP-D17), in that order (swipe_pies.dart).
+  /// Which main pie shows: units, mg (when there are mg figures), By type, in that order (swipe_pies.dart).
   int _pie = 0;
 
   /// Which of a picked strain's serving-size pies shows: 0 Quantity, 1 mg. Kept when another strain is picked.
   int _sizePie = 0;
 
-  /// SP-D11, SP-D18: the center's product information sheets (null until loaded) and why they didn't load. They are
+  /// The center's product information sheets (null until loaded) and why they didn't load. They are
   /// the rows of the lot table (it starts closed).
   List<ProductSheet>? _sheets;
   String? _sheetsError;
@@ -148,41 +150,19 @@ class _CenterStockPageState extends State<CenterStockPage> {
   /// The sheets shown are the copy kept on the phone (the server couldn't be reached).
   bool _sheetsFromCache = false;
 
-  bool get _showingKeptCopy => _sheetsFromCache || _partial;
+  @override
+  ServerHealth? get serverHealth => widget.health;
 
-  /// Reloads when the tracker comes back online while the page shows the copy kept on the phone ([ServerHealth]).
-  bool _wasOffline = false;
+  @override
+  bool get showingKeptCopy => _sheetsFromCache || _partial;
 
-  void _onHealth() {
-    final h = widget.health;
-    if (h == null) return;
-    final cameBack = _wasOffline && h.online;
-    _wasOffline = h.offline;
-    if (cameBack && mounted && !_retrying && _showingKeptCopy) _load(sheets: false);
-  }
-
-  /// Set while Retry asks the server: Retry reloads itself, so [_onHealth] doesn't as well.
-  bool _retrying = false;
-
-  /// Retry: asks the server first when it is counted as unreachable (the probe brings it back at once if it answers,
-  /// so the reload below isn't short-circuited), then reloads.
-  Future<void> _retry() async {
-    final h = widget.health;
-    if (h != null && h.offline) {
-      _retrying = true;
-      try {
-        await h.checkNow();
-      } finally {
-        _retrying = false;
-      }
-      if (!mounted) return;
-    }
-    _load();
-  }
+  /// The server answering again reloads the rows (a feed's sheets are the engine's to reload); Retry reloads both.
+  @override
+  void reload({required bool cameBack}) => _load(sheets: !cameBack);
 
   @override
   void dispose() {
-    widget.health?.removeListener(_onHealth);
+    stopListeningForServer();
     _sheetsRows?.cancel();
     super.dispose();
   }
@@ -190,8 +170,7 @@ class _CenterStockPageState extends State<CenterStockPage> {
   @override
   void initState() {
     super.initState();
-    _wasOffline = widget.health?.offline ?? false;
-    widget.health?.addListener(_onHealth);
+    listenForServer();
     _sheetsRows = widget.sheetsFeed?.watch().listen(_onSheetsRow);
     _load();
   }
@@ -244,7 +223,7 @@ class _CenterStockPageState extends State<CenterStockPage> {
       _sheets = shown.value;
       _sheetsError = shown.error == null ? null : '${shown.error}';
       _sheetsNote = shown.note == null ? null : '${shown.note}';
-      _sheetsFromCache = shown.fromCache; // the rows reload once the server answers again, as before the engine
+      _sheetsFromCache = shown.fromCache; // the rows reload once the server answers again
     });
   }
 
@@ -319,7 +298,7 @@ class _CenterStockPageState extends State<CenterStockPage> {
 
   @override
   Widget build(BuildContext context) {
-    // No title bar: it sits under the home's tab labels, whose "Stock" is its title (owner, 2026-10-22).
+    // No title bar: it sits under the home's tab labels, whose "Stock" is its title.
     return Scaffold(body: ResponsiveBody(child: _body()));
   }
 
@@ -327,21 +306,12 @@ class _CenterStockPageState extends State<CenterStockPage> {
     final rows = _rows;
     if (rows == null) {
       if (_error != null) {
-        return Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Text('Stock did not load: $_error', textAlign: TextAlign.center),
-              ),
-              const SizedBox(height: 8),
-              if (_signInNeeded && widget.onSignInAgain != null)
-                FilledButton(onPressed: () => widget.onSignInAgain!(context), child: const Text('Sign in again'))
-              else
-                FilledButton(onPressed: _retry, child: const Text('Retry')),
-            ],
-          ),
+        return LoadFailed(
+          message: 'Stock did not load: $_error',
+          onRetry: retry,
+          action: _signInNeeded && widget.onSignInAgain != null
+              ? FilledButton(onPressed: () => widget.onSignInAgain!(context), child: const Text('Sign in again'))
+              : null,
         );
       }
       return const Center(child: CircularProgressIndicator());
@@ -349,7 +319,7 @@ class _CenterStockPageState extends State<CenterStockPage> {
 
     final filtered = filterRows(rows, _makers);
     final counted = (filtered['counted'] as List).cast<StockRow>();
-    // "Other stock", as the server's: what can't be sold (SP-D9), then what the filter leaves out, by name.
+    // "Other stock", as the server's: what can't be sold, then what the filter leaves out, by name.
     final other = [
       for (final h in _heldBack) (row: h.row, reason: h.reason),
       for (final o in (filtered['other'] as List).cast<Map<String, Object?>>())
@@ -362,7 +332,7 @@ class _CenterStockPageState extends State<CenterStockPage> {
     final mg = view['mg'] as Map<String, Object?>?;
     final strainRows = (view['rows'] as List).cast<Map<String, Object?>>();
     final selected = strainRows.where((r) => r['name'] == _strain).firstOrNull;
-    // SP-D17: the By type pie, weighed as the mg pie when there are mg figures, else by units.
+    // The By type pie, weighed as the mg pie when there are mg figures, else by units.
     final byType = stockByType(counted, _mgMode);
     final typeNames = stockByTypeWords(counted, _mgMode);
     final pickedType = typeNames.contains(_type) ? _type : null;
@@ -373,12 +343,12 @@ class _CenterStockPageState extends State<CenterStockPage> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (_drawnAt != null)
-            _banner("The state system can't be reached: these are the charts drawn on "
+            PageNotice("The state system can't be reached: these are the charts drawn on "
                 'this phone ${stockAge(widget.now().difference(_drawnAt!))} ago.')
           else if (_notSetUp)
-            _banner(_notSetUpBanner)
+            PageNotice(_notSetUpBanner)
           else if (_serverQuantities)
-            _banner(_serverQuantitiesBanner),
+            PageNotice(_serverQuantitiesBanner),
           if (_signInNeeded) _signInRow(),
           Center(
             child: SegmentedButton<String>(
@@ -453,55 +423,23 @@ class _CenterStockPageState extends State<CenterStockPage> {
         ]),
       );
 
-  Widget _banner(String text) => Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.tertiaryContainer,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(text, style: TextStyle(color: Theme.of(context).colorScheme.onTertiaryContainer)),
-      );
-
   /// Shows (or, tapped again, hides) a strain's serving-size pies. "Other (n strains)" has no row: nothing shows.
-  /// A strain picked replaces a picked type (SP-D17: one pick at a time).
+  /// A strain picked replaces a picked type (one pick at a time).
   void _pick(String name) => setState(() {
         _strain = _strain == name ? null : name;
         _type = null;
       });
 
-  /// SP-D17: picks (or, tapped again, unpicks) a type on the By type pie, replacing a picked strain.
+  /// Picks (or, tapped again, unpicks) a type on the By type pie, replacing a picked strain.
   void _pickType(String name) => setState(() {
         _type = _type == name ? null : name;
         _strain = null;
       });
 
-  Widget _swatch(String slot, {String strainSlot = 's1'}) => Container(
-        width: 12,
-        height: 12,
-        margin: const EdgeInsets.only(right: 8),
-        decoration: BoxDecoration(
-          color: stockSlotColor(slot, strainSlot: strainSlot, brightness: Theme.of(context).brightness),
-          borderRadius: BorderRadius.circular(2),
-        ),
-      );
+  /// A key line's value, as the server's: "{value:g}{unit} · {pct}%".
+  static String _keyValue(Map<String, Object?> s, String unit) => '${formatG(s['value'] as num)}$unit · ${s['pct']}%';
 
-  /// One key line, as the server's: swatch, name, "{value:g}{unit} · {pct}%".
-  Widget _keyLine(Key key, Map<String, Object?> s, String unit, {VoidCallback? onTap, String strainSlot = 's1'}) {
-    final line = Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
-      child: Row(
-        children: [
-          _swatch(s['slot'] as String, strainSlot: strainSlot),
-          Expanded(child: Text(s['name'] as String)),
-          Text('${formatG(s['value'] as num)}$unit · ${s['pct']}%'),
-        ],
-      ),
-    );
-    return InkWell(key: key, onTap: onTap, child: line);
-  }
-
-  /// The units pie, the mg pie when there are mg figures, and the By type pie (SP-D17), one at a time in the same
+  /// The units pie, the mg pie when there are mg figures, and the By type pie, one at a time in the same
   /// spot: swipe it, or tap a dot, for another.
   Widget _pies(Map<String, Object?> units, Map<String, Object?>? mg, Map<String, Object?>? type, bool byMg) {
     final build = <Widget Function()>[
@@ -522,52 +460,26 @@ class _CenterStockPageState extends State<CenterStockPage> {
     );
   }
 
-  /// SP-D17: the stock by type, as the Mazama page's By type pie; tapping a type narrows the lot table to it.
-  Widget _typePie(Map<String, Object?> pie, String unit) {
-    final slices = (pie['slices'] as List).cast<Map<String, Object?>>();
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text('By type', style: Theme.of(context).textTheme.titleSmall),
-            const SizedBox(height: 8),
-            Center(child: StockPie(slices: slices, size: 160, onTapSlice: _pickType, label: 'Stock by type')),
-            const SizedBox(height: 8),
-            for (final s in slices)
-              _keyLine(ValueKey('type-key-${s['name']}'), s, unit, onTap: () => _pickType(s['name'] as String)),
-            const SizedBox(height: 4),
-            Text('Tap a type to show only its lots below.', style: Theme.of(context).textTheme.bodySmall),
-          ],
-        ),
-      ),
-    );
-  }
+  /// The stock by type, as the Mazama page's By type pie; tapping a type narrows the lot table to it.
+  Widget _typePie(Map<String, Object?> pie, String unit) => StockPieCard(
+        title: 'By type',
+        slices: (pie['slices'] as List).cast<Map<String, Object?>>(),
+        label: 'Stock by type',
+        keyPrefix: 'type',
+        valueOf: (s) => _keyValue(s, unit),
+        onPick: _pickType,
+        hint: 'Tap a type to show only its lots below.',
+      );
 
-  Widget _strainPie(String title, Map<String, Object?> pie, String keyPrefix, String unit) {
-    final slices = (pie['slices'] as List).cast<Map<String, Object?>>();
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(title, style: Theme.of(context).textTheme.titleSmall),
-            const SizedBox(height: 8),
-            Center(child: StockPie(slices: slices, size: 160, onTapSlice: _pick, label: title)),
-            const SizedBox(height: 8),
-            for (final s in slices)
-              _keyLine(ValueKey('$keyPrefix-key-${s['name']}'), s, unit, onTap: () => _pick(s['name'] as String)),
-            const SizedBox(height: 4),
-            Text('Tap a strain for its serving sizes.', style: Theme.of(context).textTheme.bodySmall),
-          ],
-        ),
-      ),
-    );
-  }
+  Widget _strainPie(String title, Map<String, Object?> pie, String keyPrefix, String unit) => StockPieCard(
+        title: title,
+        slices: (pie['slices'] as List).cast<Map<String, Object?>>(),
+        label: title,
+        keyPrefix: keyPrefix,
+        valueOf: (s) => _keyValue(s, unit),
+        onPick: _pick,
+        hint: 'Tap a strain for its serving sizes.',
+      );
 
   Widget _sizes(Map<String, Object?> row) {
     final slot = row['slot'] as String;
@@ -579,17 +491,7 @@ class _CenterStockPageState extends State<CenterStockPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              children: [
-                _swatch(slot),
-                Expanded(child: Text('${row['name']} serving sizes', style: Theme.of(context).textTheme.titleSmall)),
-                IconButton(
-                  tooltip: 'Close',
-                  icon: const Icon(Icons.close),
-                  onPressed: () => setState(() => _strain = null),
-                ),
-              ],
-            ),
+            StockCardTitle(slot: slot, title: '${row['name']} serving sizes', onClose: () => setState(() => _strain = null)),
             // Quantity and mg, one at a time in the same spot, as the main pies: swipe it, or tap a dot, for the other.
             if (sizePies.isNotEmpty)
               SwipePies(
@@ -625,17 +527,17 @@ class _CenterStockPageState extends State<CenterStockPage> {
         const SizedBox(height: 4),
         Center(child: StockPie(slices: slices, size: 120, strainSlot: slot, label: '${row['name']}: ${p['title']}')),
         for (final s in slices)
-          _keyLine(
-            ValueKey('size-key-${p['title']}-${s['name']}'),
-            s,
-            '', // the server's size keys carry no unit: "10 · 71%"
+          StockKeyLine(
+            key: ValueKey('size-key-${p['title']}-${s['name']}'),
+            slice: s,
+            value: _keyValue(s, ''), // the server's size keys carry no unit: "10 · 71%"
             strainSlot: slot,
           ),
       ],
     );
   }
 
-  // --- product information sheets (SP-D11, SP-R16) -------------------------------------------------------------
+  // --- product information sheets -------------------------------------------------------------
 
   Future<void> _open(ProductSheet sheet) async {
     final open = widget.openSheet;
@@ -655,7 +557,7 @@ class _CenterStockPageState extends State<CenterStockPage> {
     if (!opened) messenger.showSnackBar(SnackBar(content: Text("Couldn't open ${sheet.guid}'s sheet.")));
   }
 
-  /// SP-D18: the center's lots as the Mazama page's lot table, in place of the product information sheets list:
+  /// The center's lots as the Mazama page's lot table, in place of the product information sheets list:
   /// [sheetLotRows] of the sheets, narrowed by the strain or type picked on a pie ([filter]).
   Widget _lotTable(LotFilter? filter) {
     final sheets = _sheets;

@@ -1,9 +1,9 @@
-// sync/stock_merge.dart: PS-R5's one rule for a center's stock, held to today's cases (resilient_inventory_test.dart's
-// tiers 1-2 and its fill of a state-only read, merged_inventory_test.dart's join), same inputs and the same packages.
+// sync/stock_merge.dart: the one rule for a center's stock, held to its cases (the load's first two steps
+// and the fill of a state-only read, the join), same inputs and the same packages.
 // Invented fixtures (this folder is published).
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mazama_mobile/coa_data_client.dart';
-import 'package:mazama_mobile/enrichment_store.dart';
+import 'package:mazama_mobile/sync/enrichment.dart';
 import 'package:mazama_mobile/packages_client.dart';
 import 'package:mazama_mobile/sync/stock_merge.dart';
 
@@ -115,7 +115,7 @@ void main() {
     });
   });
 
-  group('both answered: the join (merged_inventory.dart)', () {
+  group('both answered: the join', () {
     test("a record both sides know keeps the server's expiry date; one only the state knows has none", () {
       final r = mergeStock(
         stateRecords: [_record(101), _record(102, quantity: 2)],
@@ -261,6 +261,26 @@ void main() {
     test('no server rows are used, even if given', () {
       final r = mergeStock(stateRecords: [_record(101)], serverRows: [serverRow], enrichment: const {}, configured: false);
       expect([r.packages.single.tpeMg, r.source], [5, stockFromState]);
+    });
+  });
+
+  group('readStock: both reads at once, joined by the one rule', () {
+    test('both answer: the join, the state\'s raw records kept as they came', () async {
+      final raw = [_record(101, quantity: 3)];
+      final read = await readStock(fetchServer: () async => [serverRow], fetchState: () async => raw);
+      expect([read.serverOk, read.stateOk, read.serverError, read.stateError], [true, true, null, null]);
+      expect(read.stateRecords, same(raw));
+      final merged = read.merged();
+      expect([merged.source, merged.packages.single.quantity, merged.packages.single.tpeMg], [stockFromBoth, 3, 8]);
+    });
+
+    test('one side failing keeps its error; neither answering is the merge\'s error', () async {
+      final serverDown = Exception('server down'), stateDown = Exception('state down');
+      final onlyServer = await readStock(fetchServer: () async => [serverRow], fetchState: () async => throw stateDown);
+      expect([onlyServer.stateOk, onlyServer.stateError, onlyServer.merged().source], [false, stateDown, stockFromServer]);
+      final neither = await readStock(fetchServer: () async => throw serverDown, fetchState: () async => throw stateDown);
+      expect([neither.serverError, neither.stateError], [serverDown, stateDown]);
+      expect(neither.merged, throwsA(isA<StockMergeError>()));
     });
   });
 }

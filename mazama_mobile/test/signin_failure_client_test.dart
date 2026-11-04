@@ -1,4 +1,4 @@
-// SL-R5: the sign-in failure report. Mirrors sale_failure_client_test.dart's structure; the example request it is
+// The sign-in failure report. Mirrors sale_failure_client_test.dart's structure; the example request it is
 // held to is ../mazama_modules/api/examples/signin_failure.request.json, vendored at assets/shared/api/examples/.
 import 'dart:convert';
 import 'dart:io';

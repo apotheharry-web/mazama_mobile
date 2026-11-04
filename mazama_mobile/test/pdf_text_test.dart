@@ -1,5 +1,5 @@
-// PDF text for the shared reader: pdfium's characters grouped into words (CoaText, coa_text.schema.json), plan 08
-// Task 7. The real lab reports are this app's vendored copies (assets/shared/coa/corpus/real/, tool/sync_flows.sh).
+// PDF text for the shared reader: pdfium's characters grouped into words (CoaText, coa_text.schema.json).
+// The real lab reports are this app's vendored copies (assets/shared/coa/corpus/real/, tool/sync_flows.sh).
 // The corpus test needs the shared core (MAZAMA_CORE_FFI_LIB, built by CI's core-ffi-build; it fails without it,
 // test/support/core.dart) and pdfium on the host (pdfrx downloads it on first use; without it the test skips and
 // says why).
@@ -90,7 +90,7 @@ void main() {
   test('extractCoaText reads every real corpus PDF like the server', () async {
     final MazamaCore core = loadTestCore();
     if (!Directory(_real).existsSync() && !File('../mazama_modules/vendored.txt').existsSync()) {
-      // the public copy of this app (specs/public-app PA-R5): the real lab reports are not published
+      // the public copy of this app: the real lab reports are not published
       markTestSkipped('$_real is not in this copy of the app');
       return;
     }

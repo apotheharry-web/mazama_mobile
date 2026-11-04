@@ -15,15 +15,15 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart' as http_testing;
-import 'package:mazama_mobile/catch_up_store.dart';
 import 'package:mazama_mobile/flow/flow_spec.dart';
+import 'package:mazama_mobile/local_store.dart';
 import 'package:mazama_mobile/login_hosts_store.dart';
 import 'package:mazama_mobile/login_spec_store.dart';
 import 'package:mazama_mobile/server_health.dart';
 import 'package:mazama_mobile/server_link.dart';
-import 'package:mazama_mobile/server_outbox.dart';
 import 'package:mazama_mobile/session.dart';
 import 'package:mazama_mobile/session_store.dart';
+import 'package:mazama_mobile/sync/sync_engine.dart';
 
 import 'fake_timers.dart';
 import 'host_list_signing.dart';
@@ -32,19 +32,13 @@ import 'package:mazama_mobile/main.dart';
 
 late Directory _tempDir;
 
-/// A server link of the test's own, in its folder, whose probe never answers (README R56).
+/// A server link of the test's own, in its folder, whose probe never answers.
 ServerLink _link() {
   final timers = FakeTimers();
   final health = ServerHealth(probe: () async => false, startTimer: timers.start);
   return ServerLink(
     health: health,
-    outbox: ServerOutbox(health: health, store: OutboxStore(dataDir: () => _tempDir), send: (e) async {}, startTimer: timers.start),
-    catchUp: CatchUpWork(
-        health: health,
-        store: CatchUpStore(dataDir: () => _tempDir),
-        submitCoa: (l, a) async => true,
-        uploadSnapshot: (s) async {},
-        auth: () async => null),
+    engine: SyncEngine(store: LocalStore.forDir(_tempDir), health: health, startTimer: timers.start, senders: const {}),
   );
 }
 
@@ -86,7 +80,7 @@ void main() {
     expect(find.text('Enter your password'), findsOneWidget);
   });
 
-  // README R56: one banner above every page while Mazama's server can't be reached, from the app's own link.
+  // One banner above every page while Mazama's server can't be reached, from the app's own link.
   testWidgets('the server link banner: none online; over the sign-in page while offline, with since when', (tester) async {
     final link = _link();
     addTearDown(link.dispose);
@@ -102,13 +96,13 @@ void main() {
     expect(identical(serverLink, link), isTrue); // the app's link is the one every /p/ client reports to
   });
 
-  // Final review I1: a saved spec whose renew fails with something other than a FlowError, with a stored session that is
+  // A saved spec whose renew fails with something other than a FlowError, with a stored session that is
   // due for renewal, must not leave the app on its start-up spinner: the saved spec is set aside (kept as .bad) and
   // the bundled one decides. Here the bundled renew is refused by the state (HTTP 400): a real sign-in.
   //
-  // How the non-FlowError is produced: runFlow turns every transport failure into a FlowError, and the usable rule now
-  // refuses the spec shapes that used to make it throw (a list `method`, a number in `into`), so the failure comes from
-  // the injected state instead. The saved spec is usable but its renew no longer checks that a token came back; the
+  // How the non-FlowError is produced: runFlow turns every transport failure into a FlowError, and the usable rule
+  // refuses the spec shapes that would make it throw (a list `method`, a number in `into`), so the failure comes from
+  // the injected state instead. The saved spec is usable but its renew doesn't check that a token came back; the
   // state answers that token request with a 200 holding no token, so Session.fromFlowResult throws a FlowSpecError in
   // ensureFreshSession's catch-all. (session_test.dart reaches the same catch-all with a spec built in code.)
   testWidgets('a saved spec with a broken renew and a stored session gives a page, not a spinner', (tester) async {
@@ -200,7 +194,7 @@ void main() {
     expect(await SessionStore(dataDir: () => _tempDir).load(), isNull);
   });
 
-  // SL-R18: at start-up the saved host list is verified again with the bundled key before anything uses it; a list
+  // At start-up the saved host list is verified again with the bundled key before anything uses it; a list
   // signed with another key (here the vectors' TEST key, never the shipped one) is never put in use, and one in use before is
   // taken out.
   testWidgets('a saved host list that the bundled key does not verify is not used at start-up', (tester) async {

@@ -41,6 +41,7 @@ and names the exact files and functions that make each one true:
 7. What the app does send to Mazama's server.
 8. Third-party code: no analytics or crash reporting, one Google library on Android.
 9. Where credentials and tokens are stored on the phone.
+10. Updates (Android): what a signed release file can and can't do.
 
 It also says plainly what the claims **don't** cover, and the gaps we know about.
 

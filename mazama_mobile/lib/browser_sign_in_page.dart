@@ -1,4 +1,4 @@
-// SL-R16 / SL-D5: the sign-in on the state's own page. The browser sign-in spec (assets/flows_phone/login_browser.yaml,
+// The sign-in on the state's own page. The browser sign-in spec (assets/flows_phone/login_browser.yaml,
 // browser_login_spec.dart) has an `open_browser` step; runFlow hands its start URL and `until` prefix to a `browse`
 // callback, and openBrowserSignIn below is that callback: a full-screen webview (webview_flutter) on the state's real
 // B2C page, where the worker types their own email and password (the app never sees them). The page ends when B2C
@@ -10,8 +10,8 @@
 //   - a URL starting with `until` ends the page (checked first, so the code redirect is never loaded);
 //   - a main-frame URL on the shared allowlist (flow_spec.dart's hostAllowedUrl: https, port 443,
 //     psilocybin.oregon.gov or the state's own tenant oregonpsilocybinprodb2c.b2clogin.com, never another B2C
-//     tenant, SL-R17, plus the hosts of a signed host list, SL-R18; the same list the flow that opened the page runs
-//     with, SL-R8: login_hosts_store.dart's currentAllowedHosts unless SignInPage passes the list of its attempt)
+//     tenant, plus the hosts of a signed host list; the same list the flow that opened the page runs
+//     with: login_hosts_store.dart's currentAllowedHosts unless SignInPage passes the list of its attempt)
 //     loads;
 //   - any other main-frame URL is refused and the page stays where it was: other hosts, http, other ports,
 //     javascript:, data:, intent:, mailto: and about:blank too (webview_flutter starts the page with loadRequest on

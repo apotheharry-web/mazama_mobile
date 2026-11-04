@@ -1,0 +1,199 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "manufacturing.transfer_check input",
+  "description": "A transfer the web form or the phone asks for (FM-13): the packages named, the typed fields, the records that may be moved now, the service centers, the manufacturer, the drivers' ids, the chosen driver's details for the manifest (optional), the server's date in its time zone and whether the person is the owner.",
+  "type": "object",
+  "required": [
+    "items",
+    "fields",
+    "packages",
+    "centers",
+    "mfr",
+    "driver_ids",
+    "today",
+    "is_owner"
+  ],
+  "properties": {
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "record_id",
+          "qty"
+        ],
+        "properties": {
+          "record_id": {
+            "type": "integer",
+            "description": "The package record's id (the web form's qty_<id> key, ASCII digits; the phone's JSON integer)."
+          },
+          "qty": {
+            "description": "The quantity as the form has it (text) or the phone's whole number; blank text names nothing, anything but 1 to 6 ASCII digits is refused."
+          }
+        }
+      }
+    },
+    "fields": {
+      "type": "object",
+      "description": "Text as typed (absent is blank; price absent is 0); driver also the phone's whole number, sign also true/false (text: \"1\" signs).",
+      "properties": {
+        "mode": {
+          "type": "string"
+        },
+        "dest": {
+          "type": "string"
+        },
+        "driver": {
+          "type": [
+            "string",
+            "integer"
+          ]
+        },
+        "dep": {
+          "type": "string"
+        },
+        "dep_time": {
+          "type": "string"
+        },
+        "arr": {
+          "type": "string"
+        },
+        "arr_time": {
+          "type": "string"
+        },
+        "route": {
+          "type": "string"
+        },
+        "price": {
+          "type": "string"
+        },
+        "sign": {
+          "type": [
+            "boolean",
+            "string"
+          ]
+        }
+      }
+    },
+    "packages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "description": "A package record as the server holds it: id, productGuid, description, quantity, and for the planned transfers productType, weightPerUnit and analyteWeight (echoed as they are).",
+        "properties": {
+          "id": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "centers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "slug",
+          "name",
+          "license",
+          "address"
+        ],
+        "properties": {
+          "slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "license": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "address": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "mfr": {
+      "type": "object",
+      "required": [
+        "license",
+        "address"
+      ],
+      "properties": {
+        "license": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "address": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "driver_ids": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      }
+    },
+    "driver": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "name",
+            "phone",
+            "permit",
+            "make",
+            "model",
+            "plate"
+          ],
+          "description": "The driver's details as confirmed (the phone number's last ten decimal digits are written).",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "phone": {
+              "type": "string"
+            },
+            "permit": {
+              "type": "string"
+            },
+            "make": {
+              "type": "string"
+            },
+            "model": {
+              "type": "string"
+            },
+            "plate": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "today": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+    },
+    "is_owner": {
+      "type": "boolean"
+    }
+  }
+}

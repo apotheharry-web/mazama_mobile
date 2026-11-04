@@ -8,8 +8,11 @@ import 'package:mazama_mobile/catch_up_store.dart';
 import 'package:mazama_mobile/coa_data_resolver.dart';
 import 'package:mazama_mobile/coa_uploader.dart';
 import 'package:mazama_mobile/configured_coa_submit.dart';
+import 'package:mazama_mobile/local_store.dart';
 import 'package:mazama_mobile/packages_client.dart';
 import 'package:mazama_mobile/server_health.dart';
+import 'package:mazama_mobile/sync/sync_queue.dart';
+import 'package:mazama_mobile/sync/sync_tables.dart';
 import 'package:mazama_mobile/state_client.dart' show stateReadsSpec;
 
 import 'fake_timers.dart';
@@ -66,50 +69,45 @@ void main() {
   late Directory dir;
   late FakeTimers timers;
   late ServerHealth health;
-  late CatchUpWork catchUp;
   setUp(() {
     dir = Directory.systemTemp.createTempSync('mazama_coa_resolver_test_');
     timers = FakeTimers();
     health = ServerHealth(probe: () async => false, startTimer: timers.start);
-    catchUp = CatchUpWork(
-        health: health,
-        store: CatchUpStore(dataDir: () => dir),
-        submitCoa: (l, a) async => true,
-        uploadSnapshot: (s) async {},
-        auth: () async => null);
   });
   tearDown(() {
-    catchUp.dispose();
     health.dispose();
+    LocalStore.debugCloseAll();
     dir.deleteSync(recursive: true);
   });
 
-  /// The app's uploader (coa_uploader.dart) over [client], its timers fired by the test ([drain]): the real chain
-  /// (configured_coa_submit.dart) against the same fake state system and server as the load.
-  CoaUploader uploaderOver(http.Client client) {
-    final u = CoaUploader(
+  /// The app's background uploads (the engine's queue, coa_uploader.dart) over [client], its timers fired by the test
+  /// ([drain]): the real chain (configured_coa_submit.dart) against the same fake state system and server as the load.
+  SyncQueue uploaderOver(http.Client client) {
+    final u = SyncQueue(
+      tables: SyncTables(LocalStore.forDir(dir)),
       health: health,
-      catchUp: catchUp,
-      auth: () async => const CatchUpAuth(accessToken: 'T', workerEmail: 'w@example.com', deviceId: 'D-1'),
-      sent: CoaSentMemory(store: CoaSentStore(dataDir: () => dir)),
       startTimer: timers.start,
       isDemo: () => false,
-      send: (lot, auth) => submitCoaForLot(
-          lotGuid: lot.lotGuid,
-          representativePackageId: lot.packageId,
-          accessToken: auth.accessToken,
-          workerEmail: auth.workerEmail,
-          deviceId: auth.deviceId,
-          statePsilocybin: lot.statePsilocybin,
-          client: client),
+      senders: {
+        QueueKind.labReport: labReportQueueSender(
+            (lot, auth) => submitCoaForLot(
+                lotGuid: lot.lotGuid,
+                representativePackageId: lot.packageId,
+                accessToken: auth.accessToken,
+                workerEmail: auth.workerEmail,
+                deviceId: auth.deviceId,
+                statePsilocybin: lot.statePsilocybin,
+                client: client),
+            () async => const CatchUpAuth(accessToken: 'T', workerEmail: 'w@example.com', deviceId: 'D-1')),
+      },
     );
     addTearDown(u.dispose);
     return u;
   }
 
-  /// Runs the uploader until nothing waits or is under way.
-  Future<void> drain(CoaUploader u) async {
-    for (var i = 0; i < 200 && !(u.idle && timers.active.isEmpty); i++) {
+  /// Runs the uploads until nothing waits or is under way.
+  Future<void> drain(SyncQueue u) async {
+    for (var i = 0; i < 200 && !(u.labReportsIdle && timers.active.isEmpty); i++) {
       timers.fireAll();
       await pumpEventQueue();
     }
@@ -144,7 +142,7 @@ void main() {
   });
 
   test('SM-22: the server answers with lower-cased lot ids; every lot it knows is still a hit, none queued', () async {
-    // 30 lots: before SM-22 every one was a "miss" and was re-downloaded and re-uploaded
+    // 30 lots: a lot id compared case-sensitively would make every one a "miss", re-downloaded and re-uploaded
     final lots = [for (var i = 0; i < 30; i++) 'HB-${(0xaaa00 + i).toRadixString(16)}'];
     final queued = <CoaUploadLot>[];
     final client = _router({
@@ -212,11 +210,11 @@ void main() {
 
     final result = await resolveAdhocInventory(
         stateId: 225, accessToken: 'T', workerEmail: 'w@example.com', deviceId: 'D-1',
-        onResolved: (guid, pkg) => resolved[guid] = pkg, queueUploads: u.enqueue, client: client);
+        onResolved: (guid, pkg) => resolved[guid] = pkg, queueUploads: u.enqueueCoaUploads, client: client);
 
     expect(parses, 0); // returned with the upload only queued
     expect(result.guidsResolved, 1);
-    expect(u.waiting, 1);
+    expect(u.labReportsWaiting, 1);
     expect({for (final p in result.packages) p.lotGuid: p.strain}, {'HB-a0001': '', 'HB-a0002': 'Enigma'});
 
     await drain(u);
@@ -250,7 +248,7 @@ void main() {
 
     final result = await resolveAdhocInventory(
         stateId: 225, accessToken: 'T', workerEmail: 'w', deviceId: 'd',
-        onResolved: (g, p) => resolved.add(g), queueUploads: u.enqueue, client: client);
+        onResolved: (g, p) => resolved.add(g), queueUploads: u.enqueueCoaUploads, client: client);
     await drain(u);
 
     expect(result.guidsTotal, 1);
@@ -274,7 +272,7 @@ void main() {
 
     final result = await resolveAdhocInventory(
         stateId: 225, accessToken: 'T', workerEmail: 'w', deviceId: 'd',
-        onResolved: (g, p) => resolved.add(g), queueUploads: u.enqueue, client: client);
+        onResolved: (g, p) => resolved.add(g), queueUploads: u.enqueueCoaUploads, client: client);
     await drain(u);
 
     expect(result.packages, hasLength(2));

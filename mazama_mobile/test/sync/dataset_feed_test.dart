@@ -1,4 +1,4 @@
-// sync/dataset_feed.dart and the engine's refreshing/refreshError (specs/phone-sync Task 8b Step 2): a page reading a
+// sync/dataset_feed.dart and the engine's refreshing/refreshError: a page reading a
 // dataset through the engine joins the refresh under way (the center home's on open) rather than asking a second, asks
 // one itself when none runs, and shows the stored copy, or the error (nothing stored, or the server's own answer).
 // Fake clock, timers and refreshers.
@@ -141,7 +141,7 @@ void main() {
       final unreachable = feed.shows(row, MazamaInventoryError("Mazama's server can't be reached", unreachable: true));
       expect(unreachable.value, isNotNull);
       expect(unreachable.error, isNull);
-      expect(unreachable.note, isNull); // R87: the banner says so, not the page
+      expect(unreachable.note, isNull); // the banner says so, not the page
       expect(unreachable.fromCache, isTrue); // the page's rows reload when the server answers again
     });
 

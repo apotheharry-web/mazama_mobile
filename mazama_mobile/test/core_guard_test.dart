@@ -1,4 +1,4 @@
-// CR-R3, CR-D2: the core is part of every build, so nothing in the app keeps a path for its absence, and no test
+// The core is part of every build, so nothing in the app keeps a path for its absence, and no test
 // skips for want of it (test/support/core.dart fails instead).
 import 'dart:io';
 
@@ -21,7 +21,7 @@ void main() {
   });
 
   test('document choice stays the core\'s: no Dart copy of the rule or its date regexes comes back (specs/core row 2)', () {
-    // stateDateIso is the core's since row 7 (selling.dart's thin call to selling.parse_state_date): no date regex is left
+    // stateDateIso is the core's (selling.dart's thin call to selling.parse_state_date): no date regex is left
     final decl = RegExp(r'''(\b_mdy\s*=|\b_iso\s*=|\b_headEnd\s*=)''');
     final found = [
       for (final f in _dart('lib'))

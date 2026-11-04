@@ -1,5 +1,5 @@
-// SL-R9: the client for GET /p/flows/login (login_spec_client.dart). The example reply it is held to is
-// ../mazama_modules/api/examples/login_spec.response.json, vendored at assets/shared/api/examples/. SL-R19: the same
+// The client for GET /p/flows/login (login_spec_client.dart). The example reply it is held to is
+// ../mazama_modules/api/examples/login_spec.response.json, vendored at assets/shared/api/examples/. The same
 // client for GET /p/flows/login_browser, held to login_browser_spec.response.json.
 import 'dart:async';
 import 'dart:convert';

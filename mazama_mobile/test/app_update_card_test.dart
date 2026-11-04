@@ -1,4 +1,4 @@
-// specs/app-updates AU-R10, AU-R13, AU-D10: the update card (app_update_card.dart) and where it shows. The checker's
+// The update card (app_update_card.dart) and where it shows. The checker's
 // installer is a fake (no Android here), its offer a TEST-signed release file (app_release_signing.dart), and the
 // download a fake `prepare`, so nothing is fetched or written.
 import 'dart:async';

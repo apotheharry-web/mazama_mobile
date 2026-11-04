@@ -1,8 +1,8 @@
-// SL-R16: the phone's own sign-in on the state's page, assets/flows_phone/login_browser.yaml (vendored from
+// The phone's own sign-in on the state's page, assets/flows_phone/login_browser.yaml (vendored from
 // ../mazama_modules/flows/phone/ by tool/sync_flows.sh, bundled by pubspec.yaml). Its `login` flow takes no inputs and
 // needs a `browse` callback (the webview page); its `renew` is login.yaml's.
 //
-// SL-R19: like login.yaml it can be fixed without a release. After a browser sign-in fails (closed or refused by B2C
+// Like login.yaml it can be fixed without a release. After a browser sign-in fails (closed or refused by B2C
 // included), SignInPage fetches the newest one from Mazama's server (/p/flows/login_browser,
 // login_spec_client.dart's fetchBrowserLoginSpec), retries once with a newer one and, after a session, keeps it in
 // `login_browser_spec.yaml` (LoginSpecStore.browser, apart from login.yaml's login_spec.yaml). The newer usable one of

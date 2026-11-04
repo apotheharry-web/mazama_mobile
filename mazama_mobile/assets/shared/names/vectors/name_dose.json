@@ -1,0 +1,105 @@
+{
+ "about": "names.name_dose: the first '<n> mg' in a product's name as written, the reader the label uses to take a dose from a name (mazama_core label.rs). mazama_core's tests/name_cases.rs also holds that a label built from each name with no chosen dose prints that dose when it is whole.",
+ "cases": [
+  {
+   "dose": "25",
+   "name": "Golden Teacher 25 mg TPE DH (2027-08-31)"
+  },
+  {
+   "dose": "10",
+   "name": "Golden Teacher 10mg TPE"
+  },
+  {
+   "dose": "10",
+   "name": "Golden Teacher 10 MG TPE"
+  },
+  {
+   "dose": "25",
+   "name": "Golden Teacher 25mgTPE"
+  },
+  {
+   "dose": "25",
+   "name": "Golden Teacher 25  mg TPE"
+  },
+  {
+   "dose": "25",
+   "name": "Golden Teacher 25\tmg TPE"
+  },
+  {
+   "dose": "25",
+   "name": "Golden Teacher 25 mg TPE"
+  },
+  {
+   "dose": "10.5",
+   "name": "Golden Teacher 10.5 mg TPE"
+  },
+  {
+   "dose": "10.25",
+   "name": "Golden Teacher 10.25 mg TPE"
+  },
+  {
+   "dose": "25.0",
+   "name": "Golden Teacher 25.0 mg TPE"
+  },
+  {
+   "dose": "025",
+   "name": "Golden Teacher 025 mg TPE"
+  },
+  {
+   "dose": "0.5",
+   "name": "Golden Teacher 0.5 mg TPE"
+  },
+  {
+   "dose": "0",
+   "name": "Golden Teacher 1 0 mg TPE"
+  },
+  {
+   "dose": "000",
+   "name": "Golden Teacher 1,000 mg TPE"
+  },
+  {
+   "dose": "5",
+   "name": "Golden Teacher 5 mg and 10 mg"
+  },
+  {
+   "dose": "25",
+   "name": "Golden Teacher 25 mg TPE 2.5mg psilocin"
+  },
+  {
+   "dose": "25",
+   "name": "Golden Teacher x25mg"
+  },
+  {
+   "dose": "25",
+   "name": "Golden Teacher (2027-08-31) 25 mg"
+  },
+  {
+   "dose": null,
+   "name": "Golden Teacher 10.255 mg TPE"
+  },
+  {
+   "dose": null,
+   "name": "Golden Teacher 12345 mg TPE"
+  },
+  {
+   "dose": null,
+   "name": "Golden Teacher .5 mg TPE"
+  },
+  {
+   "dose": null,
+   "name": "Golden Teacher 25 milligrams"
+  },
+  {
+   "dose": null,
+   "name": "Golden Teacher DH (2027-08-31)"
+  },
+  {
+   "dose": null,
+   "name": "GT 6.26"
+  },
+  {
+   "dose": null,
+   "name": ""
+  }
+ ]
+}

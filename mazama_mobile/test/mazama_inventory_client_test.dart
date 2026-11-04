@@ -1,4 +1,4 @@
-// MI-R2: the phone's client for GET /p/mazama-inventory (lib/mazama_inventory_client.dart) against the vendored API
+// The phone's client for GET /p/mazama-inventory (lib/mazama_inventory_client.dart) against the vendored API
 // example (assets/shared/api/examples/mazama_inventory.response.json, from ../mazama_modules/api/), and how it
 // reports what can go wrong. api_contract_test.dart checks the route, the app key and the 401 / 429 wording.
 import 'dart:convert';
@@ -62,7 +62,7 @@ void main() {
     final inv = await fetchMazamaInventory(client: _serve(_example()));
     expect(inv.lots.first.url().toString(), '$apiBaseUrl/p/lots/mazama/HB-aaaa0001');
     expect(inv.lots.last.url(), isNull);
-    expect([for (final l in inv.lots) l.types], [['DH'], ['WF']]); // MI-D20
+    expect([for (final l in inv.lots) l.types], [['DH'], ['WF']]); // each lot's kind codes
     expect(await _error(_serve({'name': 'Mazama', 'cells': [], 'lots': [{'strain': 'GT', 'lot': 'HB-1', 'types': 'DH'}]})),
         'unexpected response shape');
     expect(await _error(_serve({'name': 'Mazama', 'cells': [], 'lots': [{'strain': 'GT', 'lot': 'HB-1', 'path': 5}]})),

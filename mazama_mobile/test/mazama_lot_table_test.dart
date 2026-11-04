@@ -1,6 +1,6 @@
-// MI-R7 (specs/mazama-inventory): the Mazama inventory page's lot table - closed at first (MI-R7), one row per lot
-// under its strain (MI-D12), mg per gram (MI-D11), a tag per minor analyte found (MI-D13), and a tap on the heading or
-// a number switching every row between TPE, psilocybin and psilocin (MI-D14).
+// The Mazama inventory page's lot table - closed at first, one row per lot
+// under its strain, mg per gram, a tag per minor analyte found, and a tap on the heading or
+// a number switching every row between TPE, psilocybin and psilocin.
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -51,7 +51,7 @@ Future<void> _tap(WidgetTester tester, Finder f) async {
 Future<void> _open(WidgetTester tester) =>
     _tap(tester, find.descendant(of: find.byKey(const ValueKey('lot-table')), matching: find.byType(ListTile)).first);
 
-/// The vendored rules.yaml's `analyte_tags` (specs/web-charts WC-R7), in its order.
+/// The vendored rules.yaml's `analyte_tags`, in its order.
 List<Map> _sharedTags() =>
     ((loadYaml(File('assets/shared/stock/rules/rules.yaml').readAsStringSync()) as YamlMap)['analyte_tags'] as List)
         .cast<Map>();

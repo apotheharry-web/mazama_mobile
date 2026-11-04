@@ -1,0 +1,1364 @@
+[
+ {
+  "kept": [
+   {
+    "license": "SC-ac9ac56b",
+    "name": "Unstuck Psilocybin Treatment Center",
+    "state_id": 225
+   },
+   {
+    "license": "SC-2a49b223",
+    "name": "EPIC Healing Eugene",
+    "state_id": 183
+   },
+   {
+    "license": "SC-b1c7379a",
+    "name": "Bendable Service Center",
+    "state_id": 231
+   }
+  ],
+  "license_type": "ServiceCenter",
+  "licenses": [
+   {
+    "id": 294,
+    "licenseId": "MF-1e72fc8f",
+    "licenseName": "Mazama Mushrooms LLC",
+    "licenseType": "Manufacturer"
+   },
+   {
+    "id": 225,
+    "licenseId": "SC-ac9ac56b",
+    "licenseName": "Unstuck Psilocybin Treatment Center",
+    "licenseType": "ServiceCenter"
+   },
+   {
+    "id": 183,
+    "licenseId": "SC-2a49b223",
+    "licenseName": "EPIC Healing Eugene",
+    "licenseType": "ServiceCenter"
+   },
+   {
+    "id": 231,
+    "licenseId": "SC-b1c7379a",
+    "licenseName": "Bendable Service Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "a real-shaped answer: one manufacturer, three centers"
+ },
+ {
+  "kept": [
+   {
+    "license": "MF-1e72fc8f",
+    "name": "Mazama Mushrooms LLC",
+    "state_id": 294
+   }
+  ],
+  "license_type": "Manufacturer",
+  "licenses": [
+   {
+    "id": 294,
+    "licenseId": "MF-1e72fc8f",
+    "licenseName": "Mazama Mushrooms LLC",
+    "licenseType": "Manufacturer"
+   },
+   {
+    "id": 225,
+    "licenseId": "SC-ac9ac56b",
+    "licenseName": "Unstuck Psilocybin Treatment Center",
+    "licenseType": "ServiceCenter"
+   },
+   {
+    "id": 183,
+    "licenseId": "SC-2a49b223",
+    "licenseName": "EPIC Healing Eugene",
+    "licenseType": "ServiceCenter"
+   },
+   {
+    "id": 231,
+    "licenseId": "SC-b1c7379a",
+    "licenseName": "Bendable Service Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "a real-shaped answer: one manufacturer, three centers"
+ },
+ {
+  "kept": [],
+  "license_type": "ServiceCenter",
+  "licenses": [],
+  "name": "nothing"
+ },
+ {
+  "kept": [],
+  "license_type": "Manufacturer",
+  "licenses": [],
+  "name": "nothing"
+ },
+ {
+  "kept": [],
+  "license_type": "ServiceCenter",
+  "licenses": [
+   {
+    "id": 294,
+    "licenseId": "MF-1e72fc8f",
+    "licenseName": "Mazama Mushrooms LLC",
+    "licenseType": "Manufacturer"
+   }
+  ],
+  "name": "only a manufacturer"
+ },
+ {
+  "kept": [
+   {
+    "license": "MF-1e72fc8f",
+    "name": "Mazama Mushrooms LLC",
+    "state_id": 294
+   }
+  ],
+  "license_type": "Manufacturer",
+  "licenses": [
+   {
+    "id": 294,
+    "licenseId": "MF-1e72fc8f",
+    "licenseName": "Mazama Mushrooms LLC",
+    "licenseType": "Manufacturer"
+   }
+  ],
+  "name": "only a manufacturer"
+ },
+ {
+  "kept": [],
+  "license_type": "ServiceCenter",
+  "licenses": [
+   {
+    "id": 0,
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "id 0 is not a center"
+ },
+ {
+  "kept": [],
+  "license_type": "Manufacturer",
+  "licenses": [
+   {
+    "id": 0,
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "id 0 is not a center"
+ },
+ {
+  "kept": [],
+  "license_type": "ServiceCenter",
+  "licenses": [
+   {
+    "id": -5,
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "negative id"
+ },
+ {
+  "kept": [],
+  "license_type": "Manufacturer",
+  "licenses": [
+   {
+    "id": -5,
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "negative id"
+ },
+ {
+  "kept": [],
+  "license_type": "ServiceCenter",
+  "licenses": [
+   {
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "no id"
+ },
+ {
+  "kept": [],
+  "license_type": "Manufacturer",
+  "licenses": [
+   {
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "no id"
+ },
+ {
+  "kept": [],
+  "license_type": "ServiceCenter",
+  "licenses": [
+   {
+    "id": null,
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "id null"
+ },
+ {
+  "kept": [],
+  "license_type": "Manufacturer",
+  "licenses": [
+   {
+    "id": null,
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "id null"
+ },
+ {
+  "kept": [
+   {
+    "license": "SC-1",
+    "name": "Center",
+    "state_id": 183
+   }
+  ],
+  "license_type": "ServiceCenter",
+  "licenses": [
+   {
+    "id": "183",
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "id as a string"
+ },
+ {
+  "kept": [],
+  "license_type": "Manufacturer",
+  "licenses": [
+   {
+    "id": "183",
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "id as a string"
+ },
+ {
+  "kept": [
+   {
+    "license": "SC-1",
+    "name": "Center",
+    "state_id": 183
+   }
+  ],
+  "license_type": "ServiceCenter",
+  "licenses": [
+   {
+    "id": 183.0,
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "id as a whole float"
+ },
+ {
+  "kept": [],
+  "license_type": "Manufacturer",
+  "licenses": [
+   {
+    "id": 183.0,
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "id as a whole float"
+ },
+ {
+  "kept": [],
+  "license_type": "ServiceCenter",
+  "licenses": [
+   {
+    "id": 183.5,
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "id with a fraction"
+ },
+ {
+  "kept": [],
+  "license_type": "Manufacturer",
+  "licenses": [
+   {
+    "id": 183.5,
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "id with a fraction"
+ },
+ {
+  "kept": [],
+  "license_type": "ServiceCenter",
+  "licenses": [
+   {
+    "id": true,
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "id true"
+ },
+ {
+  "kept": [],
+  "license_type": "Manufacturer",
+  "licenses": [
+   {
+    "id": true,
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "id true"
+ },
+ {
+  "kept": [],
+  "license_type": "ServiceCenter",
+  "licenses": [
+   {
+    "id": "abc",
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "id not a number"
+ },
+ {
+  "kept": [],
+  "license_type": "Manufacturer",
+  "licenses": [
+   {
+    "id": "abc",
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "id not a number"
+ },
+ {
+  "kept": [
+   {
+    "license": "SC-1",
+    "name": "Service center 225",
+    "state_id": 225
+   }
+  ],
+  "license_type": "ServiceCenter",
+  "licenses": [
+   {
+    "id": 225,
+    "licenseId": "SC-1",
+    "licenseName": "   ",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "blank name"
+ },
+ {
+  "kept": [],
+  "license_type": "Manufacturer",
+  "licenses": [
+   {
+    "id": 225,
+    "licenseId": "SC-1",
+    "licenseName": "   ",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "blank name"
+ },
+ {
+  "kept": [
+   {
+    "license": "SC-1",
+    "name": "Service center 225",
+    "state_id": 225
+   }
+  ],
+  "license_type": "ServiceCenter",
+  "licenses": [
+   {
+    "id": 225,
+    "licenseId": "SC-1",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "no name"
+ },
+ {
+  "kept": [],
+  "license_type": "Manufacturer",
+  "licenses": [
+   {
+    "id": 225,
+    "licenseId": "SC-1",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "no name"
+ },
+ {
+  "kept": [
+   {
+    "license": "SC-1",
+    "name": "Unstuck",
+    "state_id": 225
+   }
+  ],
+  "license_type": "ServiceCenter",
+  "licenses": [
+   {
+    "id": 225,
+    "licenseId": "SC-1",
+    "licenseName": "  Unstuck  ",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "name with spaces around it"
+ },
+ {
+  "kept": [],
+  "license_type": "Manufacturer",
+  "licenses": [
+   {
+    "id": 225,
+    "licenseId": "SC-1",
+    "licenseName": "  Unstuck  ",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "name with spaces around it"
+ },
+ {
+  "kept": [
+   {
+    "license": null,
+    "name": "Center",
+    "state_id": 225
+   }
+  ],
+  "license_type": "ServiceCenter",
+  "licenses": [
+   {
+    "id": 225,
+    "licenseId": " ",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "blank license id"
+ },
+ {
+  "kept": [],
+  "license_type": "Manufacturer",
+  "licenses": [
+   {
+    "id": 225,
+    "licenseId": " ",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "blank license id"
+ },
+ {
+  "kept": [
+   {
+    "license": null,
+    "name": "Unstuck",
+    "state_id": 225
+   }
+  ],
+  "license_type": "ServiceCenter",
+  "licenses": [
+   {
+    "id": 225,
+    "licenseName": "Unstuck",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "no license id"
+ },
+ {
+  "kept": [],
+  "license_type": "Manufacturer",
+  "licenses": [
+   {
+    "id": 225,
+    "licenseName": "Unstuck",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "no license id"
+ },
+ {
+  "kept": [
+   {
+    "license": "SC-a",
+    "name": "First",
+    "state_id": 225
+   }
+  ],
+  "license_type": "ServiceCenter",
+  "licenses": [
+   {
+    "id": 225,
+    "licenseId": "SC-a",
+    "licenseName": "First",
+    "licenseType": "ServiceCenter"
+   },
+   {
+    "id": 225,
+    "licenseId": "SC-b",
+    "licenseName": "Second",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "the same id twice: the first one counts"
+ },
+ {
+  "kept": [],
+  "license_type": "Manufacturer",
+  "licenses": [
+   {
+    "id": 225,
+    "licenseId": "SC-a",
+    "licenseName": "First",
+    "licenseType": "ServiceCenter"
+   },
+   {
+    "id": 225,
+    "licenseId": "SC-b",
+    "licenseName": "Second",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "the same id twice: the first one counts"
+ },
+ {
+  "kept": [
+   {
+    "license": "SC-a",
+    "name": "Unstuck",
+    "state_id": 500
+   },
+   {
+    "license": "SC-b",
+    "name": "Unstuck",
+    "state_id": 501
+   }
+  ],
+  "license_type": "ServiceCenter",
+  "licenses": [
+   {
+    "id": 500,
+    "licenseId": "SC-a",
+    "licenseName": "Unstuck",
+    "licenseType": "ServiceCenter"
+   },
+   {
+    "id": 501,
+    "licenseId": "SC-b",
+    "licenseName": "Unstuck",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "two centers, same name"
+ },
+ {
+  "kept": [],
+  "license_type": "Manufacturer",
+  "licenses": [
+   {
+    "id": 500,
+    "licenseId": "SC-a",
+    "licenseName": "Unstuck",
+    "licenseType": "ServiceCenter"
+   },
+   {
+    "id": 501,
+    "licenseId": "SC-b",
+    "licenseName": "Unstuck",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "two centers, same name"
+ },
+ {
+  "kept": [],
+  "license_type": "ServiceCenter",
+  "licenses": [
+   {
+    "id": 225,
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "serviceCenter"
+   }
+  ],
+  "name": "license type in another case"
+ },
+ {
+  "kept": [],
+  "license_type": "Manufacturer",
+  "licenses": [
+   {
+    "id": 225,
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "serviceCenter"
+   }
+  ],
+  "name": "license type in another case"
+ },
+ {
+  "kept": [],
+  "license_type": "ServiceCenter",
+  "licenses": [
+   {
+    "id": 225,
+    "licenseId": "SC-1",
+    "licenseName": "Center"
+   }
+  ],
+  "name": "no license type"
+ },
+ {
+  "kept": [],
+  "license_type": "Manufacturer",
+  "licenses": [
+   {
+    "id": 225,
+    "licenseId": "SC-1",
+    "licenseName": "Center"
+   }
+  ],
+  "name": "no license type"
+ },
+ {
+  "kept": [
+   {
+    "license": "SC-1",
+    "name": "Center",
+    "state_id": 225
+   }
+  ],
+  "license_type": "ServiceCenter",
+  "licenses": [
+   "SC-1",
+   null,
+   225,
+   {
+    "id": 225,
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "an entry that is not an object"
+ },
+ {
+  "kept": [],
+  "license_type": "Manufacturer",
+  "licenses": [
+   "SC-1",
+   null,
+   225,
+   {
+    "id": 225,
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "an entry that is not an object"
+ },
+ {
+  "kept": [
+   {
+    "license": "SC-1",
+    "name": "Center",
+    "state_id": 225
+   }
+  ],
+  "license_type": "ServiceCenter",
+  "licenses": [
+   {
+    "id": " 2_25 ",
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "id with an underscore and spaces"
+ },
+ {
+  "kept": [],
+  "license_type": "Manufacturer",
+  "licenses": [
+   {
+    "id": " 2_25 ",
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "id with an underscore and spaces"
+ },
+ {
+  "kept": [
+   {
+    "license": "SC-1",
+    "name": "Center",
+    "state_id": 225
+   }
+  ],
+  "license_type": "ServiceCenter",
+  "licenses": [
+   {
+    "id": "2.25e2",
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "id in exponent form"
+ },
+ {
+  "kept": [],
+  "license_type": "Manufacturer",
+  "licenses": [
+   {
+    "id": "2.25e2",
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "id in exponent form"
+ },
+ {
+  "kept": [],
+  "license_type": "ServiceCenter",
+  "licenses": [
+   {
+    "id": false,
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "id false"
+ },
+ {
+  "kept": [],
+  "license_type": "Manufacturer",
+  "licenses": [
+   {
+    "id": false,
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "id false"
+ },
+ {
+  "kept": [
+   {
+    "license": "SC-1",
+    "name": "True",
+    "state_id": 225
+   }
+  ],
+  "license_type": "ServiceCenter",
+  "licenses": [
+   {
+    "id": 225,
+    "licenseId": "SC-1",
+    "licenseName": true,
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "name true"
+ },
+ {
+  "kept": [],
+  "license_type": "Manufacturer",
+  "licenses": [
+   {
+    "id": 225,
+    "licenseId": "SC-1",
+    "licenseName": true,
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "name true"
+ },
+ {
+  "kept": [
+   {
+    "license": "SC-1",
+    "name": "12.5",
+    "state_id": 225
+   }
+  ],
+  "license_type": "ServiceCenter",
+  "licenses": [
+   {
+    "id": 225,
+    "licenseId": "SC-1",
+    "licenseName": 12.5,
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "name a number"
+ },
+ {
+  "kept": [],
+  "license_type": "Manufacturer",
+  "licenses": [
+   {
+    "id": 225,
+    "licenseId": "SC-1",
+    "licenseName": 12.5,
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "name a number"
+ },
+ {
+  "kept": [
+   {
+    "license": "SC-1",
+    "name": "Unstuck",
+    "state_id": 225
+   }
+  ],
+  "license_type": "ServiceCenter",
+  "licenses": [
+   {
+    "id": 225,
+    "licenseId": "SC-1",
+    "licenseName": "\u001d Unstuck \u001e",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "name inside U+001C..U+001F"
+ },
+ {
+  "kept": [],
+  "license_type": "Manufacturer",
+  "licenses": [
+   {
+    "id": 225,
+    "licenseId": "SC-1",
+    "licenseName": "\u001d Unstuck \u001e",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "name inside U+001C..U+001F"
+ },
+ {
+  "kept": [
+   {
+    "license": "SC-1",
+    "name": "Service center 225",
+    "state_id": 225
+   }
+  ],
+  "license_type": "ServiceCenter",
+  "licenses": [
+   {
+    "id": 225,
+    "licenseId": "SC-1",
+    "licenseName": "\u001f",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "name only U+001F"
+ },
+ {
+  "kept": [],
+  "license_type": "Manufacturer",
+  "licenses": [
+   {
+    "id": 225,
+    "licenseId": "SC-1",
+    "licenseName": "\u001f",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "name only U+001F"
+ },
+ {
+  "kept": [
+   {
+    "license": "12.0",
+    "name": "Center",
+    "state_id": 225
+   }
+  ],
+  "license_type": "ServiceCenter",
+  "licenses": [
+   {
+    "id": 225,
+    "licenseId": 12.0,
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "license id a whole float"
+ },
+ {
+  "kept": [],
+  "license_type": "Manufacturer",
+  "licenses": [
+   {
+    "id": 225,
+    "licenseId": 12.0,
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "license id a whole float"
+ },
+ {
+  "kept": [
+   {
+    "license": null,
+    "name": "Center",
+    "state_id": 225
+   }
+  ],
+  "license_type": "ServiceCenter",
+  "licenses": [
+   {
+    "id": 225,
+    "licenseId": "\u001c",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "license id only U+001C"
+ },
+ {
+  "kept": [],
+  "license_type": "Manufacturer",
+  "licenses": [
+   {
+    "id": 225,
+    "licenseId": "\u001c",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "license id only U+001C"
+ },
+ {
+  "kept": [
+   {
+    "license": "SC-1",
+    "name": "Center",
+    "state_id": 225
+   }
+  ],
+  "license_type": "ServiceCenter",
+  "licenses": [
+   {
+    "id": "00000000000000000000000000000000000000000000000000225",
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "id with fifty leading zeros"
+ },
+ {
+  "kept": [],
+  "license_type": "Manufacturer",
+  "licenses": [
+   {
+    "id": "00000000000000000000000000000000000000000000000000225",
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "id with fifty leading zeros"
+ },
+ {
+  "kept": [],
+  "license_type": "ServiceCenter",
+  "licenses": [
+   {
+    "id": 294,
+    "licenseId": "MF-1",
+    "licenseName": "  ",
+    "licenseType": "Manufacturer"
+   }
+  ],
+  "name": "a manufacturer with a blank name"
+ },
+ {
+  "kept": [
+   {
+    "license": "MF-1",
+    "name": "Manufacturer 294",
+    "state_id": 294
+   }
+  ],
+  "license_type": "Manufacturer",
+  "licenses": [
+   {
+    "id": 294,
+    "licenseId": "MF-1",
+    "licenseName": "  ",
+    "licenseType": "Manufacturer"
+   }
+  ],
+  "name": "a manufacturer with a blank name"
+ },
+ {
+  "kept": [],
+  "license_type": "ServiceCenter",
+  "licenses": [
+   {
+    "id": 294,
+    "licenseId": "MF-1",
+    "licenseType": "Manufacturer"
+   }
+  ],
+  "name": "a manufacturer with no name"
+ },
+ {
+  "kept": [
+   {
+    "license": "MF-1",
+    "name": "Manufacturer 294",
+    "state_id": 294
+   }
+  ],
+  "license_type": "Manufacturer",
+  "licenses": [
+   {
+    "id": 294,
+    "licenseId": "MF-1",
+    "licenseType": "Manufacturer"
+   }
+  ],
+  "name": "a manufacturer with no name"
+ },
+ {
+  "kept": [],
+  "license_type": "ServiceCenter",
+  "licenses": [
+   {
+    "id": 294,
+    "licenseId": "MF-a",
+    "licenseName": "First",
+    "licenseType": "Manufacturer"
+   },
+   {
+    "id": 294,
+    "licenseId": "MF-b",
+    "licenseName": "Second",
+    "licenseType": "Manufacturer"
+   }
+  ],
+  "name": "the same manufacturer twice: the first one counts"
+ },
+ {
+  "kept": [
+   {
+    "license": "MF-a",
+    "name": "First",
+    "state_id": 294
+   }
+  ],
+  "license_type": "Manufacturer",
+  "licenses": [
+   {
+    "id": 294,
+    "licenseId": "MF-a",
+    "licenseName": "First",
+    "licenseType": "Manufacturer"
+   },
+   {
+    "id": 294,
+    "licenseId": "MF-b",
+    "licenseName": "Second",
+    "licenseType": "Manufacturer"
+   }
+  ],
+  "name": "the same manufacturer twice: the first one counts"
+ },
+ {
+  "kept": [
+   {
+    "license": "SC-1",
+    "name": "Center",
+    "state_id": 300
+   }
+  ],
+  "license_type": "ServiceCenter",
+  "licenses": [
+   {
+    "id": 300,
+    "licenseId": "MF-1",
+    "licenseName": "Maker",
+    "licenseType": "Manufacturer"
+   },
+   {
+    "id": 300,
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "a manufacturer and a center with the same id"
+ },
+ {
+  "kept": [
+   {
+    "license": "MF-1",
+    "name": "Maker",
+    "state_id": 300
+   }
+  ],
+  "license_type": "Manufacturer",
+  "licenses": [
+   {
+    "id": 300,
+    "licenseId": "MF-1",
+    "licenseName": "Maker",
+    "licenseType": "Manufacturer"
+   },
+   {
+    "id": 300,
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   }
+  ],
+  "name": "a manufacturer and a center with the same id"
+ },
+ {
+  "kept": [
+   {
+    "license": "SC-1",
+    "name": "Center",
+    "state_id": 225
+   }
+  ],
+  "license_type": "ServiceCenter",
+  "licenses": [
+   {
+    "id": 301,
+    "licenseId": "MF-1",
+    "licenseName": "B",
+    "licenseType": "Manufacturer"
+   },
+   {
+    "id": 225,
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   },
+   {
+    "id": 294,
+    "licenseId": "MF-1",
+    "licenseName": "A",
+    "licenseType": "Manufacturer"
+   }
+  ],
+  "name": "two manufacturers and a center, in the order sent"
+ },
+ {
+  "kept": [
+   {
+    "license": "MF-1",
+    "name": "B",
+    "state_id": 301
+   },
+   {
+    "license": "MF-1",
+    "name": "A",
+    "state_id": 294
+   }
+  ],
+  "license_type": "Manufacturer",
+  "licenses": [
+   {
+    "id": 301,
+    "licenseId": "MF-1",
+    "licenseName": "B",
+    "licenseType": "Manufacturer"
+   },
+   {
+    "id": 225,
+    "licenseId": "SC-1",
+    "licenseName": "Center",
+    "licenseType": "ServiceCenter"
+   },
+   {
+    "id": 294,
+    "licenseId": "MF-1",
+    "licenseName": "A",
+    "licenseType": "Manufacturer"
+   }
+  ],
+  "name": "two manufacturers and a center, in the order sent"
+ },
+ {
+  "kept": [],
+  "license_type": "ServiceCenter",
+  "licenses": [
+   {
+    "id": 294,
+    "licenseId": "MF-1",
+    "licenseName": "Maker",
+    "licenseType": "manufacturer"
+   }
+  ],
+  "name": "manufacturer type in another case"
+ },
+ {
+  "kept": [],
+  "license_type": "Manufacturer",
+  "licenses": [
+   {
+    "id": 294,
+    "licenseId": "MF-1",
+    "licenseName": "Maker",
+    "licenseType": "manufacturer"
+   }
+  ],
+  "name": "manufacturer type in another case"
+ },
+ {
+  "kept": [],
+  "license_type": "ServiceCenter",
+  "licenses": [
+   {
+    "id": 0,
+    "licenseId": "MF-1",
+    "licenseName": "Maker",
+    "licenseType": "Manufacturer"
+   }
+  ],
+  "name": "a manufacturer with id 0"
+ },
+ {
+  "kept": [],
+  "license_type": "Manufacturer",
+  "licenses": [
+   {
+    "id": 0,
+    "licenseId": "MF-1",
+    "licenseName": "Maker",
+    "licenseType": "Manufacturer"
+   }
+  ],
+  "name": "a manufacturer with id 0"
+ },
+ {
+  "kept": [],
+  "license_type": "ServiceCenter",
+  "licenses": [
+   {
+    "id": " 294 ",
+    "licenseId": "MF-1",
+    "licenseName": "Maker",
+    "licenseType": "Manufacturer"
+   }
+  ],
+  "name": "a manufacturer id as a string"
+ },
+ {
+  "kept": [
+   {
+    "license": "MF-1",
+    "name": "Maker",
+    "state_id": 294
+   }
+  ],
+  "license_type": "Manufacturer",
+  "licenses": [
+   {
+    "id": " 294 ",
+    "licenseId": "MF-1",
+    "licenseName": "Maker",
+    "licenseType": "Manufacturer"
+   }
+  ],
+  "name": "a manufacturer id as a string"
+ },
+ {
+  "kept": [],
+  "license_type": "ServiceCenter",
+  "licenses": [
+   {
+    "id": 294,
+    "licenseId": "  ",
+    "licenseName": "Maker",
+    "licenseType": "Manufacturer"
+   }
+  ],
+  "name": "a manufacturer with a blank license id"
+ },
+ {
+  "kept": [
+   {
+    "license": null,
+    "name": "Maker",
+    "state_id": 294
+   }
+  ],
+  "license_type": "Manufacturer",
+  "licenses": [
+   {
+    "id": 294,
+    "licenseId": "  ",
+    "licenseName": "Maker",
+    "licenseType": "Manufacturer"
+   }
+  ],
+  "name": "a manufacturer with a blank license id"
+ }
+]

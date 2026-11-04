@@ -1,6 +1,5 @@
 // A lab report PDF's text layer as CoaText (mazama_modules/coa/schema/coa_text.schema.json), read with pdfium
-// through pdfrx: what the shared reader (lib/mazama_core.dart) parses on the phone. Plan 08 Task 7
-// (specs/coa/08-phone-label-debug.md, "Phone text extraction").
+// through pdfrx: what the shared reader (lib/mazama_core.dart) parses on the phone.
 //
 // pdfium hands over characters with boxes; [groupWords] joins them into words the way the server's poppler words
 // look, close enough for mazama_core, whose line and column matching has tolerances. pdfium's boxes are each glyph's

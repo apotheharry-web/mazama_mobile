@@ -1,4 +1,4 @@
-// specs/app-updates AU-R12, AU-R14: what the phone keeps about updates, in its LocalStore (local_store.dart).
+// What the phone keeps about updates, in its LocalStore (local_store.dart).
 //
 // - `app_release_seen`: the newest release file (exact text and .sig) whose APK passed the download's checks and
 //   Android's inspection (app_update_download.dart). Written only from a verified APK, so a signed file naming a build
@@ -48,7 +48,7 @@ class AppUpdateStore {
   }
 
   /// Keeps [file] as the newest verified one, unless the record already holds a higher build. Call it only once
-  /// [file]'s APK has passed every check (AU-R14).
+  /// [file]'s APK has passed every check.
   Future<void> recordVerified(ReleaseFile file) async {
     final current = await seen();
     if (current != null && current.build >= file.build) return;

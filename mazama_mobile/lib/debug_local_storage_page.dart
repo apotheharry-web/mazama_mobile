@@ -1,5 +1,5 @@
-// A debug-only inspector for everything this app persists to disk (cart_store.dart/inventory_cache_store.dart/
-// session_store.dart/device_id.dart) - all four are deliberately silent about their own contents in normal
+// A debug-only inspector for everything this app persists to disk (cart_store.dart, the center_stock dataset
+// (sync/center_stock.dart), session_store.dart, device_id.dart) - all four are deliberately silent about their own contents in normal
 // use (a worker never needs to know there's a cart.json or where it lives), which makes "did that save
 // actually happen" and "why is this stale data still showing" hard to answer without this. Also the one place
 // to deliberately reset any of them - simulating a fresh install, a cleared cart, or a dropped session without
@@ -10,8 +10,9 @@ import 'package:flutter/material.dart';
 
 import 'cart_store.dart';
 import 'device_id.dart';
-import 'inventory_cache_store.dart';
 import 'session_store.dart';
+import 'sync/center_stock.dart' show keptCenterStock;
+import 'sync/sync_datasets.dart' show Dataset, Datasets;
 
 class DebugLocalStoragePage extends StatefulWidget {
   /// Pre-fills the state-id field used to look up the cart/inventory-cache stores, which are both keyed by
@@ -21,16 +22,18 @@ class DebugLocalStoragePage extends StatefulWidget {
   /// Overridable for tests, same pattern as every other page's own *Store fields. Defaults to the real stores.
   final SessionStore sessionStore;
   final CartStore cartStore;
-  final InventoryCacheStore inventoryCacheStore;
   final DeviceIdStore deviceIdStore;
+
+  /// Where the kept stock is (the center_stock dataset); the app's data folder's when null.
+  final Datasets? datasets;
 
   const DebugLocalStoragePage({
     super.key,
     this.initialStateId,
     this.sessionStore = const SessionStore(),
     this.cartStore = const CartStore(),
-    this.inventoryCacheStore = const InventoryCacheStore(),
     this.deviceIdStore = const DeviceIdStore(),
+    this.datasets,
   });
 
   @override
@@ -38,6 +41,7 @@ class DebugLocalStoragePage extends StatefulWidget {
 }
 
 class _DebugLocalStoragePageState extends State<DebugLocalStoragePage> {
+  late final Datasets _datasets = widget.datasets ?? Datasets.forDir(defaultSessionDataDir);
   late final _stateIdController = TextEditingController(text: widget.initialStateId?.toString() ?? '');
 
   String? _sessionText;
@@ -93,7 +97,7 @@ class _DebugLocalStoragePageState extends State<DebugLocalStoragePage> {
       setState(() => _inventoryCacheText = 'Enter a state id above to check for a cached inventory for that center.');
       return;
     }
-    final cached = await widget.inventoryCacheStore.load(stateId);
+    final cached = keptCenterStock(_datasets, stateId);
     if (!mounted) return;
     setState(() => _inventoryCacheText = cached == null
         ? 'Nothing stored for center $stateId.'
@@ -117,7 +121,7 @@ class _DebugLocalStoragePageState extends State<DebugLocalStoragePage> {
   }
 
   Future<void> _clearInventoryCache() async {
-    await widget.inventoryCacheStore.clear();
+    _datasets.remove(Dataset.centerStock);
     await _reloadInventoryCache();
   }
 
@@ -163,7 +167,7 @@ class _DebugLocalStoragePageState extends State<DebugLocalStoragePage> {
           ),
           const Divider(height: 32),
           _section(
-            title: 'Inventory cache (inventory_cache.json)',
+            title: 'Inventory cache (the center_stock dataset)',
             text: _inventoryCacheText,
             onClear: _clearInventoryCache,
             clearLabel: 'Clear inventory cache',

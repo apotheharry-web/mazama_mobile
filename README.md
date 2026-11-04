@@ -35,7 +35,8 @@ All releases: [Releases](../../releases).
 - **Reads product labels.** Scanning a package's label with the camera finds the matching package in the center's
   stock. The text is read on the phone.
 - **Draws product labels and dosing.** From each lot's lab report, using the same reader and rules as Mazama's own
-  labels (`mazama_modules/coa/`), so the dose on a label never exceeds what the product holds.
+  labels (the shared core in `mazama_modules/core/`, its rules in `mazama_modules/coa/rules/`), so the dose on a
+  label never exceeds what the product holds.
 - **Orders from Mazama.** Staff see what Mazama has available, set the center's par levels, and send an order.
 - **Counts the safe.** A reconciliation page compares the state's figures with a physical count, item by item.
 - **Keeps working when Mazama's server is down.** Selling never depends on it; reports wait on the phone and are sent

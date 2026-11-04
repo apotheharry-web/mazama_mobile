@@ -1,4 +1,4 @@
-// SP-D8, SP-R11, MI-D1: what a worker lands on after choosing a center (select_center_page.dart's _open): three pages
+// What a worker lands on after choosing a center (select_center_page.dart's _open): three pages
 // side by side, Mazama inventory (mazama_inventory_page.dart), Stock (center_stock_page.dart) and Cart (cart_page.dart,
 // unchanged apart from being hosted here), with their tab labels above them (Mazama | Stock | Cart: the labels are
 // the Mazama and Stock pages' titles, they have no title bar of their own). Opens on Stock, the middle one; swiping
@@ -8,20 +8,20 @@
 // The pages beside the one showing are built with it and every page is kept alive while this one lives, so the cart
 // restores its draft (and reports its count) before the worker ever swipes to it, and no page reloads on every swipe.
 //
-// specs/features FR-3: each tab shows only while its feature is on for the license's type (mazama_tab, center_stock,
+// Each tab shows only while its feature is on for the license's type (mazama_tab, center_stock,
 // selling, recent_sales in lib/features.g.dart); the page opens on Stock when it is on, else on the first tab left.
 //
-// specs/center-web CW-R10 (T13): a fourth tab, Sales (sales_page.dart), right of Cart: Mazama | Stock | Cart | Sales,
-// still opening on Stock (owner decision, amending MI-D1's three tabs). Unlike the others, Sales is built only once its
+// A fourth tab, Sales (sales_page.dart), right of Cart: Mazama | Stock | Cart | Sales,
+// still opening on Stock. Unlike the others, Sales is built only once its
 // tab first becomes the current page: it reads the center's whole sales history, which must not run while the worker
 // is on the Cart beside it (the pre-build below would otherwise start it there).
 //
-// specs/phone-sync Task 8b Step 2: opening the home asks the sync engine once for the refresh of each dataset its pages
+// Opening the home asks the sync engine once for the refresh of each dataset its pages
 // read through the engine ([CenterHomePage.refreshOnOpen]: the Mazama tab's mazama_inventory and the Stock page's
 // sheets, sync/dataset_feed.dart), before the pages are built, so each page joins that read rather than starting its
 // own. What is not asked for, and why (each would double a read a page still makes for itself on open):
 //   - center_stock and center_status: the cart loads its own stock (CenterStock, the state and the server) and its
-//     own settings on open; it is in the sale path, which never awaits or reads through the engine (PS-D3). The Stock
+//     own settings on open; it is in the sale path, which never awaits or reads through the engine. The Stock
 //     page's rows read the same server packages and state records for themselves (stock_rows.dart).
 //   - recent_sales: the Sales page reads the state's sales only once its tab is first opened, never beside the Cart
 //     (above), with a fresh state token; no engine refresher reads it in the app.
@@ -62,10 +62,10 @@ class CenterHomePage extends StatefulWidget {
   /// The Cart page, given the callback that keeps the Cart label's count (a CartPage in the app).
   final Widget Function(ValueChanged<int> onDraftCountChanged) buildCart;
 
-  /// The Sales page, right of Cart (a SalesPage in the app; anything in tests), while recent_sales is on (CW-R10).
+  /// The Sales page, right of Cart (a SalesPage in the app; anything in tests), while recent_sales is on.
   final Widget Function() buildSales;
 
-  /// specs/app-updates AU-D10: the update card above the tabs (app_update_card.dart), given the draft cart's line count
+  /// The update card above the tabs (app_update_card.dart), given the draft cart's line count
   /// so it hides while a cart holds a line; null (tests, the demo) shows none.
   final Widget Function(int draftCount)? buildUpdateCard;
 
@@ -83,8 +83,8 @@ class CenterHomePage extends StatefulWidget {
 enum _Tab { mazama, stock, cart, sales }
 
 class _CenterHomePageState extends State<CenterHomePage> with SingleTickerProviderStateMixin {
-  /// MI-D1: Mazama inventory | Stock | Cart, opening on Stock; the first tab is labelled just "Mazama"; Sales after Cart
-  /// (CW-R10). A tab whose feature is off for this license's type is left out (FR-3).
+  /// Mazama inventory | Stock | Cart, opening on Stock; the first tab is labelled just "Mazama"; Sales after Cart.
+  /// A tab whose feature is off for this license's type is left out.
   late final List<_Tab> _shown = [
     if (_on('mazama_tab')) _Tab.mazama,
     if (_on('center_stock')) _Tab.stock,

@@ -1,4 +1,4 @@
-// SL-R18: the client for GET /p/flows/hosts (login_hosts_client.dart). The example reply it is held to is
+// The client for GET /p/flows/hosts (login_hosts_client.dart). The example reply it is held to is
 // ../mazama_modules/api/examples/login_hosts.response.json (vendored at assets/shared/api/examples/), signed with the
 // shared vectors' TEST key, which these tests inject; the app verifies with its bundled signing.pub.
 import 'dart:async';

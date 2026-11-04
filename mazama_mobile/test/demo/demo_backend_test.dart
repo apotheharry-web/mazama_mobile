@@ -1,4 +1,4 @@
-// Demo mode (specs/demo-mode DM-R1, DM-R2, DM-D4, DM-D5): the demo backend's invented data and answers.
+// Demo mode: the demo backend's invented data and answers.
 import 'dart:convert';
 import 'dart:io';
 
@@ -71,8 +71,8 @@ void main() {
     expect(raw.map((r) => r['manufacturerLicenseId']).toSet(), hasLength(2));
     expect(packages.where((p) => p.mazama).length, inInclusiveRange(1, packages.length - 1));
     expect(await demo.fetchMazamaLicenses(demoStateId), ['mf-demo0001']);
-    final sizes = packages.map((p) => stockSizeKey(p.description)).toSet();
-    expect(sizes, containsAll(['25', '20', '15', '10', '5', 'other']));
+    final sizes = stockClassify([for (final p in packages) p.toStockRow()], 'tpe').rows.map((c) => c.sizeKey).toSet();
+    expect(sizes, containsAll(['25', '20', '15', '10', '5', 'booster', 'micro']));
     final summary = summarize([for (final p in packages) p.toStockRow()], 'tpe');
     final table = parTable(summary, await demo.fetchParLevels(demoStateId));
     expect(table['short_total'] as num, greaterThan(0));

@@ -8,7 +8,7 @@
 //! void  mz_free(char *s);
 //! ```
 //!
-//! The table's functions are generated into `exports.rs` (mazama_modules/core/gen.py). Design: specs/core CR-R2.
+//! The table's functions are generated into `exports.rs` (mazama_modules/core/gen.py).
 
 use std::ffi::{CStr, CString, c_char};
 use std::panic::{AssertUnwindSafe, catch_unwind};

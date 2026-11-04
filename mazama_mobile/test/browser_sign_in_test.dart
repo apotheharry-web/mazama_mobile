@@ -1,8 +1,8 @@
-// SL-R16: the decisions behind the sign-in on the state's own page (lib/browser_sign_in_page.dart) - which navigations
+// The decisions behind the sign-in on the state's own page (lib/browser_sign_in_page.dart) - which navigations
 // the webview may load, which it must refuse, and which one ends the sign-in - tested without a device through the
 // pure decideBrowserNavigation, and how the page closes (SignInPageCloser) through a stand-in page that closes the way
 // BrowserSignInPage does, with no webview. The webview itself (a platform view) is checked by hand on a device
-// (specs/state-login "Testing").
+// (the state sign-in spec's own testing notes).
 import 'dart:async';
 
 import 'package:flutter/material.dart';

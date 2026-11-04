@@ -1,4 +1,4 @@
-// The compact label drawn from a LabelSpec on the phone (plan 08 Task 8; layout: specs/labels/04-label-spec.md).
+// The compact label drawn from a LabelSpec on the phone (the compact variant of the server's printed label).
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mazama_mobile/label_preview.dart';

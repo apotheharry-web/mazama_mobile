@@ -22,7 +22,7 @@
 // banner - see sale_outcome.dart and _showSaleFailureDialog for why a failed sale can't just be silently
 // retried the way a failed inventory fetch can.
 //
-// A center can keep several carts at once (specs/multi-cart): the cart button at the top right opens the list of
+// A center can keep several carts at once: the cart button at the top right opens the list of
 // them (switch, new, rename, delete), and each has its own lines, timer and pricing controls. Long-pressing that
 // button sells the showing cart as the same sale several times over (bulk sell, _onBulkSellPressed/_bulkSell).
 import 'dart:async';
@@ -46,11 +46,9 @@ import 'center_status_client.dart' as center_status_client; // see CartPage.fetc
 import 'demo/demo_backend.dart'; // see CartPage.submitCoaForLot: avoids a same-name default-value ambiguity
 import 'device_id.dart';
 import 'dose.dart';
-import 'enrichment_store.dart';
 import 'features.g.dart';
 import 'flow/flow_runner.dart';
 import 'flow/flow_spec.dart';
-import 'inventory_cache_store.dart';
 import 'label_client.dart' as label_client; // see CartPage.fetchLabel: avoids a same-name default-value ambiguity
 import 'label_preview.dart';
 import 'licenses_client.dart';
@@ -71,14 +69,14 @@ import 'local_scan_match.dart' as local_scan_match; // see CartPage.localScanMat
 import 'select_center_page.dart';
 import 'server_error.dart' show isServerUnreachable;
 import 'server_health.dart' show ServerHealth;
-import 'server_link.dart' as server_link; // the defaults for the writes to Mazama's server (README R56)
+import 'server_link.dart' as server_link; // the defaults for the writes to Mazama's server
 import 'selling.dart';
 import 'session.dart';
 import 'session_store.dart';
 import 'session_timer_store.dart';
 import 'resilience_options.dart';
 import 'sync/center_stock.dart';
-import 'sync/sync_datasets.dart' show sourceServer, sourceState;
+import 'sync/sync_datasets.dart' show Datasets, sourceServer, sourceState;
 import 'sync/sync_tables.dart' show DatasetRow;
 import 'sync/updated_line.dart' show updatedLine, updatedLineKey;
 import 'state_packages_client.dart' as state_packages_client; // see CartPage.fetchPackagesFromState: avoids a same-name default-value ambiguity
@@ -108,15 +106,47 @@ const sessionCheckInterval = Duration(seconds: 30);
 /// ever call for (6 hrs).
 const sessionTimerMaxAge = Duration(hours: 8);
 
-/// The cart's own figure, as the cart shows it and gates Sell on (_capError): every unit of a line counted at its
-/// product's first lot in draw order (PkprGroup's figures), every dose. The sale itself is held to the lots it draws as
-/// well (_saleRefusal, DOSE-1/DOSE-17).
-List<SaleLimitLine> cartFigureLines(List<CartLine> lines) =>
-    [for (final l in lines) (record: doseFigures(l.group.lots.first), qty: l.qty, dose: l.dose)];
+/// [lines] as the cap reads them (bulk_sale.dart's cartDrawLimits): each line's lots, units and dose.
+List<DoseLine> doseLines(List<CartLine> lines) => [for (final l in lines) (lots: l.group.lots, qty: l.qty, dose: l.dose)];
 
-/// The core's answer for the cart's own figure ([cartFigureLines]), in one call: its raw mg psilocybin, the cap and the
-/// session lengths (dose.dart's saleLimits; refused when the core can't answer, DOSE-7).
-SaleLimits cartSaleLimits(List<CartLine> lines, {CoreFunctions? core}) => saleLimits([cartFigureLines(lines)], core: core).single;
+/// The core's answer for [lines] sold once, counted from the figures of each lot that sale draws (not the product's
+/// first lot alone) (cartDrawLimits, one draw and one cap call: what the cart shows, gates Sell on and times a session
+/// by; refused when the core can't answer), and
+/// [refusal], why the cap refuses it (the words beside Sell, which is then disabled), or null. Over the cap: "This sale
+/// would total ...", or "This sale draws later lots and would total ..." when it draws past a product's first lot; any
+/// other refusal in the core's own words (a figure that isn't a number, a unit whose psilocybin isn't known, the core
+/// failing). A cart its lots can't cover is refused by the stock check when
+/// Sell is pressed, and counted here as cartDrawLimits says; one the core can't draw at all has no figure
+/// ([SaleLimits.failed]) and no cap words here: Sell refuses it when pressed with the draw's own words (a product whose
+/// lots the core can't order, or the core failing: _saleRefusal), nothing sent. The product's first-lot figure is not
+/// the cap's: it stays the line's tpeMg and price.
+({SaleLimits limits, String? refusal}) cartDoseCheck(List<CartLine> lines, {CoreFunctions? core}) {
+  final check = cartDrawLimits(doseLines(lines), 1, core: core);
+  final v = check.limits.single;
+  final perSale = check.perSale;
+  final String? refusal;
+  if (v.allowed || check.coreFailed) {
+    refusal = null;
+  } else {
+    refusal = perSale == null ? v.error : copyRefusal(perSale, 0, v.error!, plain: true);
+  }
+  return (limits: v, refusal: refusal);
+}
+
+/// [lines]' limits as cartDoseCheck works them out.
+SaleLimits cartSaleLimits(List<CartLine> lines, {CoreFunctions? core}) => cartDoseCheck(lines, core: core).limits;
+
+/// What the cart's dose answer is kept against (CartPage's _cartLimitsNow): every lot of every line (its id, units left,
+/// figures and draw-order inputs), the line's units and dose.
+String _doseKey(List<CartLine> lines) => [
+      for (final l in lines)
+        [
+          for (final lot in l.group.lots)
+            [lot.id, lot.quantity, lot.weightPerUnit, lot.analyteWeight, lot.expires?.toIso8601String(), lot.stateOnly].join(','),
+          l.qty,
+          l.dose,
+        ].join(';'),
+    ].join('|');
 
 /// How long a client's session lasts (the session table's length for [psilocybinMg], the booster included, the same
 /// "w/ booster" figure the cart's dose summary shows) and how much of it is left [elapsed] in (sessionTimeLeft). The
@@ -124,10 +154,9 @@ SaleLimits cartSaleLimits(List<CartLine> lines, {CoreFunctions? core}) => saleLi
 String? sessionTimeLeftText(double psilocybinMg, Duration elapsed, {required bool booster}) =>
     sessionTimeLeft(keptMgLimits(psilocybinMg).session, elapsed, booster: booster);
 
-/// How much of a session of [length] is left [elapsed] in, as the carts list shows a running timer (specs/multi-cart
-/// MC-D14): "1:52:10 left w/ booster" ("w/ booster" only when [booster]), then "Time up · 04:12 over" once it has run
+/// How much of a session of [length] is left [elapsed] in, as the carts list shows a running timer: "1:52:10 left w/ booster" ("w/ booster" only when [booster]), then "Time up · 04:12 over" once it has run
 /// out. Null when there is no length (over the limit per sale, or not known). The length is worked out once per cart
-/// change, never per tick (CR-R6). [unknown]: the core couldn't work the length out, so it is the longest (DOSE-7), and
+/// change, never per tick. [unknown]: the core couldn't work the length out, so it is the longest (6 hours), and
 /// the text says so.
 String? sessionTimeLeft(Duration? length, Duration elapsed, {required bool booster, bool unknown = false}) {
   if (length == null) return null;
@@ -146,6 +175,9 @@ String _sessionTimeLeft(Duration length, Duration elapsed, {required bool booste
   return 'Time up · ${formatElapsed(-left)} over';
 }
 
+/// A sale date as the Sell and Bulk sell dialogs show it: "2026-11-01".
+String _saleDateText(DateTime d) => '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
 /// A plain top-level function (not a constructor tear-off) specifically so it's an unambiguous constant default
 /// value for CartPage.httpClientFactory, needing no assumption about how package:http's own Client() factory
 /// constructor behaves when torn off.
@@ -162,15 +194,13 @@ class CartLine {
 
   /// doseInitial or doseSecondary (selling.dart) - which of a sale record's initialDose/secondaryDose fields
   /// this line's units count toward. Defaults to doseInitial, the same default the real cart_line table uses
-  /// for a line the moment it's added (see mazama_sales/src/mazama_sales/carts.py's own `add`).
+  /// for a line the moment it's added (see mazama_sales/src/mazama_sales/selling/carts.py's own `add`).
   final String dose;
 
   CartLine({required this.group, required this.qty, required this.priceCentsEach, this.dose = doseInitial});
 
   String get productGuid => group.productGuid;
   String get productType => group.productType;
-
-  int get totalCents => qty * priceCentsEach;
 
   CartLine withQty(int newQty) => CartLine(group: group, qty: newQty, priceCentsEach: priceCentsEach, dose: dose);
 
@@ -225,17 +255,17 @@ class CartPage extends StatefulWidget {
   final Future<List<Package>> Function(int stateId, {required String accessToken}) fetchPackagesFromState;
 
   /// The RAW half of [fetchPackagesFromState] (state_packages_client.dart's fetchRawPackagesFromState) - used
-  /// only for a CONFIGURED center's merged inventory load (merged_inventory.dart's fetchMergedInventory,
-  /// item 2), since that merge needs mazama_sales' own enrichment (strain/tpeMg/coaAvailable/labelAvailable)
+  /// only for a CONFIGURED center's merged inventory load (sync/center_stock.dart, joined by sync/stock_merge.dart),
+  /// since that merge needs mazama_sales' own enrichment (strain/tpeMg/coaAvailable/labelAvailable)
   /// layered onto the state's own fresher quantity, AND the unmapped records themselves to hand to
-  /// [uploadInventorySnapshot] (item 3a) - [fetchPackagesFromState] above alone can't supply the second half.
+  /// [uploadInventorySnapshot] - [fetchPackagesFromState] above alone can't supply the second half.
   /// Overridable for tests for the same reason as fetchPackagesFromState. Defaults to the real
   /// fetchRawPackagesFromState, referenced through the aliased import above.
   final Future<List<Object?>> Function(int stateId, {required String accessToken}) fetchRawPackagesFromState;
 
-  /// Item 3a: posts a configured center's own fresh state read (merged_inventory.dart's own
-  /// MergedInventoryResult.rawStateRecords) back to mazama_sales' POST /p/inventory/{stateId}, so its mirror
-  /// stays current from this device instead of waiting on the server's own (now possibly manual-only) sync.
+  /// Posts a configured center's own fresh state read (sync/center_stock.dart's onStateRead, the raw
+  /// records) back to mazama_sales' POST /p/inventory/{stateId}, so its mirror
+  /// stays current from this device instead of waiting on the server's own sync.
   /// Called fire-and-forget after every successful merged load for a configured center - see
   /// _resilient (lib/sync/center_stock.dart's onStateRead). Overridable for tests for the same reason as fetchPackagesFromState. Defaults to the
   /// real upload through the app's server link (server_link.dart): while Mazama's server can't be reached the newest
@@ -244,20 +274,19 @@ class CartPage extends StatefulWidget {
 
   /// Checked once, right at the start of every _loadInventory, before [fetchPackages]/[fetchPackagesFromState]
   /// are ever tried - see coa_data_client.dart's own file comment. True (or this check itself failing, treated
-  /// the same as true: see _loadInventoryAsync) runs the ordinary [_resilient] tiers exactly as before this
-  /// field existed. False switches this load entirely onto [resolveAdhocInventory] instead - a center Mazama's
+  /// the same as true: see _loadInventoryAsync) runs the ordinary [_resilient] tiers. False switches this load entirely onto [resolveAdhocInventory] instead - a center Mazama's
   /// own server has never been configured for has nothing for [fetchPackages] (tier 1) to ever return anyway.
   /// Overridable for tests, so a widget test never makes a real network call for this either. Defaults to the
   /// real centerIsConfigured, referenced through the aliased import above for the same reason as fetchLabel.
   final Future<bool> Function(int stateId) centerIsConfigured;
 
-  /// The cart's live settings from this center's server (SM-16: tax percent, agreement split, units per line, cart
+  /// The cart's live settings from this center's server (tax percent, agreement split, units per line, cart
   /// life), or [CartSettings.fallback] when it can't say. Overridable for tests, so a widget test never makes a
   /// real network call for this either.
   final Future<CartSettings> Function(int stateId) fetchCartSettings;
 
-  /// The shared core the cart prices with (specs/core row 6): null is this app's own (MazamaCore.instance); a test gives a
-  /// fake to see the cart fail closed (PRICE-8).
+  /// The shared core the cart prices with: null is this app's own (MazamaCore.instance); a test gives a
+  /// fake to see the cart fail closed (a cart the core can't price can't be sold).
   final CoreFunctions? core;
 
   /// Runs the whole adhoc-COA flow (coa_data_resolver.dart's own file comment has the full shape) for a center
@@ -273,11 +302,11 @@ class CartPage extends StatefulWidget {
     void Function(String guid, Package updated)? onResolved,
   }) resolveAdhocInventory;
 
-  /// Item 3b: run (fire-and-forget, from _ensureCoaForCartLine) right after a product is added to the cart at a
-  /// CONFIGURED center, for each lot backing that PKPR that still has coaAvailable false (README R64) - the
+  /// Run (fire-and-forget, from _ensureCoaForCartLine) right after a product is added to the cart at a
+  /// CONFIGURED center, for each lot backing that PKPR that still has coaAvailable false - the
   /// "already built function" (configured_coa_submit.dart's submitCoaForLot, reusing coa_data_resolver.dart's
   /// own GetPackagedProductInfo -> newest-PDF -> downloadStateDocument -> uploadCoaParse chain) submitting that
-  /// lot's lab report so mazama_sales can join it into the shared COA pipeline and, per item 4, auto-queue a
+  /// lot's lab report so mazama_sales can join it into the shared COA pipeline and queue a
   /// label. Never awaited by the add itself - see this field's own call site. Overridable for tests, so a
   /// widget test exercising a configured center's cart-add never makes a real network call for this either.
   /// Defaults to the real submitCoaForLot, referenced through an aliased import for the same reason as
@@ -291,16 +320,16 @@ class CartPage extends StatefulWidget {
     double? statePsilocybin,
   }) submitCoaForLot;
 
-  /// Called when [submitCoaForLot] failed because Mazama's server couldn't be reached (README R56): the lot is kept and
+  /// Called when [submitCoaForLot] failed because Mazama's server couldn't be reached: the lot is kept and
   /// submitted again once the server answers, with the session current then (server_link.dart's catch-up work).
   /// Overridable for tests; the real one keeps it in the app's catch-up file.
   final void Function(int stateId, {required String lotGuid, required int packageId, double? statePsilocybin}) keepCoaLotForLater;
 
-  /// CU-R1 (specs/coa-upload): after each load of a CONFIGURED center that Mazama's server answered, every lot whose
+  /// After each load of a CONFIGURED center that Mazama's server answered, every lot whose
   /// package says coaAvailable false is handed to the app's background uploader (coa_uploader.dart), which sends each
   /// report at the server's pace without holding up anything on this page. An unconfigured center's lots are queued
   /// by [resolveAdhocInventory] itself. Overridable for tests; the real one is the app's uploader (server_link.dart), the
-  /// demo's does nothing (CU-R6).
+  /// demo's does nothing.
   final QueueCoaUploads queueCoaUploads;
 
   /// Whether the background uploader has [lotGuid] waiting or being sent: the cart add's own submission
@@ -308,16 +337,13 @@ class CartPage extends StatefulWidget {
   /// real one asks the app's uploader (server_link.dart), the demo's always says no.
   final bool Function(String lotGuid) coaUploadPending;
 
-  /// Where every load keeps what it read, and the last step: the last inventory this center successfully loaded (by
-  /// either of the steps above), shown at any age with its age, sold from for up to 3 days (Q3, [stockTooOld]). Overridable for tests, so a
-  /// widget test never reads or writes the real app-data directory for this either - same real-by-default,
-  /// redirected-in-tests pattern as cartStore/sessionTimerStore/deviceIdStore.
-  final InventoryCacheStore inventoryCacheStore;
-
-  /// What Mazama's server last sent per package (strain, TPE, expiry), filled back in when stock has to come from the
-  /// state system alone (enrichment_store.dart, lib/sync/center_stock.dart). Overridable for tests, as
-  /// [inventoryCacheStore].
-  final EnrichmentStore enrichmentStore;
+  /// The sync engine's datasets the cart keeps its stock in: every load keeps what it read as the center's
+  /// center_stock copy, the last step (shown at any age with its age, sold from for up to 3 days, [stockTooOld]), and
+  /// what Mazama's server last sent per package (strain, TPE, expiry) as the enrichment copy, filled back in when stock
+  /// has to come from the state system alone (lib/sync/center_stock.dart, lib/sync/enrichment.dart). Null (the
+  /// default) is the app's data folder's; tests pass their own folder's, so a widget test never reads or writes the
+  /// real app-data directory, as cartStore/sessionTimerStore/deviceIdStore.
+  final Datasets? datasets;
 
   /// The build-time knobs behind both fallback tiers above (resilience_options.dart's own file comment) -
   /// constructed once in main.dart, before MazamaApp exists, and threaded down through every SelectCenterPage
@@ -336,7 +362,7 @@ class CartPage extends StatefulWidget {
   /// still has a label to compare against. Returns mazama_core's LabelSpec, drawn by LabelPreview; throws with the
   /// reason when even the phone can't make one (no lab report on file, a report that doesn't name the lot, ...).
   /// Overridable for tests, so a widget test never makes a real state-system call for it. Null (the default) is the real
-  /// one, keeping what the phone read from the lab report in [enrichmentStore] (SM-D31, _drawLabel).
+  /// one, keeping what the phone read from the lab report in [datasets] (_drawLabel).
   final Future<Map<String, Object?>> Function(int stateId, String pkpr, {required String accessToken, String strain})? drawLabel;
 
   /// Forwarded straight through to the SelectCenterPage _onSwitchCenterPressed opens - same reasoning as
@@ -348,7 +374,7 @@ class CartPage extends StatefulWidget {
   /// so Mazama's own server can log which worker made it - see sale_log_client.dart's own file comment for why.
   /// Overridable for tests, so a widget test never makes a real network call for this either, and can assert
   /// what this was called with without a sale-log failure ever being able to affect the sale itself. Defaults
-  /// to the app's outbox (server_link.dart's queueSaleLog, README R56): the log is kept on the phone with a clientId
+  /// to the app's outbox (server_link.dart's queueSaleLog): the log is kept on the phone with a clientId
   /// and sent now, or once Mazama's server answers again - never lost while it is down, never in the way of a sale.
   final Future<void> Function(int stateId,
       {required String workerEmail, required String deviceId, required List<Map<String, Object?>> request, required Object? response}) postSaleLog;
@@ -410,19 +436,19 @@ class CartPage extends StatefulWidget {
 
   /// What _pricingMode starts out as when this page opens - see that field's own comment for what each mode
   /// means. Overridable for tests that specifically exercise "each" mode's own per-line price entry (most of
-  /// them), so they don't have to tap back to it themselves just because the real app's own default changed;
-  /// defaults to the real app's actual default, CartPricingMode.total.
+  /// them), so they don't have to tap back to it themselves; defaults to the real app's default,
+  /// CartPricingMode.total.
   final CartPricingMode initialPricingMode;
 
   /// Called with the draft cart's number of lines whenever it changes (and once when first known), so the page
-  /// hosting this one (center_home_page.dart's Cart tab, SP-D8) can show it. Optional; null calls nothing.
+  /// hosting this one (center_home_page.dart's Cart tab) can show it. Optional; null calls nothing.
   final ValueChanged<int>? onDraftCountChanged;
 
-  /// Demo mode (specs/demo-mode): the backend this cart's functions come from. Switch center stays in the demo, and
+  /// Demo mode: the backend this cart's functions come from. Switch center stays in the demo, and
   /// a sale's success says nothing was sent. Null for a real sign-in.
   final DemoBackend? demo;
 
-  /// The feature registry (specs/features FR-3): the View stock button shows only while center_stock is on for this
+  /// The feature registry: the View stock button shows only while center_stock is on for this
   /// center's license type. The generated one in the app; tests pass a copy with features off.
   final Map<String, Feature> featureTable;
 
@@ -436,24 +462,24 @@ class CartPage extends StatefulWidget {
   /// tests, real by default, as cartStore.
   final CartSlotsStore cartSlotsStore;
 
-  /// The home-screen widget showing every cart's running timer (cart_timer_widget.dart, MC-D15): sent a fresh snapshot
+  /// The home-screen widget showing every cart's running timer (cart_timer_widget.dart): sent a fresh snapshot
   /// whenever a timer, a cart's lines or the list of carts changes. Overridable for tests; the real one does nothing
   /// where there's no native widget (a widget test).
   final CartTimerWidget cartTimerWidget;
 
-  /// The app's server tracker (server_health.dart, README R56, R87). Stock read from the state system alone (Mazama's
+  /// The app's server tracker (server_health.dart). Stock read from the state system alone (Mazama's
   /// server didn't answer, [InventorySource.state]) is loaded again once the tracker goes from offline to online: at
   /// once while the showing cart has no lines, else as soon as it has none (after a sale, or its lines removed), and
   /// never while a sale is being sent. Null: never (tests, the demo, the debug launch page).
   final ServerHealth? health;
 
-  /// specs/phone-sync Task 8b: the center's stock as the sync engine keeps it (engine.watch of center_stock; null: none,
+  /// The center's stock as the sync engine keeps it (engine.watch of center_stock; null: none,
   /// as in tests and the demo). A copy newer than the one on screen is taken only while the cart has no lines and no
   /// sale is being sent; otherwise it waits until both hold (as the reload when the server comes back). Defaults to the
   /// app's link (server_link.dart's linkWatchStock), none while no link is set.
   final Stream<DatasetRow?>? Function(int stateId) watchStock;
 
-  /// PS-R6: after a confirmed sale, asks for the center's stock to be refreshed (the sync engine's center_stock dataset,
+  /// After a confirmed sale, asks for the center's stock to be refreshed (the sync engine's center_stock dataset,
   /// server_link.dart's linkRequestStockRefresh), never awaited. Overridable for tests.
   final void Function(int stateId) requestStockRefresh;
 
@@ -479,8 +505,7 @@ class CartPage extends StatefulWidget {
     this.keepCoaLotForLater = server_link.rememberCoaLot,
     this.queueCoaUploads = server_link.queueCoaUploads,
     this.coaUploadPending = server_link.coaUploadPending,
-    this.inventoryCacheStore = const InventoryCacheStore(),
-    this.enrichmentStore = const EnrichmentStore(),
+    this.datasets,
     this.resilienceOptions = const ResilienceOptions(),
     this.fetchLabel = label_client.fetchLabel,
     this.drawLabel,
@@ -517,12 +542,12 @@ class _CartPageState extends State<CartPage> {
   String? _lookupError;
   final List<CartLine> _lines = [];
 
-  /// The center's carts and which one is showing (specs/multi-cart). _lines, _sessionTimerStart and the pricing
+  /// The center's carts and which one is showing. _lines, _sessionTimerStart and the pricing
   /// controls below are always the showing cart's; the others' are on disk (lines, timer) or in _pricingByCart.
   CartSlots _slots = CartSlots.initial();
   String get _cartId => _slots.activeId;
 
-  /// The pricing controls of every cart not showing, by cart id, while this page is open (MC-D4). Not saved, the same
+  /// The pricing controls of every cart not showing, by cart id, while this page is open (each cart has its own). Not saved, the same
   /// as the showing cart's own controls never were.
   final _pricingByCart = <String, _CartPricing>{};
 
@@ -544,28 +569,56 @@ class _CartPageState extends State<CartPage> {
   /// empty cart already does, since there is no trustworthy price to sell at.
   String? _pricingError;
 
-  /// Set by _recomputeCartPricing whenever the cart's own figure would sell more than 50 mg of raw psilocybin in
-  /// total, or can't be counted (the core's cap, cartSaleLimits; DOSE-3/5/7) - a wholly separate rule from _pricingError
+  /// Set by _recomputeCartPricing whenever the cart, sold now, would sell more than 50 mg of raw psilocybin in total on
+  /// the lots it draws (each drawn lot's own figures), or can't be counted (a figure that isn't a number, a unit whose
+  /// psilocybin isn't known, the core failing) (the core's cap, cartDoseCheck) - a wholly separate rule from _pricingError
   /// above (that one is about money; this one is about the state's own raw analyteWeight field and has
   /// nothing to do with price) and checked in every pricing mode, "each" included. Also blocks Sell, same as
   /// _pricingError, and shown near the Total/Sell row rather than next to the pricing controls, since it
   /// applies whether or not the cart-wide pricing controls are even showing.
   String? _capError;
 
-  /// The core's answer for the cart's own figure (cartSaleLimits) and the lines it was worked out for (_cartLimitsNow):
-  /// the cap, the dose summary's total and session lengths, asked again only when the cart's lines change (CR-R6).
-  SaleLimits? _cartLimits;
+  /// The core's answer for the cart sold now, on the lots it draws (cartDoseCheck), with the words beside Sell
+  /// when it is refused, and the lines it was worked out for (_cartLimitsNow): the cap, the dose summary's total and
+  /// session lengths, asked again only when the cart's lines change.
+  ({SaleLimits limits, String? refusal})? _cartLimits;
   String? _cartLimitsKey;
 
-  /// The core's answer for the cart's own figure as the cart is now: kept while its lines (lot, figures, units, dose)
-  /// stay the same, asked again when they change.
-  SaleLimits _cartLimitsNow() {
-    final key = [
-      for (final l in _lines) '${l.group.lots.first.id}:${l.group.weightPerUnit}:${l.group.analyteWeight}:${l.qty}:${l.dose}',
-    ].join('|');
+  /// The cart's lines as their totals read them, each with its group (the core's group_of; null when it can't give one),
+  /// worked out again only when a line's units, price or product type change; and their totals (the core's
+  /// cartTotals; null when it can't add them up, and then the cart shows no total and can't be sold).
+  List<CartTotalLine>? _totalLines;
+  CartTotals? _cartTotals;
+  String? _cartTotalsKey;
+
+  void _refreshCartTotals() {
+    final key = jsonEncode([for (final l in _lines) [l.qty, l.priceCentsEach, l.productType]]);
+    if (key == _cartTotalsKey) return;
+    final lines = <CartTotalLine>[
+      for (final l in _lines) (qty: l.qty, priceCentsEach: l.priceCentsEach, group: groupOf(l.productType, core: widget.core)),
+    ];
+    _totalLines = lines;
+    _cartTotals = cartTotals(lines, core: widget.core);
+    _cartTotalsKey = key;
+  }
+
+  List<CartTotalLine> _totalLinesNow() {
+    _refreshCartTotals();
+    return _totalLines!;
+  }
+
+  CartTotals? _cartTotalsNow() {
+    _refreshCartTotals();
+    return _cartTotals;
+  }
+
+  /// The core's answer for the cart as it is now, on the lots its sale draws: kept while its lines (every lot's id,
+  /// units left, figures and draw-order inputs; the line's units and dose) stay the same, asked again when they change.
+  ({SaleLimits limits, String? refusal}) _cartLimitsNow() {
+    final key = _doseKey(_lines);
     final kept = _cartLimits;
     if (kept != null && key == _cartLimitsKey) return kept;
-    final fresh = cartSaleLimits(_lines);
+    final fresh = cartDoseCheck(_lines);
     _cartLimits = fresh;
     _cartLimitsKey = key;
     return fresh;
@@ -581,21 +634,23 @@ class _CartPageState extends State<CartPage> {
   final _drawnLabels = <String, Future<Map<String, Object?>>>{};
   Timer? _renewTimer;
 
-  /// The center's stock (lib/sync/center_stock.dart, specs/phone-sync phase 3): Mazama's server and the state at once,
+  /// The center's stock (lib/sync/center_stock.dart): Mazama's server and the state at once,
   /// put together by the one merge rule (stock_merge.dart), else the state's own packages, else the stock last kept for
-  /// the center at any age (Q3: shown with its age; [_onSellPressed] refuses to sell from it once it is older than
+  /// the center at any age (shown with its age; [_onSellPressed] refuses to sell from it once it is older than
   /// ResilienceOptions.cacheMaxAge). The session is read fresh at every load (`() => _session`), so the state is read
   /// with whatever token _maybeRenewSession last put there. Whenever the state answered, that read is pushed to
-  /// Mazama's server as the center's snapshot (item 3a, widget.uploadInventorySnapshot), fire-and-forget: a failed push
+  /// Mazama's server as the center's snapshot (widget.uploadInventorySnapshot), fire-and-forget: a failed push
   /// only means the server's copy stays one read behind. Handed down to StockPage/SelectCenterPage below
-  /// (_fetchPackagesForStockPage) so they load the same way. Selling never goes through it (PS-D3).
+  /// (_fetchPackagesForStockPage) so they load the same way. Selling never goes through the sync engine.
+  /// [CartPage.datasets], else the app's data folder's.
+  late final Datasets _datasets = widget.datasets ?? Datasets.forDir(defaultSessionDataDir);
+
   late final CenterStock _resilient = CenterStock(
     fetchServer: widget.fetchPackages,
     fetchRawState: widget.fetchRawPackagesFromState,
     fetchFromState: widget.fetchPackagesFromState,
-    cache: widget.inventoryCacheStore,
+    datasets: _datasets,
     session: () => _session,
-    enrichment: widget.enrichmentStore,
     now: widget.now,
     enableStateFallback: widget.resilienceOptions.enableStateFallback,
     onStateRead: (stateId, raw) => unawaited(() async {
@@ -610,11 +665,12 @@ class _CartPageState extends State<CartPage> {
   InventorySource? _inventorySource;
   DateTime? _inventoryAsOf;
 
-  /// When the stock now on screen was read (a kept copy: when it was read then), for Q3's limit and the banner: never
+  /// When the stock now on screen was read (a kept copy: when it was read then), for the 3-day selling limit and the
+  /// banner: never
   /// moved by a recheck or a sale. Null until stock has loaded.
   DateTime? _stockReadAt;
 
-  /// SM-25: when the state itself last confirmed the whole stock on screen (a load the state answered, or the bulk
+  /// When the state itself last confirmed the whole stock on screen (a load the state answered, or the bulk
   /// sale's read), and when it last confirmed each lot a sale re-read (by package id). A sale within
   /// ResilienceOptions.stockRecheckAge of either needs no read of its own. Null / empty after a load the state didn't
   /// answer (Mazama's server's rows alone, a kept copy), after a load a sale ran across or that ended under lines, after
@@ -680,7 +736,7 @@ class _CartPageState extends State<CartPage> {
   /// (a line removed, a sale ended, another cart shown). Forgets the wait once the stock isn't the state's any more or
   /// the server is offline again (the next time it comes back starts it again).
   void _reloadIfServerBack() {
-    _takeRefreshedStock(); // a refreshed copy waiting for the cart to empty (Task 8b)
+    _takeRefreshedStock(); // a refreshed copy waiting for the cart to empty
     if (!_reloadWhenEmpty || !mounted) return;
     if (_inventorySource != InventorySource.state || !(widget.health?.online ?? false)) {
       _reloadWhenEmpty = false;
@@ -691,30 +747,30 @@ class _CartPageState extends State<CartPage> {
     _loadInventory();
   }
 
-  /// The cart's settings (SM-16): the built-in rules until the server's answer arrives, which may change the tax
+  /// The cart's settings: the built-in rules until the server's answer arrives, which may change the tax
   /// offered, the agreement split, the units allowed in one line and how old a draft may be to come back.
   CartSettings _cartSettings = CartSettings.fallback;
 
   /// False while [_cartSettings] are only the built-in ones because the server's (or a kept copy of them) couldn't be
-  /// read (PRICE-9): such a cart can't add tax or share a total between the two groups. False until they are read.
+  /// read: such a cart can't add tax or share a total between the two groups. False until they are read.
   bool _cartSettingsKnown = false;
   late final Future<(CartSettings, bool)> _cartSettingsFuture;
 
-  /// Task 8b: the engine's copy of this center's stock, and the newest one not taken yet.
+  /// The engine's copy of this center's stock, and the newest one not taken yet.
   StreamSubscription<DatasetRow?>? _stockWatch;
   DatasetRow? _refreshedStock;
 
   /// When a sale flow last started (any outcome: an uncertain sale may have moved stock too), a count raised when each
-  /// sale flow starts and again when it ends (a load that a send ran across never vouches for its counts: I-C and N-1,
-  /// counted rather than timed
+  /// sale flow starts and again when it ends (a load that a send ran across never vouches for its counts: counted
+  /// rather than timed
   /// so a clock that doesn't move between the two can't hide it), and how many cart switches are between their clear and
   /// their restore (their lines are about to come back): no engine copy read before that sale, or taken in that gap,
-  /// may go on screen (review of Task 8b, C1 and C2; a count, so overlapping switches each hold it, M-a).
+  /// may go on screen (a count, so overlapping switches each hold it).
   DateTime? _stockMovedAt;
   int _saleSends = 0;
   int _switchingCarts = 0;
 
-  /// When the load that failed started, so the rescue below takes only a copy read after it (review I2).
+  /// When the load that failed started, so the rescue below takes only a copy read after it.
   DateTime? _loadStartedAt;
 
   void _onStockRow(DatasetRow? row) {
@@ -728,10 +784,10 @@ class _CartPageState extends State<CartPage> {
   /// started), the copy was read after the last sale flow started, the showing cart has no lines, no sale is being
   /// sent, and no cart is being switched in.
   ///
-  /// A copy taken never counts as the state's word (review of Task 8b, C1 and C2): [_stateReadAt] and [_lotsCheckedAt]
-  /// are cleared, so the next sale reads the state itself (SM-25) whatever the copy says. Only the cart's own state read
-  /// at load, and SM-25's own rechecks, confirm stock, exactly as before this branch. [_stockReadAt] becomes the copy's
-  /// own read time (Q3's limit and its age), and a copy older than the recheck age is shown as the kept copy with its
+  /// A copy taken never counts as the state's word: [_stateReadAt] and [_lotsCheckedAt] are cleared, so the next sale
+  /// reads the state itself whatever the copy says. Only the cart's own state read at load, and the sale's own rechecks
+  /// of the state, confirm stock. [_stockReadAt] becomes the copy's own read time (the 3-day limit and its age), and a
+  /// copy older than the recheck age is shown as the kept copy with its
   /// age, as tier 3 is.
   void _takeRefreshedStock() {
     final row = _refreshedStock;
@@ -750,7 +806,7 @@ class _CartPageState extends State<CartPage> {
     }
     if (_selling || _switchingCarts > 0 || _lines.isNotEmpty) return; // waits for the cart to be empty and still
     _refreshedStock = null;
-    final packages = InventoryCacheStore.packagesFromBody(row.body);
+    final packages = centerStockPackages(row.body);
     if (packages == null) return;
     final old = stockTooOld(row.fetchedAt, widget.now(), widget.resilienceOptions.stockRecheckAge);
     setState(() {
@@ -763,12 +819,12 @@ class _CartPageState extends State<CartPage> {
               : InventorySource.live;
       _inventoryAsOf = old ? row.fetchedAt : null;
       _stockReadAt = row.fetchedAt;
-      _stateReadAt = null; // never the state's word: the next sale reads it (SM-25)
+      _stateReadAt = null; // never the state's word: the next sale reads it
       _lotsCheckedAt.clear();
     });
-    // CU-R1: a copy of the server's rows alone says which lots it holds no lab report for, as a load does. A merged
+    // A copy of the server's rows alone says which lots it holds no lab report for, as a load does. A merged
     // copy doesn't keep which of its rows the server sent (a row only the state listed has no report known, not a
-    // missing one), so it queues nothing: the cart's next own load does, with the server's own keys (review M-b).
+    // missing one), so it queues nothing: the cart's next own load does, with the server's own keys.
     if (!old && row.source == sourceServer) {
       _queueMissingCoas(packages, serverKeys: {for (final p in packages) inventoryRowKey(p)});
     }
@@ -795,12 +851,12 @@ class _CartPageState extends State<CartPage> {
 
 
   /// Adds [added]'s units to line [i] (inside a setState), unless the line would then hold more than the server's
-  /// units-per-line cap (SM-16): then the line stays as it was and the worker is told. -> whether it merged.
+  /// units-per-line cap: then the line stays as it was and the worker is told. -> whether it merged.
   bool _mergeWithinLineCap(int i, CartLine added) {
     final cap = _cartSettings.maxUnitsPerLine;
     final total = _lines[i].qty + added.qty;
-    // SM-17: never more than the lots hold either, so a sale never has units left over to put on the last lot; SALE-4:
-    // counting the product's units in the cart's other lines too, which draw from the same lots
+    // never more than the lots hold either, so a sale never has units left over to put on the last lot, counting the
+    // product's units in the cart's other lines too, which draw from the same lots
     final elsewhere = _unitsInCart(_lines[i].productGuid, except: _lines[i]);
     final message = _lines[i].group.drawRefused || added.group.drawRefused
         ? drawRefusedText(_lines[i].productGuid)
@@ -822,7 +878,7 @@ class _CartPageState extends State<CartPage> {
     return true;
   }
 
-  /// SALE-4: adds [added] as a new line (inside a setState), unless the product's units across every line would then
+  /// Adds [added] as a new line (inside a setState), unless the product's units across every line would then
   /// be more than its lots hold: then the cart stays as it was and the worker is told. -> whether it was added.
   bool _addWithinStock(CartLine added) {
     if (added.group.drawRefused) {
@@ -846,7 +902,7 @@ class _CartPageState extends State<CartPage> {
     });
   }
 
-  /// SALE-4: the units of [productGuid] the cart's lines hold, [except] that line - the lines of one product draw from
+  /// The units of [productGuid] the cart's lines hold, [except] that line - the lines of one product draw from
   /// the same lots.
   int _unitsInCart(String productGuid, {CartLine? except}) => _lines
       .where((l) => l.productGuid == productGuid && !identical(l, except))
@@ -859,7 +915,7 @@ class _CartPageState extends State<CartPage> {
     try {
       return (await widget.fetchCartSettings(widget.center.id), true);
     } catch (_) {
-      return (CartSettings.fallback, false); // PRICE-9: shown, but no tax added and no total split on them
+      return (CartSettings.fallback, false); // shown, but no tax added and no total split on them
     }
   }
 
@@ -916,7 +972,7 @@ class _CartPageState extends State<CartPage> {
     unawaited(widget.cartStore.save(widget.center.id, _lines, cartId: _cartId).catchError((e) {
       debugPrint('could not persist the draft cart (nothing the worker is doing is affected): $e');
     }));
-    _publishTimerWidget(); // the lines are the dose a running timer counts down against (MC-D14)
+    _publishTimerWidget(); // the lines are the dose a running timer counts down against
   }
 
   /// Picks back up a running session timer left over from a previous run of the app on this same center, if
@@ -990,7 +1046,7 @@ class _CartPageState extends State<CartPage> {
     _publishTimerWidget();
   }
 
-  /// Sends the home-screen widget (widget.cartTimerWidget, MC-D15) every cart's running timer as the carts list has
+  /// Sends the home-screen widget (widget.cartTimerWidget) every cart's running timer as the carts list has
   /// them (_cartSummaries: the showing cart from memory, the others from disk - every store write here is done by the
   /// time its call returns, so disk is never behind). Fire-and-forget: the widget is a convenience, never something
   /// the worker waits on.
@@ -1042,8 +1098,8 @@ class _CartPageState extends State<CartPage> {
   /// persists the result - the one place that happens, called after anything that could change the outcome: a
   /// line added, edited, or removed, the pricing mode itself, the total/rate field, or the tax choice. A no-op
   /// on the prices themselves in "each" mode (every line already carries its own hand-typed price), but still
-  /// clears any stale _pricingError left over from switching out of total/perMg, and still persists - the same
-  /// single call _persistCart used to be called separately after every one of those same events.
+  /// clears any stale _pricingError left over from switching out of total/perMg, and still persists, so every one of
+  /// those events saves the cart through this one call.
   void _recomputeCartPricing({bool persist = true}) {
     // Built once up front, used by both the mg-cap check below and (in the cart-wide modes) priceWholeCart -
     // the mg-cap check runs unconditionally, in every pricing mode including "each", since it's about raw
@@ -1058,8 +1114,9 @@ class _CartPageState extends State<CartPage> {
           qty: l.qty,
         )
     ];
-    // the cap, on the cart's own figure (one core call per change to the cart, CR-R6)
-    final capError = _lines.isEmpty ? null : _cartLimitsNow().error;
+    // the cap, counted from each lot the sale draws (one draw and one cap call per change to the cart): Sell is
+    // disabled, with these words, wherever pressing it would be refused by the cap
+    final capError = _lines.isEmpty ? null : _cartLimitsNow().refusal;
 
     if (_pricingMode == CartPricingMode.each) {
       setState(() {
@@ -1070,7 +1127,7 @@ class _CartPageState extends State<CartPage> {
       return;
     }
     final result = groups.contains(null)
-        ? CartPricingResult.err('core', coreFailedPriceMessage) // PRICE-8
+        ? CartPricingResult.err('core', coreFailedPriceMessage) // the core failed: the cart can't be priced or sold
         : priceWholeCart(
             mode: _pricingMode,
             lines: pricingLines,
@@ -1096,7 +1153,7 @@ class _CartPageState extends State<CartPage> {
   }
 
   Future<void> _maybeRenewSession() async {
-    if (_session.isDemo) return; // DM-R4: never renewed
+    if (_session.isDemo) return; // a demo session is never renewed
     if (!_session.needsRenewal(now: widget.now, margin: refreshMarginOf(widget.spec))) return;
     final client = widget.httpClientFactory();
     try {
@@ -1120,8 +1177,8 @@ class _CartPageState extends State<CartPage> {
 
   void _loadInventory() {
     _loadStartedAt = widget.now();
-    // _stockReadAt stays the time of the stock the cart's lines were built from until this load ends (Q3 holds during
-    // a Retry: review I-A); the newer check doesn't use it while no stock is shown.
+    // _stockReadAt stays the time of the stock the cart's lines were built from until this load ends (the 3-day limit
+    // holds during a Retry); the newer check doesn't use it while no stock is shown.
     setState(() {
       _inventory = null;
       _inventoryError = null;
@@ -1148,8 +1205,8 @@ class _CartPageState extends State<CartPage> {
       // The center-status check itself failing (network, Mazama's server down) says nothing about whether
       // this center is actually configured - and the ordinary tiers below already have their own state- and
       // cache-fallbacks for exactly that situation. Treating this as "assume configured" just means a worker
-      // at a genuinely unconfigured center sees the SAME tier-2/tier-3 degraded messaging they'd have gotten
-      // before this feature existed, never a hard failure caused by this one extra check.
+      // at a genuinely unconfigured center sees the ordinary tier-2/tier-3 degraded messaging, never a hard
+      // failure caused by this one extra check.
       configured = true;
     }
     if (!mounted) return;
@@ -1167,9 +1224,9 @@ class _CartPageState extends State<CartPage> {
           _lotsCheckedAt.clear();
         });
         // Only Mazama's own answer says which lots it has no lab report for: a state-only or cached load marks every
-        // lot unknown, not missing (merged_inventory.dart's _unknownCoaLabel).
+        // lot unknown, not missing (sync/stock_merge.dart's _noCoaOrLabelKnown).
         if (result.source == InventorySource.live) _queueMissingCoas(result.packages, serverKeys: result.serverKeys);
-        _takeRefreshedStock(); // an engine copy that came during the load, if newer (Task 8b)
+        _takeRefreshedStock(); // an engine copy that came during the load, if newer
       }).catchError((e) {
         if (!mounted) return;
         setState(() => _inventoryError = e.toString());
@@ -1225,16 +1282,16 @@ class _CartPageState extends State<CartPage> {
   }
 
   /// Whether a load that started when [_saleSends] was [sendsAtStart] may count as the state confirming the stock it
-  /// read (SM-25), now that it has ended: not when a sale was sent while it ran (its counts may be from before that
-  /// sale: review I-C), and not when the cart has lines (they were built from an older stock, or restored from a draft,
-  /// and carry those lots' counts: review I-D). Either way the next sale reads the state itself.
+  /// read, now that it has ended: not when a sale was sent while it ran (its counts may be from before that
+  /// sale), and not when the cart has lines (they were built from an older stock, or restored from a draft,
+  /// and carry those lots' counts). Either way the next sale reads the state itself.
   bool _vouches(int sendsAtStart) => _saleSends == sendsAtStart && _lines.isEmpty;
 
-  /// CU-R1: hands every lot of [packages] the server has no lab report for to the app's background uploader, one
+  /// Hands every lot of [packages] the server has no lab report for to the app's background uploader, one
   /// representative package each, with the state's psilocybin figure as the cart add sends it. Only rows the server
   /// itself sent count ([serverKeys]: a row only the state listed is coaAvailable false because the server was never
-  /// asked, merged_inventory.dart's _unknownCoaLabel), and a lot with any package whose report the server has is left
-  /// alone. Never in the demo (CU-R6); never awaited, never in the way of the page.
+  /// asked, sync/stock_merge.dart's _noCoaOrLabelKnown), and a lot with any package whose report the server has is left
+  /// alone. Never in the demo; never awaited, never in the way of the page.
   void _queueMissingCoas(List<Package> packages, {required Set<String>? serverKeys}) {
     if (widget.demo != null || _session.isDemo || serverKeys == null) return;
     final lots = <String, CoaUploadLot>{};
@@ -1283,12 +1340,12 @@ class _CartPageState extends State<CartPage> {
   /// When an adhoc center's stock list was last read (by [_fetchPackagesForStockPage], on the spot: nothing keeps it).
   DateTime? _adhocListReadAt;
 
-  /// StockPage's age line (PS-R7, Task 8b Step 8): when the stock it was just handed was read. A configured center's
+  /// StockPage's age line: when the stock it was just handed was read. A configured center's
   /// is the center_stock dataset's time: every load of [_resilient] keeps what it read there, with its time, before it
   /// returns, and a kept copy it falls back to has its own; an adhoc center's is its read's.
   Future<DateTime?> _stockListReadAt(int stateId) async {
     if (_centerConfigured == false) return _adhocListReadAt;
-    return (await widget.inventoryCacheStore.load(stateId))?.fetchedAt;
+    return keptCenterStock(_datasets, stateId)?.fetchedAt;
   }
 
   Future<void> _onAddPkpr() async {
@@ -1298,7 +1355,7 @@ class _CartPageState extends State<CartPage> {
       setState(() => _lookupError = 'Enter a PKPR.');
       return;
     }
-    // SM-27, SM-D22: the shared package id rule (id_patterns.g.dart, SM-D8) before anything is looked up
+    // the shared package id rule (id_patterns.g.dart) before anything is looked up
     if (!isPackageId('PKPR-$hex')) {
       setState(() => _lookupError = "PKPR-$hex isn't a package id (PKPR- and 4 to 16 letters or digits).");
       return;
@@ -1353,25 +1410,25 @@ class _CartPageState extends State<CartPage> {
     unawaited(_ensureCoaForCartLine(matches.single));
   }
 
-  /// Item 3b: for a CONFIGURED center, submits a lab report for every lot behind [group] that still has
+  /// For a CONFIGURED center, submits a lab report for every lot behind [group] that still has
   /// coaAvailable false (packages_client.dart's own Package field, carried through the merge - see
-  /// merged_inventory.dart) - so a PKPR, HB or PL a worker just sold gets its COA (and, per item 4, its label) on
+  /// sync/stock_merge.dart) - so a PKPR, HB or PL a worker just sold gets its COA (and so its label) on
   /// file without anyone having to notice and go submit it by hand later. A lot whose COA the server already has
-  /// but whose label it hasn't drawn yet is left alone (README R64): the server draws the label itself, and
+  /// but whose label it hasn't drawn yet is left alone: the server draws the label itself, and
   /// submitting would only cost two calls to the state system and an upload for an answer the server already has. A no-op for an
   /// UNCONFIGURED center: coa_data_resolver.dart's own resolveAdhocInventory already queued every lot it was missing
   /// during the load itself, and Package's own coaAvailable/labelAvailable default true for a source (the
   /// adhoc flow) that never sets them, so the `where` below simply finds nothing to do there.
   ///
   /// A lot with no [Package.lotGuid] on file (possible if the state system's own read that would have supplied
-  /// it never ran for this lot - see merged_inventory.dart's own _unknownCoaLabel/merge comment) is skipped:
+  /// it never ran for this lot - see sync/stock_merge.dart's own merge comment) is skipped:
   /// there is nothing to key the submission by. Every lot is tried independently and a failure on one (caught
   /// inside submitCoaForLot's own ConfiguredCoaSubmitError, or any other exception) never stops the rest - same
   /// "one miss is never fatal to the others" rule coa_data_resolver.dart's own worker() already follows.
   Future<void> _ensureCoaForCartLine(PkprGroup group) async {
     if (_centerConfigured != true) return;
     final needsWork = group.lots.where((l) => !l.coaAvailable && (l.lotGuid?.isNotEmpty ?? false)).where((l) {
-      // already waiting or being sent by the background uploader (specs/coa-upload): not downloaded twice at once
+      // already waiting or being sent by the background uploader: not downloaded twice at once
       try {
         return !widget.coaUploadPending(l.lotGuid!);
       } catch (_) {
@@ -1394,7 +1451,7 @@ class _CartPageState extends State<CartPage> {
         // Swallowed on purpose - see this method's own doc comment. Nothing on this screen depends on this
         // submission having worked; the next load of this center simply still sees coaAvailable/labelAvailable
         // false for this lot until it resolves, whenever and however that ends up happening. When the report
-        // couldn't reach Mazama's server, the lot is kept for a submission once it answers (README R56).
+        // couldn't reach Mazama's server, the lot is kept for a submission once it answers.
         if (isServerUnreachable(e)) {
           try {
             widget.keepCoaLotForLater(widget.center.id,
@@ -1428,15 +1485,15 @@ class _CartPageState extends State<CartPage> {
     }
   }
 
-  /// widget.drawLabel, else the real phone drawing with this page's enrichment store, so what mazama_core read from the lab
-  /// report is kept for a later read from the state system alone (phone_label.dart, SM-D31). [labelInput] is the
-  /// server's for the product (PkprGroup.labelInput, README R64): with it the label is drawn without any state call.
+  /// widget.drawLabel, else the real phone drawing with this page's datasets, so what mazama_core read from the lab
+  /// report is kept for a later read from the state system alone (phone_label.dart). [labelInput] is the
+  /// server's for the product (PkprGroup.labelInput): with it the label is drawn without any state call.
   Future<Map<String, Object?>> _drawLabel(int stateId, String pkpr,
       {required String accessToken, String strain = '', Map<String, Object?>? labelInput}) {
     final draw = widget.drawLabel;
     if (draw != null) return draw(stateId, pkpr, accessToken: accessToken, strain: strain);
     return phone_label.drawPhoneLabelSpec(stateId, pkpr,
-        accessToken: accessToken, strain: strain, now: widget.now, enrichment: widget.enrichmentStore, labelInput: labelInput);
+        accessToken: accessToken, strain: strain, now: widget.now, enrichment: _datasets, labelInput: labelInput);
   }
 
   /// Pops up [group]'s label (_labelFor) so the worker can compare it against the physical label they just read
@@ -1487,7 +1544,7 @@ class _CartPageState extends State<CartPage> {
   /// The two ways a worker can price a line - type a flat price for one unit, or type a $/mg (TPE) rate and
   /// let the group's own tpeMg (the real per-unit dose - see Package's own file comment for why that's tpeMg
   /// and never analyteWeight) work out what one unit costs (cart_pricing.dart's linePrice, the shared core's, within the
-  /// $10,000 unit cap: PRICE-3). Either way the result is a single priceCentsEach, same as CartLine has always stored -
+  /// $10,000 unit cap). Either way the result is a single priceCentsEach, the one price CartLine stores -
   /// the mode only changes how that number gets typed in.
   static const _priceEach = 'each';
   static const _pricePerMg = 'perMg';
@@ -1548,7 +1605,7 @@ class _CartPageState extends State<CartPage> {
                   Text(group.productGuid),
                   if (group.strain.isNotEmpty) Text(group.strain, style: Theme.of(context).textTheme.bodySmall),
                   Text('${group.quantity} in stock (as of last sync)', style: Theme.of(context).textTheme.bodySmall),
-                  // PS-R5 (the owner, 2026-10-30): units only the state knows, and their own figure; a note only
+                  // units only the state knows, and their own figure; a note only
                   if (group.stateOnlyNote case final note?) Text(note, style: Theme.of(context).textTheme.bodySmall),
                   const SizedBox(height: 12),
                   TextFormField(
@@ -1563,7 +1620,7 @@ class _CartPageState extends State<CartPage> {
                       if (n == null || n < 1) return 'Enter a whole number, at least 1';
                       if (n > _cartSettings.maxUnitsPerLine) return 'At most ${_cartSettings.maxUnitsPerLine} units in one line.';
                       if (n > group.quantity) return 'Only ${group.quantity} in stock - reduce the quantity.';
-                      // SALE-4: the product's units in the cart's other lines draw from the same lots. Not the line an
+                      // the product's units in the cart's other lines draw from the same lots. Not the line an
                       // add of this dose merges into (its own check, _mergeWithinLineCap), nor the line being edited.
                       final elsewhere = _lines
                           .where((l) =>
@@ -1595,7 +1652,7 @@ class _CartPageState extends State<CartPage> {
                       key: ValueKey(mode), // a fresh FormField per mode, so switching modes clears any stale error text
                       controller: priceController,
                       decoration: InputDecoration(
-                        // SM-D31: a product whose only figure is the state's psilocybin is priced per mg psilocybin
+                        // a product whose only figure is the state's psilocybin is priced per mg psilocybin
                         labelText: mode == _priceEach
                             ? 'Price each'
                             : group.mgFigure == MgFigure.psilocybin
@@ -1608,15 +1665,15 @@ class _CartPageState extends State<CartPage> {
                       // Only needed so the "= $X each" preview below recomputes live as a per-mg rate is typed -
                       // the each-mode price has nothing downstream of it to keep in sync while typing.
                       onChanged: (_) => setDialogState(() {}),
-                      // the shared core's line price (specs/core row 6): a price each, or the rate times the unit's mg
+                      // the shared core's line price: a price each, or the rate times the unit's mg
                       validator: (v) => switch (linePrice(perMg: mode == _pricePerMg, text: v ?? '', mg: group.tpeMg, core: widget.core).error) {
                             null => null,
                             'price' => 'Enter a price from \$0 to \$10,000',
-                            // SM-14, as the server: an unknown mg TPE is refused, never priced at nothing
+                            // as on the server: an unknown mg TPE is refused, never priced at nothing
                             'no_mg' => "No ${group.mgLabel} is known for this product, so it can't be priced per mg",
                             'rate' => 'Enter a rate from \$0 to \$1,000 per mg',
-                            'unit_cap' => 'A single unit would cost more than \$10,000', // PRICE-3
-                            _ => coreFailedPriceMessage, // PRICE-8
+                            'unit_cap' => 'A single unit would cost more than \$10,000', // a rate times the unit's mg over $10,000
+                            _ => coreFailedPriceMessage, // the core failed: refused, never priced
                           },
                     ),
                     if (mode == _pricePerMg &&
@@ -1658,7 +1715,7 @@ class _CartPageState extends State<CartPage> {
                   final cents = !priceEditable
                       ? (existing?.priceCentsEach ?? 0) // placeholder - _recomputeCartPricing overwrites this right after
                       : linePrice(perMg: mode == _pricePerMg, text: priceController.text, mg: group.tpeMg, core: widget.core).cents;
-                  if (cents == null) return; // the core stopped answering since the check above: not added (PRICE-8)
+                  if (cents == null) return; // the core stopped answering since the check above: not added
                   Navigator.of(context).pop(CartLine(group: group, qty: qty, priceCentsEach: cents, dose: dose));
                 },
                 child: Text(existing == null ? 'Add' : 'Save'),
@@ -1720,7 +1777,7 @@ class _CartPageState extends State<CartPage> {
   /// The scan matched on this phone (widget.localScanMatch: mazama_core through the FFI) against the stock the cart
   /// already holds, when the server's matcher failed with [error] because it couldn't answer - unreachable or
   /// failing, not a request it refused (ScanMatchError.serverUnavailable; anything that isn't a ScanMatchError is
-  /// a failure to reach it too). Null - and the caller shows the server's error as before - when the server refused
+  /// a failure to reach it too). Null - and the caller shows the server's error - when the server refused
   /// the request, no stock is loaded yet, or the core can't answer.
   ScanMatchResult? _matchScanLocally(Object error, List<String> lines) {
     if (error is ScanMatchError && !error.serverUnavailable) return null;
@@ -1782,7 +1839,7 @@ class _CartPageState extends State<CartPage> {
   }
 
   /// Asks before throwing away unsold carts - shared by switching centers and signing out, the two ways a worker can
-  /// leave this screen with unsold lines in it. Every cart counts, not only the one showing (MC-D6). Returns true if
+  /// leave this screen with unsold lines in it. Every cart counts, not only the one showing. Returns true if
   /// it's fine to proceed (no cart has lines, or the worker confirmed), false if they backed out. A confirmed discard
   /// also clears every cart's draft on disk - otherwise the very carts the worker just chose to throw away would
   /// quietly reappear the next time anyone opens this center, which would make the "Discard" button a lie.
@@ -1915,7 +1972,7 @@ class _CartPageState extends State<CartPage> {
           sessionStore: widget.sessionStore,
           fetchLicenses: widget.fetchLicenses,
           // The plain /p/packages fetch, not _resilient's: the next CartPage wraps it in its own merge and fallbacks,
-          // and the stock page merges it itself (SP-D10); a state-only or cached fallback from here would reach the
+          // and the stock page merges it itself; a state-only or cached fallback from here would reach the
           // stock page looking like the server's own rows.
           fetchCenterPackages: widget.fetchPackages,
           resilienceOptions: widget.resilienceOptions,
@@ -1939,14 +1996,15 @@ class _CartPageState extends State<CartPage> {
   }
 
   /// Null when the cart's stock is fresh enough, or still sellable as the state has it now; else why the sale must not
-  /// be sent (SM-25, SM-D20). Every lot the sale draws from ([sale], _saleDraw) is checked with _freshStockRefusal, the
-  /// sale worker's own rule, for the units all the cart's lines take from it together (SALE-4). A state system that
+  /// be sent. The state is read again only when the stock on screen is older than the recheck age (or a lot's figures
+  /// are only a phone's upload). Every lot the sale draws from ([sale], _saleDraw) is checked with _freshStockRefusal, the
+  /// sale worker's own rule, for the units all the cart's lines take from it together. A state system that
   /// can't be read refuses the sale too: it is never sent unchecked.
   Future<String?> _recheckOldStock(List<List<(Package, int)>> sale) async {
     final now = widget.now();
     final drawn = bulkDrawPerLot([sale]);
     final lots = [for (final d in drawn) d.lot];
-    // DOSE-8 (I10): a lot whose figures are only a phone's upload (/p/packages' confirmed false) is always read again
+    // a lot whose figures are only a phone's upload (/p/packages' confirmed false) is always read again
     if (!stockRecheckNeeded(lots,
         stateVouches: _confirmedRecently(_stateReadAt, now),
         lotVouched: (lot) => _confirmedRecently(_lotsCheckedAt[lot.id], now))) {
@@ -1964,7 +2022,7 @@ class _CartPageState extends State<CartPage> {
     }
     final why = _freshStockRefusal(drawn, fresh);
     if (why != null) return why;
-    // DOSE-8: the cap again, on the state's figures as they are now, for the units the sale draws from each lot
+    // the cap again, on the state's figures as they are now, for the units the sale draws from each lot
     final overCap = _freshCapRefusal([sale], fresh);
     if (overCap != null) return overCap;
     final at = widget.now();
@@ -1974,12 +2032,12 @@ class _CartPageState extends State<CartPage> {
     return null;
   }
 
-  /// SM-25 and SALE-17 (specs/core row 7): null when every lot drawn ([drawn], with the units all the lines and copies
+  /// Null when every lot drawn ([drawn], with the units all the lines and copies
   /// take from it) can still be sold as the state has it just now ([fresh], by id), else why not - the sale worker's own
   /// check, the shared core's selling.check_sale: the lot gone or another package's, no longer sellable for those
   /// units, or a value its records copy (productGuid, productType, weightPerUnit, analyteWeight) changed since the cart
   /// drew it. The cap is [_freshCapRefusal]'s. Refused when the core can't
-  /// answer (SALE-14).
+  /// answer.
   String? _freshStockRefusal(List<({Package lot, int units})> drawn, Map<int, Map<String, Object?>> fresh) {
     try {
       final reply = MazamaCore.instance.sellingCheckSale({
@@ -2008,7 +2066,7 @@ class _CartPageState extends State<CartPage> {
         'was never attempted.';
   }
 
-  /// DOSE-8: null when every copy in [perSale] is within the cap on the state's figures as just read ([fresh], by record
+  /// Null when every copy in [perSale] is within the cap on the state's figures as just read ([fresh], by record
   /// id; the lots drawn are all in it, _freshStockRefusal checked that), else why not, in the core's words. For a bulk sell
   /// (more than one copy) the first refused copy is named.
   String? _freshCapRefusal(List<List<List<(Package, int)>>> perSale, Map<int, Map<String, Object?>> fresh) {
@@ -2038,36 +2096,36 @@ class _CartPageState extends State<CartPage> {
     return null;
   }
 
-  /// Whether the state confirmed something at [at] recently enough for a sale at [now] to skip its own read (SM-25): a
+  /// Whether the state confirmed something at [at] recently enough for a sale at [now] to skip its own read: a
   /// time in the future (the clock moved back since) never counts, so the state is read then.
   bool _confirmedRecently(DateTime? at, DateTime now) =>
       at != null && !at.isAfter(now) && now.difference(at) <= widget.resilienceOptions.stockRecheckAge;
 
-  /// Q3: whether the stock on screen is too old to sell from - the one test the Sell button and the stock banner both
-  /// use: when the stock itself was read ([_stockReadAt]: a kept copy's own time; a recheck doesn't move it), on the
+  /// Whether the stock on screen is too old to sell from (older than cacheMaxAge, 3 days by default) - the one test the
+  /// Sell button and the stock banner both use: when the stock itself was read ([_stockReadAt]: a kept copy's own time; a recheck doesn't move it), on the
   /// page's clock.
   bool get _tooOldToSell {
     final readAt = _stockReadAt;
     return readAt != null && stockTooOld(readAt, widget.now(), widget.resilienceOptions.cacheMaxAge);
   }
 
-  /// The sale's draw (SM-17, SM-D29): for each line, in order, the (lot, units) it takes, every line of one product
-  /// sharing its lots (SALE-4: the server's one cart line per record; bulk sell's draw with one copy). [sale] is null
+  /// The sale's draw: for each line, in order, the (lot, units) it takes, the lot that expires first giving units
+  /// first, every line of one product sharing its lots (as the server's one cart line per record; bulk sell's draw with
+  /// one copy). [sale] is null
   /// when [shortLine], the first line the lots can't cover, is set.
   ({List<List<(Package, int)>>? sale, int? shortLine, bool coreFailed}) _saleDraw() {
     final r = allocateBulkSales([for (final l in _lines) (lots: l.group.lots, qty: l.qty)], 1);
     return (sale: r.perSale?.single, shortLine: r.shortLine, coreFailed: r.coreFailed);
   }
 
-  /// The first line the product's lots can't cover once the lines before it have drawn theirs, or null (SM-17,
-  /// SALE-4).
+  /// The first line the product's lots can't cover once the lines before it have drawn theirs, or null.
   CartLine? _overStockLine() {
     final short = _saleDraw().shortLine;
     return short == null ? null : _lines[short];
   }
 
   /// Why [over] (_overStockLine) can't be sold, in a sentence starting "Only": the line itself when it is the
-  /// product's only line, else all of the product's lines together (SALE-4).
+  /// product's only line, else all of the product's lines together.
   String _overStockText(CartLine over) {
     if (over.group.drawRefused) return drawRefusedText(over.productGuid);
     final lines = _lines.where((l) => l.productGuid == over.productGuid).toList();
@@ -2078,9 +2136,9 @@ class _CartPageState extends State<CartPage> {
   }
 
   Future<void> _onSellPressed() async {
-    // Q3 (owner, 2026-10-28): stock of any age is shown, but never sold from once it is older than cacheMaxAge.
+    // stock of any age is shown, but never sold from once it is older than cacheMaxAge.
     if (_tooOldToSell) {
-      setState(() {}); // the stock strip offers Retry, whatever tier the stock came from (M-1)
+      setState(() {}); // the stock strip offers Retry, whatever tier the stock came from
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(staleStockRefusal(widget.resilienceOptions.cacheMaxAge))));
       return;
@@ -2096,7 +2154,7 @@ class _CartPageState extends State<CartPage> {
   }
 
   /// Null when the cart can be sold as one draw (_saleDraw): every line covered by its product's lots, and the sale
-  /// within the cap on the lots it draws (DOSE-17's per-draw check for a single sale); else why not, ending "Nothing
+  /// within the cap on the lots it draws (the per-draw check bulk sell uses, for a single sale); else why not, ending "Nothing
   /// was sent.".
   String? _saleRefusal() {
     final draw = _saleDraw();
@@ -2107,7 +2165,7 @@ class _CartPageState extends State<CartPage> {
     return why == null ? null : '$why Nothing was sent.';
   }
 
-  /// The Pacific date of now, as a local calendar day for the date pickers (SALE-2). StateError when the core can't
+  /// The Pacific date of now, as a local calendar day for the date pickers. StateError when the core can't
   /// answer.
   DateTime _pacificToday() {
     final d = pacificToday(widget.now());
@@ -2126,22 +2184,63 @@ class _CartPageState extends State<CartPage> {
     return why == null ? null : saleDateRefusal(why);
   }
 
+  /// What the Sell and Bulk sell dialogs open with: the Pacific today (the default date), the days a sale may be dated
+  /// (the core's bounds, the ones check_sale_date holds, whatever the device's zone) and the cart's totals (the core's).
+  /// Null when the core can't answer one of them: a snackbar says so, starting [prefix], and nothing is sent.
+  ({DateTime today, ({DateTime earliest, DateTime latest}) days, CartTotals totals})? _saleDialogStart(String prefix) {
+    final totals = _cartTotalsNow();
+    if (totals == null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$prefix${_sentence(coreFailedTotalMessage)} Nothing was sent.')));
+      return null;
+    }
+    try {
+      final today = _pacificToday();
+      final b = saleDateBounds(today);
+      final days = (earliest: DateTime(b.earliest.year, b.earliest.month, b.earliest.day), latest: DateTime(b.latest.year, b.latest.month, b.latest.day));
+      return (today: today, days: days, totals: totals);
+    } on StateError {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$prefix${saleDateRefusal('unchecked')} Nothing was sent.')));
+      return null;
+    }
+  }
+
+  /// [text] as a sentence: its first letter capitalised, a full stop at its end.
+  static String _sentence(String text) => '${text[0].toUpperCase()}${text.substring(1)}.';
+
+  /// "N line(s), U unit(s)": the start of both dialogs' totals line, the units the core's.
+  String _linesAndUnits(CartTotals totals) => '${_lines.length} line(s), ${totals.units} unit(s)';
+
+  /// A dialog's "Sale date: ... Change" row: the platform date picker offers only [days], the core's bounds (a sale can
+  /// be backdated, a worker catching up on a busy day, up to 365 days, never postdated); [onPicked] gets the choice.
+  Widget _saleDateRow(BuildContext context, DateTime saleDate, ({DateTime earliest, DateTime latest}) days,
+          void Function(DateTime picked) onPicked) =>
+      Row(
+        children: [
+          const Text('Sale date: '),
+          Text(_saleDateText(saleDate)),
+          const Spacer(),
+          TextButton(
+            onPressed: () async {
+              final picked = await showDatePicker(
+                context: context,
+                initialDate: saleDate,
+                firstDate: days.earliest,
+                lastDate: days.latest,
+              );
+              if (picked != null) onPicked(picked);
+            },
+            child: const Text('Change'),
+          ),
+        ],
+      );
+
   /// Shows the cart's own confirmation dialog (lines/total, a sale date defaulting to today but changeable via
   /// the platform date picker) and returns the date to sell as of, or null if the worker cancelled. Doesn't
   /// touch _lines or the network itself - that's _sell's job once this returns a real date.
   Future<DateTime?> _showSellDialog() async {
-    // SALE-2: today is the Pacific date of now, for the default and the picker's bounds, whatever the device's zone
-    final DateTime today;
-    try {
-      today = _pacificToday();
-    } on StateError {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${saleDateRefusal('unchecked')} Nothing was sent.')));
-      return null;
-    }
-    var saleDate = today;
-    String fmt(DateTime d) => '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
-    final totalCents = _lines.fold<int>(0, (sum, l) => sum + l.totalCents);
-    final totalUnits = _lines.fold<int>(0, (sum, l) => sum + l.qty);
+    final start = _saleDialogStart('');
+    if (start == null) return null;
+    var saleDate = start.today;
     return showDialog<DateTime>(
       context: context,
       builder: (context) => StatefulBuilder(
@@ -2151,29 +2250,9 @@ class _CartPageState extends State<CartPage> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('${_lines.length} line(s), $totalUnits unit(s), total ${money(totalCents)}.'),
+              Text('${_linesAndUnits(start.totals)}, total ${money(start.totals.total)}.'),
               const SizedBox(height: 16),
-              Row(
-                children: [
-                  const Text('Sale date: '),
-                  Text(fmt(saleDate)),
-                  const Spacer(),
-                  TextButton(
-                    onPressed: () async {
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: saleDate,
-                        // A sale can be backdated (a worker catching up on a busy day) up to 365 days, never
-                        // postdated - the bound the core's check_sale_date holds every sale to (SALE-1, SALE-2).
-                        firstDate: today.subtract(const Duration(days: 365)),
-                        lastDate: today,
-                      );
-                      if (picked != null) setDialogState(() => saleDate = picked);
-                    },
-                    child: const Text('Change'),
-                  ),
-                ],
-              ),
+              _saleDateRow(context, saleDate, start.days, (picked) => setDialogState(() => saleDate = picked)),
             ],
           ),
           actions: [
@@ -2185,9 +2264,21 @@ class _CartPageState extends State<CartPage> {
     );
   }
 
+  /// The sign-in checked right before a send (a sale's, or each copy's of a bulk sale), renewed and saved when it has to
+  /// be: SessionExpired and SessionRenewalUnavailable go to the caller. False when the page is gone meanwhile.
+  Future<bool> _freshSessionToSend(http.Client client) async {
+    final fresh = await ensureFreshSession(_session, widget.spec, client: client, now: widget.now);
+    if (!mounted) return false;
+    if (fresh.accessToken != _session.accessToken) {
+      setState(() => _session = fresh);
+      await widget.sessionStore.save(fresh.toJson());
+    }
+    return true;
+  }
+
   /// Turns every cart line into one or more sale records: each line's units from the lots [sale] (_saleDraw) draws
-  /// them from - the lot that expires first gives units first (SM-17, SM-D29), the lines of one product sharing its
-  /// lots (SALE-4) - at the line's price and dose. A worker never sees the split: the cart shows one line per PKPR and
+  /// them from - the lot that expires first gives units first, the lines of one product sharing its
+  /// lots - at the line's price and dose. A worker never sees the split: the cart shows one line per PKPR and
   /// dose. A line beyond every lot never gets this far (_saleRefusal), so nothing is ever put on the last lot. The
   /// same records bulk sell makes for each copy (_bulkSaleRecords).
   List<Map<String, Object?>> _buildSaleRecords(DateTime saleDate, List<List<(Package, int)>> sale) =>
@@ -2200,7 +2291,7 @@ class _CartPageState extends State<CartPage> {
   /// just clear and move on" or even "safe to just try again" without first checking which kind of failure it
   /// was.
   Future<void> _sell(DateTime saleDate) async {
-    // One draw for everything below: the cap, the stock re-read and the records (SALE-4). Checked again here, since the
+    // One draw for everything below: the cap, the stock re-read and the records. Checked again here, since the
     // cart may have changed while the confirmation was open; refused, nothing is sent.
     final refusal = _saleRefusal();
     final sale = _saleDraw().sale;
@@ -2213,8 +2304,9 @@ class _CartPageState extends State<CartPage> {
     final client = widget.httpClientFactory();
     // Built first inside the try, before anything that can throw SessionExpired - purely local (reads _lines,
     // widget.center, saleDate), so it is ready in time to report to _queueFailedSale if the session can't be renewed
-    // below. A record the core refuses to build (SALE-10, SALE-13), a date it refuses (SALE-1) or a core that can't
-    // answer (SALE-14) ends here as not sent, with its words, and the spinner stops (specs/core row 7).
+    // below. A record the core refuses to build (a price or quantity out of bounds, a state record missing what a sale
+    // record copies), a date it refuses (in the future, or more than 365 days back) or a core that can't answer ends
+    // here as not sent, with its words, and the spinner stops.
     var records = const <Map<String, Object?>>[];
     // Set just before the sale flow runs: an unexpected failure before then can't have sent anything.
     var saleFlowStarted = false;
@@ -2226,14 +2318,9 @@ class _CartPageState extends State<CartPage> {
       // A write is exactly the kind of call ensureFreshSession exists to protect, and it's too important to
       // leave entirely to the periodic timer's own 30-second cadence lining up in time - check again right
       // before this one specifically.
-      final fresh = await ensureFreshSession(_session, widget.spec, client: client, now: widget.now);
-      if (!mounted) return;
-      if (fresh.accessToken != _session.accessToken) {
-        setState(() => _session = fresh);
-        await widget.sessionStore.save(fresh.toJson());
-      }
+      if (!await _freshSessionToSend(client)) return;
 
-      // SM-25: stock read longer ago than stockRecheckAge is read from the state again, and a line that is gone or
+      // stock read longer ago than stockRecheckAge is read from the state again, and a line that is gone or
       // can't be sold any more is refused with the sale worker's own words. Nothing has been sent at this point.
       final stockRefusal = await _recheckOldStock(sale);
       if (stockRefusal != null) {
@@ -2246,7 +2333,7 @@ class _CartPageState extends State<CartPage> {
 
       final saleSpec = await widget.saleSpec;
       saleFlowStarted = true;
-      _stockMovedAt = widget.now(); // the stock may move now: no copy read before this goes on screen (C1)
+      _stockMovedAt = widget.now(); // the stock may move now: no copy read before this goes on screen
       _saleSends++;
       final result = await runFlow(saleSpec, 'sale', {'access_token': _session.accessToken, 'records': records},
           client: client, allowedHosts: currentAllowedHosts());
@@ -2285,24 +2372,24 @@ class _CartPageState extends State<CartPage> {
       // depends on being reachable at all (see packages_client.dart/label_client.dart's own file comments).
       saleConfirmed = true;
       unawaited(_logSaleAttribution(records, created));
-      // The stock has moved: the next sale reads the state first (SM-25), as after a bulk sale (MC-D13). _stockReadAt
-      // stays the stock's own read time: Q3 still refuses it once it is too old (review I-A).
+      // The stock has moved: the next sale reads the state first, as after a bulk sale. _stockReadAt
+      // stays the stock's own read time: the 3-day limit still refuses it once it is too old.
       _stateReadAt = null;
       _lotsCheckedAt.clear();
 
       if (!mounted) return;
-      // the client's session timed by what the records sent (DOSE-17), never less than the cart's own figure
+      // the client's session timed by what the records sent, from the figures of the lots they draw
       _rememberSoldDose(_cartId, _lines, [sale]);
       setState(() => _lines.clear());
       _publishTimerWidget();
-      // PS-R6: the center's stock is asked to refresh once the cart is cleared, never awaited (the sale is recorded).
+      // the center's stock is asked to refresh once the cart is cleared, never awaited (the sale is recorded).
       try {
         widget.requestStockRefresh(widget.center.id);
       } catch (e) {
         debugPrint('the stock refresh could not be asked for (the sale itself was not affected): $e');
       }
       // The sale just succeeded, so whatever draft was on disk for this cart is stale the instant this
-      // runs - nothing left in it should ever come back on a future restore. Only this cart (MC-D7).
+      // runs - nothing left in it should ever come back on a future restore. Only this cart.
       await widget.cartStore.clear(cartId: _cartId);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -2366,7 +2453,7 @@ class _CartPageState extends State<CartPage> {
       // doubt, so no dialog suggests it might be.
       if (saleConfirmed) return;
       final outcome = saleFlowStarted ? SaleOutcome.uncertain : SaleOutcome.notSent;
-      // no records yet (the core couldn't build them, SALE-14): nothing to report, nothing was sent
+      // no records yet (the core couldn't build them): nothing to report, nothing was sent
       if (records.isNotEmpty) {
         unawaited(_queueFailedSale(records, '[${outcome.name}] unexpected ${e.runtimeType} while selling'));
       }
@@ -2382,8 +2469,8 @@ class _CartPageState extends State<CartPage> {
     } finally {
       client.close();
       if (saleFlowStarted) {
-        // whatever the outcome, the stock may have moved: the next sale reads the state first, as the bulk sale (I-E);
-        // and a load that started while this was being sent (so after the count above went up) doesn't vouch (N-1)
+        // whatever the outcome, the stock may have moved: the next sale reads the state first, as the bulk sale;
+        // and a load that started while this was being sent (so after the count above went up) doesn't vouch
         _saleSends++;
         _stateReadAt = null;
         _lotsCheckedAt.clear();
@@ -2431,7 +2518,7 @@ class _CartPageState extends State<CartPage> {
   /// changed server-side, so the worker can fix whatever was wrong and hit Sell again; an uncertain one means
   /// this device genuinely doesn't know, so the only safe move is to go check before anyone touches Sell again.
   /// [outcome] always comes from the caller, which knows what happened (classifySaleFailure for a FlowError);
-  /// it is never re-derived from [message]'s wording (SM-12).
+  /// it is never re-derived from [message]'s wording.
   Future<void> _showSaleFailureDialog(String message, {required SaleOutcome outcome}) {
     final notSent = outcome == SaleOutcome.notSent;
     return showDialog<void>(
@@ -2448,7 +2535,7 @@ class _CartPageState extends State<CartPage> {
     );
   }
 
-  // ---- Several carts (specs/multi-cart) ----
+  // ---- Several carts ----
 
   /// The cart button at the top right: tap for the carts sheet, long-press to bulk sell the showing cart. Its badge
   /// says how many carts there are once there's more than one. An InkResponse rather than an IconButton because an
@@ -2477,7 +2564,7 @@ class _CartPageState extends State<CartPage> {
   }
 
   /// Every cart with how many lines it has, its timer if one is running, and the dose its session is timed against
-  /// (MC-D14): its lines, or - once it's been sold and is empty - what it sold. The showing cart's lines and timer
+  /// its lines, or - once it's been sold and is empty - what it sold. The showing cart's lines and timer
   /// come from memory, the others' from disk. A saved timer past sessionTimerMaxAge counts as not running, as it would
   /// when that cart is shown.
   Future<List<_CartSummary>> _cartSummaries() async {
@@ -2490,7 +2577,7 @@ class _CartPageState extends State<CartPage> {
       var start = showing ? _sessionTimerStart : await widget.sessionTimerStore.load(widget.center.id, cartId: c.id);
       if (start != null && widget.now().difference(start) >= sessionTimerMaxAge) start = null;
       final SessionDose? dose = lines.isNotEmpty
-          ? sessionDoseOf(showing ? _cartLimitsNow() : cartSaleLimits(lines), booster: lines.any((l) => l.dose == doseSecondary))
+          ? sessionDoseOf(showing ? _cartLimitsNow().limits : cartSaleLimits(lines), booster: lines.any((l) => l.dose == doseSecondary))
           : await widget.sessionTimerStore
               .loadSoldSession(widget.center.id, cartId: c.id, maxAge: sessionTimerMaxAge, now: widget.now);
       out.add((slot: c, lines: lines.length, timerStart: start, dose: dose));
@@ -2498,21 +2585,18 @@ class _CartPageState extends State<CartPage> {
     return out;
   }
 
-  /// MC-D14: remembers what cart [cartId] just sold ([lines], one sale's worth, drawn as [perSale]: one copy, or every
+  /// Remembers what cart [cartId] just sold ([lines], one sale's worth, drawn as [perSale]: one copy, or every
   /// copy of a bulk sell), so the carts list can still time its client's session once the sold cart is empty: the
-  /// largest copy's mg and session length on the lots it drew (DOSE-17), never less than the cart's own figure, all the
-  /// core's (one call). Fire-and-forget: the sale is already done.
+  /// largest copy's mg and session length on the lots it drew (never the product's first-lot figure),
+  /// all the core's (one call). Fire-and-forget: the sale is already done.
   void _rememberSoldDose(String cartId, List<CartLine> lines, List<List<List<(Package, int)>>> perSale) {
-    final verdicts = [
-      ...saleLimits(drawnSaleLimitLines(perSale, [for (final l in lines) l.dose])),
-      cartSaleLimits(lines),
-    ];
+    final verdicts = saleLimits(drawnSaleLimitLines(perSale, [for (final l in lines) l.dose]));
     var mg = 0.0;
     int? minutes;
     for (final v in verdicts) {
       final m = v.psilocybinMgValue;
       if (m != null && m > mg) mg = m;
-      final s = sessionDoseOf(v, booster: false).minutes; // the longest when the core couldn't answer (DOSE-7)
+      final s = sessionDoseOf(v, booster: false).minutes; // the longest (6 hours) when the core couldn't answer
       if (s != null && (minutes == null || s > minutes)) minutes = s;
     }
     unawaited(widget.sessionTimerStore
@@ -2621,7 +2705,7 @@ class _CartPageState extends State<CartPage> {
   }
 
   /// Shows the cart [slots] says is showing, in place of the one showing now: this cart's pricing controls are kept
-  /// for when it comes back (MC-D4), its lines and timer are already on disk (saved as they changed), and the other
+  /// for when it comes back, its lines and timer are already on disk (saved as they changed), and the other
   /// cart's lines, timer and pricing controls are brought in. Also how a new cart is shown and how the cart after a
   /// deleted one is.
   Future<void> _showCart(CartSlots slots) async {
@@ -2629,7 +2713,7 @@ class _CartPageState extends State<CartPage> {
     final pricing = _pricingByCart[slots.activeId] ?? _CartPricing(widget.initialPricingMode, '', '', CartTaxMode.included);
     _sessionTimerTicker?.cancel();
     _sessionTimerTicker = null;
-    _switchingCarts++; // C2: no copy goes on screen between this clear and the restore below
+    _switchingCarts++; // no copy goes on screen between this clear and the restore below
     setState(() {
       _slots = slots;
       _lines.clear();
@@ -2655,7 +2739,7 @@ class _CartPageState extends State<CartPage> {
     if (back.isNotEmpty) {
       setState(() {
         _lines.addAll(back);
-        // the other cart's lines carry the lots as they were when they were added: no read since vouches for them (I-D)
+        // the other cart's lines carry the lots as they were when they were added: no read since vouches for them
         _stateReadAt = null;
         _lotsCheckedAt.clear();
       });
@@ -2665,7 +2749,7 @@ class _CartPageState extends State<CartPage> {
     await _restoreSessionTimer();
   }
 
-  /// The name dialog for a new cart and for renaming one (MC-D3: 1 to 30 characters, unique here). -> the trimmed name,
+  /// The name dialog for a new cart and for renaming one (1 to 30 characters, unique here). -> the trimmed name,
   /// or null when cancelled.
   Future<String?> _askCartName({required String title, required String initial, String? forId}) {
     final controller = TextEditingController(text: initial);
@@ -2715,7 +2799,7 @@ class _CartPageState extends State<CartPage> {
     _publishTimerWidget();
   }
 
-  /// MC-D5: asks first when the cart has lines; clears its draft and timer; the last cart is never deleted.
+  /// Deletes a cart: asks first when the cart has lines; clears its draft and timer; the last cart is never deleted.
   Future<void> _onDeleteCart(String id, int lines) async {
     final slot = _slots.byId(id);
     if (slot == null || !_slots.canRemove) return;
@@ -2748,13 +2832,15 @@ class _CartPageState extends State<CartPage> {
     _pricingByCart.remove(id);
   }
 
-  // ---- Bulk sell (specs/multi-cart MC-D8 to MC-D13) ----
+  // ---- Bulk sell: the showing cart sold as N copies of one sale ----
 
   /// Long-press on the cart button (or "Bulk sell…" in the carts sheet): the showing cart sold as the same sale N
   /// times. Refused up front for the same reasons Sell is disabled or refused.
   Future<void> _onBulkSellPressed() async {
     if (_selling) return;
-    final why = _lines.isEmpty ? 'add items to the cart first.' : (_pricingError ?? _capError);
+    final why = _lines.isEmpty
+        ? 'add items to the cart first.'
+        : (_pricingError ?? _capError ?? (_cartTotalsNow() == null ? coreFailedTotalMessage : null));
     final over = why == null ? _overStockLine() : null;
     final overText = over == null ? null : _overStockText(over);
     final refusal = why ?? (overText == null ? null : '${overText[0].toLowerCase()}${overText.substring(1)}');
@@ -2767,38 +2853,30 @@ class _CartPageState extends State<CartPage> {
     await _bulkSell(choice.date, choice.perSale);
   }
 
-  /// The bulk sell dialog (MC-R5): how many sales, the sale date (as Sell's dialog), what one sale and all of them come
+  /// The bulk sell dialog: how many sales, the sale date (as Sell's dialog), what one sale and all of them come
   /// to, and whether there's stock for them all (allocateBulkSales). -> the date and every copy's lot draw, or null when
   /// cancelled.
   Future<({DateTime date, List<List<List<(Package, int)>>> perSale})?> _showBulkSellDialog() async {
-    final DateTime today; // SALE-2, as Sell's own dialog
-    try {
-      today = _pacificToday();
-    } on StateError {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Bulk sell: ${saleDateRefusal('unchecked')} Nothing was sent.')));
-      return null;
-    }
-    var saleDate = today;
-    String fmt(DateTime d) => '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+    final start = _saleDialogStart('Bulk sell: '); // as Sell's own dialog
+    if (start == null) return null;
+    var saleDate = start.today;
     final countController = TextEditingController(text: '2');
     final formKey = GlobalKey<FormState>();
-    final perSaleCents = _lines.fold<int>(0, (sum, l) => sum + l.totalCents);
-    final perSaleUnits = _lines.fold<int>(0, (sum, l) => sum + l.qty);
+    final totalLines = _totalLinesNow();
     final List<BulkLine> bulkLines = [for (final l in _lines) (lots: l.group.lots, qty: l.qty)];
     String? countError(String? text) {
       final n = int.tryParse((text ?? '').trim());
       if (n == null || n < 1) return 'Enter a whole number, at least 1';
       if (n > maxBulkSales) return 'At most $maxBulkSales sales at once.';
       final draw = allocateBulkSales(bulkLines, n);
-      if (draw.coreFailed) return drawCoreFailedText; // review M6: the core failed, the stock isn't short
+      if (draw.coreFailed) return drawCoreFailedText; // the core failed, the stock isn't short
       final short = draw.shortLine;
       if (short != null) {
         final guid = _lines[short].productGuid;
         final perSale = _lines.where((l) => l.productGuid == guid).fold<int>(0, (sum, l) => sum + l.qty);
         return 'Only ${_lines[short].group.quantity} of $guid in stock: $n sales need ${perSale * n}.';
       }
-      // DOSE-17: every copy within the cap on the lots it draws, not only the first copy's
+      // every copy within the cap on the lots it draws, not only the first copy's
       return bulkCapRefusal(draw.perSale!);
     }
 
@@ -2807,6 +2885,8 @@ class _CartPageState extends State<CartPage> {
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) {
           final n = countError(countController.text) == null ? int.parse(countController.text.trim()) : null;
+          // all n sales, the core's (null when it can't add them up: nothing can be confirmed)
+          final all = n == null ? null : cartTotals(totalLines, sales: n, core: widget.core);
           return AlertDialog(
             scrollable: true,
             title: Text('Bulk sell ${_slots.active.name}'),
@@ -2817,7 +2897,7 @@ class _CartPageState extends State<CartPage> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Each sale: ${_lines.length} line(s), $perSaleUnits unit(s), ${money(perSaleCents)}.'),
+                  Text('Each sale: ${_linesAndUnits(start.totals)}, ${money(start.totals.total)}.'),
                   const SizedBox(height: 4),
                   Text(
                     'Every sale is recorded separately with the state system and gets its own sale number.',
@@ -2835,37 +2915,21 @@ class _CartPageState extends State<CartPage> {
                   if (n != null)
                     Padding(
                       padding: const EdgeInsets.only(top: 8),
-                      child: Text('All $n sales: ${perSaleUnits * n} unit(s), ${money(perSaleCents * n)}.',
+                      child: Text(
+                          all == null
+                              ? _sentence(coreFailedTotalMessage)
+                              : 'All $n sales: ${all.allUnits} unit(s), ${money(all.allTotal)}.',
                           style: const TextStyle(fontWeight: FontWeight.bold)),
                     ),
                   const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      const Text('Sale date: '),
-                      Text(fmt(saleDate)),
-                      const Spacer(),
-                      TextButton(
-                        onPressed: () async {
-                          final picked = await showDatePicker(
-                            context: context,
-                            initialDate: saleDate,
-                            // the same bounds as Sell's own dialog: backdated up to a year, never postdated
-                            firstDate: today.subtract(const Duration(days: 365)),
-                            lastDate: today,
-                          );
-                          if (picked != null) setDialogState(() => saleDate = picked);
-                        },
-                        child: const Text('Change'),
-                      ),
-                    ],
-                  ),
+                  _saleDateRow(context, saleDate, start.days, (picked) => setDialogState(() => saleDate = picked)),
                 ],
               ),
             ),
             actions: [
               TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
               FilledButton(
-                onPressed: n == null
+                onPressed: n == null || all == null
                     ? null
                     : () {
                         if (!formKey.currentState!.validate()) return;
@@ -2896,7 +2960,7 @@ class _CartPageState extends State<CartPage> {
             ),
       ];
 
-  /// MC-D11: the stock is always read again before a bulk sale, and every lot checked for everything all the copies
+  /// The stock is always read again before a bulk sale, whatever its age, and every lot checked for everything all the copies
   /// draw from it, with the sale worker's rule. Null when it can all be sold; else why not. A state system that can't
   /// be read refuses the bulk sale: it is never sent unchecked.
   Future<String?> _recheckBulkStock(List<List<List<(Package, int)>>> perSale) async {
@@ -2912,19 +2976,19 @@ class _CartPageState extends State<CartPage> {
     }
     final why = _freshStockRefusal(bulkDrawPerLot(perSale), fresh);
     if (why != null) return why;
-    // DOSE-8, DOSE-17: every copy within the cap on the state's figures as they are now
+    // every copy within the cap on the state's figures as they are now
     final overCap = _freshCapRefusal(perSale, fresh);
     if (overCap != null) return overCap;
-    // (nothing stamped: MC-D13 makes the next sale read the state again in any case)
+    // (nothing stamped: after a bulk sale the next sale reads the state again in any case)
     return null;
   }
 
-  /// Sends the copies one at a time (MC-D12): the sign-in checked before each, the stock read again before the first.
+  /// Sends the copies one at a time: the sign-in checked before each, the stock read again before the first.
   /// The first copy not confirmed stops the run; it is queued for review the way a failed single sale is, and the
   /// copies after it are never attempted. Nothing is ever retried. All confirmed: the cart is cleared. Otherwise the
-  /// cart is kept and _showBulkResultDialog says what happened (MC-D13).
+  /// cart is kept and _showBulkResultDialog says what happened.
   Future<void> _bulkSell(DateTime saleDate, List<List<List<(Package, int)>>> perSale) async {
-    // DOSE-17: no copy goes over the cap on the lots it draws (the dialog refuses this already; checked again here so
+    // no copy goes over the cap on the lots it draws (the dialog refuses this already; checked again here so
     // nothing is ever sent past it)
     final overCap = bulkCapRefusal(perSale);
     if (overCap != null) {
@@ -2933,8 +2997,8 @@ class _CartPageState extends State<CartPage> {
     }
     final count = perSale.length;
     final cartId = _cartId;
-    // specs/core row 7: every copy's records built (and the date checked) before anything is sent; a refusal or a core
-    // that can't answer stops the whole bulk sale here, nothing sent (SALE-1, SALE-10, SALE-13, SALE-14)
+    // every copy's records built (and the date checked) before anything is sent; a refusal or a core
+    // that can't answer stops the whole bulk sale here, nothing sent
     final List<List<Map<String, Object?>>> sales;
     try {
       final dateRefusal = _saleDateRefusal(saleDate);
@@ -2960,12 +3024,7 @@ class _CartPageState extends State<CartPage> {
         final tag = '[bulk ${k + 1} of $count]';
         var flowStarted = false;
         try {
-          final fresh = await ensureFreshSession(_session, widget.spec, client: client, now: widget.now);
-          if (!mounted) return;
-          if (fresh.accessToken != _session.accessToken) {
-            setState(() => _session = fresh);
-            await widget.sessionStore.save(fresh.toJson());
-          }
+          if (!await _freshSessionToSend(client)) return;
           if (k == 0) {
             final refusal = await _recheckBulkStock(perSale);
             if (refusal != null) {
@@ -3021,21 +3080,21 @@ class _CartPageState extends State<CartPage> {
       }
     } finally {
       client.close();
-      // MC-D13: stock has moved (or may have), so the next sale reads it again first; and a load that started while the
-      // last copy was being sent doesn't vouch for what it read (N-1)
+      // stock has moved (or may have), so the next sale reads it again first; and a load that started while the
+      // last copy was being sent doesn't vouch for what it read
       _saleSends++;
       if (mounted) {
         setState(() {
           _selling = false;
           _stateReadAt = null;
-          _lotsCheckedAt.clear(); // _stockReadAt stays the stock's own read time, for Q3 (review I-A)
+          _lotsCheckedAt.clear(); // _stockReadAt stays the stock's own read time, for the 3-day limit
         });
       }
     }
     if (!mounted) return;
     if (recorded == count) {
-      // one client's dose, timed by the largest copy (DOSE-17: a later copy may draw stronger lots), never less than
-      // the cart's own figure
+      // one client's dose, timed by the largest copy (a later copy may draw stronger or weaker lots), each counted from
+      // the figures of the lots it drew
       _rememberSoldDose(cartId, _lines, perSale);
       setState(() => _lines.clear());
       _publishTimerWidget();
@@ -3055,8 +3114,8 @@ class _CartPageState extends State<CartPage> {
     }
   }
 
-  /// What a bulk sale that stopped part way did (MC-D13), in the single sale's own words for the copy that stopped it
-  /// (_showSaleFailureDialog, SM-12): not sent and safe, or maybe recorded and NOT safe to just send again.
+  /// What a bulk sale that stopped part way did, in the single sale's own words for the copy that stopped it
+  /// (_showSaleFailureDialog): not sent and safe, or maybe recorded and NOT safe to just send again.
   Future<void> _showBulkResultDialog(
       {required int recorded, required int count, required String message, required SaleOutcome outcome}) {
     final notSent = outcome == SaleOutcome.notSent;
@@ -3090,7 +3149,7 @@ class _CartPageState extends State<CartPage> {
 
   /// Builds the PKPR entry field as a RawAutocomplete, reusing this state's own controller/focus node (so
   /// _onAddPkpr, the Add button, and _pkprFocus.requestFocus() after a successful add all keep working exactly
-  /// as before) and suggesting one merged PKPR per entry (groupByPkpr - the server sends a separate row per
+  /// as they do) and suggesting one merged PKPR per entry (groupByPkpr - the server sends a separate row per
   /// underlying lot/transfer, and a worker typing a PKPR has no reason to see the same one listed twice),
   /// matched against the PKPR's own hex part so "pkpr-" (typed or not, any case) never has to be typed to get a
   /// match.
@@ -3175,7 +3234,7 @@ class _CartPageState extends State<CartPage> {
                       labelText: _pricingMode == CartPricingMode.total
                           ? 'Total price for the whole cart'
                           : _lines.any((l) => l.group.mgFigure == MgFigure.psilocybin)
-                              // SM-D31: some lines' only figure is the state's psilocybin, and are priced by it
+                              // some lines' only figure is the state's psilocybin, and are priced by it
                               ? 'Price per mg (TPE; mg psilocybin where no TPE is known), whole cart'
                               : 'Price per mg (TPE), whole cart',
                       prefixText: '\$',
@@ -3218,15 +3277,13 @@ class _CartPageState extends State<CartPage> {
   /// both manufacturer-agreement groups, the same condition mazama_sales' own cart.html gates its own
   /// breakdown row on (`v.both`), so a cart with only one group doesn't show a pointless $0 row for the other.
   Widget _groupBreakdown() {
-    final groupOfLine = [for (final l in _lines) groupOf(l.productType, core: widget.core)];
-    final groups = groupOfLine.toSet();
-    if (groups.length != 2 || groups.contains(null)) return const SizedBox.shrink();
-    int totalFor(String g) =>
-        [for (final (i, l) in _lines.indexed) if (groupOfLine[i] == g) l.totalCents].fold<int>(0, (sum, c) => sum + c);
+    final groups = {for (final l in _totalLinesNow()) l.group};
+    final totals = _cartTotalsNow();
+    if (groups.length != 2 || groups.contains(null) || totals == null) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.only(top: 4),
       child: Text(
-        'Edibles + extracts ${money(totalFor('A'))} · Whole / dried / homogenized ${money(totalFor('B'))}'
+        'Edibles + extracts ${money(totals.groupA)} · Whole / dried / homogenized ${money(totals.groupB)}'
         ' (split ${_cartSettings.agreementEdible}:${_cartSettings.agreementDried} by manufacturer agreement)',
         style: Theme.of(context).textTheme.bodySmall,
       ),
@@ -3251,7 +3308,9 @@ class _CartPageState extends State<CartPage> {
   @override
   Widget build(BuildContext context) {
     _reportDraftCount();
-    final totalCents = _lines.fold<int>(0, (sum, l) => sum + l.totalCents);
+    // the cart's totals, the core's; none (and no Sell) when it can't add the cart up
+    final totals = _cartTotalsNow();
+    String moneyOrNone(int? cents) => cents == null ? '—' : money(cents);
     return Scaffold(
       appBar: AppBar(
         title: Column(
@@ -3317,7 +3376,7 @@ class _CartPageState extends State<CartPage> {
                         final strainLabel = l.group.strain.isEmpty ? '' : '${l.group.strain} · ';
                         final summary = Text(
                             '${l.productGuid} · $strainLabel${l.qty} x ${money(l.priceCentsEach)} · ${l.group.tpeMg}${l.group.mgLabel} each$doseLabel');
-                        // PS-R5 (the owner, 2026-10-30): the line stays priced and capped by the product's figure; units
+                        // the line stays priced and capped by the product's figure; units
                         // only the state knows are noted under it with their own figure
                         final stateOnlyNote = l.group.stateOnlyNote;
                         return ListTile(
@@ -3333,7 +3392,7 @@ class _CartPageState extends State<CartPage> {
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Text(money(l.totalCents)),
+                              Text(moneyOrNone(totals?.lineTotals[i])),
                               IconButton(
                                   onPressed: () => _onEditLine(i), icon: const Icon(Icons.edit_outlined), tooltip: 'Edit'),
                               IconButton(onPressed: () => _removeLine(i), icon: const Icon(Icons.close), tooltip: 'Remove'),
@@ -3355,6 +3414,11 @@ class _CartPageState extends State<CartPage> {
                       padding: const EdgeInsets.only(bottom: 8),
                       child: Text(_capError!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
                     ),
+                  if (totals == null && _lines.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Text(_sentence(coreFailedTotalMessage), style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                    ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -3362,12 +3426,14 @@ class _CartPageState extends State<CartPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text('Total', style: TextStyle(fontWeight: FontWeight.bold)),
-                          Text(money(totalCents), style: const TextStyle(fontWeight: FontWeight.bold)),
+                          Text(moneyOrNone(totals?.total), style: const TextStyle(fontWeight: FontWeight.bold)),
                         ],
                       ),
                       FilledButton(
                         onPressed:
-                            (_lines.isEmpty || _selling || _pricingError != null || _capError != null) ? null : _onSellPressed,
+                            (_lines.isEmpty || _selling || _pricingError != null || _capError != null || totals == null)
+                                ? null
+                                : _onSellPressed,
                         child: _selling
                             ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
                             : const Text('Sell'),
@@ -3383,8 +3449,8 @@ class _CartPageState extends State<CartPage> {
     );
   }
 
-  /// The app bar's second line: the cart's name and, once stock is shown, its age (specs/phone-sync PS-R7, PS-D5, Task 8b
-  /// Step 8): when the stock on screen was read ([_stockReadAt], Q3's own time). It shares the name's line so the
+  /// The app bar's second line: the cart's name and, once stock is shown, its age: when the stock on screen was read
+  /// ([_stockReadAt], the time the 3-day limit counts from). It shares the name's line so the
   /// selling screen is no taller: a row of its own above the dose summary pushed the cart's lines under Total/Sell.
   /// The name keeps up to [_cartNameMaxWidth]; the age takes what is left, shortened with an ellipsis on a narrow phone.
   Widget _cartNameLine() {
@@ -3452,8 +3518,8 @@ class _CartPageState extends State<CartPage> {
   /// the cache or the adhoc path - see lib/sync/center_stock.dart's own file comment for what each fallback step can and
   /// can't promise. Null (nothing shown) for the live, ordinary case, and for stock read from the state system alone
   /// ([InventorySource.state]): that only means Mazama's server didn't answer, which the app-wide banner says
-  /// (server_link.dart, README R87); each line still says which figures are the state's (Package.mgFigure) - unless
-  /// that stock is too old to sell from (Q3), when it offers Retry (review M-1).
+  /// (server_link.dart); each line still says which figures are the state's (Package.mgFigure) - unless
+  /// that stock is too old to sell from, when it offers Retry.
   Widget? _degradedInventoryNotice() {
     final source = _inventorySource;
     if (source == null) return null;
@@ -3462,7 +3528,7 @@ class _CartPageState extends State<CartPage> {
     final String text;
     IconData icon = Icons.cloud_off;
     if (ownRead) {
-      // Q3 refuses this stock, and its refusal says Retry: the strip offers it, as the kept copy's does (review M-1)
+      // the 3-day limit refuses this stock, and its refusal says Retry: the strip offers it, as the kept copy's does
       icon = Icons.history;
       text = 'The stock on this phone is too old to sell from. Retry to load it again.';
     } else if (source == InventorySource.adhoc) {
@@ -3485,7 +3551,7 @@ class _CartPageState extends State<CartPage> {
     } else {
       final asOf = _inventoryAsOf;
       final age = asOf == null ? '' : ' from ${_formatAge(widget.now().difference(asOf))} ago';
-      // Mazama's server didn't answer either: the app-wide banner says that (README R87); this is about the state.
+      // Mazama's server didn't answer either: the app-wide banner says that; this is about the state.
       final tooOld = _tooOldToSell;
       text = 'The state system couldn\'t be reached - showing the last inventory '
           'downloaded$age. Counts may no longer be accurate.${cachedEstimatesNote(_inventory ?? const [])}'
@@ -3519,8 +3585,7 @@ class _CartPageState extends State<CartPage> {
     return '$minutes minute${minutes == 1 ? '' : 's'}';
   }
 
-  /// Replaces the old static "N packaged product(s) in this center's inventory" banner line with the cart's
-  /// own running dose total - the figure a worker actually needs while building a sale, not a static inventory
+  /// The cart's own running dose total - the figure a worker actually needs while building a sale, not a static inventory
   /// count. Shows mg TPE (the real per-unit dose, l.group.tpeMg) and mg raw psilocybin (weightPerUnit x
   /// analyteWeight - mg TPE can run well above the raw psilocybin content alone, which is why these are two different
   /// numbers, and why only the second one is what the service-center duration table and the 50mg cap both
@@ -3530,17 +3595,17 @@ class _CartPageState extends State<CartPage> {
   Widget _cartDoseSummary() {
     if (_lines.isEmpty) {
       // Nothing to total yet - the empty-cart message below covers this. A timer still running (the cart was just sold
-      // and its client's session goes on) stays in view, so it can be seen and reset (MC-D14).
+      // and its client's session goes on) stays in view, so it can be seen and reset.
       return _sessionTimerStart == null ? const SizedBox.shrink() : Align(alignment: Alignment.centerLeft, child: _sessionTimerRow());
     }
-    // SM-D31: a line whose only figure is the state's psilocybin adds no TPE; the TPE total then says it leaves them out
+    // a line whose only figure is the state's psilocybin adds no TPE; the TPE total then says it leaves them out
     final tpeLines = _lines.where((l) => l.group.mgFigure == MgFigure.tpe);
     final tpeMg = tpeLines.fold<double>(0, (sum, l) => sum + l.group.tpeMg * l.qty);
     final tpePart = tpeLines.isEmpty
         ? 'TPE not known'
         : '${tpeMg.toStringAsFixed(1)} mg TPE${tpeLines.length < _lines.length ? ' (where known)' : ''}';
-    // the core's answer for the cart's own figure, asked again only when the cart's lines change
-    final limits = _cartLimitsNow();
+    // the core's answer for the cart sold now, counted from the lots it draws, asked again only when the cart's lines change
+    final limits = _cartLimitsNow().limits;
     final totalPsilocybinMg = limits.psilocybinMgValue;
     // Null above the 50mg cap or when a figure isn't known - the cap refuses such a sale outright (see _capError), so
     // there's nothing meaningful left to show here; this just never gets the chance to look wrong.
@@ -3599,7 +3664,7 @@ class _PhoneLabel extends _Label {
   const _PhoneLabel(this.spec);
 }
 
-/// One cart's pricing controls while another cart is showing (MC-D4).
+/// One cart's pricing controls while another cart is showing.
 class _CartPricing {
   final CartPricingMode mode;
   final String total;
@@ -3614,7 +3679,7 @@ typedef _CartAction = ({String kind, String id});
 /// A cart as the carts sheet lists it.
 typedef _CartSummary = ({CartSlot slot, int lines, DateTime? timerStart, SessionDose? dose});
 
-/// A cart's running timer as the carts list shows it (MC-D14): the time left in its client's session, redrawn every
+/// A cart's running timer as the carts list shows it: the time left in its client's session, redrawn every
 /// second against [now] (sessionTimeLeft), or how long it has run when there's no dose to time it against.
 class _TimerText extends StatefulWidget {
   final DateTime start;

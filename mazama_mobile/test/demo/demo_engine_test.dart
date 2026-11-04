@@ -1,4 +1,4 @@
-// demo/demo_engine.dart (specs/phone-sync PS-R8): the demo's datasets come from its own invented data, with source
+// demo/demo_engine.dart: the demo's datasets come from its own invented data, with source
 // demo, in the demo's own database; it never sends anything and never queues an upload or a lab report.
 import 'dart:convert';
 import 'dart:io';

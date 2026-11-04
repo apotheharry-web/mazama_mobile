@@ -1,4 +1,4 @@
-// SL-R16: assets/flows_phone/login_browser.yaml (synced from ../mazama_modules/flows/phone by tool/sync_flows.sh - run
+// Assets/flows_phone/login_browser.yaml (synced from ../mazama_modules/flows/phone by tool/sync_flows.sh - run
 // that first if this can't find the file), run by the Dart interpreter against fake_state.dart's B2C, with a fake
 // `browse` standing in for the webview page.
 import 'dart:convert';

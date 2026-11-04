@@ -1,19 +1,19 @@
-// specs/mazama-inventory MI-R3: what Mazama Mushrooms itself holds, as the server's manufacturer pages show it - total
+// What Mazama Mushrooms itself holds, as the server's manufacturer pages show it - total
 // mg TPE "By strain" and "By type" (stock_mix.dart, the shared rules of mazama_modules/stock README § 5). The left page
-// of the center home (MI-D1: Mazama inventory | Stock | Cart). One pie at a time, swiped or picked by its dots
-// (MI-D3, swipe_pies.dart); tapping a slice or its key line shows that strain's types or that type's strains (MI-D4),
+// of the center home (Mazama inventory | Stock | Cart). One pie at a time, swiped or picked by its dots
+// (swipe_pies.dart); tapping a slice or its key line shows that strain's types or that type's strains,
 // one breakdown at a time, which stays open (or closed) when the other pie is swiped to.
-// It loads once when the center home opens; there is no pull to refresh (MI-D5), and a failed load offers Retry.
-// "Order" at its top right opens the order: par levels set or confirmed first (MI-D21, order_par_page.dart), then the
-// order form ("Order from Mazama") (MI-D6, order_form_page.dart). At the bottom,
-// the collapsible table of the lots in stock with their potency and minor analytes (MI-R7, mazama_lot_table.dart); a lot
-// id opens its product information sheet in the browser (MI-D18), and a strain or type picked on a pie narrows the
-// table to it (MI-D20). "Contact" at the top left, across from Order, offers
-// Mazama's website, Signal and email (MI-D19, mazama_contact.dart).
+// It loads once when the center home opens; there is no pull to refresh, and a failed load offers Retry.
+// "Order" at its top right opens the order: par levels set or confirmed first (order_par_page.dart), then the
+// order form ("Order from Mazama") (order_form_page.dart). At the bottom,
+// the collapsible table of the lots in stock with their potency and minor analytes (mazama_lot_table.dart); a lot
+// id opens its product information sheet in the browser, and a strain or type picked on a pie narrows the
+// table to it. "Contact" at the top left, across from Order, offers
+// Mazama's website, Signal and email (mazama_contact.dart).
 // While Mazama's server can't be reached, the page shows the last stock it sent (kept on the phone, sync/server_read.dart)
-// with no notice of its own: the app-wide banner says the server can't be reached (server_link.dart, README R87), and
-// the page reloads by itself once it answers again. With none kept, the error and Retry as before.
-// specs/phone-sync Task 8b Step 2: in the app (and the demo) it reads through the sync engine instead
+// with no notice of its own: the app-wide banner says the server can't be reached (server_link.dart), and
+// the page reloads by itself once it answers again. With none kept, the error and Retry.
+// In the app (and the demo) it reads through the sync engine instead
 // ([MazamaInventoryPage.feed], sync/dataset_feed.dart): the mazama_inventory dataset shows at once with its age, the
 // read on open is the one the center home asks for as it opens (joined, never a second), and the engine reloads it when
 // the server answers again; what shows is decided as above.
@@ -27,6 +27,7 @@ import 'mazama_inventory_client.dart';
 import 'mazama_lot_table.dart';
 import 'responsive.dart';
 import 'server_health.dart';
+import 'server_reload.dart';
 import 'sync/server_read.dart';
 import 'stock_mix.dart';
 import 'stock_pie.dart';
@@ -49,7 +50,7 @@ class MazamaInventoryPage extends StatefulWidget {
       this.health})
       : assert(load != null || feed != null, 'a page reads its mix with load, or through feed');
 
-  /// Mazama's mix: route C12 (mazama_inventory_client.dart), the demo's in demo mode, anything in tests. Unused with
+  /// Mazama's mix: GET /p/mazama-inventory (mazama_inventory_client.dart), the demo's in demo mode, anything in tests. Unused with
   /// [feed].
   final Future<MazamaInventory> Function()? load;
 
@@ -67,18 +68,18 @@ class MazamaInventoryPage extends StatefulWidget {
   /// The clock, for when a mix was kept. Overridable for tests.
   final DateTime Function() now;
 
-  /// MI-D6, MI-D21: what the "Order" button at the top right opens (the par step, order_par_page.dart, then the
+  /// What the "Order" button at the top right opens (the par step, order_par_page.dart, then the
   /// order form); no button when null.
   final Widget Function()? orderForm;
 
-  /// MI-D18: opens a lot's product information sheet; null opens it in the browser, as the stock page's sheets.
+  /// Opens a lot's product information sheet; null opens it in the browser, as the stock page's sheets.
   final Future<void> Function(MazamaLot lot)? openSheet;
 
-  /// MI-D19: how the Contact sheet's links open (tests); null opens them outside the app.
+  /// How the Contact sheet's links open (tests); null opens them outside the app.
   final OpenLink? openLink;
 
-  /// The app's server tracker (server_health.dart, README R56): while the page shows the copy kept on the phone, it
-  /// reloads by itself once the server answers again (README R87), and Retry asks the server first. Null: neither
+  /// The app's server tracker (server_health.dart): while the page shows the copy kept on the phone, it
+  /// reloads by itself once the server answers again, and Retry asks the server first. Null: neither
   /// (tests, the demo).
   final ServerHealth? health;
 
@@ -94,7 +95,7 @@ const _pies = [
     breakdown: 'by strain'),
 ];
 
-class _MazamaInventoryPageState extends State<MazamaInventoryPage> {
+class _MazamaInventoryPageState extends State<MazamaInventoryPage> with ServerReload<MazamaInventoryPage> {
   MazamaInventory? _inventory;
   Map<String, Object?>? _mix;
   String? _error;
@@ -103,7 +104,7 @@ class _MazamaInventoryPageState extends State<MazamaInventoryPage> {
   /// The mix on screen is the copy kept on the phone (the server can't be reached).
   bool _fromCache = false;
 
-  /// When the mix on screen was read (the age line, specs/phone-sync PS-R7); null while none is shown.
+  /// When the mix on screen was read (the age line); null while none is shown.
   DateTime? _readAt;
 
   /// Through the engine: the server's own answer to its newest refresh, said beside the mix still shown (dataset_feed.dart).
@@ -113,41 +114,18 @@ class _MazamaInventoryPageState extends State<MazamaInventoryPage> {
   /// for the page, not one per pie, so an open breakdown stays open, and a closed one closed, across a swipe.
   ({int pie, String name})? _picked;
 
-  bool get _showingKeptCopy => _fromCache;
+  @override
+  ServerHealth? get serverHealth => widget.health;
 
-  /// Reloads when the tracker comes back online while the page shows the copy kept on the phone ([ServerHealth]).
-  bool _wasOffline = false;
+  @override
+  bool get showingKeptCopy => _fromCache;
 
-  void _onHealth() {
-    final h = widget.health;
-    if (h == null) return;
-    final cameBack = _wasOffline && h.online;
-    _wasOffline = h.offline;
-    if (cameBack && mounted && !_retrying && _showingKeptCopy) _load();
-  }
-
-  /// Set while Retry asks the server: Retry reloads itself, so [_onHealth] doesn't as well.
-  bool _retrying = false;
-
-  /// Retry: asks the server first when it is counted as unreachable (the probe brings it back at once if it answers,
-  /// so the reload below isn't short-circuited), then reloads.
-  Future<void> _retry() async {
-    final h = widget.health;
-    if (h != null && h.offline) {
-      _retrying = true;
-      try {
-        await h.checkNow();
-      } finally {
-        _retrying = false;
-      }
-      if (!mounted) return;
-    }
-    _load();
-  }
+  @override
+  void reload({required bool cameBack}) => _load();
 
   @override
   void dispose() {
-    widget.health?.removeListener(_onHealth);
+    stopListeningForServer();
     _feedRows?.cancel();
     super.dispose();
   }
@@ -161,8 +139,7 @@ class _MazamaInventoryPageState extends State<MazamaInventoryPage> {
       unawaited(_readFeed(feed));
       return;
     }
-    _wasOffline = widget.health?.offline ?? false;
-    widget.health?.addListener(_onHealth);
+    listenForServer(); // through a feed, the engine reloads instead
     _load();
   }
 
@@ -222,7 +199,7 @@ class _MazamaInventoryPageState extends State<MazamaInventoryPage> {
     });
     unawaited(() async {
       final kept = widget.kept;
-      // Local first (PS-R7): the copy kept on the phone shows at once, with its age, while the server is asked.
+      // Local first: the copy kept on the phone shows at once, with its age, while the server is asked.
       if (kept != null) {
         try {
           final early = await kept();
@@ -273,8 +250,8 @@ class _MazamaInventoryPageState extends State<MazamaInventoryPage> {
 
   @override
   Widget build(BuildContext context) {
-    // No title bar: it sits under the home's tab labels, whose "Mazama" is its title (owner, 2026-10-22). One row
-    // under them, whether or not the mix loaded: Contact at the left (MI-D19), the Order button at the right.
+    // No title bar: it sits under the home's tab labels, whose "Mazama" is its title. One row
+    // under them, whether or not the mix loaded: Contact at the left, the Order button at the right.
     return Scaffold(
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -315,19 +292,7 @@ class _MazamaInventoryPageState extends State<MazamaInventoryPage> {
     final mix = _mix;
     if (inv == null || mix == null) {
       if (_error == null) return const Center(child: CircularProgressIndicator());
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Text('Mazama inventory did not load: $_error', textAlign: TextAlign.center),
-            ),
-            const SizedBox(height: 8),
-            FilledButton(onPressed: _retry, child: const Text('Retry')),
-          ],
-        ),
-      );
+      return LoadFailed(message: 'Mazama inventory did not load: $_error', onRetry: retry);
     }
     final theme = Theme.of(context);
     final total = mix['total'] as num;
@@ -337,7 +302,7 @@ class _MazamaInventoryPageState extends State<MazamaInventoryPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // No maker's name or explanation line above the total (owner, 2026-10-22): the tab says "Mazama".
+          // No maker's name or explanation line above the total: the tab says "Mazama".
           if (total <= 0)
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 16),
@@ -357,7 +322,7 @@ class _MazamaInventoryPageState extends State<MazamaInventoryPage> {
             ),
             if (picked != null) _breakdownCard(picked.card, _pies[picked.pie].breakdown),
           ],
-          // MI-D20: the strain or type picked on either pie narrows the table ("Other (n)" has no card: no filter).
+          // The strain or type picked on either pie narrows the table ("Other (n)" has no card: no filter).
           if (inv.lots.isNotEmpty)
             MazamaLotTable(
               lots: inv.lots,
@@ -373,7 +338,7 @@ class _MazamaInventoryPageState extends State<MazamaInventoryPage> {
     );
   }
 
-  /// MI-D18: a lot's product information sheet, in the browser view the stock page's sheets open in.
+  /// A lot's product information sheet, in the browser view the stock page's sheets open in.
   Future<void> _openSheet(MazamaLot lot) async {
     final open = widget.openSheet;
     if (open != null) return open(lot);
@@ -407,56 +372,16 @@ class _MazamaInventoryPageState extends State<MazamaInventoryPage> {
     return card == null ? null : (pie: picked.pie, card: card);
   }
 
-  Widget _swatch(String slot, {String strainSlot = 's1'}) => Container(
-        width: 12,
-        height: 12,
-        margin: const EdgeInsets.only(right: 8),
-        decoration: BoxDecoration(
-          color: stockSlotColor(slot, strainSlot: strainSlot, brightness: Theme.of(context).brightness),
-          borderRadius: BorderRadius.circular(2),
-        ),
-      );
-
-  /// One key line, as the server's: swatch, name, "1,234 mg · 45%".
-  Widget _keyLine(Key key, Map<String, Object?> s, {VoidCallback? onTap, String strainSlot = 's1'}) => InkWell(
-        key: key,
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 3),
-          child: Row(
-            children: [
-              _swatch(s['slot'] as String, strainSlot: strainSlot),
-              Expanded(child: Text(s['name'] as String)),
-              Text(mixKeyText(s)),
-            ],
-          ),
-        ),
-      );
-
   Widget _pieCard(Map<String, Object?> mix, int i) {
     final p = _pies[i];
-    final slices = ((mix[p.pie] as Map)['slices'] as List).cast<Map<String, Object?>>();
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(p.title, style: Theme.of(context).textTheme.titleSmall),
-            const SizedBox(height: 8),
-            Center(
-              child: StockPie(
-                  slices: slices, size: 160, onTapSlice: (name) => _pick(i, name), label: 'Total mg TPE ${p.title.toLowerCase()}'),
-            ),
-            const SizedBox(height: 8),
-            for (final s in slices)
-              _keyLine(ValueKey('${p.key}-key-${s['name']}'), s, onTap: () => _pick(i, s['name'] as String)),
-            const SizedBox(height: 4),
-            Text(p.hint, style: Theme.of(context).textTheme.bodySmall),
-          ],
-        ),
-      ),
+    return StockPieCard(
+      title: p.title,
+      slices: ((mix[p.pie] as Map)['slices'] as List).cast<Map<String, Object?>>(),
+      label: 'Total mg TPE ${p.title.toLowerCase()}',
+      keyPrefix: p.key,
+      valueOf: mixKeyText,
+      onPick: (name) => _pick(i, name),
+      hint: p.hint,
     );
   }
 
@@ -474,24 +399,15 @@ class _MazamaInventoryPageState extends State<MazamaInventoryPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              children: [
-                _swatch(slot),
-                Expanded(
-                  child: Text('$name $what · ${formatMixMg(card['total'] as num)} mg TPE',
-                      style: Theme.of(context).textTheme.titleSmall),
-                ),
-                IconButton(
-                  tooltip: 'Close',
-                  icon: const Icon(Icons.close),
-                  onPressed: () => setState(() => _picked = null),
-                ),
-              ],
-            ),
+            StockCardTitle(
+                slot: slot,
+                title: '$name $what · ${formatMixMg(card['total'] as num)} mg TPE',
+                onClose: () => setState(() => _picked = null)),
             const SizedBox(height: 4),
             Center(child: StockPie(slices: slices, size: 120, strainSlot: slot, label: '$name, $what')),
             const SizedBox(height: 8),
-            for (final s in slices) _keyLine(ValueKey('mix-card-key-$name-${s['name']}'), s, strainSlot: slot),
+            for (final s in slices)
+              StockKeyLine(key: ValueKey('mix-card-key-$name-${s['name']}'), slice: s, value: mixKeyText(s), strainSlot: slot),
           ],
         ),
       ),

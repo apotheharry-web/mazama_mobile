@@ -1,23 +1,23 @@
-//! What may be sold (specs/core row 4, Task 10; SM-10): why `qty` units of a package can't be sold, or nothing, and
-//! whether a record is one the server would sell at all (`sellable_record`, SP-D9). One rule for the server
-//! (recordrules.unsellable_reason / sellable_record, through the binding) and the phone (lib/sellability.dart, through
-//! the FFI), held to mazama_modules/selling/vectors/sellability.json and sellability_cases.json.
+//! What may be sold: why `qty` units of a package can't be sold, or nothing, and whether a record is one the server
+//! would sell at all (`sellable_record`). One rule for the server (recordrules.unsellable_reason / sellable_record,
+//! through the binding) and the phone (lib/sellability.dart, through the FFI), held to
+//! mazama_modules/selling/vectors/sellability.json and sellability_cases.json.
 //!
-//! It is the server's old rule (the order of the holds, the words) with the owner's decisions of 2026-10-31 (CR-D6)
-//! where the two old copies disagreed, "refuse wins":
+//! The holds are checked in a fixed order (pending transfer, locked, flagged, then units) and the first one is the
+//! reason. Where an input is odd, the answer is the one that refuses:
 //!
-//! | ID | Input | Answer |
-//! |---|---|---|
-//! | SL-1, SL-6, SL-8 | a quantity that isn't a number (text, true, a list or an object) | 0 units: refused (the server raised or, for true, sold) |
-//! | SL-2, SL-3, SL-9, SL-10 | a value shown in a refusal | `py::show`: `None`, `True`, text as itself, Python's repr of a float, an integer beyond 64 bits as its float (`inf` past the largest double, where Python's float() would raise), compact JSON |
-//! | SL-4 | no record | `package not found in this service center's inventory` |
-//! | SL-5/7 | sellable_record without a productGuid | false, the quantity never read |
-//! | SL-11 | a flag given as text or a number | held when truthy (the safe direction) |
-//! | SL-12 | a fractional quantity | compared as it is: 2.5 units sell 2, not 3 |
-//! | SL-13 | units asked that aren't an integer of 1 or more | refused: `the quantity to sell must be 1 or more (asked for 0)` |
+//! | Input | Answer |
+//! |---|---|
+//! | a quantity that isn't a number (text, true, a list or an object) | 0 units: refused |
+//! | a value shown in a refusal | `py::show`: `None`, `True`, text as itself, Python's repr of a float, an integer beyond 64 bits as its float (`inf` past the largest double), compact JSON |
+//! | no record | `package not found in this service center's inventory` |
+//! | sellable_record without a productGuid | false, the quantity never read |
+//! | a flag given as text or a number | held when truthy (the safe direction) |
+//! | a fractional quantity | compared as it is: 2.5 units sell 2, not 3 |
+//! | units asked that aren't an integer of 1 or more | refused: `the quantity to sell must be 1 or more (asked for 0)` |
 //!
 //! Numbers are read as Python's `json` reads them and compared exactly, so an integer beyond 64 bits is never rounded
-//! into a sale. Expired stock is not refused (SM-D3); a failed test doesn't stop a sale (RD-6).
+//! into a sale. Expired stock is not refused; a failed test doesn't stop a sale.
 use serde_json::{Value, json};
 
 pub mod cart;
@@ -52,7 +52,8 @@ pub(crate) fn reason(record: Option<&Py>, qty: &Py) -> Option<String> {
     None
 }
 
-/// A record the server would sell: a truthy productGuid, then nothing against one unit (SL-7: the guid first).
+/// A record the server would sell: a truthy productGuid, then nothing against one unit (the guid is checked first, so
+/// a record without one is never sellable whatever its quantity).
 fn sellable_record(record: Option<&Py>) -> bool {
     record.is_some_and(|r| r.get("productGuid").truthy() && reason(Some(r), &Py::Int(Int::one())).is_none())
 }

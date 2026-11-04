@@ -6,9 +6,10 @@ import 'package:mazama_mobile/cart_page.dart';
 import 'package:mazama_mobile/cart_store.dart';
 import 'package:mazama_mobile/debug_local_storage_page.dart';
 import 'package:mazama_mobile/device_id.dart';
-import 'package:mazama_mobile/inventory_cache_store.dart';
 import 'package:mazama_mobile/packages_client.dart';
 import 'package:mazama_mobile/session_store.dart';
+import 'package:mazama_mobile/sync/center_stock.dart';
+import 'package:mazama_mobile/sync/sync_datasets.dart';
 
 late Directory _tempDir;
 
@@ -25,7 +26,7 @@ void main() {
         initialStateId: 225,
         sessionStore: SessionStore(dataDir: dir()),
         cartStore: CartStore(dataDir: dir()),
-        inventoryCacheStore: InventoryCacheStore(dataDir: dir()),
+        datasets: Datasets.forDir(dir()),
         deviceIdStore: DeviceIdStore(dataDir: dir()),
       ),
     ));
@@ -33,7 +34,7 @@ void main() {
 
     expect(find.textContaining('Nothing stored'), findsNWidgets(3)); // session, cart, inventory cache
     expect(find.textContaining('Loading...'), findsNothing);
-    // The session is in Keychain/Keystore (a document off the phones), no longer session.json (re-review N-4).
+    // The session is in Keychain/Keystore (a document off the phones), not session.json.
     expect(find.textContaining('session.json'), findsNothing);
     expect(find.textContaining('Session (Keychain/Keystore'), findsOneWidget);
   });
@@ -41,13 +42,14 @@ void main() {
   testWidgets('shows a saved session, cart draft and inventory cache, and clear buttons remove each', (tester) async {
     final sessionStore = SessionStore(dataDir: dir());
     final cartStore = CartStore(dataDir: dir());
-    final inventoryCacheStore = InventoryCacheStore(dataDir: dir());
+    final datasets = Datasets.forDir(dir());
 
     await sessionStore.save({'email': 'worker@example.com', 'expires_at_ms': 123, 'access_token': 'T', 'refresh_token': 'R'});
     await cartStore.save(225, [
       CartLine(group: PkprGroup([Package(productGuid: 'PKPR-a', productType: 'Extract', id: 1, weightPerUnit: 5, analyteWeight: 4.5, quantity: 10)]), qty: 2, priceCentsEach: 500),
     ]);
-    await inventoryCacheStore.save(
+    keepCenterStock(
+      datasets,
       225,
       [Package(productGuid: 'PKPR-a', productType: 'Extract', id: 1, weightPerUnit: 5, analyteWeight: 4.5, quantity: 10)],
       DateTime.utc(2026, 1, 1),
@@ -58,7 +60,7 @@ void main() {
         initialStateId: 225,
         sessionStore: sessionStore,
         cartStore: cartStore,
-        inventoryCacheStore: inventoryCacheStore,
+        datasets: datasets,
         deviceIdStore: DeviceIdStore(dataDir: dir()),
       ),
     ));
@@ -77,7 +79,7 @@ void main() {
 
     expect(await sessionStore.load(), isNull);
     expect(await cartStore.load(225), isNull);
-    expect(await inventoryCacheStore.load(225), isNull);
+    expect(keptCenterStock(datasets, 225), isNull);
   });
 
   testWidgets('reset device id produces a different, newly-saved id', (tester) async {
@@ -88,7 +90,7 @@ void main() {
       home: DebugLocalStoragePage(
         sessionStore: SessionStore(dataDir: dir()),
         cartStore: CartStore(dataDir: dir()),
-        inventoryCacheStore: InventoryCacheStore(dataDir: dir()),
+        datasets: Datasets.forDir(dir()),
         deviceIdStore: deviceIdStore,
       ),
     ));
@@ -119,7 +121,7 @@ void main() {
         initialStateId: 225,
         sessionStore: SessionStore(dataDir: dir()),
         cartStore: cartStore,
-        inventoryCacheStore: InventoryCacheStore(dataDir: dir()),
+        datasets: Datasets.forDir(dir()),
         deviceIdStore: DeviceIdStore(dataDir: dir()),
       ),
     ));

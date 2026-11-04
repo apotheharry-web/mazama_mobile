@@ -543,7 +543,7 @@ void main() {
 
       clock = clock.add(const Duration(minutes: 2));
       await openCarts(tester);
-      // the list shows time left (MC-D14): 1 x PKPR-ab12c is 22.5 mg psilocybin, a 4 hour session
+      // the list shows time left: 1 x PKPR-ab12c is 22.5 mg psilocybin, a 4 hour session
       expect(find.text('3:53:00 left'), findsOneWidget, reason: sheetTexts(tester)); // Cart 1's, still running
       expect(find.text('3:58:00 left'), findsOneWidget, reason: sheetTexts(tester)); // Cart 2's
       await tester.tap(find.widgetWithText(ListTile, 'Cart 1'));

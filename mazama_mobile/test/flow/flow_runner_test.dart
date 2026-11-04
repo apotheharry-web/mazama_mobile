@@ -107,7 +107,7 @@ void main() {
     expect(err.message, 'the sign-in page was not available: HTTP 503');
   });
 
-  // B2C busy or down at SelfAsserted is an outage, not a changed page (final review Important 3).
+  // B2C busy or down at SelfAsserted is an outage, not a changed page.
   for (final status in [429, 500, 503]) {
     test('a throttled or failing sign-in form is unavailable ($status)', () async {
       final fake = FakeState()..selfAssertedStatus = status;
@@ -217,7 +217,7 @@ void main() {
     }
   });
 
-  // SM-12: where a request step failed decides whether a write may have reached the state system. The stage and
+  // Where a request step failed decides whether a write may have reached the state system. The stage and
   // status of every case both apps share are in assets/shared/flows/contracts/write_outcomes.json
   // (../write_outcomes_test.dart); these pin the messages and the failures only dart:io and package:http produce,
   // against a scripted client instead of a fake server, because a fake server can't produce them.
@@ -442,7 +442,7 @@ void main() {
     });
   });
 
-  // Mirrors mazama_sales/tests/state/test_flowspec_allowlist.py case for case (SL-R8): the same inline specs and
+  // Mirrors mazama_sales/tests/state/test_flowspec_allowlist.py case for case: the same inline specs and
   // the same expected values, except where the cookie jar differs (see the chain test).
   group('every request and redirect hop must be https on an allowed host', () {
     FlowSpec specOf(List<Map<String, Object?>> steps) => FlowSpec.fromYaml(jsonEncode({
@@ -476,7 +476,7 @@ void main() {
       fail('expected a FlowError');
     }
 
-    // The state's own B2C tenant: the only b2clogin.com host (SL-R17).
+    // The state's own B2C tenant: the only b2clogin.com host.
     const tenantHost = 'oregonpsilocybinprodb2c.b2clogin.com';
     const otherTenants = [
       'https://evil.b2clogin.com/x',
@@ -599,7 +599,7 @@ void main() {
       final calls = <http.Request>[];
       final err = await blocked([fetch('https://psilocybin.oregon.gov/x')],
           recording(calls, (req) async => http.Response('', 302, headers: {'location': 'https://evil.com/x'})));
-      // The state's own answer sent it there (final review Minor 1): the response stage with the 3xx.
+      // The state's own answer sent it there: the response stage with the 3xx.
       expect((err.step, err.reason, err.stage, err.status), ('fetch', 'not_allowed', FlowStage.response, 302));
       expect(calls.length, 1);
     });
@@ -819,7 +819,7 @@ void main() {
     });
   });
 
-  // Mirrors mazama_sales/tests/state/test_flowspec_phase3.py case for case (spec format 2, SL-R11-R13): the same
+  // Mirrors mazama_sales/tests/state/test_flowspec_phase3.py case for case (spec format 2): the same
   // inline specs, the same bodies and the same expected values.
   group('format 2: regex fallbacks, conditional steps and asking a person', () {
     FlowSpec specOf(String stepsYaml, {int fmt = 2}) =>
@@ -838,7 +838,7 @@ void main() {
       fail('expected a FlowError');
     }
 
-    // --- SL-R11: regex fallbacks ---
+    // --- regex fallbacks ---
 
     const fetchList = r'''
     - id: page
@@ -875,7 +875,7 @@ void main() {
       r'(?P<n>x)', r'(?P=n)', r'(?i)x', r'(?#c)x', r'(?>x)', r'a*+', r'a++', r'a?+', r'a{2}+', r'x}+',
       r'(?(1)a|b)', r'\Ax', r'x\Z', r'[\A]', r'(?<n>x)', r'[a](?<n>x)', r'(?', r'[]a]', r'[^]a]', r'(a)*+',
       r'\(?+', r'\zx', r'\ex', r'(a)\1', r'\0', r'[\z]', '\\',
-      // final review Minor 2: malformed hex escapes, \B in a class, {, and look-behinds Python can't read alike
+      // malformed hex escapes, \B in a class, {, and look-behinds Python can't read alike
       // (quantified, or of variable width)
       r'\x4', r'\x4g', r'\u12', r'\u{41}', r'[\x4]', r'[\u12]', r'x\x', r'[\B]', r'a{,3}', r'(?<=a)*',
       r'(?<=a)?', r'(?<!a)+', r'(?<=a){2}', r'(?<=a+)x', r'(?<=ab|c)x', r'(?<=a{2})x', r'(?<!a?)x',
@@ -916,7 +916,7 @@ void main() {
       expect(regexGroupCount(RegExp(r'(?<=a)b')), 0);
     });
 
-    // --- SL-R12: conditional steps ---
+    // --- conditional steps ---
 
     const whenSteps = r'''
     - id: first
@@ -1052,7 +1052,7 @@ void main() {
       });
     }
 
-    // --- SL-R13: asking a person ---
+    // --- asking a person ---
 
     const askSteps = r'''
     - id: ask
@@ -1151,7 +1151,7 @@ void main() {
       });
     }
 
-    // --- a mistake in the spec itself is reason `structure` (final review Minor 3; test_flowspec_phase3.py) ---
+    // --- a mistake in the spec itself is reason `structure` (as test_flowspec_phase3.py) ---
 
     for (final steps in [
       '    - {id: s, type: generate, when: {var: x, contains: y}, make: random_hex, into: [n]}\n', // malformed when
@@ -1178,7 +1178,7 @@ void main() {
       expect(FlowSpec.fromYaml('format: 2\nflows: {}\n').format, 2);
     });
 
-    // --- parked phase 2 follow-up: an explicit tag on a value it can't read ---
+    // --- an explicit tag on a value it can't read ---
 
     for (final text in [
       'vars: {a: !!int abc}\n',
@@ -1361,7 +1361,7 @@ void main() {
       ('url: "{{site}}/authorize"', 'url: "{{st}}/authorize"'),
       ('until: "{{site}}/"', 'until: "https://evil.example.com/"'),
       ('until: "{{site}}/"', 'until: "http://psilocybin.oregon.gov/"'),
-      // another B2C tenant (SL-R17)
+      // another B2C tenant
       ('url: "{{site}}/authorize"', 'url: "https://evil.b2clogin.com/authorize"'),
       ('url: "{{site}}/authorize"', 'url: "https://oregonpsilocybinprodb2c.b2clogin.com.evil.example/authorize"'),
       ('until: "{{site}}/"', 'until: "https://evil.b2clogin.com/"'),
@@ -1471,7 +1471,7 @@ void main() {
     }
 
     test('the prompt never carries a secret value', () async {
-      // The prompt can be stored, shown and sent on (SL-R14), so a secret templated into it reaches ask scrubbed.
+      // The prompt can be stored, shown and sent on, so a secret templated into it reaches ask scrubbed.
       final asked = <String>[];
       await run(specOf(askSteps.replaceFirst('"Code?"', '"Code for {{password}}?"')),
           inputs: {'password': 'Hunter2'}, ask: (prompt, secret) async {
@@ -1532,11 +1532,11 @@ void main() {
     // --- review fix round 1 (test_flowspec_phase4.py holds the same cases) ---
 
     final roundOne = <(String, String, Map<String, Object?>)>[
-      ('url: "{{site}}/authorize"', 'url: "{{site}}/authorize?p=X"', {}), // I1: a query belongs in params
+      ('url: "{{site}}/authorize"', 'url: "{{site}}/authorize?p=X"', {}), // a query belongs in params
       ('url: "{{site}}/authorize"', 'url: "{{site}}/authorize{{qs}}"', {'qs': '?p=X'}),
-      ('until: "{{site}}/"', 'until: "{{site}}"', {}), // M1: until needs a path
+      ('until: "{{site}}/"', 'until: "{{site}}"', {}), // until needs a path
       ('until: "{{site}}/"', 'until: "https://psilocybin.oregon.gov"', {}),
-      ('      extract:\n', '      require: [{check: truthy, vars: [st]}]\n      extract:\n', {}), // I2
+      ('      extract:\n', '      require: [{check: truthy, vars: [st]}]\n      extract:\n', {}),
       ('      extract:\n', '      capture_on_fail: [{var: why, source: url_query, name: why}]\n      extract:\n', {}),
       ('      extract:\n', '      then_require: {check: truthy}\n      extract:\n', {}),
     ];

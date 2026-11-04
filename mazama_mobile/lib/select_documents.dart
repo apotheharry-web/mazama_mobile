@@ -1,12 +1,12 @@
-// Which lab-report documents to read for a lot (SM-06; COA-R1, COA-D9, COA-D12), from a GetPackagedProductInfo
+// Which lab-report documents to read for a lot, from a GetPackagedProductInfo
 // reply: every non-deprecated .pdf document of an accepted Potency test, not already fetched, newest test first
 // (undated last; equal dates keep the reply's order), each document once, at its newest test's date. The rule is
 // mazama_core::coa::select (coa.select_documents), the one the server runs, held to the shared cases
-// (assets/shared/coa/corpus/select/cases.json); the phone only calls it (specs/core row 2, FM-04).
+// (assets/shared/coa/corpus/select/cases.json); the phone only calls it.
 import 'api_contract.g.dart';
 import 'mazama_core.dart';
 
-/// SM-D23: the one size cap for a lab-report PDF, on both sides (the server's /p/coa-data/parse limit, routes.yaml).
+/// The one size cap for a lab-report PDF, on both sides (the server's /p/coa-data/parse limit, routes.yaml).
 const labReportMaxBytes = coaDataParseMaxPdfBytes;
 
 class SelectedDocument {

@@ -1,18 +1,16 @@
-// LocalStore (foundations LS-R1, LS-R2): one SQLite database of documents per data folder. Each test has its own
+// LocalStore: one SQLite database of documents per data folder. Each test has its own
 // folder, so the registry never hands one test another's database.
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mazama_mobile/cart_store.dart';
 import 'package:mazama_mobile/local_store.dart';
-import 'package:mazama_mobile/local_store_import.dart';
 import 'package:sqlite3/sqlite3.dart';
 
 void main() {
   late Directory tempDir;
   setUp(() => tempDir = Directory.systemTemp.createTempSync('mazama_local_store_test_'));
   tearDown(() {
-    debugDeleteMigratedFile = null;
     LocalStore.debugCloseAll();
     if (tempDir.existsSync()) tempDir.deleteSync(recursive: true);
   });
@@ -116,17 +114,15 @@ void main() {
 
   test('a database file that is not a database is set aside as mazama.db.corrupt and a new one opened', () {
     File('${tempDir.path}/$localStoreFileName').writeAsStringSync('this was never a SQLite file, invented ' * 200);
-    File('${tempDir.path}/cart.json').writeAsStringSync('{"invented":1}'); // a legacy file still to import
 
     final store = LocalStore.forDir(tempDir);
-    expect(store.read('cart.json')!.body, '{"invented":1}');
     store.write('x', 'y');
     expect(File('${tempDir.path}/$localStoreFileName.corrupt').readAsStringSync(), startsWith('this was never'));
     LocalStore.debugCloseAll();
     expect(LocalStore.forDir(tempDir).read('x')!.body, 'y');
   });
 
-  // Final review I-3: a page damaged after the open (the header still whole) made every later call throw
+  // A page damaged after the open (the header still whole) made every later call throw
   // SqliteException(11), on every launch; a damaged store file only ever cost that store ("nothing saved").
   test('a page damaged after the open reads as nothing saved, and the next write lands in a fresh database', () async {
     final store = LocalStore.forDir(tempDir);
@@ -174,8 +170,8 @@ void main() {
     expect(again.read('a')!.body, '1');
   });
 
-  // Re-review N-3: when setting a damaged file aside failed half-way, the instance stayed registered on its closed
-  // connection, and every later call threw until a restart.
+  // When setting a damaged file aside fails half-way, the instance must not stay registered on its closed
+  // connection, with every later call throwing until a restart.
   test('a set-aside that fails leaves no closed connection behind: the next call opens the database again', () {
     final store = LocalStore.forDir(tempDir);
     for (var i = 0; i < 50; i++) {
@@ -277,108 +273,54 @@ void main() {
     expect(LocalStore.forDir(tempDir).read('a')!.body, '1');
   });
 
-  test('the schema version is 3 (the sync tables, then the *.migrated files deleted) and the journal is WAL', () {
+  test('the schema version is 4 (the sync tables, a step that does nothing, imported_files dropped) and the journal is WAL',
+      () {
     final store = LocalStore.forDir(tempDir);
-    expect(localStoreSchemaVersion, 3);
+    expect(localStoreSchemaVersion, 4);
     expect(store.debugQuery('PRAGMA user_version').single.values.single, localStoreSchemaVersion);
     expect(store.debugQuery('PRAGMA journal_mode').single.values.single, 'wal');
     final columns = store.debugQuery('PRAGMA table_info(documents)').map((r) => r['name']).toList();
     expect(columns, ['name', 'body', 'saved_at_ms']);
+    final tables = [for (final r in store.debugQuery("SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name")) r['name']];
+    expect(tables, containsAll(['documents', 'sync_dataset', 'sync_queue', 'sync_sent']));
+    expect(tables, isNot(contains('imported_files')));
   });
 
-  // Plan Task 8 (LS-R5): one release after the move, the files the import renamed *.migrated go; a phone opens a
-  // database at version 2 (the sync tables) with them still beside it.
-  group('the next schema after the sync tables', () {
+  // An older build's files beside the database are never read, imported or deleted, and a database an older
+  // build left at an earlier version keeps its documents and loses only imported_files.
+  group('no import of older builds', () {
     File file(String name) => File('${tempDir.path}/$name')..parent.createSync(recursive: true);
 
-    /// A database at version 2 holding [docs], as a phone on 0.2.4 left it.
-    void atVersion2(Map<String, String> docs) {
+    test("an older build's files are left as they are and read as nothing kept", () {
+      const names = ['cart.json', 'device_id.txt', 'server_outbox.json', 'server_replies/par%2F231.json', 'cart.json.migrated'];
+      for (final name in names) {
+        file(name).writeAsStringSync('{"invented":"$name"}');
+      }
       final store = LocalStore.forDir(tempDir);
-      docs.forEach(store.write);
-      LocalStore.debugCloseAll();
-      final db = sqlite3.open('${tempDir.path}/$localStoreFileName');
-      db.userVersion = 2;
-      db.close();
+      for (final name in names) {
+        expect(store.read(name), isNull, reason: name);
+        expect(File('${tempDir.path}/$name').readAsStringSync(), '{"invented":"$name"}', reason: name);
+      }
+      expect(store.names(''), isEmpty);
+    });
+
+    for (final from in [2, 3]) {
+      test('a database at version $from opens at version 4 with its documents, and without imported_files', () {
+        final store = LocalStore.forDir(tempDir);
+        store.write('cart.json', '{"invented":"draft"}');
+        LocalStore.debugCloseAll();
+        final db = sqlite3.open('${tempDir.path}/$localStoreFileName');
+        db.execute('CREATE TABLE IF NOT EXISTS imported_files (name TEXT PRIMARY KEY, saved_at_ms INTEGER NOT NULL)');
+        db.userVersion = from;
+        db.close();
+        file('cart.json.migrated').writeAsStringSync('invented');
+
+        final again = LocalStore.forDir(tempDir);
+        expect(again.debugQuery('PRAGMA user_version').single.values.single, 4);
+        expect(again.read('cart.json')!.body, '{"invented":"draft"}');
+        expect(again.debugQuery("SELECT name FROM sqlite_master WHERE name = 'imported_files'"), isEmpty);
+        expect(File('${tempDir.path}/cart.json.migrated').existsSync(), isTrue, reason: 'never deleted now');
+      });
     }
-
-    const migrated = [
-      'cart.json.migrated',
-      'cart_c2.json.migrated',
-      'device_id.txt.migrated',
-      'stock_cache_231.json.migrated',
-      'server_outbox.json.migrated',
-      'server_replies/par%2F231.json.migrated',
-    ];
-    const kept = [
-      'login_spec.yaml',
-      'login_hosts.json',
-      'x.json.migrated', // not a name the import ever renamed
-      'cart_NOT-AN-ID.json.migrated',
-      'debug_signin_files.json',
-    ];
-
-    test('the next schema deletes the *.migrated files and keeps every document', () {
-      final docs = {
-        'cart.json': '{"invented":"draft"}',
-        'device_id.txt': 'invented-device',
-        'server_replies/par%2F231.json': '{"invented":"par"}',
-      };
-      atVersion2(docs);
-      for (final name in [...migrated, ...kept]) {
-        file(name).writeAsStringSync('invented $name');
-      }
-
-      final store = LocalStore.forDir(tempDir);
-      expect(store.debugQuery('PRAGMA user_version').single.values.single, 3);
-      for (final name in migrated) {
-        expect(File('${tempDir.path}/$name').existsSync(), isFalse, reason: name);
-      }
-      for (final name in kept) {
-        expect(File('${tempDir.path}/$name').readAsStringSync(), 'invented $name', reason: name);
-      }
-      expect(Directory('${tempDir.path}/server_replies').existsSync(), isFalse, reason: 'left empty, so removed');
-      docs.forEach((name, body) => expect(store.read(name)?.body, body, reason: name));
-      expect(File('${tempDir.path}/$localStoreFileName').existsSync(), isTrue);
-    });
-
-    test('server_replies/ stays when something else is in it', () {
-      atVersion2(const {});
-      file('server_replies/par%2F231.json.migrated').writeAsStringSync('invented');
-      file('server_replies/par.json.tmp').writeAsStringSync('invented');
-
-      LocalStore.forDir(tempDir);
-      expect(File('${tempDir.path}/server_replies/par%2F231.json.migrated').existsSync(), isFalse);
-      expect(File('${tempDir.path}/server_replies/par.json.tmp').existsSync(), isTrue);
-    });
-
-    test('a delete that fails, or a file already gone, still opens the database at the new version', () {
-      atVersion2(const {'carts.json': '{"invented":1}'});
-      for (final name in migrated) {
-        file(name).writeAsStringSync('invented');
-      }
-      final tried = <String>[];
-      debugDeleteMigratedFile = (f) {
-        final name = f.uri.pathSegments.last;
-        tried.add(name);
-        if (name == 'cart.json.migrated') throw const FileSystemException('delete refused');
-        if (name == 'device_id.txt.migrated') {
-          f.deleteSync(); // gone under us: the real delete below finds nothing
-        }
-        f.deleteSync();
-      };
-
-      final store = LocalStore.forDir(tempDir);
-      expect(store.debugQuery('PRAGMA user_version').single.values.single, 3);
-      expect(store.read('carts.json')!.body, '{"invented":1}');
-      expect(tried, containsAll(['cart.json.migrated', 'device_id.txt.migrated', 'server_outbox.json.migrated']));
-      expect(File('${tempDir.path}/cart.json.migrated').existsSync(), isTrue, reason: 'its delete was refused');
-      expect(File('${tempDir.path}/server_outbox.json.migrated').existsSync(), isFalse);
-      expect(File('${tempDir.path}/server_replies/par%2F231.json.migrated').existsSync(), isFalse);
-
-      debugDeleteMigratedFile = null;
-      LocalStore.debugCloseAll();
-      LocalStore.forDir(tempDir);
-      expect(File('${tempDir.path}/cart.json.migrated').existsSync(), isTrue, reason: 'the migration runs once');
-    });
   });
 }

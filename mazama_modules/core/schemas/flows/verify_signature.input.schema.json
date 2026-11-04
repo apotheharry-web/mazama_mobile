@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "flows.verify_signature input",
-  "description": "specs/core row 13 (SL-D13): the signed bytes (standard base64), a .sig file's text and a signing.pub file's text.",
+  "description": "The signed bytes (standard base64), a .sig file's text and a signing.pub file's text.",
   "type": "object",
   "required": [
     "payload_b64",

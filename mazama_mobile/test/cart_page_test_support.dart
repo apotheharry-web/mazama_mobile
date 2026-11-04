@@ -15,10 +15,8 @@ import 'package:mazama_mobile/coa_data_client.dart';
 import 'package:mazama_mobile/coa_data_resolver.dart';
 import 'package:mazama_mobile/coa_uploader.dart';
 import 'package:mazama_mobile/device_id.dart';
-import 'package:mazama_mobile/enrichment_store.dart';
 import 'package:mazama_mobile/features.g.dart';
 import 'package:mazama_mobile/flow/flow_spec.dart';
-import 'package:mazama_mobile/inventory_cache_store.dart';
 import 'package:mazama_mobile/mazama_core.dart';
 import 'package:mazama_mobile/label_client.dart';
 import 'package:mazama_mobile/licenses_client.dart';
@@ -31,6 +29,7 @@ import 'package:mazama_mobile/server_health.dart';
 import 'package:mazama_mobile/session.dart';
 import 'package:mazama_mobile/session_store.dart';
 import 'package:mazama_mobile/session_timer_store.dart';
+import 'package:mazama_mobile/sync/sync_datasets.dart' show Datasets;
 import 'package:mazama_mobile/sync/sync_tables.dart';
 import 'package:mazama_mobile/text_scanner.dart';
 
@@ -73,7 +72,10 @@ late final FlowSpec realSaleSpec = FlowSpec.fromYaml(File('assets/flows/sale.yam
 
 late Directory tempDir;
 
-/// Keeps what CartPage sends the home-screen widget (MC-D15), instead of sending it.
+/// The datasets of [tempDir]'s database: the cart's kept stock (center_stock) and kept figures (enrichment).
+Datasets testDatasets() => Datasets.forDir(() => tempDir);
+
+/// Keeps what CartPage sends the home-screen widget, instead of sending it.
 class RecordingTimerWidget extends CartTimerWidget {
   final snapshots = <Map<String, Object?>>[];
   var clears = 0;
@@ -114,8 +116,7 @@ Widget cartPage({
     void Function(List<Package> packages)? onInventoryLoaded,
     void Function(String guid, Package updated)? onResolved,
   })? resolveAdhocInventory,
-  InventoryCacheStore? inventoryCacheStore,
-  EnrichmentStore? enrichmentStore,
+  Datasets? datasets,
   ResilienceOptions? resilienceOptions,
   Future<Uint8List> Function(int, String)? fetchLabel,
   Future<Map<String, Object?>> Function(int, String, {required String accessToken, String strain})? drawLabel,
@@ -143,9 +144,9 @@ Widget cartPage({
   void Function(int stateId)? requestStockRefresh,
   Stream<DatasetRow?>? Function(int stateId)? watchStock,
 }) {
-  // The default state read (specs/phone-sync phase 3): it fails at the page's load, as it always did here (so a load
+  // The default state read: it fails at the page's load (so a load
   // is Mazama's server's rows alone, or the tier-2 fixture's), and afterwards answers with the packages the test's own
-  // fetchPackages last gave, as sellable state records: the read a sale makes first (SM-25) now that a load the state
+  // fetchPackages last gave, as sellable state records: the read a sale makes first, since a load the state
   // didn't answer, and every confirmed sale, leave the stock unconfirmed.
   List<Package>? served;
   var stateReads = 0;
@@ -170,9 +171,9 @@ Widget cartPage({
   return MaterialApp(
       home: CartPage(
         featureTable: featureTable ?? features,
-        // PS-R6: the refresh a confirmed sale asks for; never the app's own engine in a test.
+        // The refresh a confirmed sale asks for; never the app's own engine in a test.
         requestStockRefresh: requestStockRefresh ?? (stateId) {},
-        // Task 8b: the engine's copy of the stock; none unless a test gives one (never the app's link)
+        // The engine's copy of the stock; none unless a test gives one (never the app's link)
         watchStock: watchStock ?? (stateId) => null,
         session: session ?? freshSession(),
         now: now ?? DateTime.now,
@@ -188,18 +189,17 @@ Widget cartPage({
         // start time survived a simulated app restart (a fresh pumpWidget reusing the same store) can assert
         // on it directly, same as cartStore's own restore tests do.
         sessionTimerStore: sessionTimerStore ?? SessionTimerStore(dataDir: () => tempDir),
-        // The list of carts (specs/multi-cart): a real (temporary) store, as cartStore.
+        // The list of carts: a real (temporary) store, as cartStore.
         cartSlotsStore: cartSlotsStore ?? CartSlotsStore(dataDir: () => tempDir),
-        // The home-screen widget (MC-D15): recorded, never sent over a real platform channel.
+        // The home-screen widget: recorded, never sent over a real platform channel.
         cartTimerWidget: cartTimerWidget ?? RecordingTimerWidget(),
         // Same reasoning again - a real (temporary) store rather than a fixed fake string, so a test that
         // cares what deviceId was sent can read it back the same way the real app would generate it.
         deviceIdStore: deviceIdStore ?? DeviceIdStore(dataDir: () => tempDir),
-        // Same reasoning again - a real (temporary) store, so a test exercising the 3-day cache fallback can
-        // seed or inspect it directly, same as cartStore's own restore tests do.
-        inventoryCacheStore: inventoryCacheStore ?? InventoryCacheStore(dataDir: () => tempDir),
-        // Same reasoning: what Mazama's server last sent per package, in the test's own folder.
-        enrichmentStore: enrichmentStore ?? EnrichmentStore(dataDir: () => tempDir),
+        // Same reasoning again - the datasets of the test's own folder (the kept stock and what Mazama's server last
+        // sent per package), so a test exercising the 3-day fallback can seed or inspect them directly
+        // (testDatasets), same as cartStore's own restore tests do.
+        datasets: datasets ?? testDatasets(),
         // Unlike the stores above, the REAL default here is a live network call to the state system - never
         // safe to fall through to in a test. A test that doesn't care about this fallback (most of them) still
         // needs it to fail cleanly with no network access at all, so a failed fetchPackages in those tests
@@ -208,23 +208,23 @@ Widget cartPage({
         fetchPackagesFromState: fetchPackagesFromState ??
             (stateId, {required accessToken}) async => throw StatePackagesError('no state-fallback fixture wired for this test'),
         // The REAL default here is also a live network call (to the state system, raw/unmapped - see
-        // merged_inventory.dart) - and unlike fetchPackagesFromState above, it is no longer a tier-2 fallback
+        // sync/stock_merge.dart) - and unlike fetchPackagesFromState above, it is not a tier-2 fallback
         // only reached on a tier-1 failure: _fetchMergedForCart calls it on EVERY configured-center load,
         // concurrently with fetchPackages, so every test in this file that opens a CartPage needs a fixture
         // here or it hangs waiting on a real (and in a test sandbox, unreachable) network call. Throwing is the
-        // cheapest fixture - merged_inventory.dart's own fetchMergedInventory already treats "the state side
+        // cheapest fixture - sync/stock_merge.dart's mergeStock already treats "the state side
         // failed" as a non-fatal, mazama-only result exactly as long as fetchPackages itself succeeded, so this
-        // default keeps every existing test's tier-1-only expectations unchanged.
+        // default keeps every test's tier-1-only expectations unchanged.
         fetchRawPackagesFromState: fetchRawPackagesFromState ?? defaultStateRead,
-        // A test that doesn't care about item 3a's push-after-every-state-read (every test above this field was
-        // added, since fetchRawPackagesFromState above throws by default) never reaches this at all - succeeding
+        // A test that doesn't care about the push after every state read (most tests, since
+        // fetchRawPackagesFromState above throws by default) never reaches this at all - succeeding
         // with an empty map, rather than throwing, is the safer default in case a test ever wires a succeeding
         // fetchRawPackagesFromState without separately wiring this one, the same "never surfaced to the worker"
         // rule cart_page.dart's own _fetchMergedForCart already applies to a real push failure.
         uploadInventorySnapshot: uploadInventorySnapshot ??
             (stateId, records, {required workerEmail, required deviceId}) async => <String, Object?>{},
-        // A test that doesn't exercise item 3b's cart-add COA submission (every test above this field was added)
-        // never reaches this at all - every existing fixture Package already defaults coaAvailable/
+        // A test that doesn't exercise the cart-add COA submission (most tests)
+        // never reaches this at all - every fixture Package defaults coaAvailable/
         // labelAvailable to true (packages_client.dart's own Package constructor), so _ensureCoaForCartLine
         // finds nothing to submit for and never calls this. Throwing is the cheapest fixture and would surface
         // clearly as a bug if that ever stopped being the case - same reasoning as resolveAdhocInventory below.
@@ -240,13 +240,12 @@ Widget cartPage({
         // The real default here is also a live network call (to Mazama's own server, not the state system -
         // see coa_data_client.dart's own centerIsConfigured) - never safe to fall through to in a test either.
         // Defaulting to "true" (rather than letting it fail and rely on _loadInventoryAsync's own catch-and-
-        // assume-configured fallback) means every existing test above, which was written before this field
-        // existed, keeps exercising the exact same ordinary fetchPackages/fetchPackagesFromState tiers it
-        // always did, with no real network attempt in between even on the failure path.
+        // assume-configured fallback) means every test exercises the ordinary fetchPackages/fetchPackagesFromState
+        // tiers, with no real network attempt in between even on the failure path.
         centerIsConfigured: centerIsConfigured ?? (stateId) async => true,
-        // SM-16: the built-in fallback unless a test sets the server's live values - never a network call.
+        // The built-in fallback unless a test sets the server's live values - never a network call.
         fetchCartSettings: fetchCartSettings ?? (stateId) async => CartSettings.fallback,
-        // specs/core row 6: this app's core unless a test gives a fake (PRICE-8)
+        // This app's core unless a test gives a fake
         core: core,
         // A test that doesn't exercise the adhoc-COA path (every test above this field was added) never reaches
         // this at all, since centerIsConfigured defaults to true above - throwing is the cheapest fixture and

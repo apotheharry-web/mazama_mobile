@@ -1,5 +1,5 @@
-// Every case here was cross-checked against the real pricing.to_cents/money (Python) before this file was
-// written - see the session that built this for the verification script. Not a guess at what the port should
+// Every case here was cross-checked against the server's pricing.to_cents/money (Python) by a script run
+// against both. Not a guess at what the port should
 // do; a record of what was actually confirmed to match.
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mazama_mobile/pricing.dart';
@@ -61,7 +61,7 @@ void main() {
     });
 
     test('the total cap is the boundary and leading zeros do not count', () {
-      // the core reads any number of digits without overflow (specs/core row 6); the largest cap is the cart total's
+      // the core reads any number of digits without overflow; the largest cap is the cart total's
       expect(toCents('99999999.99'), isNull); // over the unit cap, not an overflow
       expect(totalToCents('10000000'), 1000000000);
       expect(totalToCents('10000000.01'), isNull);

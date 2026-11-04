@@ -38,7 +38,7 @@ class FakeState {
   // transport error, never answer, answer with a status of the test's choosing. The twin of state_fake.py's
   // own `override`.
   final Map<String, Future<http.Response> Function(http.Request)> override = {};
-  // SL-R13: when set, a good email/password answers {"status": "200", "mfa": true}; a second SelfAsserted must carry
+  // When set, a good email/password answers {"status": "200", "mfa": true}; a second SelfAsserted must carry
   // this as form field `code` before `confirmed` hands out the code redirect (state_fake.py's mfa_code).
   String? mfaCode;
   bool mfaPassed = false;

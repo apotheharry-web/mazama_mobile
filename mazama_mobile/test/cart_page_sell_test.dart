@@ -7,6 +7,7 @@ import 'package:mazama_mobile/cart_page.dart';
 import 'package:mazama_mobile/cart_store.dart';
 import 'package:mazama_mobile/flow/flow_runner.dart';
 import 'package:mazama_mobile/flow/flow_spec.dart';
+import 'package:mazama_mobile/local_store.dart';
 import 'package:mazama_mobile/packages_client.dart';
 import 'package:mazama_mobile/state_packages_client.dart';
 import 'package:mazama_mobile/sale_log_client.dart';
@@ -14,6 +15,9 @@ import 'package:mazama_mobile/selling.dart' show doseSecondary;
 import 'package:mazama_mobile/sellability.dart';
 import 'package:mazama_mobile/server_health.dart';
 import 'package:mazama_mobile/server_outbox.dart';
+import 'package:mazama_mobile/session_timer_store.dart';
+import 'package:mazama_mobile/sync/sync_queue.dart';
+import 'package:mazama_mobile/sync/sync_tables.dart';
 
 import 'fake_timers.dart';
 import 'features_off.dart';
@@ -84,7 +88,7 @@ void main() {
       expect(find.textContaining('Sale recorded'), findsOneWidget);
     });
 
-    // R87: the server came back while this cart had lines: the state-only stock is loaded again once the sale has
+    // The server came back while this cart had lines: the state-only stock is loaded again once the sale has
     // gone through and emptied the cart, never while it is being sent.
     testWidgets("Mazama's server back mid-cart: the inventory is loaded again after the sale, not before", (tester) async {
       final fake = FakeState();
@@ -142,7 +146,7 @@ void main() {
         await tester.pumpWidget(cartPage(
           fetchPackages: (id) async => inventory,
           fetchRawPackagesFromState: (id, {required accessToken}) async {
-            // the load reads the state too (a load it didn't answer is never taken as confirmed, SM-25)
+            // the load reads the state too (a load it didn't answer is never taken as confirmed)
             if (!loaded) return [ab12cRecord];
             reads++;
             return reread();
@@ -364,17 +368,55 @@ void main() {
       testWidgets('a line that spills onto a stronger lot over 50 mg is refused before the confirmation, nothing sent',
           (tester) async {
         // lot 201 (drawn first, the smaller): 2 units at 10 mg; lot 202: 24 mg a unit. 4 units: 40 mg on the first
-        // lot's figure, 2 x 10 + 2 x 24 = 68 mg as the records would send it
+        // lot's figure, 2 x 10 + 2 x 24 = 68 mg as the records would send it. The cart counts the draw itself,
+        // so Sell is disabled with the per-draw words beside it (not offered on the first-lot 40 mg and then
+        // refused when pressed, with the same words and "Nothing was sent.")
         final lots = [lot(201, 2, weightPerUnit: 1.0, analyteWeight: 10.0), lot(202, 10, weightPerUnit: 2.0, analyteWeight: 12.0)];
         final fake = await sell(tester, lots, () => addLine(tester, pkpr: 'ab12c', qty: '4', price: '10.00'));
 
         expect(
             find.text('This sale draws later lots and would total 68.0 mg psilocybin - more than the 50 mg limit per sale '
-                '(mg TPE is not subject to this cap). Nothing was sent.'),
+                '(mg TPE is not subject to this cap).'),
             findsOneWidget);
+        expect(tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'Sell')).onPressed, isNull);
         expect(find.byType(AlertDialog), findsNothing); // never got as far as confirming
         expect(fake.posted, isEmpty);
         expect(find.text('Nothing in the cart yet.'), findsNothing);
+      });
+
+      testWidgets('DOSE-1: a first lot stronger than the lot drawn after it no longer refuses the sale on its own figure',
+          (tester) async {
+        // lot 201 (drawn first, the smaller): 2 units of 2.0 g x 12 mg/g = 24 mg; lot 202: 1 mg a unit. 3 units: 72 mg on
+        // the first lot's figure (not what counts), 2 x 24 + 1 = 49 mg as the records send it: within the cap
+        final lots = [lot(201, 2, weightPerUnit: 2.0, analyteWeight: 12.0), lot(202, 10, weightPerUnit: 1.0, analyteWeight: 1.0)];
+        final fake = await sell(tester, lots, () async {
+          await addLine(tester, pkpr: 'ab12c', qty: '3', price: '10.00');
+          expect(find.textContaining('49.0 mg psilocybin in the cart'), findsOneWidget);
+          expect(find.textContaining('mg limit per sale'), findsNothing);
+          expect(tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'Sell')).onPressed, isNotNull);
+        }, created: 2);
+
+        expect(sent(fake), [(201, 2, 0), (202, 1, 0)]);
+        expect(find.textContaining('Sale recorded'), findsOneWidget);
+        // the client's session is timed by what was sold: 49 mg, 6 hours
+        final kept = await SessionTimerStore(dataDir: () => tempDir).loadSoldSession(231);
+        expect((kept?.minutes, kept?.unknown), (360, false));
+        expect(await SessionTimerStore(dataDir: () => tempDir).loadSoldDose(231), (psilocybinMg: 49.0, booster: false));
+      });
+
+      testWidgets('DOSE-1: the session is timed by the drawn total, shorter than the first-lot figure said, never shorter '
+          'than the sale needs', (tester) async {
+        // lot 201: 1 unit of 20 mg; lot 202: 1 mg a unit. 2 units: 21 mg drawn, 4 hours (the first lot alone: 40 mg, 6)
+        final lots = [lot(201, 1, weightPerUnit: 1.0, analyteWeight: 20.0), lot(202, 10, weightPerUnit: 1.0, analyteWeight: 1.0)];
+        final fake = await sell(tester, lots, () async {
+          await addLine(tester, pkpr: 'ab12c', qty: '2', price: '10.00');
+          expect(find.textContaining('21.0 mg psilocybin in the cart'), findsOneWidget);
+          expect(find.text('Duration: 4 hrs · 4 hrs w/ booster'), findsOneWidget);
+        }, created: 2);
+
+        expect(sent(fake), [(201, 1, 0), (202, 1, 0)]); // 20 + 1 = 21 mg sent: the 4 hours are the core's for it
+        final kept = await SessionTimerStore(dataDir: () => tempDir).loadSoldSession(231);
+        expect((kept?.minutes, kept?.unknown), (240, false));
       });
 
       testWidgets('a line that spills onto another lot within 50 mg sells as before, one record per lot', (tester) async {
@@ -502,7 +544,7 @@ void main() {
       ]);
     });
 
-    // README R56: Mazama's server being down (the server link counting it offline) never slows or blocks a sale -
+    // Mazama's server being down (the server link counting it offline) never slows or blocks a sale -
     // the sale goes straight to the state system, and the attribution log is handed to the outbox at once.
     testWidgets('a sale goes through with Mazama\'s server offline; the log is queued, not waited on', (tester) async {
       final fake = FakeState();
@@ -512,10 +554,11 @@ void main() {
       ];
       final health = ServerHealth(probe: () async => false, startTimer: FakeTimers().start);
       health.markUnreachable();
-      final outbox = ServerOutbox(
+      Future<void> never(OutboxEntry e) async => fail('nothing is sent while the server is offline');
+      final outbox = SyncQueue(
+          tables: SyncTables(LocalStore.forDir(tempDir)),
           health: health,
-          store: OutboxStore(dataDir: () => tempDir),
-          send: (e) async => fail('nothing is sent while the server is offline'));
+          senders: {QueueKind.saleLog: outboxQueueSender(never), QueueKind.saleFailure: outboxQueueSender(never)});
       addTearDown(() {
         outbox.dispose();
         health.dispose();
@@ -526,7 +569,7 @@ void main() {
         session: freshSession(accessToken: login['access_token'] as String),
         saleSpec: Future.value(realSaleSpec),
         httpClientFactory: fake.client,
-        postSaleLog: (stateId, {required workerEmail, required deviceId, required request, required response}) =>
+        postSaleLog: (stateId, {required workerEmail, required deviceId, required request, required response}) async =>
             outbox.addSaleLog(stateId, workerEmail: workerEmail, deviceId: deviceId, request: request, response: response),
       ));
       await tester.pumpAndSettle();
@@ -539,8 +582,8 @@ void main() {
 
       expect(find.textContaining('Sale recorded'), findsOneWidget);
       expect(find.text('Nothing in the cart yet.'), findsOneWidget);
-      expect(outbox.pendingCount, 1); // waiting for the server, kept on the phone
-      expect(outbox.pending.single.response, [
+      expect(outbox.waitingReports, 1); // waiting for the server, kept on the phone
+      expect(outbox.saleReports(dead: false).single.response, [
         {'id': 9001, 'saleNumber': 'S-1'},
       ]);
       expect(health.offline, isTrue);
@@ -625,7 +668,7 @@ void main() {
       expect(find.text('Extract'), findsOneWidget);              // the cart line added before navigating away is still there
     });
 
-    // specs/features FR-3: the stock list is center_stock's page.
+    // The stock list is center_stock's page.
     testWidgets('the stock list button is hidden when center_stock is off', (tester) async {
       await tester.pumpWidget(cartPage(fetchPackages: (id) async => inventory, featureTable: featuresWithOff(['center_stock'])));
       await tester.pumpAndSettle();

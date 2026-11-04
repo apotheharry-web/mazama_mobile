@@ -62,15 +62,15 @@ void _refuseAnchorsAndAliases(String text) {
   }
 }
 
-/// The spec `format` this interpreter reads (SL-R7); a spec without one is format 1. Format 2 (SL-R11-R13) adds regex
+/// The spec `format` this interpreter reads; a spec without one is format 1. Format 2 adds regex
 /// fallbacks (`extract.regex` as a list), conditional steps (`when`) and asking a person (`await_input`). Format 3
-/// (SL-R16) adds handing the sign-in page to a person (`open_browser`, its `url_fragment`/`url_query` extracts) and the
+///  adds handing the sign-in page to a person (`open_browser`, its `url_fragment`/`url_query` extracts) and the
 /// `vars_equal` check. flowspec.py's SUPPORTED_FORMAT is the twin.
 const supportedFlowFormat = 3;
 
 /// Where a spec may send a request: an entry is a host, or '.suffix' for any host ending in it. The allowlist is code,
 /// not spec (flowspec.py's DEFAULT_ALLOWED_HOSTS is the twin). The defaults are two exact hosts, the state's site and
-/// its own B2C tenant (SL-R17): any *.b2clogin.com would let a spec send the worker's email and password to a tenant
+/// its own B2C tenant: any *.b2clogin.com would let a spec send the worker's email and password to a tenant
 /// anyone can create. No default entry is a suffix; the suffix rule stays for callers that pass one.
 const defaultAllowedHosts = <String>['psilocybin.oregon.gov', 'oregonpsilocybinprodb2c.b2clogin.com'];
 
@@ -78,7 +78,7 @@ const defaultAllowedHosts = <String>['psilocybin.oregon.gov', 'oregonpsilocybinp
 /// the text itself, never from Uri.parse (which throws on some of these and normalises others): no backslash anywhere
 /// and no '@' in the authority; the port, if written, is exactly 443; the host, minus one trailing dot, is ASCII
 /// letters, digits and hyphens in non-empty dot-separated labels (so no '%', Unicode, '..' or IPv6 literal),
-/// compared in lower case. The rule is the shared core's (`flows.host_allowed`, specs/core row 13; flowspec.py's
+/// compared in lower case. The rule is the shared core's (`flows.host_allowed`; flowspec.py's
 /// host_allowed calls the same function); the vectors are flows/contracts/spec_versions.json. Anything the core cannot
 /// answer is not allowed.
 bool hostAllowedUrl(String url, {Iterable<String> allowed = defaultAllowedHosts}) {

@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mazama_mobile/coa_data_resolver.dart';
-import 'package:mazama_mobile/inventory_cache_store.dart';
 import 'package:mazama_mobile/state_packages_client.dart';
+import 'package:mazama_mobile/sync/center_stock.dart' show keepCenterStock;
 import 'package:mazama_mobile/server_health.dart';
 
 import 'fake_timers.dart';
@@ -126,8 +126,7 @@ void main() {
     testWidgets('the cached copy does not reload (the state system was down too)', (tester) async {
       final health = offlineTracker();
       addTearDown(health.dispose);
-      final store = InventoryCacheStore(dataDir: () => tempDir);
-      await store.save(center.id, inventory, DateTime.now().subtract(const Duration(hours: 5)));
+      keepCenterStock(testDatasets(), center.id, inventory, DateTime.now().subtract(const Duration(hours: 5)));
       var serverCalls = 0;
       await tester.pumpWidget(cartPage(
         fetchPackages: (id) async {
@@ -135,7 +134,6 @@ void main() {
           throw Exception('mazama server unreachable');
         },
         fetchPackagesFromState: (stateId, {required accessToken}) async => throw StatePackagesError('state unreachable too'),
-        inventoryCacheStore: store,
         health: health,
       ));
       await tester.pumpAndSettle();

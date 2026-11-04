@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "manufacturing.plan input",
-  "description": "The plans to work out, in order (CR-D5: a whole page's in one call): each a batch/lot record, the dose (mg TPE per unit), the units asked for and the certificate's TPE.",
+  "description": "The plans to work out, in order (a whole page's in one call): each a batch/lot record, the dose (mg TPE per unit), the units asked for and the certificate's figures (coa), or, for a make job queued before DOSE-25, the 2-place certificate TPE it was reviewed at (coa_tpe).",
   "type": "object",
   "required": [
     "plans"
@@ -19,7 +19,7 @@
         "properties": {
           "source": {
             "type": "object",
-            "description": "The state's harvest batch or process lot record; only analyteWeight (mg/g: a JSON number, anything else is no potency, DOSE-13) and dryWeight (g, read as records::dry_grams reads it, RD-2, DOSE-14) are read."
+            "description": "The state's harvest batch or process lot record; only analyteWeight (mg/g: a JSON number, anything else is no potency) and dryWeight (g, read as records::dry_grams reads it: one that isn't a plain number is 0 g) are read."
           },
           "dose": {
             "type": "integer",
@@ -30,7 +30,16 @@
             "description": "Units to make (1..1000, else refused)."
           },
           "coa_tpe": {
-            "description": "The certificate's TPE (mg/g), or null; a value that isn't a JSON number of 0 or more counts as none, and is echoed back as given, except a figure that isn't finite (JSON can't carry one: text that reads as one, such as \"inf\", \"-inf\" or \"nan\", as the server hands it over), which is a refusal and is echoed as null (final review I1)."
+            "description": "Only for a make job queued before DOSE-25 (an item without coa): the certificate's TPE (mg/g) to 2 places as it was reviewed, or null; a value that isn't a JSON number of 0 or more counts as none, and is echoed back as given, except a figure that isn't finite (JSON can't carry one: text that reads as one, such as \"inf\", \"-inf\" or \"nan\", as the server hands it over), which is a refusal and is echoed as null."
+          },
+          "coa": {
+            "description": "The certificate's figures (mg/g) the plan works its TPE out from (DOSE-25: the certificate's potency is the higher of its unrounded TPE and that TPE to 2 places; none when the 2-place figure isn't above 0), or null for no certificate: psilocybin, psilocybin_from (\"state\" when that psilocybin is the state's), psilocin and lab_tpe (the lab's printed total), read as coa.tpe reads them. A coa that isn't an object or null, a figure the TPE needs that isn't a number (a figure that isn't finite comes as its text, as plans.for_core hands it over), or a TPE that isn't finite is a refusal, its coa_tpe echoed as null. When present, coa_tpe is not read.",
+            "properties": {
+              "psilocybin": {},
+              "psilocybin_from": {},
+              "psilocin": {},
+              "lab_tpe": {}
+            }
           }
         }
       }

@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "selling.review_each output",
-  "description": "Its price each in cents, half up (SALE-9).",
+  "description": "Its price each in cents, half up.",
   "type": "object",
   "required": [
     "cents"

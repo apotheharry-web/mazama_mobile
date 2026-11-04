@@ -1,4 +1,4 @@
-// MI-R1: the phone's stock mix (lib/stock_mix.dart) is held to the golden vectors generated from the server's own
+// The phone's stock mix (lib/stock_mix.dart) is held to the golden vectors generated from the server's own
 // Python (../mazama_modules/stock/gen.py -> stockview.mix, and the texts charts.mix_view writes), read from this
 // app's vendored copy, assets/shared/stock/vectors/mix.json (vendored_test.dart proves it equals the source).
 import 'dart:convert';
@@ -70,9 +70,16 @@ void main() {
     });
   }
 
-  test('the type words are the vendored rules.yaml', () {
+  for (final c in (jsonDecode(File('assets/shared/stock/vectors/type_words.json').readAsStringSync()) as List)
+      .cast<Map<String, Object?>>()) {
+    test('type words vector: ${c['name']}', () => expect(stockTypeWords(List<String>.from(c['codes'] as List)), c['words']));
+  }
+
+  test("the type words are the vendored rules.yaml's, from the core; a code not listed shows as itself", () {
     final rules = loadYaml(File('assets/shared/stock/rules/rules.yaml').readAsStringSync()) as YamlMap;
-    expect(Map<String, String>.from(rules['mix_type_words'] as Map), mixTypeWords);
+    final words = Map<String, String>.from(rules['mix_type_words'] as Map);
+    expect(stockTypeWords([...words.keys, 'XX']), [...words.values, 'XX']);
+    expect(stockTypeWords(const []), isEmpty);
   });
 
   test('mg texts round half to even and group thousands, as Python does', () {

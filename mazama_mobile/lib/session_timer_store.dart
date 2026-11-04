@@ -21,7 +21,7 @@ class SessionTimerStore {
 
   LocalStore get _store => LocalStore.forDir(dataDir());
 
-  /// One timer per cart (specs/multi-cart MC-D4): the first cart keeps session_timer.json, as CartStore keeps
+  /// One timer per cart: the first cart keeps session_timer.json, as CartStore keeps
   /// cart.json.
   String _name(String cartId) => cartFileName('session_timer', cartId);
 
@@ -68,9 +68,9 @@ class SessionTimerStore {
 
   String _doseName(String cartId) => cartFileName('session_dose', cartId);
 
-  /// What a cart just sold, for timing its client's session once the sold cart is empty (specs/multi-cart MC-D14):
-  /// [psilocybinMg], raw mg psilocybin with every dose, whether any of it was a secondary dose ([booster]) and, since
-  /// specs/core row 5, the session length the core gave for it ([minutes]; null: none). Overwrites whatever that cart
+  /// What a cart just sold, for timing its client's session once the sold cart is empty:
+  /// [psilocybinMg], raw mg psilocybin with every dose, whether any of it was a secondary dose ([booster]) and
+  /// the session length the core gave for it ([minutes]; null: none). Overwrites whatever that cart
   /// sold before; forgotten by [clear].
   Future<void> saveSoldDose(int centerId, double psilocybinMg,
       {required bool booster, String cartId = defaultCartId, DateTime Function() now = DateTime.now, int? minutes}) async {
@@ -84,9 +84,9 @@ class SessionTimerStore {
     }));
   }
 
-  /// The session [saveSoldDose] last kept for the cart, as it is timed (MC-D14), or null when [loadSoldDose] has none:
+  /// The session [saveSoldDose] last kept for the cart, as it is timed, or null when [loadSoldDose] has none:
   /// its kept minutes; for a dose an older build kept (a total only, no minutes), the core's length for that total
-  /// (dose.dart's keptMgLimits), never shorter than its own, or the longest when the core can't answer (DOSE-7).
+  /// (dose.dart's keptMgLimits), never shorter than its own, or the longest when the core can't answer.
   Future<SessionDose?> loadSoldSession(int centerId,
       {String cartId = defaultCartId, Duration? maxAge, DateTime Function() now = DateTime.now, CoreFunctions? core}) async {
     final dose = await loadSoldDose(centerId, cartId: cartId, maxAge: maxAge, now: now);

@@ -29,13 +29,13 @@
       },
       "potency": {
         "type": "number",
-        "description": "mg/g used: the higher of the state's figure and the certificate's TPE."
+        "description": "mg/g used: the higher of the state's figure and the certificate's potency (DOSE-25: the higher of its unrounded TPE and that TPE to 2 places; for a job queued before DOSE-25 its 2-place coa_tpe)."
       },
       "state_potency": {
         "type": "number"
       },
       "coa_tpe": {
-        "description": "As given; null for a certificate TPE that isn't finite (a refusal)."
+        "description": "The certificate's TPE to 2 places (the figure pages and labels show; for an item without coa, its coa_tpe as given), or null: no certificate TPE, or one that refuses the plan."
       },
       "available": {
         "type": "number",

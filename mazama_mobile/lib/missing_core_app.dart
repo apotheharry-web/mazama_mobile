@@ -1,4 +1,4 @@
-// What the app starts with (specs/core CR-R3, CR-D2): the shared core is loaded once, before the first frame, and
+// What the app starts with: the shared core is loaded once, before the first frame, and
 // an app that can't load it shows one full-screen error instead of the app - never a white screen, a crash loop or
 // an app with parts missing. Both builds already fail without Rust (android/app/build.gradle.kts,
 // ios/build_mazama_core_ffi.sh) and Codemagic checks the iOS app's symbols, so this is the last line of defence.

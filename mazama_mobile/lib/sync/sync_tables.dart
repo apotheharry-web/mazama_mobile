@@ -1,10 +1,10 @@
-// The sync engine's tables (specs/phone-sync PS-R2, PS-D4), beside the local store's documents in the same database
+// The sync engine's tables, beside the local store's documents in the same database
 // (local_store.dart's second migration creates them):
 //   - sync_dataset: one row per page's worth of data (a center's stock, its par levels), with where it came from, when
 //     it was read, and the newest refresh attempt and its error. A failed refresh changes only those last two.
-//   - sync_queue: everything still to send, one row per item, by kind (PS-R4). At most one item per kind and key is
+//   - sync_queue: everything still to send, one row per item, by kind. At most one item per kind and key is
 //     waiting or being sent (the partial unique index); dead letters are kept beside it, never sent again.
-//   - sync_sent: what was sent lately, by kind and key (the lab reports' 24-hour memory, CU-D2).
+//   - sync_sent: what was sent lately, by kind and key (the lab reports' 24-hour memory).
 // Typed rows over LocalStore's execute/select, synchronous as every LocalStore call (its header says why). Every value
 // goes in as a parameter, never into the SQL text.
 import '../local_store.dart';
@@ -235,12 +235,4 @@ class SyncTables {
         for (final r in store.select('SELECT key, sent_at_ms FROM sync_sent WHERE kind = ? ORDER BY sent_at_ms, rowid', [kind]))
           (key: r['key'] as String, at: _time(r['sent_at_ms'])),
       ];
-
-  /// Replaces everything remembered as sent of [kind] with [sent] (coa_uploader.dart's CoaSentStore.save).
-  void replaceSent(String kind, Map<String, DateTime> sent) => store.transaction(() {
-        store.execute('DELETE FROM sync_sent WHERE kind = ?', [kind]);
-        for (final e in sent.entries) {
-          this.sent(kind, e.key, e.value);
-        }
-      });
 }

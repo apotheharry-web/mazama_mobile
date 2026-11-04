@@ -1,8 +1,8 @@
 // Debug-only (reached from DebugToolsPage, itself kDebugMode-only): the three sign-in files the owner can fix without a
-// release (login.yaml, login_browser.yaml and the signed host list hosts.json, SL-R10, SL-R18, SL-R19), side by side:
+// release (login.yaml, login_browser.yaml and the signed host list hosts.json), side by side:
 // - the copy bundled in the app (the two specs; there is no bundled host list);
-// - Mazama's server's copy, through the usual clients and the server link (C17 requestLoginSpec, C19
-//   requestBrowserLoginSpec, C18 requestLoginHosts), with the source the server chose ("server": deployed with it,
+// - Mazama's server's copy, through the usual clients and the server link (requestLoginSpec,
+//   requestBrowserLoginSpec, requestLoginHosts), with the source the server chose ("server": deployed with it,
 //   "hosted": the owner's signed copy);
 // - the owner's hosted copy, read straight from the address typed on this page (the folder the files and their .sig
 //   files are hosted in, e.g. a GitHub raw folder), with a plain GET: debug only, no credentials, no app key, https
@@ -274,13 +274,13 @@ class DebugSigninFilesPage extends StatefulWidget {
   /// Where the typed hosted address is kept.
   final DebugSigninAddressStore addressStore;
 
-  /// C17, given the hosts the reply is held to; null means requestLoginSpec (the server link).
+  /// GET /p/flows/login, given the hosts the reply is held to; null means requestLoginSpec (the server link).
   final Future<FetchedSpec> Function(Iterable<String> allowedHosts)? fetchServerSpec;
 
-  /// C19, as [fetchServerSpec]; null means requestBrowserLoginSpec.
+  /// GET /p/flows/login_browser, as [fetchServerSpec]; null means requestBrowserLoginSpec.
   final Future<FetchedSpec> Function(Iterable<String> allowedHosts)? fetchServerBrowserSpec;
 
-  /// C18; null means requestLoginHosts.
+  /// GET /p/flows/hosts; null means requestLoginHosts.
   final Future<LoginHostsReply> Function()? fetchServerHosts;
 
   /// Makes the client the hosted files are read with; null means a plain http.Client().

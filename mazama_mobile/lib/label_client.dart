@@ -9,9 +9,7 @@ import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 
 import 'api_contract.g.dart';
-import 'app_api_key.dart';
-import 'server_error.dart';
-import 'server_link_client.dart' show serverClient;
+import 'server_request.dart';
 
 class LabelError implements Exception {
   final String message;
@@ -20,29 +18,16 @@ class LabelError implements Exception {
   String toString() => message;
 }
 
-/// GETs [apiBaseUrl]/p/label/{stateId}/{guid} (C2, routes.yaml) and returns the raw image bytes. Throws
+/// GETs [apiBaseUrl]/p/label/{stateId}/{guid} (routes.yaml) and returns the raw image bytes. Throws
 /// LabelError on anything but a clean 200 image - including a 404, which just as often means "this package has
 /// no label on file yet" as "no such service center," not a network problem either way.
 Future<Uint8List> fetchLabel(int stateId, String guid,
-    {String baseUrl = apiBaseUrl, http.Client? client}) async {
-  final c = client ?? serverClient();
-  final shouldClose = client == null;
-  try {
-    final uri = Uri.parse('$baseUrl${labelPath(stateId, guid)}');
-    http.Response resp;
-    try {
-      resp = await c.get(uri, headers: appApiKeyHeaders);
-    } catch (ex) {
-      throw LabelError('cannot reach ${uri.host}: ${ex.runtimeType}');
-    }
-    if (resp.statusCode == 404) {
-      throw LabelError('no label on file for $guid');
-    }
-    if (resp.statusCode != 200) {
-      throw LabelError(describeServerError(resp.statusCode, resp.body));
-    }
-    return resp.bodyBytes;
-  } finally {
-    if (shouldClose) c.close();
-  }
-}
+    {String baseUrl = apiBaseUrl, http.Client? client}) =>
+    serverRequest('$baseUrl${labelPath(stateId, guid)}',
+        error: _labelError, ok: (status) => status == 200 || status == 404, client: client, read: (resp) {
+      if (resp.statusCode == 404) throw LabelError('no label on file for $guid');
+      return resp.bodyBytes;
+    });
+
+// A LabelError keeps only its words.
+LabelError _labelError(String message, {int? status, bool unreachable = false}) => LabelError(message);

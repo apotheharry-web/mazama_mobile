@@ -1,4 +1,4 @@
-// specs/multi-cart MC-D10, MC-R3: which lots every copy of a bulk sale draws from.
+// Which lots every copy of a bulk sale draws from.
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mazama_mobile/bulk_sale.dart';
 import 'package:mazama_mobile/mazama_core.dart';

@@ -41,7 +41,7 @@ void main() {
   });
 
   // session.json is only ever an older build's file now (its tokens move to the secret store on the first load), so it
-  // is written before the store first opens the folder (plan P-D5).
+  // is written before the store first opens the folder.
   test('a corrupted file on disk reads back as null, not a crash', () async {
     await Directory('${tempDir.path}/nested').create(recursive: true);
     await File('${tempDir.path}/nested/session.json').writeAsString('not json{{{');

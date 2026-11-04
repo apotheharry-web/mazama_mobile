@@ -6,16 +6,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mazama_mobile/coa_data_client.dart';
 import 'package:mazama_mobile/debug_background_features_page.dart';
 import 'package:mazama_mobile/device_id.dart';
-import 'package:mazama_mobile/merged_inventory.dart';
 import 'package:mazama_mobile/packages_client.dart';
 import 'package:mazama_mobile/session.dart';
+import 'package:mazama_mobile/sync/stock_merge.dart';
 
 Session _session() => Session(
     accessToken: 'TOKEN', refreshToken: 'REFRESH', email: 'worker@example.com', expiresAtMs: DateTime.now().millisecondsSinceEpoch + 3600 * 1000);
 
 Widget _page({
   int? initialStateId,
-  Future<MergedInventoryResult> Function(int, {required String accessToken})? fetchMergedInventory,
+  Future<StockRead> Function(int, {required String accessToken})? readStock,
   Future<Map<String, Object?>> Function(int, List<Object?>, {required String workerEmail, required String deviceId})? uploadInventorySnapshot,
   Future<CoaData?> Function(
           {required String lotGuid, required int representativePackageId, required String accessToken, required String workerEmail, required String deviceId, double? statePsilocybin})?
@@ -30,7 +30,7 @@ Widget _page({
       home: DebugBackgroundFeaturesPage(
         session: _session(),
         initialStateId: initialStateId,
-        fetchMergedInventory: fetchMergedInventory ?? (stateId, {required accessToken}) async => throw Exception('no fixture'),
+        readStock: readStock ?? (stateId, {required accessToken}) async => throw Exception('no fixture'),
         uploadInventorySnapshot: uploadInventorySnapshot ?? (stateId, records, {required workerEmail, required deviceId}) async => throw Exception('no fixture'),
         submitCoaForLot: submitCoaForLot ??
             ({required lotGuid, required representativePackageId, required accessToken, required workerEmail, required deviceId, statePsilocybin}) async =>
@@ -74,14 +74,12 @@ void main() {
       (tester) async {
     await tester.pumpWidget(_page(
       initialStateId: 225,
-      fetchMergedInventory: (stateId, {required accessToken}) async => MergedInventoryResult(
-        packages: [
-          Package(productGuid: 'PKPR-a', productType: 'Extract', id: 1, weightPerUnit: 5, analyteWeight: 4.5, quantity: 10, coaAvailable: false, labelAvailable: false),
+      readStock: (stateId, {required accessToken}) async => StockRead(
+        serverRows: [
+          Package(productGuid: 'PKPR-ab12c', productType: 'Extract', id: 1, weightPerUnit: 5, analyteWeight: 4.5, quantity: 10, coaAvailable: false, labelAvailable: false),
         ],
-        mazamaOk: true,
-        stateOk: true,
-        rawStateRecords: [
-          {'id': 1}
+        stateRecords: [
+          {'productGuid': 'PKPR-ab12c', 'productType': 'Extract', 'id': 1, 'weightPerUnit': 5.0, 'analyteWeight': 4.5, 'quantity': 10, 'zeroOut': false}
         ],
       ),
     ));
@@ -104,11 +102,9 @@ void main() {
     List<Object?>? sentRecords;
     await tester.pumpWidget(_page(
       initialStateId: 225,
-      fetchMergedInventory: (stateId, {required accessToken}) async => MergedInventoryResult(
-        packages: const [],
-        mazamaOk: true,
-        stateOk: true,
-        rawStateRecords: [
+      readStock: (stateId, {required accessToken}) async => const StockRead(
+        serverRows: [],
+        stateRecords: [
           {'id': 7}
         ],
       ),
@@ -203,7 +199,7 @@ void main() {
   testWidgets('a thrown error from any action is shown in red, not swallowed', (tester) async {
     await tester.pumpWidget(_page(
       initialStateId: 225,
-      fetchMergedInventory: (stateId, {required accessToken}) async => throw Exception('both inventory sources failed'),
+      readStock: (stateId, {required accessToken}) async => throw Exception('both inventory sources failed'),
     ));
 
     await tester.tap(find.text('Fetch & merge'));

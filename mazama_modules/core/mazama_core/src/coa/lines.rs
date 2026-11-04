@@ -1,4 +1,4 @@
-//! Step 1 of the parsing algorithm (specs/coa/04-parsing.md): words -> lines, in reading order, across pages.
+//! The first step of reading a report (specs/coa/README.md): words -> lines, in reading order, across pages.
 //!
 //! A word joins a line when the two overlap vertically by at least half the smaller height, so words of different
 //! sizes on one printed line ("Sample: Shakti" and "UID: PL-7c737a92" on Rose City reports, about a point apart)

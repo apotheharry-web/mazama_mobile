@@ -7,11 +7,11 @@
 // here - what's in stock right now, by name and quantity - is already served, field for field, by the same
 // plain JSON endpoint this app already calls. No sale happens from this screen; it's read-only start to finish.
 // It is the one page in the app where pulling down re-downloads the inventory (the owner's rule). Above the list, its
-// age (specs/phone-sync PS-R7, PS-D5): when the stock it shows was read, asked of [StockPage.readAt] after each
+// age: when the stock it shows was read, asked of [StockPage.readAt] after each
 // download (the cart passes the center_stock dataset's time, which every load it runs keeps).
 import 'package:flutter/material.dart';
 
-import 'enrichment_store.dart';
+import 'sync/enrichment.dart';
 import 'features.g.dart';
 import 'licenses_client.dart';
 import 'packages_client.dart';
@@ -34,11 +34,11 @@ class StockPage extends StatefulWidget {
   /// a session in hand don't need to change.
   final String workerEmail;
 
-  /// The feature registry (specs/features FR-3): the reconcile button shows only while reconcile is on for this
+  /// The feature registry: the reconcile button shows only while reconcile is on for this
   /// center's license type. The generated one in the app; tests pass a copy with features off.
   final Map<String, Feature> featureTable;
 
-  /// When the stock [fetchPackages] last handed back was read, asked after each download, for the age line (PS-R7);
+  /// When the stock [fetchPackages] last handed back was read, asked after each download, for the age line;
   /// null (none known, or no [readAt]) shows none. Its failure only leaves the line out.
   final Future<DateTime?> Function(int stateId)? readAt;
 
@@ -211,7 +211,7 @@ class _StockPageState extends State<StockPage> {
             ),
             if (_inventory != null) Align(alignment: Alignment.centerLeft, child: UpdatedLine.at(_readAt, now: widget.now)),
             Expanded(child: _body()),
-            // Shown while reconcile is on for this license's type (specs/features FR-3); not gated on
+            // Shown while reconcile is on for this license's type; not gated on
             // _selectedGuids or search state - reconciling is a separate activity from picking PKPRs to add to a
             // cart, so it's reachable the same way regardless of what else a worker is doing on this screen.
             if (featureOnForLicense('reconcile', widget.center.licenseType, table: widget.featureTable))
@@ -309,8 +309,8 @@ class _StockPageState extends State<StockPage> {
       selectedTileColor: Theme.of(context).colorScheme.primaryContainer,
       leading: Checkbox(value: selected, onChanged: (_) => _toggleSelected(g)),
       title: Text(g.productGuid),
-      // A figure read from the state system alone says which it is and where it came from (SM-D31: mg psilocybin when
-      // only the state's is known; enrichment_store.dart's tpeProvenanceNote).
+      // A figure read from the state system alone says which it is and where it came from (mg psilocybin when
+      // only the state's is known; sync/enrichment.dart's tpeProvenanceNote).
       subtitle: Text('${g.tpeMg}${g.mgLabel} each${tpeProvenanceNote(g)}'),
       trailing: Text('${g.quantity}\nin stock', textAlign: TextAlign.right),
       onTap: () => _toggleSelected(g),

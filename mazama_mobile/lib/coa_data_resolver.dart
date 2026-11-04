@@ -9,12 +9,12 @@
 //   2. Every distinct lotGuid across that inventory, looked up in one batch (fetchCoaDataBatch) - always tried
 //      first, before anything else below, so a lot any other worker anywhere has ever resolved costs nothing
 //      here.
-//   3. Every guid the batch lookup didn't return, with no cap (CU-R1), is handed to the app's one background
+//   3. Every guid the batch lookup didn't return, with no cap, is handed to the app's one background
 //      uploader (coa_uploader.dart), keyed by one representative PACKAGE's own state-system id for its lot, never
 //      the service center's id (GetPackagedProductInfo/{center id} isn't a package at all: every lot silently came
 //      back with no PDF on file when this once used the center's id). The uploader runs the chain
 //      (GetPackagedProductInfo -> the newest accepted potency PDF -> downloadStateDocument -> uploadCoaParse,
-//      configured_coa_submit.dart) paced to the server's budget, in the background (CU-R2): this returns as soon as
+//      configured_coa_submit.dart) paced to the server's budget, in the background: this returns as soon as
 //      the batch lookup has been applied, never waiting for an upload.
 //
 // Every guid that resolves - by the batch lookup or, later, by an upload the server answered with its numbers - is
@@ -55,7 +55,7 @@ class AdhocCoaError implements Exception {
 }
 
 /// The first document to read for a lot from a GetPackagedProductInfo reply, or null if there is none: the head of
-/// the shared selection (select_documents.dart, SM-06). This app has no local doc-id ledger the way the server's
+/// the shared selection (select_documents.dart). This app has no local doc-id ledger the way the server's
 /// lab_pdf table is one; every miss here is, by definition, a guid the server has never resolved at all.
 int? newestPotencyPdfDocId(Object? info) {
   final docs = selectPotencyDocuments(info);
@@ -64,8 +64,8 @@ int? newestPotencyPdfDocId(Object? info) {
 
 /// A new Package with [data]'s strain/tpe folded in - the app-side mirror of mazama_sales' stockdata.Stock.mg_of
 /// (weightPerUnit x the TPE), rounded up the same way packages_client.dart's own fromJson/tpeMg already is. The TPE
-/// is the server's (it already applies the state's psilocybin figure, SM-03); when the server has none, the package
-/// keeps the mg it came with (the state's figure): no mg is worked out from the lab report on the phone (SM-D15).
+/// is the server's (it already applies the state's psilocybin figure); when the server has none, the package
+/// keeps the mg it came with (the state's figure): no mg is worked out from the lab report on the phone.
 Package _applyCoaData(Package p, CoaData data) {
   final tpePerG = data.tpe;
   return Package(
@@ -76,7 +76,7 @@ Package _applyCoaData(Package p, CoaData data) {
     analyteWeight: p.analyteWeight,
     saleValues: p.saleValues,
     strain: data.strain.isNotEmpty ? data.strain : p.strain,
-    tpeMg: tpePerG == null ? p.tpeMg : unitTpeMg(p.weightPerUnit, null, tpePerG) ?? 0, // SM-04 (dose.dart, the core's)
+    tpeMg: tpePerG == null ? p.tpeMg : unitTpeMg(p.weightPerUnit, null, tpePerG) ?? 0, // unit weight x the report's TPE per g, rounded up (dose.dart, the core's)
     quantity: p.quantity,
     lotGuid: p.lotGuid,
     confirmed: p.confirmed,
@@ -105,7 +105,7 @@ Future<AdhocInventoryResult> resolveAdhocInventory({
   http.Client? client,
 }) async {
   final c = client ?? http.Client();
-  // Mazama's server's own call (the batch lookup) goes through the server link (README R56) unless a client was
+  // Mazama's server's own call (the batch lookup) goes through the server link unless a client was
   // given; the state system's never do. The uploads are the uploader's (coa_uploader.dart).
   final server = client ?? serverClient();
   final shouldClose = client == null;

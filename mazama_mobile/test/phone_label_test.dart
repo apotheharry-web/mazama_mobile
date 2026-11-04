@@ -4,7 +4,8 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mazama_mobile/enrichment_store.dart';
+import 'package:mazama_mobile/sync/enrichment.dart';
+import 'package:mazama_mobile/sync/sync_datasets.dart' show Datasets;
 import 'package:mazama_mobile/mazama_core.dart';
 import 'package:mazama_mobile/packages_client.dart';
 import 'package:mazama_mobile/phone_label.dart';
@@ -74,7 +75,7 @@ Future<Map<String, Object?>> _draw(
   List<Object?>? records,
   Object? info,
   String strain = '',
-  EnrichmentStore? enrichment,
+  Datasets? enrichment,
   Map<String, Object?>? labelInput,
 }) =>
     drawPhoneLabelSpec(
@@ -104,7 +105,7 @@ Future<Map<String, Object?>> _draw(
       labelInput: labelInput,
     );
 
-/// /p/packages' labelInput for the package (README R64): the core's LabelInput as the server builds it, without today.
+/// /p/packages' labelInput for the package: the core's LabelInput as the server builds it, without today.
 final Map<String, Object?> _serverInput = {
   'package': {
     'pkpr': 'PKPR-71c5e6ad', 'description': 'Huautla 25 mg TPE DH (2027-08-31)', 'weight_per_unit': 2.62,
@@ -136,12 +137,12 @@ void main() {
       expect(calls, isEmpty);
     });
 
-    test('keeps nothing in the enrichment store: the figures are already the server\'s', () async {
+    test('keeps nothing in the enrichment dataset: the figures are already the server\'s', () async {
       final dir = Directory.systemTemp.createTempSync('phone_label_r64_');
       addTearDown(() => dir.deleteSync(recursive: true));
-      final store = EnrichmentStore(dataDir: () => dir);
+      final store = Datasets.forDir(() => dir);
       await _draw([], labelInput: _serverInput, enrichment: store);
-      expect(await store.load(DateTime(2026, 10, 21)), isEmpty);
+      expect(keptEnrichment(store, DateTime(2026, 10, 21)), isEmpty);
     });
   });
 
@@ -160,7 +161,7 @@ void main() {
       'section': _section,
       'settings': phoneLabelSettings,
       'today': '2026-10-21',
-      'test_date': '2025-05-27', // SM-D18: best-by counts from the state's test-completed date, as on the server
+      'test_date': '2025-05-27', // best-by counts from the state's test-completed date, as on the server
     });
   });
 
@@ -197,12 +198,12 @@ void main() {
         throwsA(isA<PhoneLabelError>().having((e) => e.message, 'message', 'the package has no unit weight; there is no strain name')));
   });
 
-  // SM-D31: what the phone keeps from mazama_core's reading, for a later read from the state system alone.
+  // What the phone keeps from mazama_core's reading, for a later read from the state system alone.
   group("keeping the phone's reading", () {
     late Directory tempDir;
     setUp(() => tempDir = Directory.systemTemp.createTempSync('mazama_phone_label_test_'));
     tearDown(() => tempDir.deleteSync(recursive: true));
-    EnrichmentStore store() => EnrichmentStore(dataDir: () => tempDir);
+    Datasets store() => Datasets.forDir(() => tempDir);
     final readAt = DateTime(2026, 10, 21, 9, 30);
 
     // mazama_core's answer for each record: its TPE for the record's own state figure (state + factor x psilocin, to 2
@@ -233,10 +234,10 @@ void main() {
         _record(analyteWeight: 5.25, id: 6669, lot: 'PL-0000beef'), // another lot: its report wasn't read
         _record(pkpr: 'PKPR-00000001', id: 7000), // another product
       ]);
-      final known = await es.load(readAt);
+      final known = keptEnrichment(es, readAt);
       expect(known.keys.toSet(), {enrichmentKey('PKPR-71c5e6ad', 6667), enrichmentKey('PKPR-71c5e6ad', 6668)});
       final a = known[enrichmentKey('PKPR-71c5e6ad', 6667)]!;
-      // 2.62 g x 9.54 mg/g = 24.99 -> 25 mg TPE per unit, rounded up as /p/packages' tpeMg (SM-D16, SM-D17)
+      // 2.62 g x 9.54 mg/g = 24.99 -> 25 mg TPE per unit, rounded up as /p/packages' tpeMg
       expect([a.source, a.tpeMgPerG, a.tpeMg, a.psilocinMg, a.weightPerUnit, a.analyteWeight, a.strain],
           [EnrichmentSource.phone, 9.54, 25, closeTo(2.62 * 3.08, 1e-9), 2.62, 5.25, 'Huautla']);
       expect(a.expires, DateTime(2027, 8, 31));
@@ -253,7 +254,7 @@ void main() {
         final out = perRecord(input);
         return {...out, 'spec': {...out['spec'] as Map, 'best_by_from': 'test_date'}};
       }));
-      expect((await es.load(readAt)).values.single.expires, isNull);
+      expect(keptEnrichment(es, readAt).values.single.expires, isNull);
     });
 
     test('nothing is kept when no label can be drawn', () async {
@@ -261,24 +262,24 @@ void main() {
       final blocked = _FakeCore(outcome: {'blocked': ['the linked certificate has no psilocybin/psilocin values'], 'warnings': <Object?>[]});
       await expectLater(_draw([], core: blocked, enrichment: es), throwsA(isA<PhoneLabelError>()));
       await expectLater(_draw([], core: _FakeCore(found: null), enrichment: es), throwsA(isA<PhoneLabelError>()));
-      expect(await es.load(readAt), isEmpty);
+      expect(keptEnrichment(es, readAt), isEmpty);
     });
 
     test('a spec with no TPE keeps nothing, and the label is still returned', () async {
       final es = store();
       final spec = await _draw([], enrichment: es); // _spec carries no tpe_mg_per_g
       expect(spec, _spec);
-      expect(await es.load(readAt), isEmpty);
+      expect(keptEnrichment(es, readAt), isEmpty);
     });
 
     test("never replaces the server's figures for the same inputs", () async {
       final es = store();
-      await es.remember([
+      rememberServerFigures(es, [
         Package(productGuid: 'PKPR-71c5e6ad', productType: 'Whole Fungi', id: 6667, weightPerUnit: 2.62, analyteWeight: 5.25,
             strain: 'Huautla', tpeMg: 26),
       ], readAt);
       await _draw([], core: _FakeCore(answer: perRecord), enrichment: es, records: [_record(analyteWeight: 5.25)]);
-      final e = (await es.load(readAt)).values.single;
+      final e = keptEnrichment(es, readAt).values.single;
       expect([e.source, e.tpeMg], [EnrichmentSource.server, 26]);
     });
 

@@ -1,17 +1,17 @@
-//! Certificate corrections and saved ingredient text (specs/core row 12, FM-09, FM-10), held to the frozen vectors in
-//! mazama_modules/manufacturing/vectors/ (the server's own Python under CPython 3.14, the reference):
+//! Certificate corrections and saved ingredient text, held to the frozen vectors in
+//! mazama_modules/manufacturing/vectors/:
 //!
-//! - [`coa_edit`]: one correction of the lab data in a certificate image's description (`coaedit.apply_edit`). It answers
-//!   with the *changes*, never a whole description: the server applies them to its own dict, so the image's other
-//!   fields stay byte for byte (a number past 64 bits stays itself) and `json.dumps` writes the keys in the old order.
+//! - [`coa_edit`]: one correction of the lab data in a certificate image's description (the server's
+//!   `coaedit.apply_edit`). It answers with the *changes*, never a whole description: the server applies them to its
+//!   own dict, so the image's other fields stay byte for byte (a number past 64 bits stays itself) and `json.dumps`
+//!   keeps the keys in the order they had.
 //! - [`coa_number`]: a typed mg/g figure (`coaedit.number`).
 //! - [`clean_text`]: saved ingredient and allergen text (`infosheet.clean_text`).
 //!
 //! The readings are Python's: `float()` of a stripped, lower-cased text, `repr` of a float, `str.strip()` / `split()`
-//! whitespace, `date.fromisoformat` as CPython 3.14 reads it, `$` letting one line feed follow. Two documented rulings
-//! where the core is not the reference: only ASCII digits are read as a number (`float()` also reads other scripts'
-//! decimal digits), and a list or an object as the image's own `subtype` counts as blank (Python compares with its
-//! `repr`).
+//! whitespace, `date.fromisoformat` as CPython 3.14 reads it, `$` letting one line feed follow. Two limits: only
+//! ASCII digits are read as a number (not other scripts' decimal digits), and a list or an object as the image's own
+//! `subtype` counts as blank.
 use std::sync::LazyLock;
 
 use regex::Regex;
@@ -23,7 +23,9 @@ use crate::stock::{py_space, py_strip};
 use crate::stock_order::py_float_repr;
 
 mod plan;
+mod transfer;
 pub use plan::{plan_json, serving_table_json};
+pub use transfer::{transfer_check_json, transfer_items_json, transfer_plan_json};
 
 const NUM_KEYS: [(&str, &str); 6] = [
     ("psilocybin", "Psilocybin"),

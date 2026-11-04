@@ -1,6 +1,6 @@
-// specs/core row 5 (Task 11) on the cart page: the cap is the shared core's (dose.dart). DOSE-8: the sale check reads
-// the state again and refuses a sale, or a bulk sale's copy, whose state figures moved since the cart was priced (since
-// row 7 SALE-17's words, before the cap on those figures), nothing sent; DOSE-5: a unit of unknown potency refuses the cart, with the core's words.
+// The cap on the cart page: the cap is the shared core's (dose.dart). The sale check reads
+// the state again and refuses a sale, or a bulk sale's copy, whose state figures moved since the cart was priced (in
+// the core's check_sale words, before the cap on those figures), nothing sent; a unit of unknown potency refuses the cart, with the core's words.
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -14,7 +14,7 @@ import 'package:mazama_mobile/state_packages_client.dart';
 import 'flow/fake_state.dart';
 import 'cart_page_test_support.dart';
 
-/// specs/core row 7, SALE-17: a figure the state changed since the cart was priced is refused before the cap is reached
+/// A figure the state changed since the cart was priced is refused before the cap is reached
 /// (the server's worker does the same); the cap still runs on the state's figures as just read when they are unchanged.
 const _changed = "PKPR-d00d1: the state's record changed since the sale was priced (analyteWeight); nothing was sent.";
 

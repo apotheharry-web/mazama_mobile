@@ -12,7 +12,7 @@
       "items": {
         "type": "integer"
       },
-      "description": "Largest remainder in exact integers, ties to the earlier weight (PRICE-4); they add up to the total."
+      "description": "Largest remainder in exact integers, ties to the earlier weight; they add up to the total."
     }
   }
 }

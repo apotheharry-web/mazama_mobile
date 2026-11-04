@@ -6,8 +6,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mazama_mobile/center_status_client.dart';
 import 'package:mazama_mobile/coa_data_resolver.dart';
 import 'package:mazama_mobile/coa_uploader.dart';
-import 'package:mazama_mobile/enrichment_store.dart';
-import 'package:mazama_mobile/inventory_cache_store.dart';
+import 'package:mazama_mobile/sync/enrichment.dart';
+import 'package:mazama_mobile/sync/center_stock.dart' show keepCenterStock;
 import 'package:mazama_mobile/packages_client.dart';
 import 'package:mazama_mobile/resilience_options.dart';
 import 'package:mazama_mobile/state_packages_client.dart';
@@ -54,7 +54,7 @@ void main() {
     expect(attempts, 2);
   });
 
-  // R87: Mazama's server not answering is said once, by the app-wide banner (server_link.dart); the cart has no strip of
+  // Mazama's server not answering is said once, by the app-wide banner (server_link.dart); the cart has no strip of
   // its own for it.
   testWidgets('tier 1 down, tier 2 (state) up: the state\'s stock, with no strip of the cart\'s own', (tester) async {
     await tester.pumpWidget(cartPage(
@@ -75,10 +75,9 @@ void main() {
   });
 
   testWidgets("a live load remembers the server's own figures per package for a later outage", (tester) async {
-    final enrichment = EnrichmentStore(dataDir: () => tempDir);
-    await tester.pumpWidget(cartPage(fetchPackages: (id) async => inventory, enrichmentStore: enrichment));
+    await tester.pumpWidget(cartPage(fetchPackages: (id) async => inventory));
     await tester.pumpAndSettle();
-    final known = await enrichment.load(DateTime.now());
+    final known = keptEnrichment(testDatasets(), DateTime.now());
     expect(known[enrichmentKey('PKPR-ab12c', 101)]!.strain, 'Golden Teacher');
     expect(known[enrichmentKey('PKPR-ff99aa', 102)]!.tpeMg, 90);
   });
@@ -99,12 +98,10 @@ void main() {
         ];
 
     testWidgets("every product filled: the cart line has Mazama's last TPE, with no strip of the cart's own", (tester) async {
-      final enrichment = EnrichmentStore(dataDir: () => tempDir);
-      await enrichment.remember(served, seen);
+      rememberServerFigures(testDatasets(), served, seen);
       await tester.pumpWidget(cartPage(
         fetchPackages: (id) async => throw Exception('mazama server unreachable'),
         fetchPackagesFromState: (stateId, {required accessToken}) async => fromState(),
-        enrichmentStore: enrichment,
       ));
       await tester.pumpAndSettle();
       expect(find.textContaining('Strain and TPE'), findsNothing);
@@ -113,12 +110,10 @@ void main() {
     });
 
     testWidgets("a product whose state potency changed stays an estimate; the unchanged one keeps Mazama's TPE", (tester) async {
-      final enrichment = EnrichmentStore(dataDir: () => tempDir);
-      await enrichment.remember(served, seen);
+      rememberServerFigures(testDatasets(), served, seen);
       await tester.pumpWidget(cartPage(
         fetchPackages: (id) async => throw Exception('mazama server unreachable'),
         fetchPackagesFromState: (stateId, {required accessToken}) async => fromState(ff99aaPotency: 9.5),
-        enrichmentStore: enrichment,
       ));
       await tester.pumpAndSettle();
       expect(find.textContaining('Strain and TPE'), findsNothing);
@@ -127,7 +122,7 @@ void main() {
     });
   });
 
-  // SM-D31: a product read from the state system with nothing kept for it shows and prices on the state's psilocybin,
+  // A product read from the state system with nothing kept for it shows and prices on the state's psilocybin,
   // and says so; the 50 mg cap and session lengths stay on raw psilocybin either way.
   group("state-only products (no TPE known)", () {
     // As state_packages_client.dart maps them: tpeMg = ceil(weightPerUnit x analyteWeight) - 23 from 22.5 here.
@@ -183,16 +178,14 @@ void main() {
     });
 
     testWidgets("a product filled from the phone's reading of the lab report shows mg TPE and says whose it is", (tester) async {
-      final enrichment = EnrichmentStore(dataDir: () => tempDir);
       final seen = DateTime.now().toUtc().subtract(const Duration(hours: 2));
-      await enrichment.rememberPhone([
+      rememberPhoneReadings(testDatasets(), [
         PackageEnrichment(productGuid: 'PKPR-ab12c', id: 101, weightPerUnit: 5, analyteWeight: 4.5, strain: 'Golden Teacher',
             tpeMg: 26, expires: null, seenAt: seen, source: EnrichmentSource.phone, tpeMgPerG: 5.12, psilocinMg: 2.8),
       ], seen);
       await tester.pumpWidget(cartPage(
         fetchPackages: (id) async => throw Exception('mazama server unreachable'),
         fetchPackagesFromState: (stateId, {required accessToken}) async => stateOnly(),
-        enrichmentStore: enrichment,
       ));
       await tester.pumpAndSettle();
       await addLine(tester, pkpr: 'ab12c', qty: '1', price: '10.00');
@@ -202,13 +195,11 @@ void main() {
   });
 
   testWidgets('tiers 1 and 2 both down, a same-center cache on file: shows the cache-fallback banner with its age', (tester) async {
-    final store = InventoryCacheStore(dataDir: () => tempDir);
     final fetchedAt = DateTime.now().subtract(const Duration(hours: 5));
-    await store.save(center.id, inventory, fetchedAt);
+    keepCenterStock(testDatasets(), center.id, inventory, fetchedAt);
     await tester.pumpWidget(cartPage(
       fetchPackages: (id) async => throw Exception('mazama server unreachable'),
       fetchPackagesFromState: (stateId, {required accessToken}) async => throw StatePackagesError('state unreachable too'),
-      inventoryCacheStore: store,
     ));
     await tester.pumpAndSettle();
     // R87: about the state system only; the app-wide banner says Mazama's server can't be reached.
@@ -220,7 +211,7 @@ void main() {
     expect(find.widgetWithText(TextButton, 'Retry'), findsOneWidget);
   });
 
-  // R87: the strip with a Retry for stock read from the state alone is gone; the cart loads it again itself once the
+  // No strip with a Retry for stock read from the state alone; the cart loads it again itself once the
   // app's tracker says Mazama's server answers, but only with nothing in the cart and no sale being sent.
   testWidgets('resilienceOptions.enableStateFallback: false skips tier 2, even with fetchPackagesFromState wired', (tester) async {
     var stateFallbackCalled = false;
@@ -239,17 +230,15 @@ void main() {
     expect(find.textContaining('server unreachable'), findsOneWidget);
   });
 
-  // Q3 (specs/phone-sync phase 3): kept stock is shown at any age, with its age; cacheMaxAge is how old it may be
+  // Kept stock is shown at any age, with its age; cacheMaxAge is how old it may be
   // to be sold from (test/cart_page_selling_guarantees_test.dart holds the refusal itself).
   testWidgets('resilienceOptions.cacheMaxAge: kept stock older than it is still shown, marked too old to sell from',
       (tester) async {
-    final store = InventoryCacheStore(dataDir: () => tempDir);
     final fetchedAt = DateTime.now().subtract(const Duration(hours: 2));
-    await store.save(center.id, inventory, fetchedAt);
+    keepCenterStock(testDatasets(), center.id, inventory, fetchedAt);
     await tester.pumpWidget(cartPage(
       fetchPackages: (id) async => throw Exception('mazama server unreachable'),
       fetchPackagesFromState: (stateId, {required accessToken}) async => throw StatePackagesError('state unreachable too'),
-      inventoryCacheStore: store,
       // A 2-hour-old copy is well within the default 3 days; this build's 1-hour limit makes it too old to sell from.
       resilienceOptions: const ResilienceOptions(cacheMaxAge: Duration(hours: 1)),
     ));
@@ -329,7 +318,7 @@ void main() {
     expect(find.textContaining('resolving lab reports: 2 of 3 lots so far'), findsOneWidget);
   });
 
-  // specs/coa-upload CU-R1: a tracked center's load hands every lot the server has no lab report for to the uploader.
+  // A tracked center's load hands every lot the server has no lab report for to the uploader.
   testWidgets('a configured center the server answered: each lot the server has no report for is queued once', (tester) async {
     final queued = <CoaUploadLot>[];
     Package pkg(String pkpr, int id, String? lot, {bool coa = true}) => Package(productGuid: pkpr, productType: 'Extract', id: id,
@@ -591,7 +580,7 @@ void main() {
       expect(find.textContaining('1 x \$0.10'), findsOneWidget);
     });
 
-    // SM-16: the cart's tax percent, agreement split and units-per-line cap are the server's live settings.
+    // The cart's tax percent, agreement split and units-per-line cap are the server's live settings.
     const serverSettings = CartSettings(
         minutes: 1080, taxPercent: 10, agreementEdible: 1, agreementDried: 2, dedupeSeconds: 20, maxUnitsPerLine: 2);
 

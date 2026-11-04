@@ -1,4 +1,4 @@
-// MI-D6..D10, MI-R6 (specs/mazama-inventory): the order form the Mazama inventory page opens and its review page.
+// The order form the Mazama inventory page opens and its review page.
 // Built from the center's par levels (a strain with a par level and no stock included), each line at its full par,
 // freeze dried / dehydrated / homogenized per line with an "All lines" setter; reviewed with notes, Back to edit
 // keeping everything, then sent by Submit order through the injected submit.
@@ -219,7 +219,7 @@ void main() {
 
   test('the review page writes each line as the form does', () {
     expect(orderLineText(const OrderLine(strain: 'Bluey', size: 15, type: 'DH', quantity: 2)), '2 × Bluey 15 mg, Dehydrated');
-    // specs/edibles ED-A6: an edible product is its own kind
+    // An edible product is its own kind
     expect(orderLineText(const OrderLine(strain: 'Chocolate', size: -1, type: 'CH', quantity: 20)), '20 × Chocolate Booster');
     expect(orderLineText(const OrderLine(strain: 'Gummy', size: -2, type: 'GM', quantity: 4)), '4 × Gummy Microdose');
   });
@@ -235,7 +235,7 @@ void main() {
         ParLevel(strain: 'Chocolate', size: 25, par: 9), // a size a product doesn't take: not a line
         ParLevel(strain: 'Bluey', size: -1, par: 9), //     nor a strain's Booster
         ParLevel(strain: 'Bluey', size: 5, par: 3),
-        ParLevel(strain: 'Honey', size: 0, par: 5), //       an edible's Other: no longer in the par table, not a line
+        ParLevel(strain: 'Honey', size: 0, par: 5), //       an edible's Other: not in the par table, not a line
       ],
       submit: (lines, note) async {
         sent = lines;
@@ -243,7 +243,7 @@ void main() {
       },
     ));
     await tester.pumpAndSettle();
-    // MI-D17: one row per product, both fields each, at its par or 0; below every strain line
+    // One row per product, both fields each, at its par or 0; below every strain line
     expect([_qty(tester, 'Chocolate|-1'), _qty(tester, 'Chocolate|-2'), _qty(tester, 'Gummy|-1'), _qty(tester, 'Gummy|-2')],
         ['6', '0', '0', '2']);
     expect(find.byKey(const ValueKey('edible-Honey')), findsNothing);

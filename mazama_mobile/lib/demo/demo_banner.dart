@@ -1,7 +1,7 @@
-// Demo mode's banner (specs/demo-mode DM-D3, DM-R5): "Demo: nothing here is real" above every page while the demo
+// Demo mode's banner: "Demo: nothing here is real" above every page while the demo
 // is open. It sits in MaterialApp.builder (main.dart), above the Navigator, so every page, dialog and sheet reached
 // from the demo shows it without each one knowing about the demo. SelectCenterPage.demo turns it on; the sign-in
-// page turns it off (signing out of the demo lands there, DM-D6).
+// page turns it off (signing out of the demo lands there).
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 

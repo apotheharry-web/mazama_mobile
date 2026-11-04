@@ -1,7 +1,7 @@
-// sync/sync_datasets.dart and the engine's datasets (specs/phone-sync PS-R3, PS-R7): one row per page's worth of data
+// sync/sync_datasets.dart and the engine's datasets: one row per page's worth of data
 // with one age, watched by pages; a refresh writes it, a failed one only records the try; one refresh per key at a
 // time; the foreground tick refreshes what is watched and older than five minutes, never in the background; the
-// server answering again refreshes what is watched (README R87's reload). Fake clock, timers and refreshers.
+// server answering again refreshes what is watched. Fake clock, timers and refreshers.
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -65,7 +65,8 @@ void main() {
       'coa_data',
       'recent_sales',
       'stock_rows',
-      'mazama_licenses', // Task 10: the stock page's kept Mazama licenses (stock_cache_store.dart's, before)
+      'mazama_licenses', // the stock page's kept Mazama licenses (stock_cache_store.dart's, before)
+      'manufacturer', // what the phone keeps for a manufacturer license, a key per read and license
     ]);
   });
 
@@ -399,7 +400,7 @@ void main() {
     expect([for (final r in d.list()) '${r.name}/${r.key}'], ['par/231', 'sheets/231']);
   });
 
-  // The server's reads (phase 2), ported from the old reply_store_test.dart's "the reads moved here".
+  // The server's reads: their keepers, and a copy the reply store kept read as the dataset.
   group("the server's reads", () {
     const levels = [ParLevel(strain: 'Golden Teacher', size: 25, par: 12)];
     final at = DateTime.utc(2026, 10, 21, 9, 30);
@@ -414,95 +415,45 @@ void main() {
       expect([row.source, row.fetchedAt], [sourceServer, at]);
     });
 
-    // Task 10: the classes that kept these (stock_cache_store.dart, mazama_inventory_cache_store.dart) are gone; their
-    // documents, as an older build wrote them, are moved in on the folder's first open (sync_migration.dart).
-    test("par and sheets: an older build's stock_cache document is moved in on the first open", () async {
+    test('sheets: kept and read back, as the sheets dataset', () async {
       final sheet = ProductSheet.fromJson(const {
         'guid': 'HB-aaaa0001', 'name': 'GT', 'product': 'Dried', 'tested': '2026-09-01', 'path': '/p/lots/m/HB-aaaa0001',
         'strains': ['Golden Teacher'],
       });
-      LocalStore.forDir(dir).write(
-          'stock_cache_231.json',
-          jsonEncode({
-            'par': [for (final l in levels) l.toJson()],
-            'parAtMs': at.millisecondsSinceEpoch,
-            'sheets': [sheet.toJson()],
-            'sheetsAtMs': at.millisecondsSinceEpoch,
-          }));
-      final par = (await parDataset(datasets(), 231).load())!;
-      expect([par.value.single.par, par.cachedAt], [12, at]);
+      await sheetsDataset(datasets(), 231).save([sheet], at);
       final sheets = (await sheetsDataset(datasets(), 231).load())!;
       expect([sheets.value.single.toJson(), sheets.cachedAt], [sheet.toJson(), at]);
       expect(await parDataset(datasets(), 183).load(), isNull);
-      expect(LocalStore.forDir(dir).read('stock_cache_231.json'), isNull); // nothing left in it
     });
 
-    // Task 10 review, minor 1: a move that failed (caught and logged) is tried again on the next open in the same run,
-    // not only at the next launch; one that keeps failing is tried a few times, not at every read.
-    test("an older build's copy whose move failed is moved on the next open, in the same run", () async {
-      LocalStore.forDir(dir).write('stock_cache_231.json',
-          jsonEncode({'par': [for (final l in levels) l.toJson()], 'parAtMs': at.millisecondsSinceEpoch}));
-      final tables = _FailingDatasetTables(LocalStore.forDir(dir), fails: 1);
-      final d = Datasets(tables);
-      expect(d.read(Dataset.par, '231'), isNull); // the first move failed, as a full disk would
-      expect(LocalStore.forDir(dir).read('stock_cache_231.json'), isNotNull, reason: 'kept for the next try');
-      final par = (await parDataset(d, 231).load())!;
-      expect([par.value.single.par, par.cachedAt], [12, at]);
-      expect(LocalStore.forDir(dir).read('stock_cache_231.json'), isNull);
-    });
-
-    test('a move that keeps failing is tried 3 times, then left for the next launch', () {
-      LocalStore.forDir(dir).write('stock_cache_231.json', jsonEncode({'par': [for (final l in levels) l.toJson()]}));
-      final tables = _FailingDatasetTables(LocalStore.forDir(dir), fails: 1000);
-      final d = Datasets(tables);
-      for (var i = 0; i < 6; i++) {
-        expect(d.read(Dataset.par, '231'), isNull);
-      }
-      expect(tables.tries, 3);
-      expect(LocalStore.forDir(dir).read('stock_cache_231.json'), isNotNull);
-    });
-
-    test("par kept without a time by an older build is shown with none", () async {
-      LocalStore.forDir(dir).write('stock_cache_231.json', jsonEncode({'par': [for (final l in levels) l.toJson()]}));
+    test('a copy stored at the epoch is shown with no time', () async {
+      datasets().put(Dataset.par, '231', jsonEncode([for (final l in levels) l.toJson()]),
+          source: sourceServer, at: DateTime.fromMillisecondsSinceEpoch(0, isUtc: true));
       final par = (await parDataset(datasets(), 231).load())!;
       expect([par.value.single.par, par.cachedAt], [12, null]);
     });
 
-    test("Mazama's stock: an older build's copy is moved in on the first open, every field kept; then kept here",
-        () async {
+    test("Mazama's stock: kept and read back, every field kept", () async {
       const inv = MazamaInventory(name: 'Mazama Mushrooms LLC', cells: [
         MixCell(strain: 'Golden Teacher', type: 'DH', mg: 3888),
       ], lots: [
         MazamaLot(strain: 'Golden Teacher', lot: 'HB-aaaa0001', tpe: 8.64, detected: ['baeocystin'], path: '/p/lots/mazama/HB-aaaa0001', types: ['DH']),
       ]);
-      // as mazama_inventory_cache_store.dart kept it
-      LocalStore.forDir(dir)
-          .write('mazama_inventory_cache.json', jsonEncode({'atMs': at.millisecondsSinceEpoch, 'inventory': inv.toJson()}));
+      await mazamaInventoryDataset(datasets()).save(inv, at);
       final read = (await mazamaInventoryDataset(datasets()).load())!;
       expect([read.fromCache, read.cachedAt, read.value.name], [true, at, 'Mazama Mushrooms LLC']);
       expect(read.value.cells.single.toJson(), {'strain': 'Golden Teacher', 'type': 'DH', 'mg': 3888});
       expect(read.value.lots.single.toJson(), inv.lots.single.toJson());
-      expect(LocalStore.forDir(dir).read('mazama_inventory_cache.json'), isNull);
       final later = at.add(const Duration(days: 1));
       await mazamaInventoryDataset(datasets()).save(inv, later);
       expect((await mazamaInventoryDataset(datasets()).load())!.cachedAt, later);
     });
 
-    test("an older build's damaged Mazama copy counts as nothing kept", () async {
-      for (final (i, body) in ['{not json', '{"atMs": 1, "inventory": {"cells": 3}}', '[]'].indexed) {
-        final older = Directory('${dir.path}/older$i')..createSync();
-        LocalStore.forDir(older).write('mazama_inventory_cache.json', body);
-        expect(await mazamaInventoryDataset(Datasets.forDir(() => older)).load(), isNull, reason: body);
+    test("a damaged Mazama copy counts as nothing kept", () async {
+      for (final body in ['{not json', '{"cells": 3}', '[]']) {
+        datasets().put(Dataset.mazamaInventory, '', body, source: sourceServer, at: at);
+        expect(await mazamaInventoryDataset(datasets()).load(), isNull, reason: body);
       }
-    });
-
-    test("a reply the reply store kept is read as the dataset (moved on the folder's first use)", () async {
-      // as reply_store.dart (removed in Task 10) kept it
-      LocalStore.forDir(dir).write('server_replies/${Uri.encodeComponent('par/231')}.json',
-          jsonEncode({'atMs': at.millisecondsSinceEpoch, 'value': [for (final l in levels) l.toJson()]}));
-      final read = (await parDataset(datasets(), 231).load())!;
-      expect([read.value.single.par, read.cachedAt], [12, at]);
-      expect(LocalStore.forDir(dir).names('server_replies/'), isEmpty);
     });
 
     test('a stored copy that cannot be decoded counts as none', () async {
@@ -570,17 +521,4 @@ void main() {
       expect(e.datasets.read(Dataset.par, 'x')!.lastError, isNotNull);
     });
   });
-}
-
-/// Tables whose first [fails] dataset writes throw, as a full disk would mid-move; [tries] counts the writes asked.
-class _FailingDatasetTables extends SyncTables {
-  _FailingDatasetTables(super.store, {required this.fails});
-  final int fails;
-  int tries = 0;
-
-  @override
-  void putDataset(String name, String key, String body, {required String source, required DateTime fetchedAt}) {
-    if (++tries <= fails) throw StateError('disk full');
-    super.putDataset(name, key, body, source: source, fetchedAt: fetchedAt);
-  }
 }

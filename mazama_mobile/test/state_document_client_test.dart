@@ -11,11 +11,11 @@ import 'package:mazama_mobile/state_document_client.dart';
 late final FlowSpec readsSpec = FlowSpec.fromYaml(File('assets/flows/state_reads.yaml').readAsStringSync());
 
 void main() {
-  // downloadStateDocument reads its site, API base and User-Agent from assets/flows/state_reads.yaml (SM-20) via
+  // downloadStateDocument reads its site, API base and User-Agent from assets/flows/state_reads.yaml via
   // rootBundle when no spec is passed, which needs a binding.
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  // SM-20: the same values the shared read flows send, taken from the spec rather than written out here.
+  // The same values the shared read flows send, taken from the spec rather than written out here.
   test('takes the API base, Referer, Origin and User-Agent from the state_reads spec', () async {
     final custom = FlowSpec({
       ...readsSpec.vars,
@@ -174,7 +174,7 @@ void main() {
     );
   });
 
-  // SM-12: this hand-written state read had no timeout either.
+  // This hand-written state read had no timeout either.
   test('no answer within the timeout is an error, not a wait forever', () async {
     final client = http_testing.MockClient.streaming((req, bodyStream) => Completer<http.StreamedResponse>().future);
     await expectLater(

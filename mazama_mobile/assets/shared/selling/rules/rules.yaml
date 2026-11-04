@@ -1,4 +1,4 @@
-# Selling rules both apps use (specs/shared-modules/README.md G4: SM-13 onwards). Vendored into each app by SM-00
+# Selling rules both apps use. Vendored into each app by the sync scripts
 # (mazama_modules/vendored.txt "selling-rules"); the server reads its copy (pricing.py), the phone holds its
 # constants to its copy in a test (selling_rules_test.dart). Money is whole cents.
 
@@ -10,7 +10,7 @@ pricing:
   # A whole-cart total may be at most this many times max_unit_cents: $10,000,000 (total_to_cents, totalToCents).
   max_total_units: 1000
 
-# A shopping cart's settings (SM-16). The server's defaults: config.py reads these from its vendored copy, and
+# A shopping cart's settings. The server's defaults: config.py reads these from its vendored copy, and
 # mazama_sales/nix/module.nix writes the same numbers as its option defaults (nix keeps the final say; a test holds
 # the two equal). The server sends the live values with /p/center-status/{state_id} ("cart"); the phone uses them,
 # and these from its own vendored copy when the server can't be asked.
@@ -22,7 +22,7 @@ cart:
   dedupe_seconds: 20         # the server holds back the same package sold again within this many seconds
   max_units_per_line: 999    # the most units one cart line may hold
 
-# Pricing a whole cart (SM-14). A new cart starts in this mode (SM-D28): "total" (one price for the whole cart,
+# Pricing a whole cart. A new cart starts in this mode: "total" (one price for the whole cart,
 # shared out), "per_mg" (one $-per-mg TPE rate) or "each" (a price typed for every line). A product whose type
 # contains one of the group A words (any case) is in group A (edibles and extracts), every other product in group B;
 # a total is first split between the groups by the agreement weights above.
@@ -30,7 +30,7 @@ pricing_modes:
   default: total
   group_a_words: [edible, extract]
 
-# Raw psilocybin in one sale (SM-15, SM-D11): both apps refuse a cart over the cap and show the minimum session
+# Raw psilocybin in one sale: both apps refuse a cart over the cap and show the minimum session
 # length. Raw psilocybin is the state's own figures, weightPerUnit (g) x analyteWeight (mg/g), never mg TPE, summed
 # over every unit in the cart. A row applies when the total is below `below_mg`, or at most `up_to_mg`; above the
 # last row the sale is over the cap and has no session length.
@@ -45,20 +45,20 @@ dose:
     - {below_mg: 35, minutes: 300}
     - {up_to_mg: 50, minutes: 360}
 
-# Expiry (SM-18, SM-D12): a package is expired from the day after its expiry date (the date itself is its last good
-# day), and "expiring soon" (orange) once this many months or fewer are left. Expired stock stays sellable (SM-D3);
+# Expiry: a package is expired from the day after its expiry date (the date itself is its last good
+# day), and "expiring soon" (orange) once this many months or fewer are left. Expired stock stays sellable;
 # this decides what the stock pages count and show as expired, and what rotation suggests.
 expiry:
   expired_after_days: 1
   soon_months: 1
 
-# Before the phone sends a sale (SM-25, SM-D20): when its stock was read longer ago than this, it reads the center's
+# Before the phone sends a sale: when its stock was read longer ago than this, it reads the center's
 # stock from the state again and refuses a line that is gone or can't be sold, with the sale worker's own reasons
 # (salejobs.line_refusal; the server's worker re-reads before every sale). A setting, not a fixed rule.
 sale_check:
   recheck_after_minutes: 5
 
-# A sale's date (specs/core row 7, SALE-1, SALE-2): written to the state as Pacific midnight in UTC, by the US
+# A sale's date: written to the state as Pacific midnight in UTC, by the US
 # daylight-saving rule of 2007 (daylight time from the 2nd Sunday of March to the 1st Sunday of November, switching at
 # 2 am: midnight of the 1st Sunday of November is still daylight time). A sale may be dated today (the Pacific date) or
 # up to backdate_days back, never after. The rule was checked day by day against zoneinfo's America/Los_Angeles up

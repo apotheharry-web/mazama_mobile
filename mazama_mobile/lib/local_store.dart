@@ -1,20 +1,20 @@
-// LocalStore: the one SQLite database (`mazama.db`) the phone keeps everything in between launches (specs/foundations
-// Part B, LS-R1, LS-R2). Nothing else in the app opens the database.
+// LocalStore: the one SQLite database (`mazama.db`) the phone keeps everything in between launches.
+// Nothing else in the app opens the database.
 //
 // Synchronous on purpose. package:sqlite3 calls SQLite through dart:ffi with no isolate in between, so a read or a
-// write here is a small blocking call, exactly as the stores' *Sync file calls were. The stores chose those over
+// write here is a small blocking call, like dart:io's *Sync file calls. Synchronous calls rather than
 // dart:io's async calls because an async write still in flight could deadlock a later delete of the same file under
 // flutter_test's fake clock (cart_store.dart's header); keeping every call synchronous keeps that guarantee, and keeps
 // every store's public method shape.
 //
-// Documents, not a table per store (plan P-D1). Each store keeps today's JSON text under today's file name
-// (`cart.json`, `stock_cache_231.json`, `server_replies/par%2F231.json`), so its own parsing, caps and corrupt-data
-// rules are unchanged, and moving a legacy file in (local_store_import.dart) is a copy.
+// Documents, not a table per store. Each store keeps its JSON text under its own name (`cart.json`,
+// `session_timer.json`, `par_columns_231.json`), with its own parsing, caps and corrupt-data rules. A file an older
+// build wrote beside the database is never read: phones on older builds no longer matter.
 //
-// One database per data folder, found by the folder (P-D2). Every store already takes its folder as `dataDir`, most
+// One database per data folder, found by the folder. Every store already takes its folder as `dataDir`, most
 // are built `const`, and every test passes its own temporary folder; a registry keyed by the folder keeps all of
 // that, opens one connection per file (never two in one process), and gives demo mode, whose stores use their own
-// folder, its own database for free (LS-R8).
+// folder, its own database for free.
 //
 // Every write is in a transaction (a single statement is one on its own; [LocalStore.transaction] groups several):
 // a crash leaves the old document or the new one, never half of either.
@@ -23,27 +23,23 @@ import 'dart:io';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:sqlite3/sqlite3.dart';
 
-import 'local_store_import.dart';
-
 /// The database's file name, in each data folder.
 const localStoreFileName = 'mazama.db';
 
 /// `PRAGMA user_version` once every migration in [_migrations] has run.
-const localStoreSchemaVersion = 3;
+const localStoreSchemaVersion = 4;
 
 /// Index i moves `user_version` from i to i + 1, in its own transaction. Append only: a phone may be at any version.
-/// Each gets the database's folder too (null for [LocalStore.inMemory]), for the files beside it.
-final List<void Function(Database db, Directory? dir)> _migrations = [
-  (db, _) {
+final List<void Function(Database db)> _migrations = [
+  (db) {
     db.execute('CREATE TABLE documents (name TEXT PRIMARY KEY, body TEXT NOT NULL, saved_at_ms INTEGER NOT NULL)');
-    // The legacy files already imported (local_store_import.dart), so one whose rename failed is never imported again
-    // after its document is deleted (a sold cart coming back).
+    // Dropped by the fourth step: nothing imports files any more.
     db.execute('CREATE TABLE imported_files (name TEXT PRIMARY KEY, saved_at_ms INTEGER NOT NULL)');
   },
-  // specs/phone-sync PS-R2: the sync engine's tables (lib/sync/sync_tables.dart), beside the documents (PS-D4). The
+  // The sync engine's tables (lib/sync/sync_tables.dart), beside the documents. The
   // queue's ids are AUTOINCREMENT, never reused: an item replaced while it was being sent must never share its id with
   // the newer one, which the sender's "done" would then delete.
-  (db, _) {
+  (db) {
     db.execute('CREATE TABLE sync_dataset ('
         'name TEXT NOT NULL, key TEXT NOT NULL, body TEXT NOT NULL, source TEXT NOT NULL, '
         'fetched_at_ms INTEGER NOT NULL, last_try_ms INTEGER, last_error TEXT, PRIMARY KEY (name, key))');
@@ -55,12 +51,10 @@ final List<void Function(Database db, Directory? dir)> _migrations = [
     db.execute('CREATE TABLE sync_sent ('
         'kind TEXT NOT NULL, key TEXT NOT NULL, sent_at_ms INTEGER NOT NULL, PRIMARY KEY (kind, key))');
   },
-  // specs/foundations LS-R5, plan Task 8: one release after the move (0.2.2's builds; 0.2.3 and 0.2.4 have shipped
-  // since), the `*.migrated` files the import left are deleted. No table changes; it never throws, so a file that
-  // can't be deleted never stops the app from starting.
-  (_, dir) {
-    if (dir != null) deleteMigratedLegacyFiles(dir);
-  },
+  // Nothing: kept so that every later step keeps its number.
+  (_) {},
+  // The table of files imported from older builds: nothing imports them now.
+  (db) => db.execute('DROP TABLE IF EXISTS imported_files'),
 ];
 
 /// SQLite's result codes for a damaged file: SQLITE_CORRUPT and SQLITE_NOTADB.
@@ -88,8 +82,7 @@ class LocalStore {
 
   /// The database of [dir] (created if need be, with the folder). The same instance is returned while its file
   /// exists; when `mazama.db` is gone (the folder deleted under it: a test's tear-down, the debug page's fresh
-  /// install) a new, empty database is opened instead of writing into the deleted file. Every fresh open imports
-  /// the legacy files still in the folder before it returns (LS-R5), so no store reads before the import.
+  /// install) a new, empty database is opened instead of writing into the deleted file.
   static LocalStore forDir(Directory dir) {
     dir.createSync(recursive: true);
     final key = dir.resolveSymbolicLinksSync();
@@ -102,7 +95,6 @@ class LocalStore {
     }
     final store = LocalStore._(_openOrSetAside(path), path);
     _open[key] = store;
-    importLegacyFiles(store, Directory(key));
     return store;
   }
 
@@ -121,8 +113,8 @@ class LocalStore {
 
   /// Renames a damaged database to `mazama.db.corrupt` (with its journal files), for a person to look at: all three
   /// or none. The journal files go first, so a fresh database is never opened beside the damaged one's `-wal` to
-  /// replay (re-review m-1); when a later rename fails, what was moved is put back before the error is thrown, so
-  /// `mazama.db` keeps its `-wal` (review of m-1) and the next call tries again.
+  /// replay; when a later rename fails, what was moved is put back before the error is thrown, so
+  /// `mazama.db` keeps its `-wal` and the next call tries again.
   static void _setAside(String path) {
     final moved = <String>[];
     try {
@@ -146,7 +138,6 @@ class LocalStore {
   }
 
   static Database _openDatabase(String path) {
-    final dir = path == ':memory:' ? null : File(path).parent;
     final db = sqlite3.open(path);
     try {
       db.select('PRAGMA journal_mode=WAL');
@@ -154,7 +145,7 @@ class LocalStore {
       for (var v = db.userVersion; v < _migrations.length; v++) {
         db.execute('BEGIN IMMEDIATE');
         try {
-          _migrations[v](db, dir);
+          _migrations[v](db);
           db.userVersion = v + 1;
           db.execute('COMMIT');
         } catch (_) {
@@ -176,7 +167,7 @@ class LocalStore {
   ///
   /// When the set-aside or the fresh open fails half-way, the connection stays marked closed ([_closed]), and the next
   /// call opens the file again (setting it aside then if it is still unreadable) instead of every call throwing on a
-  /// closed connection until a restart (re-review N-3).
+  /// closed connection until a restart.
   T _run<T>(T Function() op) {
     if (_depth > 0) return op();
     if (_closed) {
@@ -229,7 +220,7 @@ class LocalStore {
       });
 
   /// Runs one statement of [sql] with [params] (never values built into the text), in a transaction of its own or the
-  /// one it is inside. For the sync engine's typed tables (lib/sync/sync_tables.dart, specs/phone-sync PS-D4).
+  /// one it is inside. For the sync engine's typed tables (lib/sync/sync_tables.dart).
   void execute(String sql, [List<Object?> params = const []]) {
     transaction(() => _db.execute(sql, params));
   }
@@ -237,17 +228,6 @@ class LocalStore {
   /// The rows [sql] selects with [params], as maps by column name. For the sync engine's typed tables, as [execute].
   List<Map<String, Object?>> select(String sql, [List<Object?> params = const []]) =>
       _run(() => [for (final r in _db.select(sql, params)) Map<String, Object?>.from(r)]);
-
-  /// For local_store_import.dart: whether the legacy file [name] was imported once already.
-  bool legacyFileImported(String name) =>
-      _run(() => _db.select('SELECT 1 FROM imported_files WHERE name = ?', [name]).isNotEmpty);
-
-  /// For local_store_import.dart, inside the import's transaction: records the legacy file [name] as imported.
-  void recordLegacyFileImported(String name) {
-    final ms = DateTime.now().millisecondsSinceEpoch;
-    transaction(() => _db.execute(
-        'INSERT INTO imported_files (name, saved_at_ms) VALUES (?, ?) ON CONFLICT (name) DO NOTHING', [name, ms]));
-  }
 
   /// Runs [fn] in one transaction (BEGIN IMMEDIATE): everything it writes commits together, or, when it throws,
   /// nothing does and the error is rethrown. A transaction inside another runs inline, as part of the outer one.
@@ -292,7 +272,7 @@ class LocalStore {
   List<Map<String, Object?>> debugQuery(String sql) =>
       [for (final r in _db.select(sql)) Map<String, Object?>.from(r)];
 
-  /// Closes every open database, as an app restart would; the next [forDir] opens (and imports) afresh.
+  /// Closes every open database, as an app restart would; the next [forDir] opens afresh.
   @visibleForTesting
   static void debugCloseAll() {
     for (final store in _open.values) {

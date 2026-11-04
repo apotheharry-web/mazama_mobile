@@ -1,4 +1,4 @@
-// CR-R3, CR-D2: an app that can't load the shared core shows one full-screen error, never a white screen, a crash or
+// An app that can't load the shared core shows one full-screen error, never a white screen, a crash or
 // an app with parts missing (missing_core_app.dart, run by main()).
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mazama_mobile/main.dart';

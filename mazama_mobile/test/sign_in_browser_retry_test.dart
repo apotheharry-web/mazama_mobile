@@ -1,4 +1,4 @@
-// SL-R19: after a sign-in on the state's page fails (not cancelled, not B2C's own refusal), SignInPage fetches the signed
+// After a sign-in on the state's page fails (not cancelled, not B2C's own refusal), SignInPage fetches the signed
 // host list and the newest browser sign-in spec, retries once (the state's page opens again) when that spec is newer
 // and a usable browser spec under the retry's hosts, and keeps the spec (login_browser_spec.yaml, apart from
 // login_spec.yaml) and the list only after a session. The webview is an injected `browse` answering as the state's page

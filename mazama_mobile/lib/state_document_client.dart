@@ -36,16 +36,16 @@ class StateDocumentError implements Exception {
 /// than buffering an unbounded response into memory. Throws [StateDocumentError] on a network problem, a 401
 /// (session expired - this call does not retry, the same policy state_client.dart's fetchStateJson already
 /// documents for every other state-system read in this app), any other non-200 status, exceeding [limit], or
-/// going quiet for [timeout] - no answer, or no data part way through (SM-12/SM-D1: the same 60 s as every
+/// going quiet for [timeout] - no answer, or no data part way through (the same 60 s as every
 /// flow-spec request; a limit on silence rather than on the whole download, so a slow but moving PDF still
 /// arrives).
 ///
 /// The API base, Referer, Origin and User-Agent are state_reads.yaml's `api`, `site`, `site_origin` and
-/// `user_agent` (SM-20), the same values every shared read sends; [spec] overrides the cached
+/// `user_agent`, the same values every shared read sends; [spec] overrides the cached
 /// assets/flows/state_reads.yaml parse, mainly for tests.
 Future<Uint8List> downloadStateDocument(int docId,
     {required String accessToken,
-    int limit = labReportMaxBytes, // SM-D23: the one 2 MB cap, the same as the server's
+    int limit = labReportMaxBytes, // the one 2 MB cap, the same as the server's
     http.Client? client,
     Duration timeout = defaultRequestTimeout,
     FlowSpec? spec,
@@ -55,7 +55,7 @@ Future<Uint8List> downloadStateDocument(int docId,
   try {
     final vars = (spec ?? await stateReadsSpec()).vars;
     var uri = Uri.parse('${vars['api']}DownloadDocument/$docId');
-    // The session's token goes only to an allowed host (the shared allowlist, SL-R8/SL-R18), and on a redirect only
+    // The session's token goes only to an allowed host (the shared allowlist), and on a redirect only
     // to the origin first asked (the same scheme, host and port): the redirects are followed here, not by
     // package:http, so a hop to another host (a storage service, say) or another port never carries the Authorization
     // header.

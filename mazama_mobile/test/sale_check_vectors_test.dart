@@ -1,8 +1,8 @@
-// SM-25: why a sale line is refused when the state's inventory is read again just before sending
+// Why a sale line is refused when the state's inventory is read again just before sending
 // (sellability.dart saleLineRefusal), held to the cases the server's sale worker computed
 // (../mazama_modules/selling/gen.py -> salejobs.line_refusal), vendored here at
 // assets/shared/selling/vectors/sale_check.json; and the age past which the phone reads again
-// (rules.yaml sale_check.recheck_after_minutes, SM-D20: 5 minutes).
+// (rules.yaml sale_check.recheck_after_minutes: 5 minutes).
 import 'dart:convert';
 import 'dart:io';
 

@@ -12,6 +12,8 @@ import 'package:mazama_mobile/cart_page.dart';
 import 'package:mazama_mobile/center_home_page.dart';
 import 'package:mazama_mobile/center_stock_page.dart';
 import 'package:mazama_mobile/device_id.dart';
+import 'package:mazama_mobile/feature_entry.dart';
+import 'package:mazama_mobile/feature_pages.g.dart';
 import 'package:mazama_mobile/features.g.dart';
 import 'package:mazama_mobile/flow/flow_spec.dart';
 import 'package:mazama_mobile/licenses_client.dart';
@@ -48,7 +50,7 @@ Future<List<Package>> _noPackages(int stateId) async => [];
 
 // The REAL default for SelectCenterPage.fetchRawPackagesFromState is a live network call, forwarded straight
 // through to whichever CartPage this page opens - see that field's own doc comment and cart_page_test_support.dart's
-// own fetchRawPackagesFromState fixture for why this is no longer a tier-2-only fallback a test can just never
+// own fetchRawPackagesFromState fixture for why this is not a tier-2-only fallback a test can just never
 // reach: CartPage's _fetchMergedForCart calls it on every configured-center load. Every test below that taps or
 // auto-opens through to a CartPage needs this wired or it hangs on a real (and in a test sandbox, unreachable)
 // network call.
@@ -66,11 +68,11 @@ final _dummySpec = FlowSpec(const {}, const {});
 
 late Directory _tempDir;
 
-/// MI-R3: the Mazama inventory page loads as soon as a center's home opens; a fixed mix, never the network.
+/// The Mazama inventory page loads as soon as a center's home opens; a fixed mix, never the network.
 Future<MazamaInventory> _mazamaMix() async =>
     const MazamaInventory(name: 'Mazama Mushrooms LLC', cells: [MixCell(strain: 'Golden Teacher', type: 'DH', mg: 3888)]);
 
-/// SP-D11: the stock page's product information sheets load with it; a fixed list, never the network.
+/// The stock page's product information sheets load with it; a fixed list, never the network.
 Future<List<ProductSheet>> _sheets(int stateId) async => const [
       ProductSheet(guid: 'HB-aaaa0001', name: 'GT 6.26', product: 'Whole Fungi', tested: 'Aug 27, 2026',
           path: '/p/lots/mazama/HB-aaaa0001', strains: ['Golden Teacher']),
@@ -111,12 +113,13 @@ void main() {
           return [];
         },
         fetchRawPackagesFromState: _noRawState,
+        debugBuild: false, // a release build: no manufacturer feature is on
       ),
     ));
     await tester.pumpAndSettle();
 
-    // Only one ServiceCenter license (294 is a Manufacturer, filtered out) - auto-opens straight to its home
-    // page (SP-D8), on Stock, with the cart built beside it.
+    // Only one ServiceCenter license (294 is a Manufacturer, filtered out in a release build) - auto-opens straight to its home
+    // page, on Stock, with the cart built beside it.
     expect(find.byType(CenterHomePage), findsOneWidget);
     expect(find.byType(CenterStockPage), findsOneWidget); // on Stock (no title bar of its own: the tab is its title)
     expect(tester.widget<CenterHomePage>(find.byType(CenterHomePage)).center.id, 231);
@@ -216,9 +219,9 @@ void main() {
     expect(find.text('10 units'), findsOneWidget); // the expired package is other stock
     expect(find.text('250 mg TPE'), findsOneWidget); // the server's exact mg TPE per unit
     expect(find.text('Other stock (1)'), findsOneWidget);
-    expect(find.text('Par levels'), findsNothing); // SP-D19: par is set when ordering, not on the stock page
+    expect(find.text('Par levels'), findsNothing); // par is set when ordering, not on the stock page
 
-    // MI-D21: Order (on the Mazama page) opens the par step first, with the same stock and the server's par.
+    // Order (on the Mazama page) opens the par step first, with the same stock and the server's par.
     await tester.tap(find.text('Mazama'));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('order-button')));
@@ -246,19 +249,18 @@ void main() {
     // The order form, starting from the levels just saved; they are kept on the phone for offline too.
     expect(find.byType(OrderFormPage), findsOneWidget);
     expect(tester.widget<TextField>(find.byKey(const ValueKey('qty-Golden Teacher|25'))).controller!.text, '15');
-    final kept = (await parDataset(Datasets.forDir(() => _tempDir), 231).load())!; // the par dataset (specs/phone-sync)
+    final kept = (await parDataset(Datasets.forDir(() => _tempDir), 231).load())!; // the par dataset
     expect(kept.value.single.par, 15);
   });
 
   testWidgets('with the server unreachable the stock page draws the state\'s records, partial, with the kept licenses',
       (tester) async {
-    // kept by an older build (stock_cache_store.dart, removed in Task 10): moved into the datasets on the first open
-    LocalStore.forDir(_tempDir).write(
-        'stock_cache_231.json',
-        jsonEncode({
-          'mazamaLicenses': ['mf-1e72fc8f'],
-          'par': [const ParLevel(strain: 'Unknown', size: 25, par: 12).toJson()],
-        }));
+    // kept from an earlier read: Mazama's licenses and the par levels, with no time recorded
+    final epoch = DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
+    final kept = Datasets.forDir(() => _tempDir);
+    kept.put(Dataset.mazamaLicenses, '231', jsonEncode(['mf-1e72fc8f']), source: sourceServer, at: epoch);
+    kept.put(Dataset.par, '231', jsonEncode([const ParLevel(strain: 'Unknown', size: 25, par: 12).toJson()]),
+        source: sourceServer, at: epoch);
     final tokens = <String>[];
     // The session as last saved (the cart renews and saves it): its token is the one the state read uses.
     await sessionStore().save(Session(
@@ -290,7 +292,7 @@ void main() {
 
     expect(tokens, contains('SAVED')); // ensureFreshSession on the saved session: fresh, so used as it is
     expect(find.byType(CenterStockPage), findsOneWidget);
-    expect(find.textContaining('Partial'), findsNothing); // R87: the app-wide banner says the server can't be reached
+    expect(find.textContaining('Partial'), findsNothing); // the app-wide banner says the server can't be reached
     expect(find.text('14 units'), findsOneWidget);
     // The mg pie is a swipe away from the units pie.
     await tester.drag(find.byKey(const ValueKey('stock-pies')), const Offset(-300, 0));
@@ -303,12 +305,12 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('10 units'), findsOneWidget); // the kept license tells Mazama's product apart
 
-    // MI-D21: the par step shows the kept par levels read-only; they can still be confirmed for the order.
+    // The par step shows the kept par levels read-only; they can still be confirmed for the order.
     await tester.tap(find.text('Mazama'));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('order-button')));
     await tester.pumpAndSettle();
-    expect(find.textContaining('last sent'), findsNothing); // no notice of the page's own (R87)
+    expect(find.textContaining('last sent'), findsNothing); // no notice of the page's own
     expect(
         find.text("Mazama's server can't be reached, so par levels can't be saved now - try again later. "
             'The order starts from the par levels above.'),
@@ -359,18 +361,18 @@ void main() {
     final home = tester.widget<CenterHomePage>(find.byType(CenterHomePage));
     expect(home.center.id, 183);
     expect(find.byType(CenterStockPage), findsOneWidget); // opens on Stock
-    // SP-D18: the lot table in place of the sheets list, closed, its rows the center's sheets
+    // The lot table in place of the sheets list, closed, its rows the center's sheets
     expect(find.byKey(const ValueKey('stock-lot-table'), skipOffstage: false), findsOneWidget);
     expect(find.text('1 lot · 1 strain', skipOffstage: false), findsOneWidget);
     expect(find.text('Stock'), findsOneWidget);
     expect(find.text('Cart'), findsOneWidget);
 
-    // MI-D1: Mazama inventory (its tab labelled "Mazama") sits left of Stock, built beside it, loaded from
+    // Mazama inventory (its tab labelled "Mazama") sits left of Stock, built beside it, loaded from
     // fetchMazamaInventory.
     await tester.tap(find.text('Mazama'));
     await tester.pumpAndSettle();
     expect(find.byType(MazamaInventoryPage), findsOneWidget);
-    expect(find.byKey(const ValueKey('order-button')), findsOneWidget); // MI-D6
+    expect(find.byKey(const ValueKey('order-button')), findsOneWidget); // the order button
     expect(find.text('3,888 mg TPE in all'), findsOneWidget);
     await tester.tap(find.text('Stock'));
     await tester.pumpAndSettle();
@@ -379,10 +381,10 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(CartPage), findsOneWidget);
     expect(find.text('EPIC Healing Eugene'), findsOneWidget); // the cart's own AppBar title
-    expect(salesReads, isEmpty); // review I-1: nothing of the Sales page runs while the worker is on the Cart
+    expect(salesReads, isEmpty); // nothing of the Sales page runs while the worker is on the Cart
     expect(salesUploads, isEmpty);
 
-    // specs/center-web CW-R10: Sales, right of Cart: the center's sales read with the session's token, every record
+    // Sales, right of Cart: the center's sales read with the session's token, every record
     // uploaded as the signed-in worker.
     await tester.tap(find.text('Sales'));
     await tester.pumpAndSettle();
@@ -394,7 +396,7 @@ void main() {
     expect(salesUploads, [(183, 1, 'worker@example.com')]);
   });
 
-  // SM-21: the picker lists what the server's directory.service_centers would keep - an id once, never id 0.
+  // The picker lists what the server's directory.service_centers would keep - an id once, never id 0.
   testWidgets('the picker lists each usable service center once', (tester) async {
     await tester.pumpWidget(MaterialApp(
       home: SelectCenterPage(
@@ -483,7 +485,7 @@ void main() {
     expect(attempts, 2);
   });
 
-  // specs/phone-sync PS-R3: the licenses dataset.
+  // The licenses dataset.
   group("the worker's licenses kept on the phone (specs/phone-sync PS-R3, PS-R7)", () {
     late Object? failWith;
     late int attempts;
@@ -597,6 +599,7 @@ void main() {
         fetchMazamaLicenses: (id) async => const [],
         fetchLicenses: (token) async => [_license(294, 'Mazama Mushrooms LLC', 'Manufacturer')],
         fetchCenterPackages: _noPackages,
+        debugBuild: false, // a release build: no manufacturer feature is on
       ),
     ));
     await tester.pumpAndSettle();
@@ -604,8 +607,12 @@ void main() {
     expect(find.textContaining('no service-center access'), findsOneWidget);
   });
 
-  // specs/features FR-3: the picker and the Order button follow the feature registry.
-  Widget picker(List<License> licenses, {Map<String, Feature> featureTable = features}) => MaterialApp(
+  // The picker and the Order button follow the feature registry, as a release build counts it unless [debugBuild].
+  Widget picker(List<License> licenses,
+          {Map<String, Feature> featureTable = features,
+          bool debugBuild = false,
+          Map<String, FeatureEntry> entries = featureEntries}) =>
+      MaterialApp(
         home: SelectCenterPage(
           session: _freshSession(),
           spec: _dummySpec,
@@ -617,6 +624,8 @@ void main() {
           fetchCenterPackages: _noPackages,
           fetchRawPackagesFromState: _noRawState,
           featureTable: featureTable,
+          debugBuild: debugBuild,
+          entries: entries,
         ),
       );
 
@@ -635,13 +644,13 @@ void main() {
   });
 
   testWidgets('a Manufacturer license is never listed while no manufacturer feature is on', (tester) async {
-    expect(licenseTypeListed('Manufacturer'), isFalse);
+    expect(licenseTypeListed('Manufacturer', debugBuild: false), isFalse);
     await tester.pumpWidget(picker(twoCentersAndMazama));
     await tester.pumpAndSettle();
     expect(find.text('Mazama Mushrooms LLC'), findsNothing);
 
     // And a service center is not listed either once nothing beyond sign-in, the picker, demo and debug
-    // is on for its license type (Q3).
+    // is on for its license type.
     final centerOff = featuresWithOff([
       for (final f in features.values)
         if (!licensePickerIgnores.contains(f.name)) f.name,
@@ -653,7 +662,72 @@ void main() {
     expect(find.textContaining('no service-center access'), findsOneWidget);
   });
 
-  // CW-R9: the inventory portal left the phone, with its button.
+  // A feature on for Manufacturer in debug builds only (FR-11), with a page of its own folder: the picker lists the
+  // manufacturer's license in a debug build, after the centers, and opens that page; never in a release build.
+  Map<String, Feature> makerDebugTable() => {
+        ...features,
+        'maker_test': const Feature(
+          name: 'maker_test',
+          id: 'F-99',
+          what: 'a manufacturer feature for this test',
+          built: ['phone'],
+          onWeb: [],
+          onPhone: [],
+          onPhoneDebug: ['Manufacturer'],
+          pages: [],
+          uses: [],
+          shared: 'complete',
+          logic: [],
+        ),
+      };
+  final makerEntries = <String, FeatureEntry>{
+    'maker_test': FeatureEntry(page: (context, license) => Text('maker page for ${license.id} ${license.licenseName}')),
+  };
+
+  testWidgets('a debug build lists a Manufacturer license after the centers and opens its feature page', (tester) async {
+    final table = makerDebugTable();
+    expect(licenseTypeListed('Manufacturer', table: table, debugBuild: true), isTrue);
+    await tester.pumpWidget(picker(twoCentersAndMazama, featureTable: table, debugBuild: true, entries: makerEntries));
+    await tester.pumpAndSettle();
+    expect(find.text('Choose a license'), findsOneWidget);
+    final titles = [
+      for (final t in tester.widgetList<ListTile>(find.byType(ListTile))) (t.title as Text).data,
+    ];
+    expect(titles, ['Unstuck Psilocybin Treatment Center', 'EPIC Healing Eugene', 'Mazama Mushrooms LLC']);
+    expect(find.text('Manufacturer · L-294'), findsOneWidget);
+
+    await tester.tap(find.text('Mazama Mushrooms LLC'));
+    await tester.pumpAndSettle();
+    expect(find.text('maker page for 294 Mazama Mushrooms LLC'), findsOneWidget);
+    expect(find.byType(CenterHomePage), findsNothing);
+  });
+
+  testWidgets('a release build, or no page for it, never lists a Manufacturer license', (tester) async {
+    final table = makerDebugTable();
+    expect(licenseTypeListed('Manufacturer', table: table, debugBuild: false), isFalse);
+    for (final (debugBuild, entries) in [(false, makerEntries), (true, const <String, FeatureEntry>{})]) {
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpWidget(picker(twoCentersAndMazama, featureTable: table, debugBuild: debugBuild, entries: entries));
+      await tester.pumpAndSettle();
+      expect(find.text('Choose a service center'), findsOneWidget, reason: 'debugBuild $debugBuild');
+      expect(find.text('Mazama Mushrooms LLC'), findsNothing, reason: 'debugBuild $debugBuild');
+      expect(find.text('EPIC Healing Eugene'), findsOneWidget, reason: 'debugBuild $debugBuild');
+    }
+  });
+
+  testWidgets('the only license a Manufacturer one: its page opens at once, and back shows the picker', (tester) async {
+    await tester.pumpWidget(picker([_license(294, 'Mazama Mushrooms LLC', 'Manufacturer')],
+        featureTable: makerDebugTable(), debugBuild: true, entries: makerEntries));
+    await tester.pumpAndSettle();
+    expect(find.text('maker page for 294 Mazama Mushrooms LLC'), findsOneWidget);
+    final navigator = tester.state<NavigatorState>(find.byType(Navigator));
+    navigator.pop();
+    await tester.pumpAndSettle();
+    expect(find.text('Mazama Mushrooms LLC'), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+  });
+
+  // The inventory portal left the phone, with its button.
   testWidgets('the picker has no inventory portal button', (tester) async {
     await tester.pumpWidget(picker(twoCentersAndMazama));
     await tester.pumpAndSettle();
@@ -690,7 +764,7 @@ void main() {
     expect(tester.widget<CenterHomePage>(find.byType(CenterHomePage)).featureTable['mazama_tab']!.onPhone, isEmpty);
   });
 
-  // specs/app-updates AU-D10: the update card on the license picker (no center open, so no cart holds it back).
+  // The update card on the license picker (no center open, so no cart holds it back).
   testWidgets('the update card shows on the picker when there is an offer, and not without one', (tester) async {
     Widget picker(AppUpdateChecker checker) => MaterialApp(
           home: SelectCenterPage(
@@ -733,7 +807,7 @@ void main() {
     expect(find.byKey(const ValueKey('app-update-card')), findsNothing);
   });
 
-  // specs/phone-sync Task 8b Step 2: the Mazama tab and the stock page's sheets read through the engine, and the
+  // The Mazama tab and the stock page's sheets read through the engine, and the
   // center home asks for each once as it opens; the cart (in the sale path) still reads its own stock, as before.
   testWidgets("opening a center asks the engine once for the Mazama mix and the sheets; the cart's stock read is unchanged",
       (tester) async {

@@ -1,4 +1,4 @@
-// SM-19: a package read straight from the state system gets the strain written in its name, read by the shared core
+// A package read straight from the state system gets the strain written in its name, read by the shared core
 // the way the server's names.py reads it (product_names.dart). The cases are the app's vendored copy of
 // mazama_modules/names/vectors/names.json (tool/sync_flows.sh), computed from the server's Python. CI builds the
 // library and passes it as MAZAMA_CORE_FFI_LIB (test/support/core.dart).

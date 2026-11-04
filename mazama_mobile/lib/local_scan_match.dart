@@ -86,7 +86,7 @@ ScanMatchResult? localScanMatchWith(CoreFunctions core, List<Package> inventory,
     return ScanMatchResult(matches: matches, guesses: guesses);
   } catch (_) {
     // MazamaCoreError, or a reply of the wrong shape (a TypeError from a cast):
-    // this phone can't match, and the caller says the server couldn't be reached, as before
+    // this phone can't match, and the caller says the server couldn't be reached
     return null;
   }
 }

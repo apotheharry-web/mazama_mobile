@@ -1,8 +1,8 @@
-// SM-10, specs/core row 4: what the phone may sell is the shared core's rule (sellability.dart calls
-// mazama_core::selling through the FFI), held to the golden vectors: sellability.json (the old rule's cases, unchanged)
-// and sellability_cases.json (the SL rows as the owner decided them on 2026-10-31, CR-D6), reason text included, read
+// What the phone may sell is the shared core's rule (sellability.dart calls
+// mazama_core::selling through the FFI), held to the golden vectors: sellability.json (the base cases)
+// and sellability_cases.json (the cases as the owner decided them), reason text included, read
 // from this app's vendored copy, assets/shared/selling/vectors/ (tool/sync_flows.sh; vendored_test.dart proves it
-// equals the source). And it fails closed (SL-15): a core that can't answer refuses, never sells.
+// equals the source). And it fails closed: a core that can't answer refuses, never sells.
 import 'dart:convert';
 import 'dart:io';
 
@@ -181,7 +181,7 @@ void main() {
     test('a lone surrogate the core can\'t read refuses that record only, through the real core', () {
       final lone = {..._plain, 'locked': true, 'reasonLocked': String.fromCharCode(0xD800)};
       final got = unsellableReasons([lone, _plain], core: core);
-      expect(got[0], isNotNull); // refused: the core's error (SL-15), or locked if the text reached it some other way
+      expect(got[0], isNotNull); // refused: the core's error, or locked if the text reached it some other way
       expect(got[1], isNull);
     });
 

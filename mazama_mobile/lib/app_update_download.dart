@@ -1,4 +1,4 @@
-// specs/app-updates AU-R11, AU-R12, AU-D11: downloading the APK a verified release file names, and checking it before
+// Downloading the APK a verified release file names, and checking it before
 // Android's installer sees it.
 //
 // [downloadApk]: only after the worker tapped Install. A GET of the file's `apk` with a client that follows no
@@ -12,8 +12,8 @@
 // into the installer session and abandons the session unless they are the signed size and SHA-256 (AppInstaller.kt),
 // so the bytes installed are the bytes checked.
 //
-// The server's copy (AU-R21, AU-D14): when GitHub's download fails for any reason but the worker's cancel, the same
-// build from Mazama's server (C22, through the server link, with the app key, no redirect followed), held to the same
+// The server's copy: when GitHub's download fails for any reason but the worker's cancel, the same
+// build from Mazama's server (through the server link, with the app key, no redirect followed), held to the same
 // signed size and SHA-256 and then the same inspection: whoever serves the bytes, only the signed file says they are
 // right. An APK refused by the inspection is not fetched again from the server (its bytes are the signed ones).
 //
@@ -22,10 +22,10 @@
 // certificates exactly the installed app's. A readable APK whose fields differ is deleted and that build is never
 // offered again (app_update_store.dart); a test build signed with the debug key is never offered a release. A file
 // Android can't read, or whose signers it can't read, is a failed attempt (deleted, tried again on the next Install),
-// never a refusal. Only an APK that passed all of it moves the phone's record (AU-R14). The cancel is looked at again
+// never a refusal. Only an APK that passed all of it moves the phone's record. The cancel is looked at again
 // after the download and after the inspection.
 //
-// AU-D11: the APK is a file (tens of megabytes, kept for minutes, handed to another app), the one file this app writes
+// The APK is a file (tens of megabytes, kept for minutes, handed to another app), the one file this app writes
 // outside LocalStore besides the shared reconciliation image (test/local_store_guard_test.dart). It is written only
 // under the cache folder's `updates/`, which [clearUpdates] empties at start-up; each attempt deletes its own file after
 // the hand-over or a failure.
@@ -45,6 +45,7 @@ import 'app_update_store.dart';
 import 'github_files.dart';
 import 'server_error.dart';
 import 'server_link_client.dart' show serverClient;
+import 'server_request.dart';
 
 /// The most redirects a download follows (each one checked first).
 const maxApkRedirects = 3;
@@ -58,7 +59,7 @@ const apkTotalTimeout = Duration(minutes: 15);
 /// The card's words for a download that failed (fixed: nothing of an answer is shown).
 const downloadFailedWords = 'The update could not be downloaded. Try again later.';
 
-/// The card's words for an APK refused by the checks (AU-R12).
+/// The card's words for an APK refused by the checks.
 const cantInstallWords = "This update can't be installed on this phone.";
 
 /// The card's words after the worker's cancel.
@@ -182,7 +183,7 @@ class ServerApkError implements Exception {
   String toString() => message;
 }
 
-/// C22 (`GET /p/app/apk/{build}`, AU-R21): the server's checked copy of [build]'s APK, asked through [client] (the
+/// The server's checked copy of [build]'s APK, asked through [client] (the
 /// server link in the app) with the app key, following no redirect. Throws [ServerApkError] on anything but a 200 (the
 /// server's own wording for a 401 or 429, through describeServerError). The caller checks the bytes.
 Future<http.StreamedResponse> requestServerApk(int build,
@@ -191,18 +192,16 @@ Future<http.StreamedResponse> requestServerApk(int build,
   final req = http.Request('GET', uri)
     ..followRedirects = false
     ..headers.addAll(appApiKeyHeaders);
-  final http.StreamedResponse resp;
-  try {
-    resp = await client.send(req).timeout(timeout);
-  } catch (ex) {
-    throw ServerApkError('cannot reach ${uri.host}: ${ex.runtimeType}');
-  }
+  final resp = await sendToServer(uri, () => client.send(req).timeout(timeout), _serverApkError);
   if (resp.statusCode != 200) {
     final body = await resp.stream.bytesToString().catchError((Object _) => '');
     throw ServerApkError(describeServerError(resp.statusCode, body));
   }
   return resp;
 }
+
+// A ServerApkError keeps only its words.
+ServerApkError _serverApkError(String message, {int? status, bool unreachable = false}) => ServerApkError(message);
 
 /// GitHub's download into [file]: the start address, then at most [maxApkRedirects] hops each checked by
 /// [apkHopAllowed] before it is requested. Throws.
@@ -242,8 +241,8 @@ String _attemptName(int build) {
 /// Downloads [f]'s APK into [updatesDir], in a file of this attempt's own, and returns the file; throws
 /// [UpdateDownloadError] (fixed words) on any failure, leaving no file. [cancel] completing stops it at once. GitHub
 /// first ([client], a plain one by default); with [fromServer], when GitHub's download fails for any reason but the
-/// cancel, the server's copy (C22, [serverHttp], the server link by default), held to the same signed size and
-/// SHA-256 (AU-R21). [readTimeout] is the longest wait for an answer or between two chunks.
+/// cancel, the server's copy ([serverHttp], the server link by default), held to the same signed size and
+/// SHA-256. [readTimeout] is the longest wait for an answer or between two chunks.
 Future<File> downloadApk(
   ReleaseFile f, {
   required Directory cacheDir,

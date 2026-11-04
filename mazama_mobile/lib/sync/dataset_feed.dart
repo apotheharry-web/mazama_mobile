@@ -1,15 +1,15 @@
-// specs/phone-sync Task 8b Step 2: one dataset as a page reads it through the sync engine (PS-R7) instead of its own
+// One dataset as a page reads it through the sync engine instead of its own
 // fetch on open. The page shows the stored copy ([watch]: at once, then after every refresh), with its age; on open it
 // joins the refresh under way (the center home asks for its datasets' refreshes as it opens, center_home_page.dart),
 // asking one itself only when none runs, so opening the home reads each dataset once ([read]). Retry reads the same
 // way. A page reading through a feed has no health listener of its own: the engine refreshes what is watched when the
-// server answers again (README R87's reload) and every five minutes in the foreground (PS-D6).
+// server answers again and every five minutes in the foreground.
 //
 // What a page shows of it ([DatasetFeed.shows]): the stored copy, with no notice of its own while the server can't be
-// reached (the app-wide banner says so, R87); when the newest refresh had the server's own answer (a 4xx: a key
+// reached (the app-wide banner says so); when the newest refresh had the server's own answer (a 4xx: a key
 // rotated, 401; too many requests, 429), the copy still, with that answer as a note beside it, since the engine refreshes
 // by itself (every five minutes, the server answering again) and must never take away what the worker is looking at
-// (review of Step 2; readWithCache showed the error instead, but only ever on open or Retry); the error, in the page's
+// (an error shown in its place would take it away at every refresh); the error, in the page's
 // own words, only when nothing is stored.
 import 'dart:convert';
 
@@ -78,7 +78,7 @@ class DatasetFeed<T> {
   /// has ended, pass [settled] false: the copy stored shows (or the spinner), whatever an earlier run's refresh said.
   FeedShown<T> shows(DatasetRow? row, Object? error, {bool settled = true}) {
     final value = row == null ? null : decode(row);
-    final at = row == null || row.fetchedAt.millisecondsSinceEpoch == 0 ? null : row.fetchedAt; // moved in without a time
+    final at = row == null || row.fetchedAt.millisecondsSinceEpoch == 0 ? null : row.fetchedAt; // stored without a time
     if (!settled) return (value: value, at: value == null ? null : at, error: null, note: null, fromCache: false);
     if (value != null) {
       final unreachable = error != null && isServerUnreachable(error);
@@ -95,10 +95,10 @@ class DatasetFeed<T> {
   }
 }
 
-/// Mazama's stock (route C12), the Mazama tab's dataset.
+/// Mazama's stock (GET /p/mazama-inventory), the Mazama tab's dataset.
 DatasetFeed<MazamaInventory> mazamaInventoryFeed(SyncEngine engine) =>
     DatasetFeed.of(engine, Dataset.mazamaInventory, '', decode: mazamaInventoryFromJson);
 
-/// A center's product information sheets (route C13), the stock page's lot table.
+/// A center's product information sheets (GET /p/sheets/{state_id}), the stock page's lot table.
 DatasetFeed<List<ProductSheet>> sheetsFeed(SyncEngine engine, int stateId) =>
     DatasetFeed.of(engine, Dataset.sheets, '$stateId', decode: sheetsFromJson);

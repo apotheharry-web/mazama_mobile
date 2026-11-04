@@ -1,10 +1,10 @@
-// specs/mazama-inventory MI-R7: the collapsible lot table at the bottom of the Mazama inventory page. One row per batch
-// or lot in Mazama's stock, grouped under its strain (MI-D12), with its potency in mg per gram (MI-D11) and a coloured
-// tag for each minor analyte its lab report found (MI-D13). Tapping the column's heading, or any number in it, switches
-// every row between mg TPE / g, mg psilocybin / g and mg psilocin / g (MI-D14). Closed when the page opens. A lot id
-// with a public product information sheet is a link to it (MI-D18): [MazamaLotTable.onOpen] opens it. A pick on a pie
-// above narrows it to a strain or a type ([LotFilter], MI-D20). The stock page shows the same table for the center's
-// lots, in place of its product information sheets (specs/stock-page SP-D18).
+// The collapsible lot table at the bottom of the Mazama inventory page. One row per batch
+// or lot in Mazama's stock, grouped under its strain, with its potency in mg per gram and a coloured
+// tag for each minor analyte its lab report found. Tapping the column's heading, or any number in it, switches
+// every row between mg TPE / g, mg psilocybin / g and mg psilocin / g. Closed when the page opens. A lot id
+// with a public product information sheet is a link to it: [MazamaLotTable.onOpen] opens it. A pick on a pie
+// above narrows it to a strain or a type ([LotFilter]). The stock page shows the same table for the center's
+// lots, in place of its product information sheets.
 import 'package:flutter/material.dart';
 
 import 'mazama_inventory_client.dart';
@@ -28,14 +28,14 @@ enum LotMeasure {
       };
 }
 
-/// "8.64", or "—" when the lab result isn't known (never 0: unknown is not none, AD-3).
+/// "8.64", or "—" when the lab result isn't known (never 0: unknown is not none).
 String formatLotValue(num? v) => v == null ? '—' : v.toStringAsFixed(2);
 
 /// A minor analyte's tag: its word, and its colours (background, text) in light and dark, as 0xFFRRGGBB.
 typedef AnalyteTag = ({String word, int lightBg, int lightFg, int darkBg, int darkFg});
 
 /// Each minor analyte's tag, by its name, in the order of the shared rules (rules.yaml `analyte_tags`, which the
-/// server's pages use too, specs/web-charts WC-R7). The app doesn't bundle assets/shared/, so these stay in code:
+/// server's pages use too). The app doesn't bundle assets/shared/, so these stay in code:
 /// test/mazama_lot_table_test.dart holds them equal to the vendored assets/shared/stock/rules/rules.yaml.
 const Map<String, AnalyteTag> analyteTags = {
   'baeocystin': (word: 'Baeocystin', lightBg: 0xFFD7F2EE, lightFg: 0xFF0B5D52, darkBg: 0xFF16433D, darkFg: 0xFFA6E8DD),
@@ -48,7 +48,7 @@ const Map<String, AnalyteTag> analyteTags = {
 String analyteWord(String name) =>
     analyteTags[name]?.word ?? (name.isEmpty ? name : name[0].toUpperCase() + name.substring(1));
 
-/// What a pick on a pie narrows the table to (MI-D20, SP-D18): its words for the title, and which rows it keeps.
+/// What a pick on a pie narrows the table to: its words for the title, and which rows it keeps.
 typedef LotFilter = ({String label, bool Function(MazamaLot lot) keep});
 
 /// A pick on a strain pie: the rows of that strain, ignoring case; "Unknown" keeps the rows whose strain isn't known.
@@ -57,9 +57,13 @@ LotFilter lotStrainFilter(String strain) {
   return (label: strain, keep: (l) => (l.strain.isEmpty ? 'Unknown' : l.strain).toLowerCase() == want);
 }
 
-/// A pick on a By type pie (its slice names are [mixTypeWords]'): the lots with that type among theirs.
-LotFilter lotTypeFilter(String typeWord) =>
-    (label: typeWord, keep: (l) => l.types.any((c) => (mixTypeWords[c] ?? c) == typeWord));
+/// A pick on a By type pie (its slice names are the words of the kind codes, [stockTypeWords]): the lots with that type
+/// among theirs. Each code's word is asked of the core once per filter.
+LotFilter lotTypeFilter(String typeWord) {
+  final words = <String, String>{};
+  String word(String code) => words[code] ??= stockTypeWords([code]).single;
+  return (label: typeWord, keep: (l) => l.types.any((c) => word(c) == typeWord));
+}
 
 class MazamaLotTable extends StatefulWidget {
   const MazamaLotTable({super.key, required this.lots, this.onOpen, this.filter, this.note, this.noteIsError = false});
@@ -67,10 +71,10 @@ class MazamaLotTable extends StatefulWidget {
   /// The rows, sorted by strain then lot id. A lot made into two strains may be a row under each.
   final List<MazamaLot> lots;
 
-  /// Opens a lot's product information sheet (MI-D18); lot ids are plain text when null or the lot has no sheet.
+  /// Opens a lot's product information sheet; lot ids are plain text when null or the lot has no sheet.
   final void Function(MazamaLot lot)? onOpen;
 
-  /// The pick on a pie the rows are narrowed to (MI-D20, SP-D18); all rows when null. It applies while the table is
+  /// The pick on a pie the rows are narrowed to; all rows when null. It applies while the table is
   /// closed too: its title says so.
   final LotFilter? filter;
 

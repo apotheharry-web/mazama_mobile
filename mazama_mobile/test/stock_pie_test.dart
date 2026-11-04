@@ -1,4 +1,4 @@
-// SP-R12: the stock page's pies (lib/stock_pie.dart) draw the slices stock_summary.dart's pies() gives, in the
+// The stock page's pies (lib/stock_pie.dart) draw the slices stock_summary.dart's pies() gives, in the
 // server's colours (mazama_sales/src/mazama_sales/web/static/app.css .f-* classes), and report taps by name.
 import 'dart:convert';
 import 'dart:io';
@@ -153,7 +153,7 @@ void main() {
     expect(stockSlotColor('d5', strainSlot: 's1'), const Color(0xFFA6C6EE));
     // Dark: d25 = 45% colour + 55% white. #3987e5 -> (166.1, 200.9, 243.3) -> (166, 201, 243).
     expect(stockSlotColor('d25', strainSlot: 's1', brightness: Brightness.dark), const Color(0xFFA6C9F3));
-    // specs/edibles: Booster = 68% colour + 32% black, Microdose = 52% colour + 48% white (.strainrow --db / --dm).
+    // Booster = 68% colour + 32% black, Microdose = 52% colour + 48% white (.strainrow --db / --dm).
     // #2a78d6 x 0.68 = (28.56, 81.6, 145.52) -> (29, 82, 146).
     expect(stockSlotColor('db', strainSlot: 's1'), const Color(0xFF1D5292));
     // #2a78d6 x 0.52 + 255 x 0.48 = (144.24, 184.8, 233.68) -> (144, 185, 234).

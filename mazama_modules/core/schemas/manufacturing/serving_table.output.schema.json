@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "manufacturing.serving_table output",
-  "description": "A sheet's amounts: the per-dose table (or one unit's), the lot summary, the note under it, and each package's mg TPE per unit (null: not known, the id is shown alone). A mg is never below what the unit holds (DOSE-15, DOSE-16, DOSE-22). The server adds each package's center.",
+  "description": "A sheet's amounts: the per-dose table (or one unit's), the lot summary, the note under it, and each package's mg TPE per unit (null: not known, the id is shown alone). A mg is never below what the unit holds: unit weight x the larger of the batch/lot's potency and the package's own analyteWeight, rounded up. The server adds each package's center.",
   "type": "object",
   "required": [
     "serv",

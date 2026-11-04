@@ -71,7 +71,7 @@ void main() {
     );
   });
 
-  // SM-20: one named flow per endpoint both apps read, each with get_json's headers (User-Agent included).
+  // One named flow per endpoint both apps read, each with get_json's headers (User-Agent included).
   group('named reads', () {
     final cases = <(String, Map<String, Object?>, String)>[
       ('packaged_products', {'state_id': 225, 'holder': 'ServiceCenter'}, 'GetPackagedProducts/225/ServiceCenter'),

@@ -1,6 +1,6 @@
-// How the phone reads fields of the state's own records, by the same rules as the server's state/mapping.py (SM-21),
+// How the phone reads fields of the state's own records, by the same rules as the server's state/mapping.py,
 // so a record the server skips is skipped here too, and an odd one (an id written as a string) is read, not a crash.
-// The key of a packaged-product record is the shared core's (specs/core row 10), held to the server's answers by
+// The key of a packaged-product record is the shared core's, held to the server's answers by
 // test/state_records_test.dart (../mazama_modules/contracts/vectors/). wholeNumber and textOrNull stay for the other
 // fields this app reads (their own rows' turn comes later).
 
@@ -34,7 +34,7 @@ String? textOrNull(Object? v) {
 typedef PackageKey = ({int stateId, String pkpr});
 
 /// The state id and PKPR of each GetPackagedProducts record in [records], in order, or null for one the server skips
-/// (no whole-number id, or no PKPR): the shared core's rule (records.package_keys, specs/core row 10, SM-21), the one
+/// (no whole-number id, or no PKPR): the shared core's rule (records.package_keys), the one
 /// the server's mapping.packaged_product asks too, in one call; [core] defaults to this app's ([MazamaCore.instance]).
 /// Only the two fields the rule reads are sent. A core that can't answer skips every record, as the server does for
 /// one it can't read, never a crash.

@@ -32,7 +32,7 @@ pub struct Rules {
     pub lot_links: LotLinks,
 }
 
-/// AD-19: the labels on a report's request / chain of custody that pair a lot with the batch id the lab printed.
+/// The labels on a report's request / chain of custody that pair a lot with the batch id the lab printed.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct LotLinks {
@@ -47,7 +47,7 @@ pub struct LotLinks {
 pub struct Anchor {
     pub labels: Vec<String>,
     pub id: String,
-    /// Prefixes of a client's own ids, which may head a section but are never a lot's own id (AD-21).
+    /// Prefixes of a client's own ids, which may head a section but are never a lot's own id.
     pub client_prefixes: Vec<String>,
 }
 

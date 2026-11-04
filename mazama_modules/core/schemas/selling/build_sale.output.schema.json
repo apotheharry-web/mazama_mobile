@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "selling.build_sale output",
-  "description": "The record, or the words of why it can't be built (SALE-10, SALE-13).",
+  "description": "The record, or the words of why it can't be built.",
   "type": "object",
   "required": [
     "record",

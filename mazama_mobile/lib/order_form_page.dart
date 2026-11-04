@@ -1,11 +1,11 @@
-// specs/mazama-inventory MI-D6..D9, MI-D16, MI-R6: the order form the Mazama inventory page opens ("Order from
-// Mazama"), opened by the par step (MI-D21, order_par_page.dart). One line per par level the worker has just
-// confirmed or saved there (it amends MI-D16: no longer the copy on the phone), strains added in the par editor with no
+// The order form the Mazama inventory page opens ("Order from
+// Mazama"), opened by the par step (order_par_page.dart). One line per par level the worker has just
+// confirmed or saved there (not a copy kept on the phone), strains added in the par editor with no
 // stock included, then the combined All strains lines (any strain); each line starts at its full par level
-// (MI-D7) and is ordered freeze dried, dehydrated or homogenized (MI-D8), with an "All lines" setter. A quantity of
-// 0 leaves a line out. "Review order" opens the review page (MI-D10, order_review_page.dart: the lines, notes, Back to
+//  and is ordered freeze dried, dehydrated or homogenized, with an "All lines" setter. A quantity of
+// 0 leaves a line out. "Review order" opens the review page (order_review_page.dart: the lines, notes, Back to
 // edit, Submit order); once it is sent there, the form shows the order's number. Going back to edit keeps the notes.
-// Edibles (Chocolate, Gummy, Honey: specs/edibles ED-A6, MI-D17) come below every strain line, one row per product with
+// Edibles (Chocolate, Gummy, Honey) come below every strain line, one row per product with
 // a par level, with just two fields, Booster and Microdose (each starting at its par, else 0). They are of their own
 // kind: no freeze dried / dehydrated / homogenized choice, and "All lines" leaves them alone.
 import 'dart:async';
@@ -25,7 +25,7 @@ class OrderFormPage extends StatefulWidget {
 
   final License center;
 
-  /// The center's par levels, as confirmed or saved on the par step (MI-D21).
+  /// The center's par levels, as confirmed or saved on the par step.
   final Future<List<ParLevel>> Function() loadPar;
 
   /// Sends the order and its notes; the host adds who and which device (order_client.submitOrder in the app).
@@ -55,7 +55,7 @@ class _OrderFormPageState extends State<OrderFormPage> {
   List<_Line>? _lines;
   String? _loadError;
 
-  /// The notes typed on the review page, kept while the worker goes back to edit (MI-D10).
+  /// The notes typed on the review page, kept while the worker goes back to edit.
   String _note = '';
   OrderReceipt? _sent;
 
@@ -82,7 +82,7 @@ class _OrderFormPageState extends State<OrderFormPage> {
       try {
         final levels = await widget.loadPar();
         if (!mounted) return;
-        // The form's lines (orderFormLines: the shared core's stock.order_form, specs/core row 9): strains by name
+        // The form's lines (orderFormLines: the shared core's stock.order_form): strains by name
         // ignoring case then size, the combined All strains lines, the edibles last with Booster and Microdose.
         final lines = orderFormLines(levels);
         setState(() => _lines = [for (final l in lines) _Line(l.strain, l.size, l.par)]);
@@ -234,7 +234,7 @@ class _OrderFormPageState extends State<OrderFormPage> {
         ),
       );
 
-  /// MI-D17: the edibles below the strain lines, one row per product, with a Booster and a Microdose field.
+  /// The edibles below the strain lines, one row per product, with a Booster and a Microdose field.
   List<Widget> _edibleSection(List<_Line> lines) {
     final byProduct = <String, Map<int, _Line>>{};
     for (final l in lines) {
@@ -300,7 +300,7 @@ class _OrderFormPageState extends State<OrderFormPage> {
         const SizedBox(height: 16),
         Align(
           alignment: Alignment.centerLeft,
-          // true: the order was sent, so the par step that opened this form closes too (MI-D21)
+          // true: the order was sent, so the par step that opened this form closes too
           child: FilledButton(onPressed: () => Navigator.of(context).maybePop(true), child: const Text('Done')),
         ),
       ],

@@ -1,5 +1,5 @@
-// server_link.dart: the app's one link to Mazama's server (README R56) - the banner above every page, the outbox and
-// catch-up work woken when the server answers again, the snapshot and lab-report defaults, and when the server went
+// server_link.dart: the app's one link to Mazama's server - the banner above every page, the engine's queue (the sale
+// reports, then the catch-up work) woken when the server answers again, the snapshot and lab-report defaults, and when the server went
 // offline kept across restarts.
 import 'dart:async';
 import 'dart:convert';
@@ -15,10 +15,12 @@ import 'package:mazama_mobile/coa_uploader.dart';
 import 'package:mazama_mobile/configured_coa_submit.dart';
 import 'package:mazama_mobile/device_id.dart';
 import 'package:mazama_mobile/inventory_upload_client.dart';
+import 'package:mazama_mobile/local_store.dart';
 import 'package:mazama_mobile/sales_upload_client.dart';
 import 'package:mazama_mobile/server_health.dart';
 import 'package:mazama_mobile/server_link.dart';
-import 'package:mazama_mobile/sync/sync_queue.dart' show Done;
+import 'package:mazama_mobile/sync/sync_engine.dart';
+import 'package:mazama_mobile/sync/sync_queue.dart' show Done, QueueKind;
 import 'package:mazama_mobile/sync/sync_tables.dart' show QueueItem;
 import 'package:mazama_mobile/sync/updated_line.dart' show formatAsOf;
 import 'package:mazama_mobile/server_outbox.dart';
@@ -40,22 +42,32 @@ void main() {
     sent = [];
     uploaded = [];
   });
-  tearDown(() => _dir.deleteSync(recursive: true));
+  tearDown(() {
+    LocalStore.debugCloseAll();
+    _dir.deleteSync(recursive: true);
+  });
 
   final since = DateTime.utc(2026, 10, 23, 13, 5);
 
-  ServerLink link({bool Function()? probeAnswer}) {
+  // A link over an engine on the test's own folder, with fake senders ([labReport]: the lab report's send; none by
+  // default, so a lab report is skipped).
+  ServerLink link({bool Function()? probeAnswer, CoaLotSend? labReport}) {
     final health = ServerHealth(probe: () async => probeAnswer?.call() ?? false, now: () => since, startTimer: timers.start);
+    Future<void> upload(PendingSnapshot s) async => uploaded.add(s.stateId);
     return ServerLink(
       health: health,
-      outbox: ServerOutbox(
-          health: health, store: OutboxStore(dataDir: () => _dir), send: (e) async => sent.add(e.clientId), startTimer: timers.start),
-      catchUp: CatchUpWork(
+      engine: SyncEngine(
+        store: LocalStore.forDir(_dir),
         health: health,
-        store: CatchUpStore(dataDir: () => _dir),
-        submitCoa: (lot, auth) async => true,
-        uploadSnapshot: (s) async => uploaded.add(s.stateId),
-        auth: () async => const CatchUpAuth(accessToken: 'T', workerEmail: 'w', deviceId: 'd'),
+        startTimer: timers.start,
+        senders: {
+          QueueKind.saleLog: outboxQueueSender((e) async => sent.add(e.clientId)),
+          QueueKind.saleFailure: outboxQueueSender((e) async => sent.add(e.clientId)),
+          QueueKind.inventorySnapshot: snapshotQueueSender(upload),
+          QueueKind.salesSnapshot: snapshotQueueSender(upload),
+          QueueKind.labReport: labReportQueueSender(labReport ?? (lot, a) async => null,
+              () async => const CatchUpAuth(accessToken: 'T', workerEmail: 'w', deviceId: 'd')),
+        },
       ),
     );
   }
@@ -81,9 +93,9 @@ void main() {
       final l = ServerLink.standard(dataDir: () => broken, rememberOffline: false);
       addTearDown(l.dispose);
       l.health.markUnreachable();
-      final id = await l.outbox.addSaleLog(231, workerEmail: 'w', deviceId: 'd', request: const [{'n': 1}], response: null);
+      final id = l.queue.addSaleLog(231, workerEmail: 'w', deviceId: 'd', request: const [{'n': 1}], response: null);
       expect(id, isNotEmpty);
-      expect(l.engine.queue.waitingReports, 1);
+      expect(l.queue.waitingReports, 1);
     });
   });
 
@@ -105,8 +117,8 @@ void main() {
       final l = link();
       addTearDown(l.dispose);
       l.health.markUnreachable();
-      await l.outbox.addSaleFailure(231, workerEmail: 'w', deviceId: 'd', reason: 'r', request: const [{'n': 1}]);
-      await l.outbox.addSaleLog(231, workerEmail: 'w', deviceId: 'd', request: const [{'n': 2}], response: null);
+      l.queue.addSaleFailure(231, workerEmail: 'w', deviceId: 'd', reason: 'r', request: const [{'n': 1}]);
+      l.queue.addSaleLog(231, workerEmail: 'w', deviceId: 'd', request: const [{'n': 2}], response: null);
       await tester.pumpWidget(app(l, ValueNotifier(false)));
       expect(find.byKey(const ValueKey('server-link-banner')), findsOneWidget);
       expect(find.text(serverLinkBannerText(since: since, waiting: 2)), findsOneWidget);
@@ -129,7 +141,7 @@ void main() {
       expect(find.byKey(const ValueKey('server-link-banner')), findsOneWidget);
     });
 
-    // R87: the one banner has a close button; dismissed, it stays hidden for the rest of this outage.
+    // The one banner has a close button; dismissed, it stays hidden for the rest of this outage.
     group('dismissed', () {
       final dismiss = find.byKey(const ValueKey('server-link-banner-dismiss'));
       final banner = find.byKey(const ValueKey('server-link-banner'));
@@ -185,7 +197,7 @@ void main() {
         expect(find.text('another page'), findsOneWidget);
         expect(banner, findsNothing);
 
-        await l.outbox.addSaleLog(231, workerEmail: 'w', deviceId: 'd', request: const [{'n': 1}], response: null);
+        l.queue.addSaleLog(231, workerEmail: 'w', deviceId: 'd', request: const [{'n': 1}], response: null);
         await tester.pump();
         expect(banner, findsNothing);
 
@@ -239,12 +251,12 @@ void main() {
     });
   });
 
-  test('going online flushes the outbox and then the catch-up work', () async {
+  test('going online sends the sale reports and then the catch-up work', () async {
     final l = link();
     addTearDown(l.dispose);
     l.health.markUnreachable();
-    final id = await l.outbox.addSaleLog(231, workerEmail: 'w', deviceId: 'd', request: const [{'n': 1}], response: null);
-    l.catchUp.keepSnapshot(231, const [1], workerEmail: 'w', deviceId: 'd');
+    final id = l.queue.addSaleLog(231, workerEmail: 'w', deviceId: 'd', request: const [{'n': 1}], response: null);
+    l.queue.keepSnapshot(231, const [1], workerEmail: 'w', deviceId: 'd');
     await pumpEventQueue();
     expect([sent, uploaded], [[], []]);
     l.health.markReachable();
@@ -253,12 +265,12 @@ void main() {
     expect(uploaded, [231]);
   });
 
-  test('a probe that gets an answer wakes the outbox too', () async {
+  test('a probe that gets an answer wakes the queue too', () async {
     var up = false;
     final l = link(probeAnswer: () => up);
     addTearDown(l.dispose);
     l.health.markUnreachable();
-    await l.outbox.addSaleLog(231, workerEmail: 'w', deviceId: 'd', request: const [{'n': 1}], response: null);
+    l.queue.addSaleLog(231, workerEmail: 'w', deviceId: 'd', request: const [{'n': 1}], response: null);
     up = true;
     timers.active.where((t) => t.delay == probeFirstDelay).single.fire();
     await pumpEventQueue();
@@ -285,7 +297,7 @@ void main() {
     await expectLater(l.uploadInventorySnapshot(231, const [1, 2], workerEmail: 'w', deviceId: 'd'),
         throwsA(isA<InventoryUploadError>().having((e) => e.unreachable, 'unreachable', isTrue)));
     await expectLater(l.uploadInventorySnapshot(231, const [1], workerEmail: 'w', deviceId: 'd'), throwsA(isA<InventoryUploadError>()));
-    expect(l.catchUp.snapshots['inventory:231']!.records, [1]);
+    expect(l.queue.keptSnapshots['inventory:231']!.records, [1]);
   });
 
   test('sales: offline, the newest read is kept beside the inventory one, failing at once as unreachable', () async {
@@ -296,18 +308,18 @@ void main() {
     await expectLater(l.uploadSalesSnapshot(231, const [1, 2], workerEmail: 'w', deviceId: 'd'),
         throwsA(isA<SalesUploadError>().having((e) => e.unreachable, 'unreachable', isTrue)));
     await expectLater(l.uploadSalesSnapshot(231, const [3], workerEmail: 'w', deviceId: 'd'), throwsA(isA<SalesUploadError>()));
-    expect(l.catchUp.snapshots['sales:231']!.records, [3]);
-    expect(l.catchUp.snapshots['inventory:231']!.records, [1]);
+    expect(l.queue.keptSnapshots['sales:231']!.records, [3]);
+    expect(l.queue.keptSnapshots['inventory:231']!.records, [1]);
   });
 
   test('sales: a newer read that reaches the server makes the kept one moot (the inventory one stays)', () async {
     final l = link();
     addTearDown(l.dispose);
-    l.catchUp.keepSnapshot(231, const [1], workerEmail: 'w', deviceId: 'd');
-    l.catchUp.keepSnapshot(231, const [2], workerEmail: 'w', deviceId: 'd', kind: 'sales');
+    l.queue.keepSnapshot(231, const [1], workerEmail: 'w', deviceId: 'd');
+    l.queue.keepSnapshot(231, const [2], workerEmail: 'w', deviceId: 'd', kind: 'sales');
     final ok = http_testing.MockClient((_) async => http.Response('{"rows": 1, "skipped": 0}', 200));
     expect(await l.uploadSalesSnapshot(231, const [4], workerEmail: 'w', deviceId: 'd', client: ok), {'rows': 1, 'skipped': 0});
-    expect(l.catchUp.snapshots.keys, ['inventory:231']);
+    expect(l.queue.keptSnapshots.keys, ['inventory:231']);
   });
 
   test("sales: a read over the route's limit sends (and keeps) only the newest records it takes", () async {
@@ -328,7 +340,7 @@ void main() {
     expect([ids.contains(0), ids.contains(1), ids.contains(ingestMaxRecords + 1)], [false, false, true]); // the two oldest left out
     l.health.markUnreachable();
     await expectLater(l.uploadSalesSnapshot(231, records, workerEmail: 'w', deviceId: 'd'), throwsA(isA<SalesUploadError>()));
-    expect(l.catchUp.snapshots['sales:231']!.records, hasLength(ingestMaxRecords));
+    expect(l.queue.keptSnapshots['sales:231']!.records, hasLength(ingestMaxRecords));
   });
 
   test('a snapshot the server timed out reading (408) is kept for later, as an unreachable one is', () async {
@@ -339,8 +351,8 @@ void main() {
         throwsA(isA<InventoryUploadError>()));
     await expectLater(l.uploadSalesSnapshot(231, const [2], workerEmail: 'w', deviceId: 'd', client: slow),
         throwsA(isA<SalesUploadError>()));
-    expect(l.catchUp.snapshots['inventory:231']!.records, [1]);
-    expect(l.catchUp.snapshots['sales:231']!.records, [2]);
+    expect(l.queue.keptSnapshots['inventory:231']!.records, [1]);
+    expect(l.queue.keptSnapshots['sales:231']!.records, [2]);
   });
 
   test('sales: an unreachable send keeps the read for later; a refusal keeps nothing', () async {
@@ -349,11 +361,11 @@ void main() {
     final down = http_testing.MockClient((_) async => throw const SocketException('down'));
     await expectLater(l.uploadSalesSnapshot(231, const [1], workerEmail: 'w', deviceId: 'd', client: down),
         throwsA(isA<SalesUploadError>()));
-    expect(l.catchUp.snapshots['sales:231']!.records, [1]);
+    expect(l.queue.keptSnapshots['sales:231']!.records, [1]);
     final refused = http_testing.MockClient((_) async => http.Response('{"detail": "Records for another service center."}', 400));
     await expectLater(l.uploadSalesSnapshot(183, const [1], workerEmail: 'w', deviceId: 'd', client: refused),
         throwsA(isA<SalesUploadError>()));
-    expect(l.catchUp.snapshots.containsKey('sales:183'), isFalse);
+    expect(l.queue.keptSnapshots.containsKey('sales:183'), isFalse);
   });
 
   test("the catch-up uploader sends each kept snapshot to its own kind's route", () async {
@@ -371,9 +383,9 @@ void main() {
     expect(seen, hasLength(2)); // an unknown kind is never sent anywhere
   });
 
-  // specs/phone-sync Task 8b Step 6 (PS-D7): one sender for the inventory snapshot, on the ingest route, whoever queued
+  // One sender for the inventory snapshot, on the ingest route, whoever queued
   // it: the cart's own upload, the center_stock refresher's kept read, and what an older build left in the queue (its
-  // items hold the records and the pair, never a route, so they survive the update unchanged and go to C20 too).
+  // items hold the records and the pair, never a route, so they survive the update unchanged and go to the ingest route too).
   test('the snapshot goes to the ingest route', () async {
     final seen = <String>[];
     final bodies = <Object?>[];
@@ -422,7 +434,7 @@ void main() {
     expect(store.loadOfflineSince(), isNull);
   });
 
-  test('the catch-up work uses the saved session only while it is fresh, and never the demo', () async {
+  test('the queued lab reports use the saved session only while it is fresh, and never the demo', () async {
     final sessions = SessionStore(dataDir: () => _dir);
     final devices = DeviceIdStore(dataDir: () => _dir);
     final now = DateTime.utc(2026, 10, 23, 12);
@@ -438,7 +450,7 @@ void main() {
     expect(await savedSessionAuth(sessions, devices, now: () => now), isNull); // about to expire: never renewed from here
   });
 
-  // specs/coa-upload: the link's one background uploader, and one memory of the lab reports sent, whichever way.
+  // The link's one background uploader, and one memory of the lab reports sent, whichever way.
   group('lab reports sent in the background', () {
     /// The state system and the server for one lot's chain: package 777, document 42, the upload answered [status].
     http.Client chain(int status) => http_testing.MockClient((req) async {
@@ -477,10 +489,13 @@ void main() {
       l.health.markUnreachable();
       queueCoaUploads([const CoaUploadLot(lotGuid: 'HB-1', packageId: 1, stateId: 231, statePsilocybin: 4.5)]);
       expect(coaUploadPending('hb-1'), isTrue);
-      await pumpEventQueue(); // its first start is on a timer of no delay
+      for (final t in timers.active.where((t) => t.delay == Duration.zero).toList()) {
+        t.fire(); // its first start is on a timer of no delay
+      }
+      await pumpEventQueue();
       expect(coaUploadPending('HB-1'), isFalse);
-      expect(l.coaUploads.idle, isTrue);
-      expect(l.catchUp.lots, isEmpty); // never filled in bulk: the next load enqueues the lot again
+      expect(l.queue.labReportsIdle, isTrue);
+      expect(l.queue.keptCoaLots, isEmpty); // never filled in bulk: the next load enqueues the lot again
     });
 
     for (final status in [200, 202]) {
@@ -494,9 +509,9 @@ void main() {
         } on ConfiguredCoaSubmitError catch (e) {
           expect(e.status, status);
         }
-        expect(l.coaUploads.sent.wasSent('hb-9BC7D118'), isTrue);
-        l.coaUploads.enqueue([const CoaUploadLot(lotGuid: 'HB-9bc7d118', packageId: 777, stateId: 231)]);
-        expect(l.coaUploads.waiting, 0);
+        expect(l.queue.wasSent(QueueKind.labReport, 'hb-9BC7D118'), isTrue);
+        l.queue.enqueueCoaUploads([const CoaUploadLot(lotGuid: 'HB-9bc7d118', packageId: 777, stateId: 231)]);
+        expect(l.queue.labReportsWaiting, 0);
       });
     }
 
@@ -509,17 +524,26 @@ void main() {
             l.submitCoaForLot(
                 lotGuid: 'HB-9bc7d118', representativePackageId: 777, accessToken: 'T', workerEmail: 'w', deviceId: 'd', client: chain(status)),
             throwsA(isA<ConfiguredCoaSubmitError>()));
-        expect(l.coaUploads.sent.wasSent('HB-9bc7d118'), isFalse);
+        expect(l.queue.wasSent(QueueKind.labReport, 'HB-9bc7d118'), isFalse);
       });
     }
 
-    test('a catch-up submission the server answered is remembered in the memory it is given', () async {
+    test('a kept lab report the server answered is remembered as sent, and leaves the queue', () async {
       TestWidgetsFlutterBinding.ensureInitialized();
-      final sent = CoaSentMemory(store: CoaSentStore(dataDir: () => _dir));
-      final lot = PendingCoaLot(lotGuid: 'HB-9bc7d118', packageId: 777, stateId: 231, addedAt: DateTime.utc(2026, 10, 27));
-      const auth = CatchUpAuth(accessToken: 'T', workerEmail: 'w', deviceId: 'd');
-      expect(await submitPendingCoaLot(lot, auth, sent: sent, client: chain(200)), isTrue);
-      expect(sent.wasSent('HB-9bc7d118'), isTrue);
+      final l = link(
+          labReport: (lot, a) => submitCoaForLot(
+              lotGuid: lot.lotGuid,
+              representativePackageId: lot.packageId,
+              accessToken: a.accessToken,
+              workerEmail: a.workerEmail,
+              deviceId: a.deviceId,
+              statePsilocybin: lot.statePsilocybin,
+              client: chain(200)));
+      addTearDown(l.dispose);
+      l.queue.addCoaLot(lotGuid: 'HB-9bc7d118', packageId: 777, stateId: 231);
+      await l.queue.flush();
+      expect(l.queue.wasSent(QueueKind.labReport, 'HB-9bc7d118'), isTrue);
+      expect(l.queue.keptCoaLots, isEmpty);
     });
   });
 }

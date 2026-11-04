@@ -1,8 +1,8 @@
 // A debug-only screen for manually exercising the things CartPage normally does silently in the background -
-// item 2/3a's merge-and-push-after-every-read, item 3b's fire-and-forget COA submission on a cart add, item
-// 4's server-side label queueing that follows a successful COA parse, and the fire-and-forget sale-log/
-// sale-failure posts - all deliberately swallow their own errors in the real flow (see merged_inventory.dart's
-// own "a push failing is never surfaced to the worker" comment, configured_coa_submit.dart's "never surfaced
+// the merge-and-push-after-every-read, the fire-and-forget COA submission on a cart add, the
+// server-side label queueing that follows a successful COA parse, and the fire-and-forget sale-log/
+// sale-failure posts - all deliberately swallow their own errors in the real flow (the snapshot push is
+// queued and never surfaced to the worker, configured_coa_submit.dart's "never surfaced
 // to the worker" comment, and cart_page.dart's _sell/_queueFailedSale) so there's normally nothing to look at
 // even when one of them is silently failing. This page runs each one on demand and shows exactly what came
 // back - the real functions, not a reimplementation, so a green result here really did happen for real.
@@ -20,10 +20,12 @@ import 'configured_coa_submit.dart' as configured_coa_submit;
 import 'device_id.dart';
 import 'inventory_upload_client.dart' as inventory_upload_client;
 import 'label_client.dart' as label_client;
-import 'merged_inventory.dart' as merged_inventory;
+import 'packages_client.dart' as packages_client;
 import 'sale_failure_client.dart' as sale_failure_client;
 import 'sale_log_client.dart' as sale_log_client;
 import 'session.dart';
+import 'state_packages_client.dart' as state_packages_client;
+import 'sync/stock_merge.dart';
 
 class DebugBackgroundFeaturesPage extends StatefulWidget {
   final Session session;
@@ -31,10 +33,10 @@ class DebugBackgroundFeaturesPage extends StatefulWidget {
   /// Pre-fills the state-id field, same convenience as DebugAdhocCoaDiagnosticsPage.initialStateId.
   final int? initialStateId;
 
-  /// Overridable for tests. Defaults to the real fetchMergedInventory (merged_inventory.dart) - the exact
-  /// function _fetchMergedForCart calls, so a run here really does exercise items 2/3a end to end.
-  final Future<merged_inventory.MergedInventoryResult> Function(int stateId, {required String accessToken})
-      fetchMergedInventory;
+  /// Overridable for tests. Defaults to the real reads of a configured center's stock, the server's /p/packages and the
+  /// state's records at once (sync/stock_merge.dart's readStock), which the page joins with the one merge rule
+  /// (mergeStock), so a run here really does exercise the read and join end to end.
+  final Future<StockRead> Function(int stateId, {required String accessToken}) readStock;
 
   /// Overridable for tests. Defaults to the real uploadInventorySnapshot (inventory_upload_client.dart) - the
   /// same call _fetchMergedForCart makes fire-and-forget after every merge; this page makes it on demand and
@@ -56,7 +58,7 @@ class DebugBackgroundFeaturesPage extends StatefulWidget {
   }) submitCoaForLot;
 
   /// Overridable for tests. Defaults to the real fetchLabel (label_client.dart) - lets you check, right after a
-  /// submitCoaForLot run above, whether item 4's server-side auto-queued label has actually shown up yet for
+  /// submitCoaForLot run above, whether the server-side auto-queued label has actually shown up yet for
   /// that same product.
   final Future<Uint8List> Function(int stateId, String guid) fetchLabel;
 
@@ -82,7 +84,7 @@ class DebugBackgroundFeaturesPage extends StatefulWidget {
     super.key,
     required this.session,
     this.initialStateId,
-    Future<merged_inventory.MergedInventoryResult> Function(int, {required String accessToken})? fetchMergedInventory,
+    Future<StockRead> Function(int, {required String accessToken})? readStock,
     Future<Map<String, Object?>> Function(int, List<Object?>, {required String workerEmail, required String deviceId})?
         uploadInventorySnapshot,
     Future<coa_data_client.CoaData?> Function({
@@ -104,7 +106,7 @@ class DebugBackgroundFeaturesPage extends StatefulWidget {
             {required String workerEmail, required String deviceId, required String reason, required List<Map<String, Object?>> request})?
         postSaleFailure,
     this.deviceIdStore = const DeviceIdStore(),
-  })  : fetchMergedInventory = fetchMergedInventory ?? merged_inventory.fetchMergedInventory,
+  })  : readStock = readStock ?? _readStock,
         uploadInventorySnapshot = uploadInventorySnapshot ?? inventory_upload_client.uploadInventorySnapshot,
         submitCoaForLot = submitCoaForLot ?? configured_coa_submit.submitCoaForLot,
         fetchLabel = fetchLabel ?? ((stateId, guid) => label_client.fetchLabel(stateId, guid)),
@@ -114,6 +116,11 @@ class DebugBackgroundFeaturesPage extends StatefulWidget {
   @override
   State<DebugBackgroundFeaturesPage> createState() => _DebugBackgroundFeaturesPageState();
 }
+
+Future<StockRead> _readStock(int stateId, {required String accessToken}) => readStock(
+      fetchServer: () => packages_client.fetchPackages(stateId),
+      fetchState: () => state_packages_client.fetchRawPackagesFromState(stateId, accessToken: accessToken),
+    );
 
 /// One on-demand action's own little status line, shared by every section below - just enough to say what
 /// happened, not a build-up of history across runs (re-running always replaces whatever's showing).
@@ -170,14 +177,15 @@ class _DebugBackgroundFeaturesPageState extends State<DebugBackgroundFeaturesPag
       _lastRawStateRecords = null;
     });
     try {
-      final result = await widget.fetchMergedInventory(stateId, accessToken: widget.session.accessToken);
-      _lastRawStateRecords = result.rawStateRecords;
-      final needsWork = result.packages.where((p) => !p.coaAvailable || !p.labelAvailable).length;
+      final read = await widget.readStock(stateId, accessToken: widget.session.accessToken);
+      _lastRawStateRecords = read.stateRecords;
+      final packages = read.merged().packages; // both failing: the error below
+      final needsWork = packages.where((p) => !p.coaAvailable || !p.labelAvailable).length;
       if (!mounted) return;
       setState(() => _mergeResult = _Result(
             true,
-            'mazamaOk=${result.mazamaOk}, stateOk=${result.stateOk}. ${result.packages.length} merged package(s), '
-            '$needsWork missing a COA/label. ${result.rawStateRecords == null ? "No raw state records to push (state read failed)." : "${result.rawStateRecords!.length} raw state record(s) ready to push below."}',
+            'mazamaOk=${read.serverOk}, stateOk=${read.stateOk}. ${packages.length} merged package(s), '
+            '$needsWork missing a COA/label. ${read.stateRecords == null ? "No raw state records to push (state read failed)." : "${read.stateRecords!.length} raw state record(s) ready to push below."}',
           ));
     } catch (e) {
       if (!mounted) return;
@@ -361,8 +369,8 @@ class _DebugBackgroundFeaturesPageState extends State<DebugBackgroundFeaturesPag
           const Divider(height: 32),
           _section(
             title: 'Merged inventory (items 2 & 3a)',
-            description: 'The exact fetchMergedInventory/uploadInventorySnapshot calls CartPage makes silently '
-                'on every load of a configured center\'s cart.',
+            description: 'The server and state reads, joined by the one merge rule, and the uploadInventorySnapshot call '
+                'CartPage makes silently on every load of a configured center\'s cart.',
             children: [
               TextField(
                 controller: _stateIdController,

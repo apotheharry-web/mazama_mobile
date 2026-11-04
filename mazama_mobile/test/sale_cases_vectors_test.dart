@@ -1,5 +1,5 @@
-// specs/core row 7: the phone's sale records, dates, draws, checks and outcomes are the shared core's, held to the SALE
-// rows the owner approved on 2026-10-31 (assets/shared/selling/vectors/sale_cases.json, vendored from
+// The phone's sale records, dates, draws, checks and outcomes are the shared core's, held to the SALE
+// cases the owner approved (assets/shared/selling/vectors/sale_cases.json, vendored from
 // ../mazama_modules/selling/vectors/; mazama_modules/core/tests/test_sale.py holds the server's side to the same file).
 // A case marked "big" holds an integer beyond 64 bits, which Dart's JSON reader can't carry: the server and the core
 // run it.

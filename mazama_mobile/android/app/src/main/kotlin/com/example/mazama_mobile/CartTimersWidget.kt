@@ -1,6 +1,6 @@
 package com.example.mazama_mobile
 
-// The cart timers home-screen widget (specs/multi-cart MC-D15): every cart's running session timer at the center the
+// The cart timers home-screen widget: every cart's running session timer at the center the
 // app was last on. The app sends a snapshot over the "mazama/cart_timer_widget" channel (lib/cart_timer_widget.dart)
 // whenever a timer, a cart's lines or the list of carts changes; it holds moments (when each timer started, when its
 // session ends), never durations, so the rows count on their own with Chronometer while the app is closed.
@@ -188,7 +188,7 @@ class CartTimersWidgetProvider : AppWidgetProvider() {
         }
 
         /**
-         * One row's clock, as the app's carts list words it (MC-D14): counting down to the session's end ("left", "left
+         * One row's clock, as the app's carts list words it: counting down to the session's end ("left", "left
          * w/ booster"), then up from it ("over · time up"); with no session length, up from the start ("elapsed").
          */
         private fun drawClock(context: Context, views: RemoteViews, i: Int, timer: CartTimer, nowMs: Long, nowRealtime: Long) {

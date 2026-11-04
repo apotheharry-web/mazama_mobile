@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "dose.ceil_mg output",
-  "description": "Per figure, in order: ceil(x - 1e-9) (SM-D17), or null when it isn't finite or is beyond 64 bits (DOSE-11).",
+  "description": "Per figure, in order: ceil(x - 1e-9), rounded up to a whole mg forgiving only float noise, or null when it isn't finite or is beyond 64 bits.",
   "type": "array",
   "items": {
     "type": [

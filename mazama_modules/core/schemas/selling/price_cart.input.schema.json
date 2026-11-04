@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "selling.price_cart input",
-  "description": "A cart priced as a whole (SM-14; cart.json's shape): one total shared out, or one rate per mg.",
+  "description": "A cart priced as a whole: one total shared out, or one rate per mg.",
   "type": "object",
   "required": [
     "mode",
@@ -38,7 +38,7 @@
           "mg": {
             "type": "integer",
             "minimum": 0,
-            "description": "The whole mg a unit is sold as (SM-D16; PRICE-7: anything else is an input error); 0 is unknown."
+            "description": "The whole mg a unit is sold as (anything else is an input error); 0 is unknown."
           },
           "qty": {
             "type": "integer",

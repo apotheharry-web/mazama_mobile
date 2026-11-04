@@ -7,7 +7,7 @@
 // A build that never constructs one of these (every existing call site, including every existing test) gets
 // `const ResilienceOptions()` - today's behavior exactly, unchanged by this file's own existence.
 
-/// How old the cart's stock may be before a sale reads it from the state again (SM-25, SM-D20: 5 minutes):
+/// How old the cart's stock may be before a sale reads it from the state again (5 minutes):
 /// rules.yaml sale_check.recheck_after_minutes (test/sale_check_vectors_test.dart holds this to the vendored rules).
 const defaultStockRecheckAge = Duration(minutes: 5);
 
@@ -20,13 +20,13 @@ class ResilienceOptions {
   /// if no session were available at all.
   final bool enableStateFallback;
 
-  /// How old the cart's stock may be before the cart refuses to sell from it (Q3, owner 2026-10-28: stock kept on the
+  /// How old the cart's stock may be before the cart refuses to sell from it (stock kept on the
   /// phone is shown at any age, with its age; selling from it stops past this, cart_page.dart's stockTooOld). Three
-  /// days by default, same window this app shipped with before this became configurable.
+  /// days by default.
   final Duration cacheMaxAge;
 
   /// Before a sale is sent, the cart's stock is read from the state system again when it was read longer ago than
-  /// this, and a line that is gone or can't be sold any more is refused (SM-25). [defaultStockRecheckAge] by default.
+  /// this, and a line that is gone or can't be sold any more is refused. [defaultStockRecheckAge] by default.
   final Duration stockRecheckAge;
 
   const ResilienceOptions({

@@ -1,9 +1,9 @@
-// SL-R18 / SL-D13: the owner's signed sign-in host list, and the hosts every flow on this phone may talk to.
+// The owner's signed sign-in host list, and the hosts every flow on this phone may talk to.
 //
 // The app's allowlist is the built-in two (flow_spec.dart's defaultAllowedHosts) plus the hosts of the newest list
 // that verifies against the bundled public key (signing.dart, assets/signing/signing.pub). A list only ever adds exact
 // hosts; it never removes the built-in ones. It reaches the phone from Mazama's server (/p/flows/hosts,
-// login_hosts_client.dart) only after a failed sign-in (with the newer sign-in spec, SL-R10), and is kept here, in
+// login_hosts_client.dart) only after a failed sign-in (with the newer sign-in spec), and is kept here, in
 // `login_hosts.json` beside login_spec.yaml, only after the sign-in it enabled gave a session (SignInPage). The file
 // holds the list's exact text and its signature, and is verified again every time it is read, so a list saved under
 // another key (or while the bundled key is `none`) is never used.
@@ -30,8 +30,8 @@ const maxHostListBytes = 65536;
 /// One exact host as a list may name it: lower-case ASCII letters, digits and hyphens in two or more dot-separated
 /// labels of 1-63 characters, none starting or ending with a hyphen, at most 253 characters, and a last label that is
 /// not a number (so no IP address literal). No dot at either end, no `*`, port, scheme or path, and never one of the
-/// GitHub hosts the app reads the owner's signed files and its updates from (specs/app-updates AU-R16). The shared
-/// core's rule (`flows.parse_host_list`, specs/core row 13; login_hosts.py's valid_host asks the same function).
+/// GitHub hosts the app reads the owner's signed files and its updates from. The shared
+/// core's rule (`flows.parse_host_list`; login_hosts.py's valid_host asks the same function).
 bool validListedHost(Object? host) {
   if (host is! String) return false;
   try {

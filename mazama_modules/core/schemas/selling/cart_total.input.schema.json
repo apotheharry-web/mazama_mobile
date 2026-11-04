@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "selling.cart_total input",
+  "description": "A cart's lines (units, price each in cents, group) and how many sales of it.",
+  "type": "object",
+  "required": [
+    "lines",
+    "sales"
+  ],
+  "properties": {
+    "lines": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "qty",
+          "price_cents",
+          "group"
+        ],
+        "properties": {
+          "qty": {
+            "type": "integer",
+            "minimum": -9223372036854775808,
+            "maximum": 9223372036854775807
+          },
+          "price_cents": {
+            "type": "integer",
+            "minimum": -9223372036854775808,
+            "maximum": 9223372036854775807
+          },
+          "group": {
+            "enum": [
+              "A",
+              "B",
+              null
+            ]
+          }
+        }
+      }
+    },
+    "sales": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9223372036854775807
+    }
+  }
+}

@@ -78,7 +78,7 @@ void main() {
       expect(result.keys, ['G-1']); // G-2 is a miss - simply absent, not an error
       expect(result['G-1']!.strain, 'Golden Teacher');
       expect(result['G-1']!.tpe, 1.75);
-      // SM-08: the rules file's analyte names
+      // The rules file's analyte names
       expect(result['G-1']!.baeocystin, 0.1);
       expect(result['G-1']!.norbaeocystin, 0.05);
       expect(result['G-1']!.aeruginascin, 0.03);

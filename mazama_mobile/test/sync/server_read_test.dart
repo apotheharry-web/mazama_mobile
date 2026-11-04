@@ -1,4 +1,4 @@
-// What the phone does with Mazama's own pages while Mazama's server can't be reached (lib/sync/server_read.dart, moved from server_offline.dart in Task 10): a read
+// What the phone does with Mazama's own pages while Mazama's server can't be reached (lib/sync/server_read.dart): a read
 // keeps each reply with when, and gives that copy back only when the server can't be reached; a 4xx, or no copy kept,
 // is the error as before.
 import 'dart:io';

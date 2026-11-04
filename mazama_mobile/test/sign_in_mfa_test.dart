@@ -1,11 +1,11 @@
-// SL-R13 on the sign-in page: when a sign-in spec's `await_input` step needs a value (an MFA code), SignInPage asks the
+// On the sign-in page: when a sign-in spec's `await_input` step needs a value (an MFA code), SignInPage asks the
 // worker - through its injected `ask`, or through askSignInValue's dialog when none is given - on the first attempt
-// and on the SL-D11 retry alike. A cancelled question shows "Sign-in cancelled.", is not reported and starts no spec
+// and on the retry with a newer spec alike. A cancelled question shows "Sign-in cancelled.", is not reported and starts no spec
 // fetch. The state system is test/flow/fake_state.dart's FakeState with its `mfaCode` set, through http.runWithClient;
 // the spec fetch, the store and the reporter are injected, as in sign_in_retry_test.dart.
 //
 // The bundled spec knows no MFA round: against an MFA state its `confirmed` step gets a 400 (a `structure` failure),
-// so a newer spec with the round (the one SPEC.md shows, as in flow_runner_test.dart's phase-3 group) is fetched and
+// so a newer spec with the round (the one SPEC.md shows, as in flow_runner_test.dart's format-2 group) is fetched and
 // retried.
 import 'dart:io';
 
@@ -145,7 +145,7 @@ Future<void> _signIn(
         reportSigninFailure: reporter,
         fetchSpec: fetchSpec,
         specStore: store,
-        fetchHosts: () async => null, // no host list (SL-R18 is sign_in_hosts_test.dart's)
+        fetchHosts: () async => null, // no host list (the host list is sign_in_hosts_test.dart's)
         ask: ask,
       ),
     ));
@@ -216,7 +216,7 @@ void main() {
     expect(reports.single.$2, _bundled.specVersion);
   });
 
-  // Final review Minor 7: a wrong code on the retry is the worker's to fix, like a wrong password.
+  // A wrong code on the retry is the worker's to fix, like a wrong password.
   testWidgets("a wrong code on the retry shows the retry's own refusal, is not reported and saves nothing",
       (tester) async {
     final fake = FakeState(mfaCode: _code);
@@ -244,7 +244,7 @@ void main() {
     expect(await SessionStore(dataDir: () => _dir).load(), isNull);
   });
 
-  // Final review Minor 7: the whole chain after a retry saved the MFA spec - chosen at the next start-up, then used to
+  // The whole chain after a retry saved the MFA spec - chosen at the next start-up, then used to
   // renew without asking anyone (ensureFreshSession takes no `ask`, and renew sends no sign-in form).
   test('a saved MFA spec is chosen at start-up and renews the session it signed in without asking', () async {
     final fake = FakeState(mfaCode: _code);

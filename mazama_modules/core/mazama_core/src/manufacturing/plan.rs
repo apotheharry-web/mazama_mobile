@@ -1,23 +1,29 @@
-//! The manufacturer's dose plan and a product information sheet's amounts (specs/core row 11, FM-07, FM-08, Task 17),
-//! held to the frozen vectors in mazama_modules/manufacturing/ (the server's `plans.product_plan` and `infosheet.build`
-//! under CPython 3.14, and the DOSE rows the owner approved, CR-D6, as specs/core/replay/replay_plan.py proposes them).
+//! The manufacturer's dose plan and a product information sheet's amounts, held to the frozen vectors in
+//! mazama_modules/manufacturing/ (the server's `plans.product_plan` and `infosheet.build` call these).
 //!
-//! - [`plan_json`]: grams per unit for a dose, rounded DOWN to 0.01 g so the actual TPE never exceeds the dose (the
-//!   AGENTS.md rule), worked out in Python's 28-digit decimals from the potency's shortest digits (`Decimal(str(p))`);
-//!   the actual mg rounded UP to 0.01; how many units the dry weight allows; or why not. No usable potency (DOSE-12),
-//!   an analyteWeight that isn't a JSON number (DOSE-13), a certificate TPE that isn't finite (final review I1) and a
-//!   potency the decimals can't divide by are one refusal; the dry weight is read as `records::dry_grams` reads it
-//!   (RD-2, DOSE-14).
+//! - [`plan_json`]: grams per unit for a dose. The potency (mg/g) is the larger of the state record's `analyteWeight`
+//!   and the certificate's potency, so a unit is never heavier than the dose allows. The certificate's potency is the
+//!   higher of its unrounded TPE and that TPE to 2 places, worked out here from the certificate's figures (a plan item's
+//!   `coa`), so a TPE that rounds down never makes a unit heavier (DOSE-25); a make job queued before that carries the
+//!   2-place TPE it was reviewed at (`coa_tpe`) and is planned from it as it was. Grams per unit = dose / potency,
+//!   rounded DOWN to 0.01 g so the actual TPE never exceeds the dose, worked out in Python's 28-digit decimals from
+//!   the potency's shortest digits (`Decimal(str(p))`); the actual mg = grams x potency, rounded UP to 0.01 mg; the
+//!   most units = the dry weight / grams per unit (+1e-9 for float noise), toward zero; the total grams =
+//!   grams x units, rounded to 0.01 g. One refusal (no potency) covers: no usable potency, a state analyteWeight that
+//!   isn't a JSON number (absent and null included), a certificate TPE that isn't finite, a certificate the plan can't
+//!   read (a `coa` that isn't an object, or a figure its TPE needs that isn't a number), and a potency the decimals
+//!   can't divide by. The dry weight is read as `records::dry_grams` reads it (unreadable is 0 g).
 //! - [`serving_table_json`]: the per-dose table of a batch/lot's sheet (or one package's one-column table), its summary
-//!   and note, and the mg shown beside each package: never below what a unit holds (DOSE-15, DOSE-16, DOSE-22); no
-//!   amounts at all when the state's potency isn't a JSON number (DOSE-20) or, for that package, when its weight
-//!   can't be read.
+//!   and note, and the mg shown beside each package: never below what a unit holds (see [`package_mg`]); no amounts
+//!   at all when the state's potency is there but isn't a JSON number or, for that package, when its weight or own
+//!   analyteWeight can't be read.
 use std::cmp::Ordering;
 
 use serde_json::{Map, Value, json};
 
 use crate::api::Error;
 use crate::dose;
+use crate::tpe;
 use crate::records::{dry_grams, py_float_text};
 use crate::stock::{Num, fmt_g, py_space, round2};
 
@@ -71,13 +77,13 @@ fn or0(x: Option<f64>) -> f64 {
     x.filter(|f| *f != 0.0).unwrap_or(0.0)
 }
 
-/// `math.ceil(x - 1e-9)`, the one round-up of an mg figure: row 5's `dose::ceil` (`dose.ceil_mg`); an mg that isn't
+/// `math.ceil(x - 1e-9)`, the one round-up of an mg figure: `dose::ceil` (`dose.ceil_mg`); an mg that isn't
 /// finite or fits no i64 is out of range.
 fn ceil_mg(x: f64) -> Result<i64, Error> {
     dose::ceil(x).ok_or_else(out_of_range)
 }
 
-/// A package's own figure as RD-2 reads a dry weight: absent or null is 0, a JSON number itself, text that is a plain
+/// A package's own figure, read as a dry weight is: absent or null is 0, a JSON number itself, text that is a plain
 /// number that number; anything else (other text, NaN/inf, true/false, a list, an object) is unknown (`None`).
 fn package_figure(r: &Map<String, Value>, key: &str) -> Option<f64> {
     match r.get(key).unwrap_or(&NULL) {
@@ -88,13 +94,13 @@ fn package_figure(r: &Map<String, Value>, key: &str) -> Option<f64> {
     }
 }
 
-/// A package's weightPerUnit (g): absent or null is 0 (today's `or 0`), else `package_figure`'s reading; unknown
+/// A package's weightPerUnit (g): absent or null is 0, else `package_figure`'s reading; unknown
 /// (`None`): that package gets no amounts.
 fn weight(r: &Map<String, Value>) -> Option<f64> {
     package_figure(r, "weightPerUnit")
 }
 
-/// DOSE-23: a package's own analyteWeight (mg/g), read as its weight is (absent or null: 0, no figure); unknown
+/// A package's own analyteWeight (mg/g, the state's psilocybin figure for that package), read as its weight is (absent or null: 0, no figure); unknown
 /// (`None`) when present but unreadable, and that package gets no amounts.
 fn own_potency(r: &Map<String, Value>) -> Option<f64> {
     package_figure(r, "analyteWeight")
@@ -292,15 +298,16 @@ fn from_hundredths(h: u128, negative: bool) -> f64 {
     s.parse().expect("a decimal")
 }
 
-/// Grams per unit for `dose` mg at `p` mg/g, rounded down to 0.01 g, and the actual mg rounded up, as today's Python
-/// works them out; `None` where its decimals raise or the floor would be over the dose (DOSE-12's refusal).
+/// Grams per unit for `dose` mg at `p` mg/g, rounded down to 0.01 g, and the actual mg (grams x `p`) rounded up to
+/// 0.01 mg, in Python's 28-digit decimals; `None` where those decimals raise or the rounded-down grams would still
+/// hold more than the dose (the plan is then refused as having no potency).
 fn per_and_actual(dose: i64, p: f64) -> Option<(f64, f64)> {
     let (m, e) = shortest(p);
     let negative = dose < 0;
     let n = dose.unsigned_abs();
     let k = divide(n, m, e).hundredths(false)?;
     let mg = multiply(k, m, e - 2);
-    // today's `assert per_d * p <= dose`, with the signs put back
+    // the rounded-down grams must hold no more than the dose, with the signs put back
     let over = match mg.cmp(&Dec::of(n as u128)) {
         Ordering::Greater => !negative,
         Ordering::Less => negative,
@@ -321,21 +328,59 @@ fn not_finite(coa_tpe: &Value) -> bool {
     matches!(coa_tpe, Value::String(s) if py_float_text(s).is_ok_and(|f| !f.is_finite()))
 }
 
-/// `plans.product_plan` as approved (CR-D6): `state` the record's analyteWeight as read (DOSE-13), `avail` its dry
-/// weight (RD-2), `coa_tpe` as given (echoed back). A certificate TPE that isn't finite is a refusal, echoed as null
-/// (stricter than the old code on purpose, final review I1: it raised on an infinite one, so nothing was queued; it is
-/// never a plan at the state's potency alone); other text counts as none (DOSE-13).
-fn plan(state: Option<f64>, avail: f64, dose: i64, qty: i64, coa_tpe: &Value) -> Value {
-    let unreadable = not_finite(coa_tpe);
-    let echo = if unreadable { &NULL } else { coa_tpe };
-    let ct = finite_number(coa_tpe).filter(|f| *f >= 0.0);
-    let p = pymax(state.unwrap_or(0.0), or0(ct));
+/// The certificate's side of a plan: `potency` (mg/g, 0: none), `echo` the TPE the answer shows (`coa_tpe`), and
+/// `refused`: a certificate that refuses the plan (echoed as null), never a plan at the state's potency alone.
+struct Cert {
+    potency: f64,
+    echo: Value,
+    refused: bool,
+}
+
+impl Cert {
+    /// A make job queued before DOSE-25: its 2-place TPE as given (echoed back); one that isn't finite is a refusal,
+    /// other text (or a figure below 0) counts as none.
+    fn reviewed(coa_tpe: &Value) -> Cert {
+        let refused = not_finite(coa_tpe);
+        let ct = finite_number(coa_tpe).filter(|f| *f >= 0.0);
+        Cert { potency: or0(ct), echo: if refused { Value::Null } else { coa_tpe.clone() }, refused }
+    }
+
+    /// DOSE-25: from the certificate's unrounded TPE `t` ([`tpe_unrounded`]), the higher of `t` and `t` to 2 places,
+    /// shown to 2 places; none when that 2-place figure isn't above 0 (as a 2-place TPE of 0 always was). A TPE that
+    /// can't be read (`Err`) or isn't finite refuses the plan.
+    fn of_tpe(t: Result<Option<f64>, Error>) -> Cert {
+        match t {
+            Ok(None) => Cert { potency: 0.0, echo: Value::Null, refused: false },
+            Ok(Some(t)) if t.is_finite() => {
+                let two = round2(Num::F(t)).f();
+                Cert { potency: if two > 0.0 { pymax(t, two) } else { 0.0 }, echo: json!(two), refused: false }
+            }
+            _ => Cert { potency: 0.0, echo: Value::Null, refused: true },
+        }
+    }
+
+    /// A plan item's `coa`: the certificate's figures (`psilocybin`, `psilocybin_from`, `psilocin`, `lab_tpe`), or null
+    /// for none; anything else refuses the plan.
+    fn of_coa(coa: &Value) -> Cert {
+        match coa {
+            Value::Null => Cert::of_tpe(Ok(None)),
+            Value::Object(m) => Cert::of_tpe(tpe_unrounded(m)),
+            _ => Cert::of_tpe(Err("manufacturing.plan: a certificate must be an object".into())),
+        }
+    }
+}
+
+/// One plan: `state` the record's analyteWeight as read (None when it isn't a JSON number: refused), `avail` its dry
+/// weight in grams, `cert` the certificate's side. The potency is the larger of the two.
+fn plan(state: Option<f64>, avail: f64, dose: i64, qty: i64, cert: &Cert) -> Value {
+    let echo = &cert.echo;
+    let p = pymax(state.unwrap_or(0.0), cert.potency);
     let refusal = || {
         json!({"dose": dose, "qty": qty, "potency": p, "state_potency": state.unwrap_or(0.0), "coa_tpe": echo,
                "available": avail, "per_unit": 0.0, "actual_mg": 0.0, "max_qty": 0, "error": NO_POTENCY, "total": 0.0,
                "remaining": round2(Num::F(avail)).f()})
     };
-    if unreadable {
+    if cert.refused {
         return refusal();
     }
     let Some(state) = state else { return refusal() };
@@ -356,7 +401,7 @@ fn plan(state: Option<f64>, avail: f64, dose: i64, qty: i64, coa_tpe: &Value) ->
     } else {
         None
     };
-    json!({"dose": dose, "qty": qty, "potency": p, "state_potency": state, "coa_tpe": coa_tpe, "available": avail,
+    json!({"dose": dose, "qty": qty, "potency": p, "state_potency": state, "coa_tpe": echo, "available": avail,
            "per_unit": per, "actual_mg": actual, "max_qty": max_qty, "error": error, "total": total, "remaining": remaining})
 }
 
@@ -364,7 +409,9 @@ fn int_of(v: &Value, what: &str) -> Result<i64, Error> {
     v.as_i64().ok_or_else(|| format!("manufacturing.plan: {what} must be an integer").into())
 }
 
-/// `{"plans": [{"source", "dose", "qty", "coa_tpe"}]}` -> one plan per item, in order (CR-D5: a page's in one call).
+/// `{"plans": [{"source", "dose", "qty", "coa"}]}` -> one plan per item, in order (a whole page's in one call). An
+/// item without `coa` is a make job queued before DOSE-25: its `coa_tpe` (the 2-place TPE it was reviewed at) is used
+/// as given.
 pub fn plan_json(input: &str) -> Result<String, Error> {
     let v: Value = serde_json::from_str(input)?;
     let items = v.get("plans").and_then(Value::as_array).ok_or("manufacturing.plan: plans must be a list")?;
@@ -374,7 +421,11 @@ pub fn plan_json(input: &str) -> Result<String, Error> {
         let dose = int_of(it.get("dose").unwrap_or(&NULL), "dose")?;
         let qty = int_of(it.get("qty").unwrap_or(&NULL), "qty")?;
         let state = finite_number(src.get("analyteWeight").unwrap_or(&NULL));
-        out.push(plan(state, dry_grams(src.get("dryWeight").unwrap_or(&NULL)), dose, qty, it.get("coa_tpe").unwrap_or(&NULL)));
+        let cert = match it.get("coa") {
+            Some(coa) => Cert::of_coa(coa),
+            None => Cert::reviewed(it.get("coa_tpe").unwrap_or(&NULL)),
+        };
+        out.push(plan(state, dry_grams(src.get("dryWeight").unwrap_or(&NULL)), dose, qty, &cert));
     }
     Ok(serde_json::to_string(&out)?)
 }
@@ -396,34 +447,38 @@ fn figure_or0(meta: &Map<String, Value>, k: &str) -> Result<f64, Error> {
     if truthy(v) { figure(v) } else { Ok(0.0) }
 }
 
-/// `coa.tpe(meta)` (AD-18 as amended by SM-D14): mg/g to 2 places, or `None`.
-fn tpe(meta: &Map<String, Value>) -> Result<Option<f64>, Error> {
+/// The certificate's TPE unrounded (`tpe::tpe` of its figures), mg/g, or `None`: `coa.tpe(meta)` before its rounding.
+/// When the certificate's psilocybin is the state's (`psilocybin_from` "state") and it has a psilocin figure:
+/// psilocybin + 284.25 / 204.27 x psilocin; else the lab's printed total (`lab_tpe`) when it is a number of 0 or more
+/// (true/false as 1/0); else, with the lab's own psilocybin, that + the factor x psilocin. A figure the formula needs
+/// that isn't a number is an error, as Python's arithmetic raised; one it doesn't need is never read.
+fn tpe_unrounded(meta: &Map<String, Value>) -> Result<Option<f64>, Error> {
     let get = |k: &str| meta.get(k).unwrap_or(&NULL);
     let (ps, pc, lab) = (get("psilocybin"), get("psilocin"), get("lab_tpe"));
     let state = get("psilocybin_from") == "state" && !ps.is_null();
-    let two = |x: f64| round2(Num::F(x)).f();
-    if state && !pc.is_null() {
-        return Ok(Some(two(figure(ps)? + TPE_FACTOR * figure(pc)?)));
-    }
     let lab_number = match lab {
         Value::Bool(b) => Some(if *b { 1.0 } else { 0.0 }),
         Value::Number(n) => n.as_f64().filter(|f| f.is_finite() && *f >= 0.0),
         _ => None,
     };
-    if let Some(l) = lab_number {
-        return Ok(Some(two(l)));
-    }
-    if !state && !ps.is_null() && !pc.is_null() {
-        return Ok(Some(two(figure(ps)? + TPE_FACTOR * figure(pc)?)));
-    }
-    Ok(None)
+    let formula = !pc.is_null() && !ps.is_null() && (state || lab_number.is_none());
+    let (psf, pcf) = if formula { (Some(figure(ps)?), Some(figure(pc)?)) } else { (None, None) };
+    let (lab_ps, state_ps) = if state { (None, psf) } else { (psf, None) };
+    Ok(tpe::tpe(lab_ps, pcf, lab_number, state_ps, TPE_FACTOR))
+}
+
+
+/// A potency as a sheet's note names it: Python's `:g` when it has at most 2 places, else to 4 places (an unrounded
+/// certificate TPE, DOSE-25).
+fn potency_text(p: f64) -> String {
+    if round2(Num::F(p)).f() == p { fmt_g(Num::F(p)) } else { format!("{p:.4}") }
 }
 
 fn n2(v: f64) -> String {
     format!("{v:.2}")
 }
 
-/// DOSE-15: an mg a unit holds, to 0.01 and never below it (only float noise forgiven, as `ceil_mg`):
+/// An mg a unit holds, to 0.01 and never below it (only float noise forgiven, as `ceil_mg`):
 /// `(Decimal(repr(v)) - Decimal("1e-9")).quantize(Decimal("0.01"), ROUND_CEILING)`.
 fn n2_up(v: f64) -> Result<String, Error> {
     if !(v > 0.0 && v.is_finite()) {
@@ -442,21 +497,22 @@ fn n2_up(v: f64) -> Result<String, Error> {
     Ok(format!("{}.{:02}", c / 100, c % 100))
 }
 
-/// DOSE-22: what a package holds is reckoned at the larger of its batch/lot's potency and its own analyteWeight
-/// (DOSE-23: `own_potency`'s reading; callers have already given an unreadable one no amounts).
+/// What a package holds is reckoned at the larger of its batch/lot's potency and its own analyteWeight
+/// (`own_potency`'s reading; callers have already given an unreadable one no amounts).
 fn floor_potency(r: &Map<String, Value>, potency: f64) -> f64 {
     pymax(potency, own_potency(r).unwrap_or(0.0))
 }
 
-/// DOSE-23: what a package holds, rounded up to a whole mg, at DOSE-22's floor potency; `None` when that isn't finite or
+/// What a package holds: its unit weight x [`floor_potency`], rounded up to a whole mg; `None` when that isn't finite or
 /// fits no i64, and that package gets no amounts (never an error for one package's figure).
 fn holds(r: &Map<String, Value>, w: f64, potency: f64) -> Option<i64> {
     dose::ceil(w * floor_potency(r, potency))
 }
 
-/// `infosheet.package_item`'s mg as approved: the dose it was filed under, else the whole mg in its name, else worked
-/// out from its weight; then never below what the unit holds (DOSE-16, DOSE-22), the package's own figure counted even
-/// when the batch/lot's potency is 0 (DOSE-23); `None` when not known, or its weight or own figure can't be read.
+/// The mg shown beside a package (`infosheet.package_item`): the dose it was filed under, else the whole mg in its
+/// name, else its unit weight x the batch/lot's potency rounded up (at least 1); then raised to what the unit holds
+/// ([`holds`]) when that is more, the package's own figure counted even when the batch/lot's potency is 0; `None` when
+/// not known, or its weight or own figure can't be read.
 fn package_mg(r: &Map<String, Value>, potency: f64, dose: i64) -> Result<Option<i64>, Error> {
     let (Some(w), Some(_)) = (weight(r), own_potency(r)) else { return Ok(None) };
     let Some(h) = holds(r, w, potency) else { return Ok(None) };
@@ -477,8 +533,8 @@ fn package_mg(r: &Map<String, Value>, potency: f64, dose: i64) -> Result<Option<
     Ok(mg)
 }
 
-/// `infosheet._dose_of` as approved: by the name's dose, else by weight within 0.005 g of the plan's, and (DOSE-22)
-/// only when the unit holds no more than that dose; 0: under "other" (also when its weight or own figure can't be read).
+/// The dose column a package is listed under (`infosheet._dose_of`): by the name's dose, else by weight within
+/// 0.005 g of the plan's, and only when the unit holds no more than that dose; 0: under "other" (also when its weight or own figure can't be read).
 fn dose_of(r: &Map<String, Value>, by_dose: &[(i64, f64)], doses: &[i64], potency: f64) -> Result<i64, Error> {
     let (Some(w), Some(_)) = (weight(r), own_potency(r)) else { return Ok(0) };
     let Some(h) = holds(r, w, potency) else { return Ok(0) };
@@ -495,7 +551,7 @@ fn item(r: &Map<String, Value>, mg: Option<i64>) -> Value {
     json!({"guid": r.get("productGuid").unwrap_or(&NULL), "mg": mg})
 }
 
-/// DOSE-20: the state's potency is there but isn't a JSON number.
+/// The state's potency is there but isn't a JSON number: the sheet then shows no amounts at all.
 fn unreadable_potency(src: &Map<String, Value>) -> bool {
     matches!(src.get("analyteWeight"), Some(v) if !v.is_null() && !v.is_number())
 }
@@ -533,6 +589,13 @@ pub fn serving_table_json(input: &str) -> Result<String, Error> {
     Ok(serde_json::to_string(&sheet(src, meta, &made, package, &doses)?)?)
 }
 
+/// The sheet. Its potency is the larger of the state record's analyteWeight and the certificate's TPE to 2 places
+/// (`coa.tpe`'s figure, [`tpe_unrounded`] rounded); a batch/lot's net weights are the plan's for each dose, whose certificate potency is DOSE-25's.
+/// - one package (`package`): a single column at its own unit weight: net weight (g), psilocybin = weight x the
+///   certificate's psilocybin rounded up to 0.01 mg, psilocin = weight x psilocin to 0.01, TPE = weight x
+///   [`floor_potency`] rounded up to 0.01 mg, and each other alkaloid the certificate has, to 0.01.
+/// - a batch/lot: one column per dose, at the plan's grams per unit for it ([`plan`]): the same rows, with the TPE row
+///   showing the dose itself; each package made is listed under its dose ([`dose_of`]) or under "other".
 fn sheet(
     src: &Map<String, Value>,
     meta: Option<&Map<String, Value>>,
@@ -545,10 +608,11 @@ fn sheet(
         return Ok(json!({"serv": null, "summary": null, "notes": [], "packages": packages}));
     }
     let state_p = or0(finite_number(src.get("analyteWeight").unwrap_or(&NULL)));
-    let coa_t = match meta {
-        Some(m) => tpe(m)?,
+    let coa_unrounded = match meta {
+        Some(m) => tpe_unrounded(m)?,
         None => None,
     };
+    let coa_t = coa_unrounded.map(|t| round2(Num::F(t)).f());
     let potency = pymax(state_p, or0(coa_t));
     let packages: Vec<Value> = made.iter().map(|r| Ok(item(r, package_mg(r, potency, 0)?))).collect::<Result<_, Error>>()?;
     let mut serv = Value::Null;
@@ -573,11 +637,11 @@ fn sheet(
             serv = json!({"one": pk.get("productGuid").unwrap_or(&NULL), "rows": rows});
         }
     } else if potency > 0.0 {
-        let coa_v = coa_t.map_or(Value::Null, |t| json!(t));
+        let cert = Cert::of_tpe(Ok(coa_unrounded)); // the net weights are the plan's (DOSE-25)
         let mut by_dose: Vec<(i64, f64)> = vec![];
         for d in doses {
             if !by_dose.iter().any(|(x, _)| x == d) {
-                let p = plan(Some(state_p), 1e9, *d, 1, &coa_v);
+                let p = plan(Some(state_p), 1e9, *d, 1, &cert);
                 by_dose.push((*d, p["per_unit"].as_f64().unwrap_or(0.0)));
             }
         }
@@ -616,7 +680,8 @@ fn sheet(
             doses.iter().map(|d| json!(lots_of.iter().find(|(x, _)| x == d).map_or(vec![], |(_, l)| l.clone()))).collect();
         serv = json!({"doses": doses, "rows": rows, "lots": lots, "other": other});
         summary = json!(doses.iter().map(|d| json!([d, n2(per(d))])).collect::<Vec<_>>());
-        notes.push(format!("{NOTE} (calculated from {} mg/g TPE).", fmt_g(Num::F(potency))));
+        let used = pymax(state_p, cert.potency); // the potency the net weights were worked out at (DOSE-25)
+        notes.push(format!("{NOTE} (calculated from {} mg/g TPE).", potency_text(used)));
     }
     Ok(json!({"serv": serv, "summary": summary, "notes": notes, "packages": packages}))
 }
@@ -648,6 +713,48 @@ mod tests {
         assert_eq!(name_mg("x 2.5mg", 3, false), None);
         assert_eq!(name_mg("x 1234 mg", 3, false), None);
         assert_eq!(name_mg("x 123 mg", 3, false).as_deref(), Some("123"));
+    }
+
+    fn one(input: Value) -> Value {
+        let out: Value = serde_json::from_str(&plan_json(&json!({"plans": [input]}).to_string()).unwrap()).unwrap();
+        out[0].clone()
+    }
+
+    #[test]
+    fn plan_divides_by_unrounded_tpe() {
+        // 25 mg at a TPE of 2.004 mg/g (2.00 to 2 places): dividing by 2.00 gave 12.50 g, 25.05 mg in a unit
+        let p = one(json!({"source": {"analyteWeight": 0.0, "dryWeight": 500.0}, "dose": 25, "qty": 1, "coa": {"lab_tpe": 2.004}}));
+        assert_eq!((p["per_unit"].as_f64(), p["actual_mg"].as_f64()), (Some(12.47), Some(24.99)), "{p}");
+        assert_eq!((p["potency"].as_f64(), p["coa_tpe"].as_f64(), p["error"].clone()), (Some(2.004), Some(2.0), Value::Null), "{p}");
+        // the same TPE worked out from the certificate's figures, never handed over rounded
+        let q = one(json!({"source": {"analyteWeight": 1.5, "dryWeight": 500.0}, "dose": 25, "qty": 1,
+                           "coa": {"psilocybin": 2.004, "psilocin": 0.0}}));
+        assert_eq!(q["per_unit"].as_f64(), Some(12.47), "{q}");
+        // a job queued before DOSE-25 (its 2-place coa_tpe) is planned as it was reviewed
+        let old = one(json!({"source": {"analyteWeight": 0.0, "dryWeight": 500.0}, "dose": 25, "qty": 1, "coa_tpe": 2.0}));
+        assert_eq!(old["per_unit"].as_f64(), Some(12.5), "{old}");
+    }
+
+    #[test]
+    fn plan_uses_two_place_tpe_when_it_rounds_up() {
+        // 2.0096 is 2.01 to 2 places: the higher figure is the potency, 12.43 g (12.44 g at 2.0096 itself)
+        let p = one(json!({"source": {"analyteWeight": 0.0, "dryWeight": 500.0}, "dose": 25, "qty": 1, "coa": {"lab_tpe": 2.0096}}));
+        assert_eq!((p["potency"].as_f64(), p["per_unit"].as_f64(), p["actual_mg"].as_f64()), (Some(2.01), Some(12.43), Some(24.99)), "{p}");
+        // the state's figure still wins when it is higher
+        let s = one(json!({"source": {"analyteWeight": 2.5, "dryWeight": 500.0}, "dose": 25, "qty": 1, "coa": {"lab_tpe": 2.004}}));
+        assert_eq!((s["potency"].as_f64(), s["per_unit"].as_f64()), (Some(2.5), Some(10.0)), "{s}");
+    }
+
+    #[test]
+    fn a_certificate_the_plan_cant_read_is_a_refusal() {
+        for coa in [json!({"psilocybin": "2.0", "psilocin": 0.0}), json!({"psilocybin": "inf", "psilocin": 0.0}), json!(2.004),
+                    json!({"psilocybin": 1.7e308, "psilocin": 1.7e308})] {
+            let p = one(json!({"source": {"analyteWeight": 7.25, "dryWeight": 500.0}, "dose": 25, "qty": 1, "coa": coa}));
+            assert_eq!((p["error"].as_str(), p["per_unit"].as_f64(), p["coa_tpe"].clone()), (Some(NO_POTENCY), Some(0.0), Value::Null), "{coa}");
+        }
+        // a TPE that is 0 to 2 places is no certificate potency, as a 2-place 0 always was
+        let p = one(json!({"source": {"analyteWeight": 0.0, "dryWeight": 500.0}, "dose": 25, "qty": 1, "coa": {"lab_tpe": 0.004}}));
+        assert_eq!((p["error"].as_str(), p["coa_tpe"].as_f64()), (Some(NO_POTENCY), Some(0.0)), "{p}");
     }
 
     #[test]

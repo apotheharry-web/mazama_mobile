@@ -1,14 +1,14 @@
-// The par table with Edit / Save (SP-R9, SP-R14, SP-D13..D15), as the order's first step (MI-D21: Order opens it,
-// order_par_page.dart; it was on the stock page until SP-D19). The strains' rows in the serving-size columns this
+// The par table with Edit / Save, as the order's first step (Order opens it,
+// order_par_page.dart). The strains' rows in the serving-size columns this
 // center uses (the sizes it has stock or a par in, plus the ones added on this phone, less the ones deleted here:
 // par_columns.dart's ParColumns), then the combined All strains row, then the edibles' rows below with just
 // Booster and Microdose. While editing, a column can be deleted (its pars go with it) or added back, and a strain with
 // no stock deleted. Every number comes from stock_summary.dart (the shared rules, held to the server's vectors); this
 // file only lays them out and formats texts as the server's templates do (formatG for Python's {x:g}).
 //
-// Par is always compared with ALL counted stock (SP-D4), whatever maker. The worker either confirms the levels as they
+// Par is always compared with ALL counted stock, whatever maker. The worker either confirms the levels as they
 // are ("Continue to order") or edits them and saves ("Save and continue"); either way [ParLevelsEditor.onContinue]
-// gets the levels the order is to start from. Read-only (the server unreachable, SP-R13) it can't save, but the
+// gets the levels the order is to start from. Read-only (the server unreachable) it can't save, but the
 // levels shown can still be confirmed. A save that can't reach Mazama's server is never queued: it says to try again
 // later and leaves the edits on screen (sync/server_read.dart).
 import 'package:flutter/material.dart';
@@ -35,19 +35,19 @@ class ParLevelsEditor extends StatefulWidget {
     this.readOnly = false,
   });
 
-  /// The center's packages as stock rows (every package: par counts every maker's counted stock, SP-D4).
+  /// The center's packages as stock rows (every package: par counts every maker's counted stock).
   final List<StockRow> rows;
 
-  /// 'tpe' or 'psilocybin' (SP-D6); par counts units, so this only feeds the shared summary.
+  /// 'tpe' or 'psilocybin'; par counts units, so this only feeds the shared summary.
   final String mgMode;
 
   /// The center's par levels as loaded.
   final List<ParLevel> levels;
 
-  /// SP-D14: the serving-size columns chosen on this phone (added, deleted).
+  /// The serving-size columns chosen on this phone (added, deleted).
   final ParColumns columns;
 
-  /// The server can't be reached (SP-R13): the table can't be edited, only confirmed.
+  /// The server can't be reached: the table can't be edited, only confirmed.
   final bool readOnly;
 
   /// Sends the edited par levels (null par removes one) and returns the levels as stored.
@@ -87,7 +87,7 @@ class _ParLevelsEditorState extends State<ParLevelsEditor> {
   final Map<String, TextEditingController> _parCells = {};
   final List<_NewParRow> _newRows = [];
 
-  /// SP-D14: the columns chosen on this phone (kept), and while editing the ones added or deleted since Edit and the
+  /// The columns chosen on this phone (kept), and while editing the ones added or deleted since Edit and the
   /// strains deleted (by name, lower case), all sent or kept only by Save.
   late ParColumns _columns = widget.columns;
   final Set<int> _addingCols = {};
@@ -144,7 +144,7 @@ class _ParLevelsEditorState extends State<ParLevelsEditor> {
     }
   }
 
-  /// SP-D4: par against every maker's counted stock.
+  /// Par against every maker's counted stock.
   Map<String, Object?> _par() =>
       parTable(summarize((filterRows(widget.rows, 'all')['counted'] as List).cast<StockRow>(), widget.mgMode), _levels);
 
@@ -182,7 +182,7 @@ class _ParLevelsEditorState extends State<ParLevelsEditor> {
 
   Map<String, Object?> _allRow(Map<String, Object?> par) => (par['all'] as Map).cast<String, Object?>();
 
-  /// SP-D15: the edibles' rows, below the strains: the products with stock or a par, and while editing every product,
+  /// The edibles' rows, below the strains: the products with stock or a par, and while editing every product,
   /// so any of them can be given one.
   List<Map<String, Object?>> _edibleRows(Map<String, Object?> par) {
     final byName = {
@@ -201,7 +201,7 @@ class _ParLevelsEditorState extends State<ParLevelsEditor> {
     return out;
   }
 
-  /// SP-D14: the serving-size columns the strains' table shows, in column order: the sizes with stock or a par (any
+  /// The serving-size columns the strains' table shows, in column order: the sizes with stock or a par (any
   /// strain's or the combined row's), plus those added on this phone, less those deleted here; a size with a par always
   /// shows (it counts towards par), unless it is being deleted. With nothing in stock, no par and nothing chosen, all.
   List<int> _visibleColumns(Map<String, Object?> par) {
@@ -280,7 +280,7 @@ class _ParLevelsEditorState extends State<ParLevelsEditor> {
     return out;
   }
 
-  /// Saves the edits, then goes on to the order with the levels as stored. A failed save stays here (SP-R14).
+  /// Saves the edits, then goes on to the order with the levels as stored. A failed save stays here.
   Future<void> _save(Map<String, Object?> par) async {
     if (widget.readOnly) return;
     // A product or the combined row typed as a new strain would land in the wrong cells: they have rows of their own.
@@ -306,7 +306,7 @@ class _ParLevelsEditorState extends State<ParLevelsEditor> {
     try {
       stored = levels.isEmpty ? _levels : await widget.savePar(levels);
     } catch (e) {
-      // SP-R14: the edits stay on screen with the server's message; nothing is lost. The server down: try later.
+      // The edits stay on screen with the server's message; nothing is lost. The server down: try later.
       if (!mounted) return;
       setState(() {
         _saving = false;

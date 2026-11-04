@@ -1,10 +1,10 @@
-// SM-13: the phone's price maths (pricing.dart, cart_pricing.dart shareTotal), held to the cases the server's own Python
+// The phone's price maths (pricing.dart, cart_pricing.dart shareTotal), held to the cases the server's own Python
 // computed (../mazama_modules/selling/gen.py -> pricing.py), vendored here at assets/shared/selling/vectors/pricing.json,
 // and the ceilings in ../mazama_modules/selling/rules.yaml (vendored at assets/shared/selling/rules/rules.yaml).
-// SM-D9: a typed price is a plain decimal; SM-D10: a per-mg rate is whole cents. The rule is the shared core's (specs/core
-// row 6), loaded here from MAZAMA_CORE_FFI_LIB; pricing_cases.json adds the PRICE rows the owner decided (CR-D6,
-// 2026-10-31): long figures refused without overflow (PRICE-1), only what both apps trim trimmed (PRICE-2), ties to the
-// earlier weight (PRICE-4), an mg of more than two decimals an input error (PRICE-7).
+// A typed price is a plain decimal; a per-mg rate is whole cents. The rule is the shared core's,
+// loaded here from MAZAMA_CORE_FFI_LIB; pricing_cases.json adds the cases the owner decided:
+// long figures refused without overflow, only white space trimmed, ties to the
+// earlier weight, an mg of more than two decimals an input error.
 import 'dart:convert';
 import 'dart:io';
 

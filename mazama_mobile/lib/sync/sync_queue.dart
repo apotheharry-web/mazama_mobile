@@ -1,5 +1,5 @@
-// One queue for everything the phone still has to send to Mazama's server (specs/phone-sync PS-D2, PS-R4), each kind
-// keeping exactly the rules it had in its own store before (server_outbox.dart, catch_up_store.dart, coa_uploader.dart):
+// One queue for everything the phone still has to send to Mazama's server, each kind with its own rules (its item and
+// sender are in server_outbox.dart, catch_up_store.dart and coa_uploader.dart):
 //
 //   - sale_log, sale_failure (keyed by clientId): one line, oldest first, one at a time, while the tracker is online.
 //     Done leaves the queue; Unreachable with the tracker offline waits for it (its coming back online flushes again);
@@ -10,22 +10,22 @@
 //   - inventory_snapshot, sales_snapshot (keyed by center): only the newest per center, a newer one replacing it (one
 //     replaced while it was being sent stays to be sent). Done or Skipped (refused: the next state read sends a fresher
 //     one) leave the queue; Unreachable stops the run.
-//   - lab_report (keyed by lot id, lower case), two ways, as before:
+//   - lab_report (keyed by lot id, lower case), two ways:
 //       kept (catch-up): stored, at most [labReportCap] waiting, the oldest dropped; sent by [flush] one at a time
 //       after the snapshots. Done or Skipped (no report on file, or refused) leave the queue; Unreachable or Busy (no
 //       session now, or 429) stop the run and keep it.
-//       paced (the background uploader, CU-R1..R6): [offerLabReports]; held only in memory (the next load fills it
+//       paced (the background uploader): [offerLabReports]; held only in memory (the next load fills it
 //       again), one start every [labReportStartEvery] at most, [labReportMaxInFlight] at most, every start on a timer,
 //       never inside the call that offered it. Done: remembered as sent, callers told when it carries a value; Busy
 //       (429, no session): the waiting ones are let go, none marked; Unreachable: that lot becomes a kept one while
 //       there is room (never pushing out a cart add's), the waiting ones let go; Skipped: nothing remembered. While the
-//       tracker counts the server offline nothing starts and the waiting ones are let go. Never in the demo (CU-R6).
+//       tracker counts the server offline nothing starts and the waiting ones are let go. Never in the demo.
 //     A lot is remembered as sent for [sentKeep], at most [sentMax] (sync_sent); one sent lately is not offered again.
 //   - par saves and orders are never queued (the owner's rule): they are not a kind.
 //
 // The senders do the network work and say what happened ([SendResult]); the queue decides what that means. A flush
 // never throws: a sender that throws turns a report into a dead letter and anything else into a skip. Selling never
-// waits on any of this (PS-D3): the cart only adds.
+// waits on any of this: the cart only adds.
 import 'dart:async';
 import 'dart:convert';
 
@@ -99,7 +99,7 @@ class Busy extends SendResult {
   const Busy();
 }
 
-/// Every item can be sent at once: the queue's waits are timers, as before, so a clock moved backwards never holds one.
+/// Every item can be sent at once: the queue's waits are timers, so a clock moved backwards never holds one.
 final _atOnce = DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
 
 const _droppedDocument = 'sync_dropped_sale_logs';
@@ -162,7 +162,7 @@ class SyncQueue extends ChangeNotifier {
   /// transaction; a report is then sent at once if the server answers. Returns [key]. Never sends inside the call.
   String add(QueueKind kind, String key, Map<String, Object?> body) {
     final k = _keyOf(kind, key);
-    // CU-R6, PS-R8: the demo never queues an upload or a lab report (nor does a phone that can't tell whether it is one)
+    // The demo never queues an upload or a lab report (nor does a phone that can't tell whether it is one)
     if (!_reportKinds.contains(kind) && _demo()) return k;
     final at = now().toUtc();
     final item = QueueItem(kind: kind.stored, key: k, body: jsonEncode(body), queuedAt: at, nextAt: _atOnce);
@@ -185,7 +185,7 @@ class SyncQueue extends ChangeNotifier {
     return k;
   }
 
-  /// Whether this is the demo. An unreadable flag counts as the demo (phase 4 review M1): a demo phone that can't read
+  /// Whether this is the demo. An unreadable flag counts as the demo: a demo phone that can't read
   /// it must never send real data, while a real phone taken for the demo only waits (the catch-up and the next load
   /// offer the work again).
   bool _demo() {
@@ -523,7 +523,7 @@ class SyncQueue extends ChangeNotifier {
   void _startNext() {
     if (_disposed) return;
     if (_demo() || health.offline) {
-      _letGo(); // the waiting lots are let go, unmarked; the next load offers them again (CU-R4)
+      _letGo(); // the waiting lots are let go, unmarked; the next load offers them again
       return;
     }
     while (_paced.isNotEmpty && _inFlight.length < labReportMaxInFlight) {

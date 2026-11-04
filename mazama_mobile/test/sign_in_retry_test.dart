@@ -1,4 +1,4 @@
-// SL-R10 / SL-D7 / SL-D11: after a failed sign-in whose reason isn't `credentials`, SignInPage asks for a newer
+// After a failed sign-in whose reason isn't `credentials`, SignInPage asks for a newer
 // sign-in spec and, when the one it gets is newer than the spec that just failed, signs in once more with it. The
 // state system is test/flow/fake_state.dart's FakeState through http.runWithClient (SignInPage builds its own
 // http.Client()); the spec fetch, the spec store and the failure reporter are injected, so nothing reaches Mazama's
@@ -57,7 +57,7 @@ String _fixedYaml(String version) {
 }
 
 /// [_fixedYaml] whose login `token` step "extracts" access_token from a field the answer doesn't have and no longer
-/// checks it: usable by the phone's rule, it runs to the end and leaves no token (final review C1).
+/// checks it: usable by the phone's rule, it runs to the end and leaves no token.
 String _noTokenYaml(String version) {
   var text = _fixedYaml(version);
   const extract = '        - {var: access_token, source: body, json: access_token}\n';
@@ -76,8 +76,7 @@ String _noTokenYaml(String version) {
 /// running it throws a TypeError, not a FlowError, before anything is sent. It is built in code, not from text: the
 /// phone's rule refuses every spec text that would do this (a number in `into`, a list `method`), and runFlow turns
 /// transport failures into FlowErrors, so the page's catch-all for a spec "the checks didn't foresee" is reached by
-/// handing it this object through `spec` or `fetchSpec`, the way session_test.dart reaches ensureFreshSession's
-/// (final review I1).
+/// handing it this object through `spec` or `fetchSpec`, the way session_test.dart reaches ensureFreshSession's.
 FlowSpec _unrunnable(String version) => FlowSpec({..._bundled.vars, 'spec_version': version}, {
       ..._bundled.flows,
       'login': [
@@ -158,7 +157,7 @@ Future<SelectCenterPage?> _signIn(
         reportSigninFailure: reporter ?? (e, v) async {},
         fetchSpec: fetchSpec,
         specStore: store,
-        fetchHosts: () async => null, // no host list (SL-R18 is sign_in_hosts_test.dart's)
+        fetchHosts: () async => null, // no host list (the host list is sign_in_hosts_test.dart's)
         browse: browse,
       ),
     ));

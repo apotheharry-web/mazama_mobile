@@ -1,9 +1,10 @@
-// The stock page's shared rules (specs/stock-page/README.md SP-R2, SP-R10): filterRows, summarize, pies and parTable
-// are the shared core's (mazama_core::stock, specs/core row 8), the same functions the server's stockview.py calls;
-// they are held to the golden vectors vendored at assets/shared/stock/vectors/ (test/stock_summary_test.dart). The
-// algorithm in words is mazama_modules/stock/README.md; the constants are its rules.yaml, vendored at
-// assets/shared/stock/rules/rules.yaml. The constants and the small lookups below (size words, par sizes, a row's
-// kind and size, Python's %g for the par page's figures) stay here for the pages.
+// The stock page's shared rules: filterRows, summarize, pies and parTable
+// are the shared core's (mazama_core::stock), the same functions the server's stockview.py calls;
+// they are held to the golden vectors vendored at assets/shared/stock/vectors/ (test/stock_summary_test.dart). So is
+// how a row is read (stockClassify: its kind, size, mg per unit, units on hand) and a state record's kind
+// (stockRecordTypes): the phone keeps no copy of those rules. The algorithm in words is mazama_modules/stock/README.md;
+// the constants are its rules.yaml, vendored at assets/shared/stock/rules/rules.yaml. The constants and the small
+// lookups below (size words, par sizes, Python's %g for the par page's figures) stay here for the pages.
 //
 // Data only: drawing the pies is the page's job. Results are plain maps in the JSON shapes the vectors hold (rows
 // in filterRows' result are the caller's StockRow objects, which jsonEncode writes as their JSON).
@@ -12,37 +13,25 @@ import 'dart:math' as math;
 
 import 'mazama_core.dart';
 
-/// The standard serving sizes, mg per unit, largest first (rules.yaml serving_sizes).
-const List<int> stockServingSizes = [25, 20, 15, 10, 5];
-
 /// The size key for every other size: no size in the description (rules.yaml other_size).
 const String stockOtherSize = 'other';
 
-/// specs/edibles ED-D1, ED-A1: a kind code that is an edible -> the product it is counted under (rules.yaml
+/// A kind code that is an edible -> the product it is counted under (rules.yaml
 /// edibles.products).
 const Map<String, String> stockEdibles = {'CH': 'Chocolate', 'GM': 'Gummy', 'HN': 'Honey'};
-
-/// ED-D2, ED-A2: a package holding less than this many mg is a Microdose, else a Booster (rules.yaml
-/// edibles.booster_from_mg).
-const num stockBoosterFromMg = 3;
 
 /// The size keys of the two edible classes (rules.yaml edibles.sizes).
 const String stockBooster = 'booster', stockMicro = 'micro';
 
-/// An edible class's par/order size code (ED-A4: codes, not mg), word and pie slot (rules.yaml edibles.sizes).
+/// An edible class's par/order size code (codes, not mg), word and pie slot (rules.yaml edibles.sizes).
 const Map<String, (int, String, String)> stockEdibleSizes = {
   stockBooster: (-1, 'Booster', 'db'),
   stockMicro: (-2, 'Microdose', 'dm'),
 };
 
 /// The edible classes' par/order size codes, Booster then Microdose: the only sizes an edible's par row and order row
-/// take (SP-D15, MI-D17).
+/// take.
 final List<int> stockEdibleSizeCodes = [for (final e in stockEdibleSizes.values) e.$1];
-
-/// A row with no type: the first of these words its name contains, any case (rules.yaml name_keywords).
-const List<(String, String)> stockNameKeywords = [
-  ('gumm', 'GM'), ('chocolate', 'CH'), ('choc', 'CH'), ('honey', 'HN'), ('extract', 'EX'),
-];
 
 /// The sizes of a strain's summary, in order (rules.yaml size_order).
 const List<String> stockSizeOrder = ['25', '20', '15', '10', '5', stockBooster, stockMicro, stockOtherSize];
@@ -56,14 +45,15 @@ const int stockStrainSlots = 7;
 /// Strains listed with their own serving-size pies; the rest are counted in "more" (rules.yaml strain_rows).
 const int stockMaxStrainRows = 12;
 
-/// SP-D3: all inventory, or made by Mazama only; the first is the default (rules.yaml filters, default_filter).
+/// All inventory, or made by Mazama only; the first is the default (rules.yaml filters, default_filter).
 const List<String> stockFilters = ['all', 'mazama'];
 
-/// SP-D6: mg TPE (the server's figure) or mg psilocybin (the state's figures), never mixed (rules.yaml mg_modes).
+/// Mg TPE (the server's figure) or mg psilocybin (the state's figures), never mixed (rules.yaml mg_modes).
 const List<String> stockMgModes = ['tpe', 'psilocybin'];
 
 
-/// One package as the stock rules see it (specs/stock-page/stock-page.plan.md "Stock row").
+/// One package as the stock rules see it: one row per state record (productGuid + id), its units, the server's mg TPE
+/// per unit and the state's weightPerUnit and analyteWeight for its mg psilocybin, the strain, kind and who made it.
 class StockRow {
   const StockRow({
     required this.productGuid,
@@ -87,7 +77,7 @@ class StockRow {
   final num? quantity;
   final bool zeroOut;
 
-  /// Expired (SM-18: from the day after its date); the server decides it, or the phone offline (SP-R13).
+  /// Expired (from the day after its date); the server decides it, or the phone offline.
   final bool expired;
 
   /// Made by Mazama (Stock.made_by_us on the server; the manufacturer license offline).
@@ -104,8 +94,8 @@ class StockRow {
   /// The state's psilocybin figure; mg psilocybin per unit = weightPerUnit x analyteWeight.
   final num? analyteWeight;
 
-  /// The kind code (FD, DH, HG, CH, GM, HN, ...): the server's, else read from the name offline; null or '' = read
-  /// it from [description] ([stockTypeOf], specs/edibles ED-R2).
+  /// The kind code (FD, DH, HG, CH, GM, HN, ...): the server's, else the state record's offline
+  /// ([stockRecordTypes]); null or '' = the core reads it from [description] ([stockClassify]).
   final String? type;
 
   factory StockRow.fromJson(Map<String, Object?> j) => StockRow(
@@ -137,9 +127,6 @@ class StockRow {
         'analyteWeight': analyteWeight,
         if (type != null) 'type': type,
       };
-
-  /// Units on hand: quantity above 0 and not zeroed out.
-  bool get onHand => (quantity ?? 0) > 0 && !zeroOut;
 }
 
 /// One par level: [size] 25/20/15/10/5, -1 Booster, -2 Microdose (edibles), or 0 for other sizes; [par] null removes
@@ -225,7 +212,7 @@ List<Map<String, Object?>> _sent(List<StockRow> rows) => [
       for (var i = 0; i < rows.length; i++) {...rows[i].toJson(), '_row': i},
     ];
 
-/// SP-D2, SP-D3: {"counted": [StockRow], "other": [{"row": StockRow, "reason": "expired" | "other_maker"}]}.
+/// {"counted": [StockRow], "other": [{"row": StockRow, "reason": "expired" | "other_maker"}]}.
 /// Rows with no units on hand are in neither; expired beats other maker. [makers] is 'all' or 'mazama'. The core's
 /// stock.filter; [core] defaults to this app's ([MazamaCore.instance]).
 Map<String, Object?> filterRows(List<StockRow> rows, String makers, {CoreFunctions? core}) {
@@ -242,59 +229,6 @@ Map<String, Object?> filterRows(List<StockRow> rows, String makers, {CoreFunctio
 
 // --- 2. summary --------------------------------------------------------------------------------------------------
 
-final RegExp _doseRe = RegExp(r'(?<![0-9.])([0-9]{1,3})\s*mg\b', caseSensitive: false);
-
-/// The size key of a description: "25" .. "5" for the first "N mg" when N is a standard size, else "other"
-/// (the server's stockmath.serving_size).
-String stockSizeKey(String? description) {
-  final m = _doseRe.firstMatch(description ?? '');
-  if (m != null) {
-    final n = int.parse(m.group(1)!);
-    if (stockServingSizes.contains(n)) return '$n';
-  }
-  return stockOtherSize;
-}
-
-/// The mg in one unit of [r] in [mgMode] (0 when not known): the stock page's By type pie weighs rows by it (SP-D17).
-num stockMgPerUnit(StockRow r, String mgMode) => _mgPerUnit(r, mgMode);
-
-num _mgPerUnit(StockRow r, String mgMode) {
-  if (mgMode == 'tpe') return r.unitMgTpe ?? 0.0;
-  final w = r.weightPerUnit, a = r.analyteWeight;
-  return w != null && a != null ? w * a : 0.0;
-}
-
-final RegExp _nameCodeRe = RegExp(r'\bTPE\s+([A-Z]{2})\b');
-final RegExp _packageMgRe = RegExp(r'(?<![0-9.])([0-9]{1,4}(?:\.[0-9]{1,2})?)\s*mg\b', caseSensitive: false);
-
-/// A row's kind code (ED-R2): its type when not empty; else the code after "TPE" in its name; else the first
-/// [stockNameKeywords] word its lower-cased name contains; else ''.
-String stockTypeOf(StockRow r) {
-  final t = r.type ?? '';
-  if (t.isNotEmpty) return t;
-  final desc = r.description ?? '';
-  final m = _nameCodeRe.firstMatch(desc);
-  if (m != null) return m.group(1)!;
-  final low = desc.toLowerCase();
-  for (final (word, code) in stockNameKeywords) {
-    if (low.contains(word)) return code;
-  }
-  return '';
-}
-
-/// The product an edible row is counted under ("Chocolate", "Gummy", "Honey"); null for anything else (ED-D1).
-String? stockEdibleOf(StockRow r) => stockEdibles[stockTypeOf(r)];
-
-/// A row's size key: "25" .. "5" for a serving size, "booster" / "micro" for an edible (by the first "N mg" in its
-/// name, else its mg per unit in [mgMode]: ED-D2, ED-A3), else "other".
-String stockRowSizeKey(StockRow r, String mgMode) {
-  if (stockEdibleOf(r) == null) return stockSizeKey(r.description);
-  final m = _packageMgRe.firstMatch(r.description ?? '');
-  final num mg = m != null ? double.parse(m.group(1)!) : _mgPerUnit(r, mgMode);
-  if (mg <= 0) return stockOtherSize;
-  return mg < stockBoosterFromMg ? stockMicro : stockBooster;
-}
-
 /// A par/order size -> its words: "25 mg", "Booster", "Microdose", "Other".
 String stockSizeWord(int code) {
   for (final e in stockEdibleSizes.values) {
@@ -304,14 +238,14 @@ String stockSizeWord(int code) {
 }
 
 /// True for a par/order row named after an edible product ("Chocolate", "gummy"): it takes Booster, Microdose and
-/// Other; a strain takes 25 .. 5 mg and Other (ED-A6).
+/// Other; a strain takes 25 .. 5 mg and Other.
 bool stockIsProduct(String name) => stockEdibles.values.any((w) => w.toLowerCase() == name.trim().toLowerCase());
 
 /// The product's own word for a product name ("chocolate" -> "Chocolate"); the name itself otherwise.
 String stockProductWord(String name) =>
     stockEdibles.values.firstWhere((w) => w.toLowerCase() == name.trim().toLowerCase(), orElse: () => name);
 
-/// The par/order sizes a row takes, in column order (ED-A6).
+/// The par/order sizes a row takes, in column order.
 List<int> stockSizesFor(String name) {
   final product = stockIsProduct(name);
   return [
@@ -335,6 +269,62 @@ String? stockProductCode(String name) {
   return null;
 }
 
+/// How the stock rules read one row (the core's stock.classify): its kind code and the word its pies show, the edible
+/// product it is counted under (null for a strain's), its size key ("25" .. "5", "booster", "micro", "other"), its mg
+/// per unit in the mg mode (0 when not known; null past what a JSON number holds), whether it has units on hand, and
+/// what it weighs on the By type pie (null with none on hand).
+class StockClass {
+  const StockClass({
+    required this.type,
+    required this.word,
+    required this.edible,
+    required this.sizeKey,
+    required this.mgPerUnit,
+    required this.hasUnits,
+    required this.typeMg,
+  });
+
+  final String type;
+  final String word;
+  final String? edible;
+  final String sizeKey;
+  final num? mgPerUnit;
+  final bool hasUnits;
+  final num? typeMg;
+
+  factory StockClass.fromJson(Map<String, Object?> j) => StockClass(
+        type: j['type'] as String,
+        word: j['word'] as String,
+        edible: j['edible'] as String?,
+        sizeKey: j['size_key'] as String,
+        mgPerUnit: j['mg_per_unit'] as num?,
+        hasUnits: j['has_units'] as bool,
+        typeMg: j['type_mg'] as num?,
+      );
+}
+
+/// [rows] as the stock rules read them, one [StockClass] per row in order, and the words of every type the By type pie
+/// weighs above 0 (first seen first; the types a pick on that pie can name, those folded into "Other (n)" included).
+/// [mgMode] is 'tpe' or 'psilocybin'. One call of the core's stock.classify for the list.
+({List<StockClass> rows, List<String> typeWords}) stockClassify(List<StockRow> rows, String mgMode, {CoreFunctions? core}) {
+  if (!stockMgModes.contains(mgMode)) throw ArgumentError.value(mgMode, 'mgMode', 'must be one of $stockMgModes');
+  final got = (core ?? MazamaCore.instance).stockClassify({'rows': [for (final r in rows) r.toJson()], 'mg_mode': mgMode});
+  return (
+    rows: [for (final c in got['rows'] as List) StockClass.fromJson(Map<String, Object?>.from(c as Map))],
+    typeWords: [for (final w in got['type_words'] as List) w as String],
+  );
+}
+
+/// Each state record's kind code (the core's stock.record_types, the server's Stock.package_code as far as the record
+/// says: the code or an edible word in its name; a kind word in its name or product type; else what it was made from,
+/// HB- dehydrated and PL- homogenized; else WF for a whole fungi product type), or null when nothing says it. One call
+/// for the list.
+List<String?> stockRecordTypes(List<Map<String, Object?>> records, {CoreFunctions? core}) {
+  if (records.isEmpty) return const [];
+  final got = (core ?? MazamaCore.instance).stockRecordTypes({'records': records});
+  return [for (final t in got['types'] as List) t as String?];
+}
+
 /// Counted rows -> {"total", "mg_total", "mg_mode", "strains": [{"name", "units", "mg", "sizes", "mg_sizes"}]}.
 /// [mgMode] is 'tpe' or 'psilocybin'. Rows not on hand are skipped. The core's stock.summarize.
 Map<String, Object?> summarize(List<StockRow> rows, String mgMode, {CoreFunctions? core}) {
@@ -347,7 +337,7 @@ Map<String, Object?> summarize(List<StockRow> rows, String mgMode, {CoreFunction
 Map<String, Object?> pies(Map<String, Object?> summary, {CoreFunctions? core}) =>
     (core ?? MazamaCore.instance).stockPies({'summary': summary});
 
-/// The summary of ALL counted stock (SP-D4) and the center's par levels ->
+/// The summary of ALL counted stock and the center's par levels ->
 /// {"heads": [25, 20, 15, 10, 5, -1, -2, 0], "rows": [{"name", "cells": [{"size", "have", "par", "short"}], "short"}],
 /// "short_total", "summary", "all"} (charts.par_view's data; mazama_modules/stock/README.md section 4). The core's
 /// stock.par_table.

@@ -1,40 +1,27 @@
-// Item 3a of "mazama_sales no longer auto-syncs every 12 hours": for a CONFIGURED service center, CartPage
-// posts its own state-system read of this center's inventory (state_packages_client.dart's
-// fetchRawPackagesFromState - the raw records, unreshaped) to mazama_sales after every such read, so the mirror stays
-// current from the worker's own device instead of waiting on this server's own (now possibly manual-only) sync.
+// For a CONFIGURED service center, CartPage posts its own state-system read of this center's inventory
+// (state_packages_client.dart's fetchRawPackagesFromState - the raw records, unreshaped) to mazama_sales after every
+// such read, so the mirror stays current from the worker's own device instead of waiting on the server's own sync.
 // PUBLIC and unauthenticated like the app's other /p/ calls - see mazama_sales' web/stock_pages.py's ingest_upload
 // for the server-side half.
-// Since specs/phone-sync Task 8b Step 6 (PS-D7, specs/ingest IN-R7) the snapshot goes to the ingest route's
-// `packaged` dataset, POST /p/ingest/packaged/{stateId} (routes.yaml C20), with the same body and the same answers as
-// POST /p/inventory/{stateId} (C3), which the server keeps for older builds (CW-D5) and this build no longer calls.
-// Every sender of the snapshot comes here (the cart's upload, the catch-up queue's sender for what the center_stock
-// refresher or an older build kept), so the route is chosen at send time and a kept snapshot never names one.
-import 'dart:convert';
-
+// The snapshot goes to the ingest route's `packaged` dataset, POST /p/ingest/packaged/{stateId} (routes.yaml), with
+// the same body and the same answers as POST /p/inventory/{stateId}, which the server still accepts and this app
+// doesn't call. Every sender of the snapshot comes here (the cart's upload, the catch-up queue's sender for what the
+// center_stock refresher kept), so the route is chosen at send time and a kept snapshot never names one.
 import 'package:http/http.dart' as http;
 
 import 'api_contract.g.dart';
-import 'app_api_key.dart';
 import 'server_error.dart';
-import 'server_link_client.dart' show serverClient;
+import 'server_request.dart';
 
-class InventoryUploadError implements ServerRequestError {
-  @override
-  final String message;
-
-  /// Mazama's server couldn't be reached (server_error.dart's rule): the snapshot waits (catch_up_store.dart).
-  @override
-  final bool unreachable;
-
-  /// The status the server answered with; null when it didn't answer (or nothing was sent).
-  final int? status;
-  InventoryUploadError(this.message, {this.unreachable = false, this.status});
-  @override
-  String toString() => message;
+/// [unreachable]: Mazama's server couldn't be reached (server_error.dart's rule): the snapshot waits
+/// (catch_up_store.dart). [status]: the status the server answered with; null when it didn't answer (or nothing was
+/// sent).
+class InventoryUploadError extends ServerFailure {
+  InventoryUploadError(super.message, {super.status, super.unreachable});
 }
 
-/// The ingest dataset this client sends (routes.yaml C20's `{dataset}`): a center's packaged products, a full listing
-/// (rows it lacks leave the center's stock, specs/ingest IN-D6, as C3's upload did).
+/// The ingest dataset this client sends (routes.yaml's `{dataset}` of /p/ingest): a center's packaged products, a full listing
+/// (rows it lacks leave the center's stock, as a POST /p/inventory upload does).
 const packagedDataset = 'packaged';
 
 /// POSTs `records` (the state system's own raw packaged-product records for this center, exactly as
@@ -61,35 +48,15 @@ Future<Map<String, Object?>> uploadInventorySnapshot(
   if (records.length > ingestMaxRecords) {
     throw InventoryUploadError('${records.length} records is more than the server takes in one upload ($ingestMaxRecords)');
   }
-  final c = client ?? serverClient();
-  final shouldClose = client == null;
-  try {
-    final uri = Uri.parse('$baseUrl${ingestPath(packagedDataset, stateId)}');
-    http.Response resp;
-    try {
-      resp = await c.post(
-        uri,
-        headers: {...appApiKeyHeaders, 'content-type': 'application/json'},
-        body: jsonEncode({'workerEmail': workerEmail, 'deviceId': deviceId, 'records': records}),
-      );
-    } catch (ex) {
-      throw InventoryUploadError('cannot reach ${uri.host}: ${ex.runtimeType}', unreachable: true);
-    }
-    if (resp.statusCode != 200) {
-      throw InventoryUploadError(describeServerError(resp.statusCode, resp.body),
-          unreachable: isUnreachableStatus(resp.statusCode), status: resp.statusCode);
-    }
-    Object? body;
-    try {
-      body = jsonDecode(resp.body);
-    } on FormatException {
-      throw InventoryUploadError('the server did not answer with JSON');
-    }
+  return serverRequest('$baseUrl${ingestPath(packagedDataset, stateId)}',
+      method: 'POST',
+      json: {'workerEmail': workerEmail, 'deviceId': deviceId, 'records': records},
+      error: InventoryUploadError.new,
+      client: client, read: (resp) {
+    final body = serverJson(resp, InventoryUploadError.new);
     if (body is! Map) {
       throw InventoryUploadError('unexpected response shape');
     }
     return Map<String, Object?>.from(body);
-  } finally {
-    if (shouldClose) c.close();
-  }
+  });
 }

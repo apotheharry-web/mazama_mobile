@@ -1,4 +1,4 @@
-// The phone's "COA → label" debug page (plan 08 Task 8, specs/coa/08-phone-label-debug.md): every step faked
+// The phone's "COA → label" debug page: every step faked
 // (state calls, pdfium, the shared reader), the same pattern as the Adhoc-COA page's tests.
 import 'dart:typed_data';
 

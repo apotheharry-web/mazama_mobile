@@ -1,14 +1,14 @@
-// The shared core (mazama_modules/core/mazama_core_ffi) loaded through dart:ffi (specs/core; SM-02). CI builds the
+// The shared core (mazama_modules/core/mazama_core_ffi) loaded through dart:ffi. CI builds the
 // library and passes its path as MAZAMA_CORE_FFI_LIB (ci/run.sh, core-ffi-build); without it these tests fail
 // (test/support/core.dart). The cases are this app's vendored copies (assets/shared/coa/, tool/sync_flows.sh): every
 // golden label case, one lab report's extracted text, every lot case and every scan-matching case. The Rust and
 // Python suites run the whole corpus; these prove the same answers come through the C interface.
 import 'dart:convert';
+import 'dart:ffi' show DynamicLibrary;
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mazama_mobile/mazama_core.dart';
-import 'package:mazama_mobile/mazama_core.g.dart' show coreFunctionSymbols;
 
 import 'support/core.dart';
 
@@ -16,7 +16,7 @@ const _shared = 'assets/shared/coa/corpus';
 
 Map<String, Object?> _json(String path) => jsonDecode(File(path).readAsStringSync()) as Map<String, Object?>;
 
-/// True only in the public copy of this app (specs/public-app PA-R5), which has neither the folder nor the private
+/// True only in the public copy of this app, which has neither the folder nor the private
 /// mazama_modules/ beside it: here a missing folder still fails the test.
 bool _missingInPublicCopy(String dir) =>
     !Directory(dir).existsSync() && !File('../mazama_modules/vendored.txt').existsSync();
@@ -68,33 +68,29 @@ void main() {
       expect(second.version, first.version);
     });
 
-    test('the generated symbol list is the table the library exports', () {
-      expect(coreFunctionSymbols, [
-        'mz_coa_parse_json', 'mz_coa_parse_with_rules_json', 'mz_coa_find_lot_json', 'mz_coa_select_documents_json',
-        'mz_label_spec_json', 'mz_names_name_json', 'mz_scan_find_ids_json', 'mz_scan_closest_json',
-        'mz_records_judge_json', 'mz_records_can_transfer_json', 'mz_records_package_keys_json', 'mz_records_service_centers_json',
-        'mz_stock_filter_json', 'mz_stock_summarize_json', 'mz_stock_pies_json', 'mz_stock_par_table_json',
-        'mz_stock_mix_json', 'mz_stock_mix_cells_json', 'mz_stock_by_type_json',
-        'mz_stock_order_check_json', 'mz_stock_order_form_json',
-        'mz_manufacturing_coa_edit_json', 'mz_manufacturing_coa_number_json', 'mz_manufacturing_clean_text_json',
-        'mz_manufacturing_plan_json', 'mz_manufacturing_serving_table_json',
-        'mz_names_product_name_json',
-        'mz_flows_host_allowed_json', 'mz_flows_compare_spec_versions_json', 'mz_flows_parse_host_list_json',
-        'mz_flows_verify_signature_json', 'mz_flows_public_key_json', 'mz_flows_usable_login_spec_json',
-        'mz_selling_sellable_json',
-        'mz_selling_parse_price_json', 'mz_selling_price_cart_json', 'mz_selling_line_price_json', 'mz_selling_group_of_json',
-        'mz_selling_share_total_json', 'mz_selling_per_mg_price_json', 'mz_selling_with_tax_json', 'mz_selling_money_json', 'mz_selling_allocate_json',
-        'mz_selling_build_sale_json', 'mz_selling_allocate_sale_json', 'mz_selling_check_sale_json', 'mz_selling_parse_sale_date_json',
-        'mz_selling_check_sale_date_json', 'mz_selling_today_json', 'mz_selling_pacific_midnight_json', 'mz_selling_review_sale_date_json',
-        'mz_selling_sale_outcome_json', 'mz_selling_sale_proof_json', 'mz_selling_review_each_json', 'mz_selling_expiry_json',
-        'mz_selling_parse_state_date_json',
-        'mz_dose_unit_mg_json', 'mz_dose_ceil_mg_json', 'mz_dose_sale_limits_json',
-      ]);
+    test('the library exports every function of the generated symbol list', () {
+      // coreFunctionSymbols is generated from functions.yaml (mazama_modules/core/gen.py), as the C library's exports
+      // are: every one is there, once, beside the two every build needs
+      final lib = DynamicLibrary.open(Platform.environment['MAZAMA_CORE_FFI_LIB']!);
+      expect(coreFunctionSymbols, isNotEmpty);
+      expect(coreFunctionSymbols.toSet().length, coreFunctionSymbols.length);
+      for (final symbol in [...coreFunctionSymbols, 'mz_version', 'mz_free']) {
+        expect(symbol, matches(RegExp(r'^mz_[a-z0-9_]+$')));
+        expect(lib.providesSymbol(symbol), isTrue, reason: symbol);
+      }
     });
   });
 
   group('through the library', () {
     late final MazamaCore core = loadTestCore();
+
+    test('the dose in a product name is read as its vectors say', () {
+      final cases = _json('assets/shared/names/vectors/name_dose.json')['cases'] as List;
+      expect(cases.length, greaterThanOrEqualTo(20));
+      for (final c in cases.cast<Map<String, Object?>>()) {
+        expect(core.namesNameDose({'name': c['name']}), {'dose': c['dose']}, reason: '${c['name']}');
+      }
+    });
 
     test('every golden label case gives the server\'s answer', () {
       final cases = _json('$_shared/labels/cases.json');
@@ -130,7 +126,7 @@ void main() {
       final cases = (_json('$_shared/lots/cases.json')['cases'] as List).cast<Map<String, Object?>>();
       expect(cases.length, greaterThanOrEqualTo(12));
       for (final c in cases) {
-        // the public copy of this app has no real lab reports (specs/public-app PA-R5); here they are always vendored
+        // the public copy of this app has no real lab reports; here they are always vendored
         if (_missingInPublicCopy('$_shared/${c['report']}')) continue;
         final text = _json('$_shared/${c['report']}/text.server.json');
         final reply = core.findLot(text, c['lot'] as String, statePsilocybin: (c['state_psilocybin'] as num?)?.toDouble());

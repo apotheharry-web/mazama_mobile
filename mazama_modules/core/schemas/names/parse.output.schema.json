@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "names.parse output",
+  "description": "Each name read, in order: ok, partial (read, with notes on what is off) or unparsed (with why); dose_text is the dose as written, dose the same number as plain decimal text (null when the text isn't digits with at most a decimal point).",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "status",
+      "strain_raw",
+      "strain",
+      "dose",
+      "dose_text",
+      "code",
+      "expiry",
+      "label",
+      "note"
+    ],
+    "properties": {
+      "status": {
+        "enum": [
+          "ok",
+          "partial",
+          "unparsed"
+        ]
+      },
+      "strain_raw": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "strain": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "dose": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "pattern": "^[0-9]+(\\.[0-9]+)?$"
+      },
+      "dose_text": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "code": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "expiry": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "pattern": "^\\d{4}-\\d\\d-\\d\\d$"
+      },
+      "label": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "note": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    }
+  }
+}

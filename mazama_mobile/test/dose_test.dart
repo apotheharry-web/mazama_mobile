@@ -1,8 +1,8 @@
-// SM-04: the mg TPE of a unit where the phone works it out itself (the state-only path, and a lab result's TPE from
-// the server) is the shared core's (mazama_core::dose, specs/core row 5), held to the frozen vectors from this app's
+// The mg TPE of a unit where the phone works it out itself (the state-only path, and a lab result's TPE from
+// the server) is the shared core's (mazama_core::dose), held to the frozen vectors from this app's
 // vendored copy (assets/shared/dose/vectors/, tool/sync_flows.sh): unit_mg.json and ceil_mg.json (the old rule's cases)
-// and dose_cases.json (the DOSE rows as the owner approved them, CR-D6). Owner decisions SM-D16 (the TPE, else the
-// state's psilocybin) and SM-D17 (ceil(x - 1e-9)). Fails closed (DOSE-7): a core that can't answer gives no mg.
+// and dose_cases.json (the DOSE rows as the owner approved them): the TPE, else the
+// state's psilocybin, rounded up as ceil(x - 1e-9). Fails closed: a core that can't answer gives no mg.
 import 'dart:convert';
 import 'dart:io';
 

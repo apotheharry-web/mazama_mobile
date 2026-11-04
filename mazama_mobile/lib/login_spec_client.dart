@@ -1,20 +1,16 @@
-// GET /p/flows/login (C17, routes.yaml; SL-R9): the newest sign-in spec Mazama's server knows of (its own or the hosted
+// GET /p/flows/login (routes.yaml): the newest sign-in spec Mazama's server knows of (its own or the hosted
 // copy), for a phone whose bundled one no longer gets through the state's sign-in. The phone sends the spec format it
 // reads; the server answers {"specVersion", "source": "server" | "hosted", "yaml"}. The reply is held to the same rule
 // as a saved spec (login_spec_store.dart's usableLoginSpec) before anything uses it, in the login served mode (no
-// open_browser). GET /p/flows/login_browser (C19, SL-R19) is the same for the browser sign-in spec (the sign-in on the
+// open_browser). GET /p/flows/login_browser is the same for the browser sign-in spec (the sign-in on the
 // state's own page), in the browser served mode (an open_browser in login). Contract: ../mazama_modules/api/routes.yaml,
 // examples assets/shared/api/examples/login_spec.response.json and login_browser_spec.response.json.
-import 'dart:convert';
-
 import 'package:http/http.dart' as http;
 
 import 'api_contract.g.dart';
-import 'app_api_key.dart';
 import 'flow/flow_spec.dart';
 import 'login_spec_store.dart' show ServedAs, usableLoginSpec;
-import 'server_error.dart';
-import 'server_link_client.dart' show serverClient;
+import 'server_request.dart';
 
 /// How long the fetch waits for the server's answer.
 const loginSpecTimeout = Duration(seconds: 10);
@@ -23,7 +19,7 @@ class LoginSpecError implements Exception {
   final String message;
 
   /// True when no answer came at all (no connection, no reply within the timeout), as opposed to an error reply or one
-  /// this app can't use: SignInPage then reads the signed spec from GitHub (specs/app-updates AU-R17).
+  /// this app can't use: SignInPage then reads the signed spec from GitHub.
   final bool unreachable;
 
   LoginSpecError(this.message, {this.unreachable = false});
@@ -40,10 +36,10 @@ class FetchedSpec {
   const FetchedSpec(this.spec, this.yaml, this.source);
 }
 
-/// Asks C17 for the newest sign-in spec this app's format can read. Throws [LoginSpecError] on anything but a 200
+/// Asks GET /p/flows/login for the newest sign-in spec this app's format can read. Throws [LoginSpecError] on anything but a 200
 /// whose reply is a usable spec (the server's own wording for a 401 or 429, through describeServerError). Usable under
 /// [allowedHosts]: the phone's own allowlist by default; SignInPage passes the built-in hosts plus a host list it
-/// fetched with the spec (SL-R18). A spec with an open_browser is refused (SL-R19's login served mode).
+/// fetched with the spec. A spec with an open_browser is refused (the login served mode).
 Future<FetchedSpec> requestLoginSpec({
   String baseUrl = apiBaseUrl,
   http.Client? client,
@@ -53,7 +49,7 @@ Future<FetchedSpec> requestLoginSpec({
     _requestSpec(loginSpecPath(), ServedAs.login,
         baseUrl: baseUrl, client: client, timeout: timeout, allowedHosts: allowedHosts);
 
-/// Asks C19 for the newest browser sign-in spec this app's format can read (SL-R19), as [requestLoginSpec] does for
+/// Asks GET /p/flows/login_browser for the newest browser sign-in spec this app's format can read, as [requestLoginSpec] does for
 /// the password one; a spec without an open_browser in `login` is refused (the browser served mode).
 Future<FetchedSpec> requestBrowserLoginSpec({
   String baseUrl = apiBaseUrl,
@@ -71,39 +67,26 @@ Future<FetchedSpec> _requestSpec(
   required http.Client? client,
   required Duration timeout,
   required Iterable<String>? allowedHosts,
-}) async {
-  final c = client ?? serverClient(); // through the server link, like every /p/ client (sales README R56)
-  final shouldClose = client == null;
-  try {
-    final uri = Uri.parse('$baseUrl$path?format=$supportedFlowFormat');
-    http.Response resp;
-    try {
-      resp = await c.get(uri, headers: appApiKeyHeaders).timeout(timeout);
-    } catch (ex) {
-      throw LoginSpecError('cannot reach ${uri.host}: ${ex.runtimeType}', unreachable: true);
-    }
-    if (resp.statusCode != 200) throw LoginSpecError(describeServerError(resp.statusCode, resp.body));
-    Object? body;
-    try {
-      body = jsonDecode(utf8.decode(resp.bodyBytes));
-    } on FormatException {
-      throw LoginSpecError('the server did not answer with JSON');
-    }
-    if (body is! Map) throw LoginSpecError('unexpected response shape');
-    final yaml = body['yaml'];
-    final source = body['source'];
-    final version = body['specVersion'];
-    if (yaml is! String || version is! String || (source != 'server' && source != 'hosted')) {
-      throw LoginSpecError('unexpected response shape');
-    }
-    final spec = usableLoginSpec(yaml, allowedHosts: allowedHosts, served: served);
-    if (spec == null) throw LoginSpecError('the server sent a sign-in spec this app cannot use');
-    if (spec.specVersion != version) throw LoginSpecError("the reply's specVersion is not the spec's own");
-    return FetchedSpec(spec, yaml, source as String);
-  } finally {
-    if (shouldClose) c.close();
-  }
-}
+}) =>
+    serverRequest('$baseUrl$path?format=$supportedFlowFormat',
+        error: _loginSpecError, timeout: timeout, client: client, read: (resp) {
+      final body = serverJson(resp.bodyBytes, _loginSpecError);
+      if (body is! Map) throw LoginSpecError('unexpected response shape');
+      final yaml = body['yaml'];
+      final source = body['source'];
+      final version = body['specVersion'];
+      if (yaml is! String || version is! String || (source != 'server' && source != 'hosted')) {
+        throw LoginSpecError('unexpected response shape');
+      }
+      final spec = usableLoginSpec(yaml, allowedHosts: allowedHosts, served: served);
+      if (spec == null) throw LoginSpecError('the server sent a sign-in spec this app cannot use');
+      if (spec.specVersion != version) throw LoginSpecError("the reply's specVersion is not the spec's own");
+      return FetchedSpec(spec, yaml, source as String);
+    });
+
+// A LoginSpecError says only whether no answer came at all: an error reply (a 5xx included) is an answer.
+LoginSpecError _loginSpecError(String message, {int? status, bool unreachable = false}) =>
+    LoginSpecError(message, unreachable: unreachable && status == null);
 
 /// [requestLoginSpec], or null on any failure (no answer, an error reply, a reply that isn't a usable spec, or no
 /// answer within [timeout]). Never throws.

@@ -1,13 +1,13 @@
-// GET /p/app/latest (C21, routes.yaml; specs/app-updates AU-R5, AU-R9): the newest signed release file as Mazama's
+// GET /p/app/latest (routes.yaml): the newest signed release file as Mazama's
 // server recorded it, {"build", "manifest" (the signed latest.json's exact text), "signature" (its .sig text)}, or all
 // three null when there is none. The phone verifies it again with its own bundled key and by its own clock
 // (app_release.dart's verifiedReleaseFile) before anything is offered: the server is not trusted to have checked.
 //
 // When the server can't answer (the request through the server link failed and the link now counts the server
-// offline, server_health.dart), the same file is read from GitHub (github_files.dart, AU-D9) and held to the same
+// offline, server_health.dart), the same file is read from GitHub (github_files.dart) and held to the same
 // checks. When the server answers, even with an error, GitHub is not asked.
 //
-// AU-R22: C21 carries the installed build and the install id (lib/device_id.dart), so the owner's App users page shows
+// The request carries the installed build and the install id (lib/device_id.dart), so the owner's App users page shows
 // which build each phone runs (phones left behind by a key rotation can be found). The id is sent only in the shape the
 // app makes (32 lower-case hex digits, the only one the server takes); GitHub's request carries neither. Contract: ../mazama_modules/api/routes.yaml,
 // example assets/shared/api/examples/app_latest.response.json.
@@ -24,15 +24,15 @@ import 'github_files.dart';
 import 'server_error.dart';
 import 'signing.dart' show bundledPublicKey, publicKeyBytes;
 import 'server_link.dart' show serverLink;
-import 'server_link_client.dart' show serverClient;
+import 'server_request.dart';
 
-/// The install id's shape (lib/device_id.dart makes 16 random bytes as hex), the only one C21 takes.
+/// The install id's shape (lib/device_id.dart makes 16 random bytes as hex), the only one the route takes.
 final installIdShape = RegExp(r'^[0-9a-f]{32}$');
 
-/// The largest C21 reply read (the release file is at most 4 KiB; review M5).
+/// The largest reply read (the release file is at most 4 KiB).
 const appLatestMaxBytes = 16384;
 
-/// How long C21 may take.
+/// How long the request may take.
 const appLatestTimeout = Duration(seconds: 10);
 
 class AppLatestError implements Exception {
@@ -41,7 +41,7 @@ class AppLatestError implements Exception {
   /// True when no answer came at all (as opposed to an error reply or a malformed one).
   final bool unreachable;
 
-  /// True when the headers came but the body stalled: no answer either, though the server link saw one (review N4).
+  /// True when the headers came but the body stalled: no answer either, though the server link saw one.
   final bool stalled;
 
   AppLatestError(this.message, {this.unreachable = false, this.stalled = false});
@@ -49,7 +49,7 @@ class AppLatestError implements Exception {
   String toString() => message;
 }
 
-/// C21's reply as sent: all three null when the server has nothing recorded, else all three set (unverified here).
+/// The route's reply as sent: all three null when the server has nothing recorded, else all three set (unverified here).
 class AppLatestReply {
   final int? build;
   final String? manifest;
@@ -58,7 +58,7 @@ class AppLatestReply {
 }
 
 /// [stream]'s bytes, failing with a [FormatException] as soon as they pass [cap], and with a [TimeoutException] when
-/// they haven't all come within [timeout]; either way the stream is cancelled (review N4).
+/// they haven't all come within [timeout]; either way the stream is cancelled.
 Future<List<int>> _capped(Stream<List<int>> stream, int cap, Duration timeout) {
   final out = <int>[];
   final done = Completer<List<int>>();
@@ -84,65 +84,55 @@ Future<List<int>> _capped(Stream<List<int>> stream, int cap, Duration timeout) {
   return done.future.whenComplete(timer.cancel);
 }
 
-/// Asks C21. Throws [AppLatestError] on anything but a 200 whose reply has the contract's shape (the server's own
+/// Asks GET /p/app/latest. Throws [AppLatestError] on anything but a 200 whose reply has the contract's shape (the server's own
 /// wording for a 401 or 429, through describeServerError). Verifies nothing: see [fetchLatestRelease]. With
-/// [installedBuild] and [deviceId], both are sent as C21's `build` and `device` (AU-R22).
+/// [installedBuild] and [deviceId], both are sent as the request's `build` and `device`.
 Future<AppLatestReply> requestAppLatest({
   String baseUrl = apiBaseUrl,
   http.Client? client,
   Duration timeout = appLatestTimeout,
   int? installedBuild,
   String? deviceId,
-}) async {
-  final c = client ?? serverClient(); // through the server link, like every /p/ client (sales README R56)
-  final shouldClose = client == null;
-  try {
-    var uri = Uri.parse('$baseUrl${appLatestPath()}');
-    if (installedBuild != null &&
-        installedBuild >= 0 &&
-        installedBuild <= 99999999 &&
-        deviceId != null &&
-        installIdShape.hasMatch(deviceId)) {
-      uri = uri.replace(queryParameters: {'build': '$installedBuild', 'device': deviceId});
-    }
-    final http.StreamedResponse resp;
-    try {
-      resp = await c.send(http.Request('GET', uri)..headers.addAll(appApiKeyHeaders)).timeout(timeout);
-    } catch (ex) {
-      throw AppLatestError('cannot reach ${uri.host}: ${ex.runtimeType}', unreachable: true);
-    }
-    final List<int> bytes;
-    try {
-      bytes = await _capped(resp.stream, appLatestMaxBytes, timeout);
-    } on TimeoutException {
-      // a body that stalls after the headers is no answer: GitHub may be asked (review N4)
-      throw AppLatestError('the reply from ${uri.host} did not arrive', unreachable: true, stalled: true);
-    } catch (_) {
-      throw AppLatestError('the reply was too large or broken');
-    }
-    if (resp.statusCode != 200) {
-      throw AppLatestError(describeServerError(resp.statusCode, utf8.decode(bytes, allowMalformed: true)));
-    }
-    Object? body;
-    try {
-      body = jsonDecode(utf8.decode(bytes));
-    } on FormatException {
-      throw AppLatestError('the server did not answer with JSON');
-    }
-    if (body is! Map) throw AppLatestError('unexpected response shape');
-    final Object? build = body['build'];
-    final Object? manifest = body['manifest'];
-    final Object? signature = body['signature'];
-    if (build == null && manifest == null && signature == null) return const AppLatestReply(null, null, null);
-    if (build is! int || manifest is! String || signature is! String) throw AppLatestError('unexpected response shape');
-    return AppLatestReply(build, manifest, signature);
-  } finally {
-    if (shouldClose) c.close();
-  }
-}
+}) =>
+    withServerClient(client, (c) async {
+      var uri = Uri.parse('$baseUrl${appLatestPath()}');
+      if (installedBuild != null &&
+          installedBuild >= 0 &&
+          installedBuild <= 99999999 &&
+          deviceId != null &&
+          installIdShape.hasMatch(deviceId)) {
+        uri = uri.replace(queryParameters: {'build': '$installedBuild', 'device': deviceId});
+      }
+      final resp = await sendToServer(
+          uri, () => c.send(http.Request('GET', uri)..headers.addAll(appApiKeyHeaders)).timeout(timeout), _appLatestError);
+      final List<int> bytes;
+      try {
+        bytes = await _capped(resp.stream, appLatestMaxBytes, timeout);
+      } on TimeoutException {
+        // a body that stalls after the headers is no answer: GitHub may be asked
+        throw AppLatestError('the reply from ${uri.host} did not arrive', unreachable: true, stalled: true);
+      } catch (_) {
+        throw AppLatestError('the reply was too large or broken');
+      }
+      if (resp.statusCode != 200) {
+        throw AppLatestError(describeServerError(resp.statusCode, utf8.decode(bytes, allowMalformed: true)));
+      }
+      final body = serverJson(bytes, _appLatestError);
+      if (body is! Map) throw AppLatestError('unexpected response shape');
+      final Object? build = body['build'];
+      final Object? manifest = body['manifest'];
+      final Object? signature = body['signature'];
+      if (build == null && manifest == null && signature == null) return const AppLatestReply(null, null, null);
+      if (build is! int || manifest is! String || signature is! String) throw AppLatestError('unexpected response shape');
+      return AppLatestReply(build, manifest, signature);
+    });
+
+// An AppLatestError says only whether no answer came at all.
+AppLatestError _appLatestError(String message, {int? status, bool unreachable = false}) =>
+    AppLatestError(message, unreachable: unreachable);
 
 /// The newest release file that verifies against [publicKey] (a `signing.pub` text; the bundled one, from [bundle],
-/// when null) and passes AU-R1 by [now]'s date: from C21, or from GitHub when the server can't answer
+/// when null) and passes the release file's rules by [now]'s date: from the server, or from GitHub when the server can't answer
 /// ([serverOffline], the app's server link by default, says so after the request failed). Null on anything else.
 /// Never throws.
 Future<ReleaseFile?> fetchLatestRelease({
@@ -158,7 +148,7 @@ Future<ReleaseFile?> fetchLatestRelease({
   String? deviceId,
 }) async {
   try {
-    // AU-R2 / review M7: while signing.pub holds no key nothing could verify, so nothing is asked for
+    // While signing.pub holds no key nothing could verify, so nothing is asked for
     if (publicKeyBytes(publicKey ?? await bundledPublicKey(bundle: bundle)) == null) return null;
     final AppLatestReply reply;
     try {

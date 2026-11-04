@@ -1,7 +1,7 @@
-// specs/phone-sync PS-R6, Review Focus 1, 2 and 4: selling never goes through the sync engine. The sale completes
+// Selling never goes through the sync engine. The sale completes
 // while everything the engine could wait on hangs; an uncertain sale's flow runs once however often the engine runs;
-// stock of any age is shown with its age, but never sold from once older than three days (Q3); stock older than five
-// minutes is read from the state itself before a sale (SM-25); a confirmed sale asks for a refresh and never waits.
+// stock of any age is shown with its age, but never sold from once older than three days; stock older than five
+// minutes is read from the state itself before a sale; a confirmed sale asks for a refresh and never waits.
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -15,7 +15,6 @@ import 'package:mazama_mobile/cart_slots.dart' show defaultCartId;
 import 'package:mazama_mobile/cart_store.dart';
 import 'package:mazama_mobile/flow/flow_runner.dart';
 import 'package:mazama_mobile/flow/flow_spec.dart';
-import 'package:mazama_mobile/inventory_cache_store.dart';
 import 'package:mazama_mobile/local_store.dart';
 import 'package:mazama_mobile/packages_client.dart';
 import 'package:mazama_mobile/sellability.dart';
@@ -140,7 +139,7 @@ void main() {
 
   group('stock older than three days is shown and selling refuses it (Q3)', () {
     Future<void> openWithKept(WidgetTester tester, Duration age, DateTime clock) async {
-      await InventoryCacheStore(dataDir: () => tempDir).save(center.id, inventory, clock.subtract(age));
+      keepCenterStock(testDatasets(), center.id, inventory, clock.subtract(age));
       await tester.pumpWidget(cartPage(
         fetchPackages: (id) async => throw Exception('mazama server unreachable'),
         fetchPackagesFromState: (stateId, {required accessToken}) async => throw StatePackagesError('state unreachable too'),
@@ -186,8 +185,7 @@ void main() {
       };
       var clock = DateTime.now();
       // kept a minute inside the limit
-      await InventoryCacheStore(dataDir: () => tempDir)
-          .save(center.id, inventory, clock.subtract(const Duration(days: 2, hours: 23, minutes: 59)));
+      keepCenterStock(testDatasets(), center.id, inventory, clock.subtract(const Duration(days: 2, hours: 23, minutes: 59)));
       var phase = 'load';
       var reads = 0;
       await tester.pumpWidget(cartPage(
@@ -354,7 +352,7 @@ void main() {
     expect(find.text('The sale may or may not have been recorded'), findsNothing);
   });
 
-  // Review of phase 3 (I1-I3): the state is read before a sale unless it confirmed this stock in the last 5 minutes.
+  // The state is read before a sale unless it confirmed this stock in the last 5 minutes.
   group('SM-25: when the state must be read before a sale', () {
     Map<String, Object?> rec(int id, String guid, String type, double wpu, double aw, num qty) => {
           'id': id, 'productGuid': guid, 'productType': type, 'weightPerUnit': wpu, 'analyteWeight': aw, 'quantity': qty,
@@ -479,10 +477,10 @@ void main() {
       await tester.pumpAndSettle();
     });
 
-    // Review of Task 8b (I-C, I-D, I-E): what a load, a cart switch, a restored draft and a sale that wasn't confirmed
+    // What a load, a cart switch, a restored draft and a sale that wasn't confirmed
     // leave behind. Each sale that must read the state shows the read happened, and an oversell that nothing was sent.
 
-    /// Every sale is confirmed (S-1), [onSale] run first (the state taking the units).
+    /// Every sale is confirmed, [onSale] run first (the state taking the units).
     void saleAnswers(FakeState fake, void Function() onSale) {
       fake.override['CreateSalesRecords/false'] = (req) async {
         onSale();
@@ -518,7 +516,7 @@ void main() {
       saleAnswers(fake, () => left -= 2);
       final clock = DateTime.now();
       // a kept copy an hour old, so the stock banner offers Retry
-      await InventoryCacheStore(dataDir: () => tempDir).save(center.id, inventory, clock.subtract(const Duration(hours: 1)));
+      keepCenterStock(testDatasets(), center.id, inventory, clock.subtract(const Duration(hours: 1)));
       var atLoad = true;
       var reads = 0;
       final server = Completer<List<Package>>();
@@ -546,7 +544,7 @@ void main() {
       await pumpFor(tester, const Duration(milliseconds: 500));
       expect(reads, 1); // the Retry's load has read the state (3) and waits for the server
       expect(find.text('Downloading inventory...'), findsOneWidget);
-      // sold while that load runs: the kept copy is nobody's word, so SM-25 reads the state, then the sale is sent
+      // sold while that load runs: the kept copy is nobody's word, so the sale reads the state, then the sale is sent
       await tester.tap(find.widgetWithText(FilledButton, 'Sell'));
       await pumpFor(tester, const Duration(seconds: 1));
       await tester.tap(find.widgetWithText(FilledButton, 'Confirm sale'));
@@ -585,7 +583,7 @@ void main() {
       };
       final clock = DateTime.now();
       // a kept copy an hour old, so the stock banner offers Retry
-      await InventoryCacheStore(dataDir: () => tempDir).save(center.id, inventory, clock.subtract(const Duration(hours: 1)));
+      keepCenterStock(testDatasets(), center.id, inventory, clock.subtract(const Duration(hours: 1)));
       var atLoad = true;
       var reads = 0;
       var serverCalls = 0;

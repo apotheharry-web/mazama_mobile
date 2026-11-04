@@ -1,29 +1,25 @@
-// A center's stock as the cart reads it (specs/phone-sync phase 3, PS-R5, PS-R6, Q3), in place of
-// resilient_inventory.dart's tiers (removed in Task 10; its InventorySource and InventoryFetch are here now) and
-// merged_inventory.dart's join (still the stock page's and a debug page's). Each load, in order:
+// A center's stock as the cart reads it, through these steps (InventorySource names where a load's stock came
+// from), by the same join as the stock page's (stock_merge.dart). Each load, in order:
 //   1. Mazama's server (/p/packages) and the state system (GetPackagedProducts, the worker's own token) at once, put
 //      together by the one merge rule (stock_merge.dart's mergeStock). The server answered: InventorySource.live, its
-//      own rows remembered for later fills (EnrichmentStore) and its row keys given for the uploader (CU-R1). Only the
+//      own rows remembered for later fills (enrichment.dart) and its row keys given for the uploader. Only the
 //      state answered: InventorySource.state, filled from the figures kept where they still apply. Whenever the state
 //      answered, its raw read is handed to [onStateRead] (the cart uploads it as the center's snapshot, never awaited).
 //   2. Both failed, with a session and the state fallback on: the state's own packages, filled the same way
-//      (InventorySource.state), as resilient_inventory.dart's tier 2 was.
-//   3. Still nothing: the stock last kept for the center (the center_stock dataset, inventory_cache_store.dart), at
-//      ANY age, with when it was read (InventorySource.cache). Q3 (owner, 2026-10-28): stock is always shown with its
+//      (InventorySource.state).
+//   3. Still nothing: the stock last kept for the center (the center_stock dataset, [keptCenterStock]), at
+//      ANY age, with when it was read (InventorySource.cache). Stock is always shown with its
 //      age; it is selling that refuses stock older than [ResilienceOptions.cacheMaxAge] (cart_page.dart, [stockTooOld]).
 //   4. Nothing kept either: the first step's error.
 // Every stock read in steps 1-2 is kept for step 3, with where it came from. Selling never goes through this: the sale
-// reads the state itself when its stock is older than 5 minutes (SM-25) and goes straight to the state (PS-D3).
-import 'dart:async';
+// reads the state itself when its stock is older than 5 minutes and goes straight to the state.
 import 'dart:convert';
 
-import '../enrichment_store.dart';
-import '../inventory_cache_store.dart';
-import '../merged_inventory.dart' show MergedInventoryError;
+import 'enrichment.dart';
 import '../packages_client.dart';
 import '../session.dart';
 import 'stock_merge.dart';
-import 'sync_datasets.dart' show Refresher, sourceMerged, sourceServer, sourceState;
+import 'sync_datasets.dart' show Dataset, Datasets, Refresher, sourceMerged, sourceServer, sourceState;
 
 /// Which step produced a load ([CenterStock.fetch]): Mazama's server ([live], with the state's counts when it answered
 /// too), the state alone ([state]), or the stock kept for the center ([cache]). [adhoc] is CartPage's own: a center
@@ -40,12 +36,12 @@ class InventoryFetch {
 
   /// For [InventorySource.live] only: the [inventoryRowKey]s of the rows Mazama's server itself sent. A merged row
   /// only the state listed has coaAvailable false because the server was never asked about it, not because its lab
-  /// report is missing, so the background uploader (specs/coa-upload CU-R1) queues only these. Null when the server's
+  /// report is missing, so the background uploader queues only these. Null when the server's
   /// rows aren't known.
   final Set<String>? serverKeys;
 
   /// Whether the state system itself was read for these packages in this load: false for Mazama's server's rows alone
-  /// and for a kept copy, whose counts the state hasn't confirmed, so a sale reads the state first (SM-25).
+  /// and for a kept copy, whose counts the state hasn't confirmed, so a sale reads the state first.
   final bool stateRead;
   InventoryFetch({required this.packages, required this.source, this.asOf, this.serverKeys, this.stateRead = false});
 }
@@ -60,8 +56,8 @@ String cachedEstimatesNote(List<Package> packages) => packages.any((p) => p.stat
     ? " For some products in it only the state's psilocybin is known, shown as mg psilocybin."
     : '';
 
-/// The engine's center_stock refresher (specs/phone-sync phase 4, PS-R3): a load as the cart makes it ([CenterStock.fetch],
-/// from [stock], which gives null without a session to read the state with), its body as InventoryCacheStore keeps it
+/// The engine's center_stock refresher: a load as the cart makes it ([CenterStock.fetch],
+/// from [stock], which gives null without a session to read the state with), its body as [keepCenterStock] keeps it
 /// ({"packages": [...], "source": ...}) and where it came from: merged when the state answered beside the server, server
 /// when only the server did, state when only the state did. A load that fell back to the kept copy, or found nothing,
 /// is a failed refresh (the engine keeps the body and its time): a kept copy is never stamped as read again.
@@ -79,13 +75,13 @@ Refresher centerStockRefresher(Future<CenterStock?> Function() stock) => (key) a
       );
     };
 
-/// Q3: whether stock read at [readAt] is too old to sell from at [now] (older than [maxAge]; exactly [maxAge] is
+/// Whether stock read at [readAt] is too old to sell from at [now] (older than [maxAge]; exactly [maxAge] is
 /// still sellable). A time in the future counts as just read. Whole milliseconds, as stored times are kept
 /// (sync_dataset.fetched_at_ms): a kept time has lost its microseconds, and must not read as older for it.
 bool stockTooOld(DateTime readAt, DateTime now, Duration maxAge) =>
     now.millisecondsSinceEpoch - readAt.millisecondsSinceEpoch > maxAge.inMilliseconds;
 
-/// What the cart says when it refuses to sell from stock that is too old (Q3), [maxAge] in words.
+/// What the cart says when it refuses to sell from stock that is too old, [maxAge] in words.
 String staleStockRefusal(Duration maxAge) =>
     'The stock on this phone was read more than ${_inWords(maxAge)} ago, so nothing was sent. '
     'Load the stock again (Retry) before selling.';
@@ -96,14 +92,59 @@ String _inWords(Duration d) {
   return '${d.inMinutes} minutes';
 }
 
+/// What the center_stock dataset keeps for a center ([keptCenterStock]): the packages as last read, by whichever step,
+/// and when that read started.
+class CachedInventory {
+  final List<Package> packages;
+  final DateTime fetchedAt;
+  CachedInventory({required this.packages, required this.fetchedAt});
+}
+
+/// Keeps [packages] as [stateId]'s center_stock copy in [datasets], read from [source] (sync_datasets.dart's sources)
+/// at [fetchedAt]: the body {"packages": [...], "source": ...}. An older read finishing last never replaces a newer one
+/// ([Datasets.put]); never throws.
+void keepCenterStock(Datasets datasets, int stateId, List<Package> packages, DateTime fetchedAt,
+        {String source = sourceMerged}) =>
+    datasets.put(Dataset.centerStock, '$stateId',
+        jsonEncode({'packages': [for (final p in packages) p.toJson()], 'source': source}),
+        source: source, at: fetchedAt);
+
+/// [stateId]'s center_stock copy in [datasets] with when it was read (UTC); null when none is kept, or what is kept
+/// can't be read back. No staleness rule: the caller decides (shown at any age; the cart refuses to sell from stock
+/// older than 3 days).
+CachedInventory? keptCenterStock(Datasets datasets, int stateId) {
+  final row = datasets.read(Dataset.centerStock, '$stateId');
+  if (row == null) return null;
+  final packages = centerStockPackages(row.body);
+  return packages == null ? null : CachedInventory(packages: packages, fetchedAt: row.fetchedAt.toUtc());
+}
+
+/// The packages of a center_stock body ({"packages": [...], "source": ...}); null when it isn't one (a damaged copy:
+/// as if none were kept).
+List<Package>? centerStockPackages(String body) {
+  try {
+    final decoded = jsonDecode(body);
+    if (decoded is! Map) return null;
+    final rawPackages = decoded['packages'];
+    if (rawPackages is! List) return null;
+    final packages = <Package>[];
+    for (final rp in rawPackages) {
+      if (rp is! Map) return null;
+      packages.add(Package.fromJson(Map<String, Object?>.from(rp)));
+    }
+    return packages;
+  } catch (_) {
+    return null;
+  }
+}
+
 class CenterStock {
   CenterStock({
     required this.fetchServer,
     required this.fetchRawState,
     required this.fetchFromState,
-    required this.cache,
+    required this.datasets,
     required this.session,
-    this.enrichment,
     this.onStateRead,
     this.enableStateFallback = true,
     this.now = DateTime.now,
@@ -115,17 +156,15 @@ class CenterStock {
   /// The state's raw records (GetPackagedProducts).
   final Future<List<Object?>> Function(int stateId, {required String accessToken}) fetchRawState;
 
-  /// Step 2: the state's own packages.
+  /// The second step: the state's own packages.
   final Future<List<Package>> Function(int stateId, {required String accessToken}) fetchFromState;
 
-  /// Step 3, and where every read is kept.
-  final InventoryCacheStore cache;
+  /// Where every read is kept (the center_stock dataset, the third step) and the figures kept for fills (the
+  /// enrichment dataset).
+  final Datasets datasets;
 
   /// The worker's session, read fresh at every load (the cart renews it).
   final Session? Function() session;
-
-  /// The figures kept for fills; null: nothing is remembered or filled, a state-only read is left as it is.
-  final EnrichmentStore? enrichment;
 
   /// Given every raw state read of step 1 (the cart uploads it); never awaited, its failures ignored.
   final void Function(int stateId, List<Object?> records)? onStateRead;
@@ -133,21 +172,18 @@ class CenterStock {
   final bool enableStateFallback;
   final DateTime Function() now;
 
-  Future<Map<String, PackageEnrichment>> _known() async {
-    final store = enrichment;
-    if (store == null) return const {};
+  Map<String, PackageEnrichment> _known() {
     try {
-      return await store.load(now());
+      return keptEnrichment(datasets, now());
     } catch (_) {
       return const {};
     }
   }
 
   void _remember(List<Package> serverRows) {
-    final store = enrichment;
-    if (store == null || serverRows.isEmpty) return;
+    if (serverRows.isEmpty) return;
     try {
-      unawaited(store.remember(serverRows, now()).catchError((_) {}));
+      rememberServerFigures(datasets, serverRows, now());
     } catch (_) {
       // nothing remembered this time; what was kept before stays
     }
@@ -155,14 +191,14 @@ class CenterStock {
 
   void _keep(int stateId, List<Package> packages, String source, DateTime startedAt) {
     try {
-      unawaited(cache.save(stateId, packages, startedAt, source: source).catchError((_) {}));
+      keepCenterStock(datasets, stateId, packages, startedAt, source: source);
     } catch (_) {
       // kept next time; the stock itself is good
     }
   }
 
   Future<InventoryFetch> fetch(int stateId) async {
-    final startedAt = now(); // what this load keeps is as old as its start (review I1, phase 4), per load (8b M5)
+    final startedAt = now(); // what this load keeps is as old as its start, per load
     Object firstError;
     final s = session();
     List<Package>? server;
@@ -198,7 +234,7 @@ class CenterStock {
     }
     if (server != null || records != null) {
       try {
-        final known = server == null ? await _known() : const <String, PackageEnrichment>{};
+        final known = server == null ? _known() : const <String, PackageEnrichment>{};
         final merged = mergeStock(stateRecords: records, serverRows: server, enrichment: known, configured: true);
         if (merged.serverKeys != null) {
           _remember(merged.remember);
@@ -215,15 +251,14 @@ class CenterStock {
         firstError = e;
       }
     } else {
-      // merged_inventory.dart's words, as before
-      firstError = MergedInventoryError('both inventory sources failed: ${serverError ?? ''} ${stateError ?? ''}'.trim());
+      firstError = StockMergeError('both inventory sources failed: ${serverError ?? ''} ${stateError ?? ''}'.trim());
     }
 
     final fallback = enableStateFallback ? session() : null;
     if (fallback != null) {
       try {
         final state = await fetchFromState(stateId, accessToken: fallback.accessToken);
-        final filled = enrichment == null ? state : applyEnrichment(state, await _known());
+        final filled = applyEnrichment(state, _known());
         _keep(stateId, filled, sourceState, startedAt);
         return InventoryFetch(packages: filled, source: InventorySource.state, stateRead: true);
       } catch (_) {
@@ -232,7 +267,7 @@ class CenterStock {
     }
 
     try {
-      final kept = await cache.load(stateId);
+      final kept = keptCenterStock(datasets, stateId);
       if (kept != null) {
         return InventoryFetch(packages: kept.packages, source: InventorySource.cache, asOf: kept.fetchedAt);
       }

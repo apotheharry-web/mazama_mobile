@@ -1,4 +1,4 @@
-// SL-R5: SignInPage reports every failed sign-in except a wrong email or password, fire-and-forget, and says so
+// SignInPage reports every failed sign-in except a wrong email or password, fire-and-forget, and says so
 // in plain words when the state's sign-in page has changed. The state system is test/flow/fake_state.dart's
 // FakeState, reached through http.runWithClient (SignInPage builds its own http.Client()); the reporter is
 // injected, so nothing is posted to Mazama's server or written to disk, and so is the newer-spec fetch (none here).
@@ -27,8 +27,8 @@ Future<void> _signIn(WidgetTester tester, http.Client Function() clientFactory, 
         spec: _spec,
         sessionStore: SessionStore(dataDir: () => _dir),
         reportSigninFailure: reporter,
-        fetchSpec: () async => null, // no newer spec to retry with (SL-R10 is sign_in_retry_test.dart's)
-        fetchHosts: () async => null, // nor a host list (SL-R18 is sign_in_hosts_test.dart's)
+        fetchSpec: () async => null, // no newer spec to retry with (the newer-spec retry is sign_in_retry_test.dart's)
+        fetchHosts: () async => null, // nor a host list (the host list is sign_in_hosts_test.dart's)
       ),
     ));
     await tester.enterText(find.widgetWithText(TextFormField, 'Email'), fakeEmail);

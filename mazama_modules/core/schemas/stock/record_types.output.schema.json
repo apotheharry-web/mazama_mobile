@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "stock.record_types output",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "types"
+  ],
+  "properties": {
+    "types": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "description": "Each record's kind code, in order; null when nothing says it."
+    }
+  }
+}

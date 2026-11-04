@@ -1,5 +1,5 @@
-// SM-11: the phone's sale record and sale-date rules (the shared core's since specs/core row 7, through selling.dart's
-// thin calls) are held to the golden vectors frozen from the server's old Python (../mazama_modules/selling/gen.py),
+// The phone's sale record and sale-date rules (the shared core's, through selling.dart's
+// thin calls) are held to the golden vectors frozen from the server's Python (../mazama_modules/selling/gen.py),
 // so the two sides send the same state record for the same sale. Read from this app's vendored copy,
 // assets/shared/selling/vectors/ (tool/sync_flows.sh; vendored_test.dart proves it equals the source);
 // mazama_sales/tests/unit/test_golden_vectors.py proves the source is a fresh generation.

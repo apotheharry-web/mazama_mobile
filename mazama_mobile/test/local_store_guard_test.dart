@@ -1,4 +1,4 @@
-// The guard for specs/foundations LS-R7: what the phone keeps goes through lib/local_store.dart (one SQLite database of
+// The guard: what the phone keeps goes through lib/local_store.dart (one SQLite database of
 // documents per data folder) and the session's tokens through lib/secret_store.dart. A new file write anywhere else
 // in lib/ fails here, naming the file and line. Like the server's security tests, it is never weakened to make a
 // change pass: move the new data into LocalStore instead.
@@ -10,20 +10,19 @@ import 'package:flutter_test/flutter_test.dart';
 final _fileWrite = RegExp(r'writeAsStringSync|writeAsBytesSync|writeAsString\(|writeAsBytes\(|\bFile\(|File\.fromUri\('
     r'|openWrite\(|openSync\(|copySync\(|\.copy\(|RandomAccessFile');
 
-/// The files allowed to: LocalStore itself and its legacy import; session_store.dart (moving and deleting an older
-/// build's session.json); the sign-in spec and host list, which stay files (plan P-D4); reconcile_page.dart (the image
-/// it shares); app_update_download.dart (the APK handed to Android's installer, specs/app-updates AU-D11); and the
+/// The files allowed to: LocalStore itself; session_store.dart (moving and deleting an older
+/// build's session.json); the sign-in spec and host list, which stay files; reconcile_page.dart (the image
+/// it shares); app_update_download.dart (the APK handed to Android's installer); and the
 /// debug pages (kDebugMode builds only).
 bool _allowed(String path) {
   final name = path.split('/').last;
   return const {
         'lib/local_store.dart',
-        'lib/local_store_import.dart',
         'lib/session_store.dart',
         'lib/login_spec_store.dart',
         'lib/login_hosts_store.dart',
         'lib/reconcile_page.dart',
-        'lib/app_update_download.dart', // the APK handed to Android's installer, AU-D11
+        'lib/app_update_download.dart', // the APK handed to Android's installer
       }.contains(path) ||
       RegExp(r'^debug_.*_page\.dart$').hasMatch(name);
 }
@@ -73,7 +72,7 @@ void main() {
     // The phones' branch of secretStoreFor is the platform store, and only that.
     expect(secretStore, contains('Platform.isAndroid || Platform.isIOS ? const PlatformSecretStore() : DocumentSecretStore(dir)'));
     // SessionStore keeps the tokens only through its SecretStore. Its one LocalStore document is the non-secret install
-    // marker (final review I-2): every LocalStore call there names that marker, and nothing else.
+    // marker: every LocalStore call there names that marker, and nothing else.
     final sessionStore = File('lib/session_store.dart').readAsLinesSync();
     final localCalls = [
       for (final l in sessionStore)

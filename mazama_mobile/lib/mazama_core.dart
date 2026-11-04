@@ -1,24 +1,23 @@
 // The shared core (mazama_modules/core/mazama_core, through its C interface mazama_core_ffi) loaded with dart:ffi:
-// JSON in, JSON out, the same Rust the server's Python binding runs (specs/core; SM-02 in specs/shared-modules).
+// JSON in, JSON out, the same Rust the server's Python binding runs.
 //
 // Android packs it as libmazama_core_ffi.so (android/app/build.gradle.kts); iOS links it into the app itself
 // (ios/build_mazama_core_ffi.sh), so its functions are looked up in the running process. Both builds fail without
-// Rust: the core is part of every build (specs/core CR-D2). main() loads it once, before the first frame
+// Rust: the core is part of every build. main() loads it once, before the first frame
 // (missing_core_app.dart's startWidgetFor); an app that can't load it shows MissingCoreApp, never a degraded app.
 //
-// The functions are the core's table (mazama_modules/core/functions.yaml), generated into mazama_core.g.dart as
-// [CoreFunctions]; [MazamaCore] is the library's, and the typed helpers below ([CoreHelpers]) work on any
-// CoreFunctions, so a test's fake gets them too. Errors from the library come back as {"error": ...} (that one key
-// alone) and are thrown here as [MazamaCoreError].
+// The functions are the core's table (mazama_modules/core/functions.yaml), generated into mazama_core.g.dart (a part
+// of this library) as [CoreFunctions] and their forwarders [CoreForwarders]; [MazamaCore] is the library's, supplying
+// the one call they all go through, and the typed helpers below ([CoreHelpers]) work on any CoreFunctions, so a
+// test's fake gets them too. Errors from the library come back as {"error": ...} (that one key alone) and are thrown
+// here as [MazamaCoreError].
 import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
 
 import 'package:ffi/ffi.dart';
 
-import 'mazama_core.g.dart';
-
-export 'mazama_core.g.dart' show CoreFunctions;
+part 'mazama_core.g.dart';
 
 /// The library is missing or isn't this one, or it answered with an error object or with something that isn't one
 /// of its JSON replies.
@@ -33,19 +32,22 @@ typedef _VersionFn = Pointer<Utf8> Function();
 typedef _FreeNative = Void Function(Pointer<Utf8>);
 typedef _FreeFn = void Function(Pointer<Utf8>);
 
+/// A C function of the table: a UTF-8 JSON string in, one the library owns out.
+typedef _JsonFn = Pointer<Utf8> Function(Pointer<Utf8>);
+
 /// The file name the Android build packs into the app (and the name on Linux, where tests load it by path).
 const _libraryName = 'libmazama_core_ffi.so';
 
-class MazamaCore implements CoreFunctions {
+class MazamaCore with CoreForwarders {
   final _VersionFn _version;
   final _FreeFn _free;
-  late final CoreFunctionsFfi _fns;
+  final Map<String, _JsonFn> _fns;
 
+  // Every symbol is looked up here, so a library missing one fails at once (lookupFunction throws ArgumentError).
   MazamaCore._(DynamicLibrary lib)
       : _version = lib.lookupFunction<_VersionFn, _VersionFn>('mz_version'),
-        _free = lib.lookupFunction<_FreeNative, _FreeFn>('mz_free') {
-    _fns = CoreFunctionsFfi(lib, _call, (message) => throw MazamaCoreError(message));
-  }
+        _free = lib.lookupFunction<_FreeNative, _FreeFn>('mz_free'),
+        _fns = {for (final symbol in coreFunctionSymbols) symbol: lib.lookupFunction<_JsonFn, _JsonFn>(symbol)};
 
   static MazamaCore? _instance;
 
@@ -99,8 +101,11 @@ class MazamaCore implements CoreFunctions {
     }
   }
 
-  Object? _call(CoreJsonFn fn, String input) {
-    final arg = input.toNativeUtf8();
+  @override
+  Object? _call(String symbol, String inputJson) {
+    final fn = _fns[symbol];
+    if (fn == null) throw MazamaCoreError('mazama_core has no function $symbol');
+    final arg = inputJson.toNativeUtf8();
     try {
       final reply = _decode(_take(fn(arg)));
       // The library's own failure is an object with "error" as its only key (mazama_core_ffi's `error`). An answer
@@ -115,125 +120,6 @@ class MazamaCore implements CoreFunctions {
       malloc.free(arg);
     }
   }
-
-  @override
-  Map<String, Object?> coaParse(Map<String, Object?> input) => _fns.coaParse(input);
-  @override
-  Map<String, Object?> coaParseWithRules(Map<String, Object?> input) => _fns.coaParseWithRules(input);
-  @override
-  Map<String, Object?> coaFindLot(Map<String, Object?> input) => _fns.coaFindLot(input);
-  @override
-  List<Object?> coaSelectDocuments(Map<String, Object?> input) => _fns.coaSelectDocuments(input);
-  @override
-  Map<String, Object?> labelSpec(Map<String, Object?> input) => _fns.labelSpec(input);
-  @override
-  Map<String, Object?> namesName(Map<String, Object?> input) => _fns.namesName(input);
-  @override
-  Map<String, Object?> scanFindIds(Map<String, Object?> input) => _fns.scanFindIds(input);
-  @override
-  Map<String, Object?> scanClosest(Map<String, Object?> input) => _fns.scanClosest(input);
-  @override
-  List<Object?> recordsJudge(Map<String, Object?> input) => _fns.recordsJudge(input);
-  @override
-  List<Object?> recordsCanTransfer(Map<String, Object?> input) => _fns.recordsCanTransfer(input);
-  @override
-  List<Object?> recordsPackageKeys(Map<String, Object?> input) => _fns.recordsPackageKeys(input);
-  @override
-  List<Object?> recordsServiceCenters(Map<String, Object?> input) => _fns.recordsServiceCenters(input);
-  @override
-  Map<String, Object?> stockFilter(Map<String, Object?> input) => _fns.stockFilter(input);
-  @override
-  Map<String, Object?> stockSummarize(Map<String, Object?> input) => _fns.stockSummarize(input);
-  @override
-  Map<String, Object?> stockPies(Map<String, Object?> input) => _fns.stockPies(input);
-  @override
-  Map<String, Object?> stockParTable(Map<String, Object?> input) => _fns.stockParTable(input);
-  @override
-  Map<String, Object?> stockMix(Map<String, Object?> input) => _fns.stockMix(input);
-  @override
-  List<Object?> stockMixCells(Map<String, Object?> input) => _fns.stockMixCells(input);
-  @override
-  Map<String, Object?> stockByType(Map<String, Object?> input) => _fns.stockByType(input);
-  @override
-  Map<String, Object?> stockOrderCheck(Map<String, Object?> input) => _fns.stockOrderCheck(input);
-  @override
-  List<Object?> stockOrderForm(Map<String, Object?> input) => _fns.stockOrderForm(input);
-  @override
-  Map<String, Object?> manufacturingCoaEdit(Map<String, Object?> input) => _fns.manufacturingCoaEdit(input);
-  @override
-  Map<String, Object?> manufacturingCoaNumber(Map<String, Object?> input) => _fns.manufacturingCoaNumber(input);
-  @override
-  Map<String, Object?> manufacturingCleanText(Map<String, Object?> input) => _fns.manufacturingCleanText(input);
-  @override
-  List<Object?> manufacturingPlan(Map<String, Object?> input) => _fns.manufacturingPlan(input);
-  @override
-  Map<String, Object?> manufacturingServingTable(Map<String, Object?> input) => _fns.manufacturingServingTable(input);
-  @override
-  Map<String, Object?> namesProductName(Map<String, Object?> input) => _fns.namesProductName(input);
-  @override
-  Map<String, Object?> flowsHostAllowed(Map<String, Object?> input) => _fns.flowsHostAllowed(input);
-  @override
-  Map<String, Object?> flowsCompareSpecVersions(Map<String, Object?> input) => _fns.flowsCompareSpecVersions(input);
-  @override
-  Map<String, Object?> flowsParseHostList(Map<String, Object?> input) => _fns.flowsParseHostList(input);
-  @override
-  Map<String, Object?> flowsVerifySignature(Map<String, Object?> input) => _fns.flowsVerifySignature(input);
-  @override
-  Map<String, Object?> flowsPublicKey(Map<String, Object?> input) => _fns.flowsPublicKey(input);
-  @override
-  Map<String, Object?> flowsUsableLoginSpec(Map<String, Object?> input) => _fns.flowsUsableLoginSpec(input);
-  @override
-  List<Object?> sellingSellable(Map<String, Object?> input) => _fns.sellingSellable(input);
-  @override
-  Map<String, Object?> sellingParsePrice(Map<String, Object?> input) => _fns.sellingParsePrice(input);
-  @override
-  Map<String, Object?> sellingPriceCart(Map<String, Object?> input) => _fns.sellingPriceCart(input);
-  @override
-  Map<String, Object?> sellingLinePrice(Map<String, Object?> input) => _fns.sellingLinePrice(input);
-  @override
-  Map<String, Object?> sellingGroupOf(Map<String, Object?> input) => _fns.sellingGroupOf(input);
-  @override
-  Map<String, Object?> sellingShareTotal(Map<String, Object?> input) => _fns.sellingShareTotal(input);
-  @override
-  Map<String, Object?> sellingPerMgPrice(Map<String, Object?> input) => _fns.sellingPerMgPrice(input);
-  @override
-  Map<String, Object?> sellingWithTax(Map<String, Object?> input) => _fns.sellingWithTax(input);
-  @override
-  Map<String, Object?> sellingMoney(Map<String, Object?> input) => _fns.sellingMoney(input);
-  @override
-  Map<String, Object?> sellingAllocate(Map<String, Object?> input) => _fns.sellingAllocate(input);
-  @override
-  Map<String, Object?> sellingBuildSale(Map<String, Object?> input) => _fns.sellingBuildSale(input);
-  @override
-  Map<String, Object?> sellingAllocateSale(Map<String, Object?> input) => _fns.sellingAllocateSale(input);
-  @override
-  Map<String, Object?> sellingCheckSale(Map<String, Object?> input) => _fns.sellingCheckSale(input);
-  @override
-  Map<String, Object?> sellingParseSaleDate(Map<String, Object?> input) => _fns.sellingParseSaleDate(input);
-  @override
-  Map<String, Object?> sellingCheckSaleDate(Map<String, Object?> input) => _fns.sellingCheckSaleDate(input);
-  @override
-  Map<String, Object?> sellingToday(Map<String, Object?> input) => _fns.sellingToday(input);
-  @override
-  Map<String, Object?> sellingPacificMidnight(Map<String, Object?> input) => _fns.sellingPacificMidnight(input);
-  @override
-  Map<String, Object?> sellingReviewSaleDate(Map<String, Object?> input) => _fns.sellingReviewSaleDate(input);
-  @override
-  Map<String, Object?> sellingSaleOutcome(Map<String, Object?> input) => _fns.sellingSaleOutcome(input);
-  @override
-  Map<String, Object?> sellingSaleProof(Map<String, Object?> input) => _fns.sellingSaleProof(input);
-  @override
-  Map<String, Object?> sellingReviewEach(Map<String, Object?> input) => _fns.sellingReviewEach(input);
-  @override
-  Map<String, Object?> sellingExpiry(Map<String, Object?> input) => _fns.sellingExpiry(input);
-  @override
-  Map<String, Object?> sellingParseStateDate(Map<String, Object?> input) => _fns.sellingParseStateDate(input);
-  @override
-  List<Object?> doseUnitMg(Map<String, Object?> input) => _fns.doseUnitMg(input);
-  @override
-  List<Object?> doseCeilMg(Map<String, Object?> input) => _fns.doseCeilMg(input);
-  @override
-  List<Object?> doseSaleLimits(Map<String, Object?> input) => _fns.doseSaleLimits(input);
 }
 
 Object? _decode(String text) {
@@ -253,11 +139,11 @@ extension CoreHelpers on CoreFunctions {
     return coaParse(text);
   }
 
-  /// A product name read for display (SM-19): `{"strain_raw", "strain", "code", "expiry"}` - the strain as written,
+  /// A product name read for display: `{"strain_raw", "strain", "code", "expiry"}` - the strain as written,
   /// the strain cleaned and spelled the built-in way (null when the name has none), the type code, the ISO date.
   Map<String, Object?> name(String name) => namesName({'name': name});
 
-  /// AD-19 (the core's coa::lot::find_lot): which section of a lab report is [lot]'s value of record when the lab
+  /// Which section of a lab report is [lot]'s value of record when the lab
   /// may have printed another id, e.g. a process lot reported under the harvest batch it was made from. Its own UID
   /// first, else the batch the report's own request / chain of custody pairs it with, else the one primary section
   /// whose psilocybin equals [statePsilocybin] (the state's mg/g) at 3 significant figures. Returns

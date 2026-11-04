@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "records.licenses_of_type output",
+  "description": "The entries of that license type that count, in the order given, the first entry for an id only; a blank name is shown as 'Service center <id>' or 'Manufacturer <id>'.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [
+      "state_id",
+      "name",
+      "license"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "state_id": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "name": {
+        "type": "string",
+        "minLength": 1
+      },
+      "license": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "minLength": 1
+      }
+    }
+  }
+}

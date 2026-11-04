@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "stock.classify output",
+  "description": "How the stock rules read each row, in order, and the type words the By type pie can be picked by.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "rows",
+    "type_words"
+  ],
+  "properties": {
+    "rows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "type",
+          "word",
+          "edible",
+          "size_key",
+          "mg_per_unit",
+          "has_units",
+          "type_mg"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "The kind code: type, else the code after TPE in the description, else the first name keyword, else ''."
+          },
+          "word": {
+            "type": "string",
+            "description": "The word the pies show for it (mix_type_words; a code not listed is itself)."
+          },
+          "edible": {
+            "anyOf": [
+              {
+                "enum": [
+                  "Chocolate",
+                  "Gummy",
+                  "Honey"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "size_key": {
+            "enum": [
+              "25",
+              "20",
+              "15",
+              "10",
+              "5",
+              "booster",
+              "micro",
+              "other"
+            ]
+          },
+          "mg_per_unit": {
+            "type": "number",
+            "description": "unitMgTpe (tpe) or weightPerUnit x analyteWeight (psilocybin); 0 when not known."
+          },
+          "has_units": {
+            "type": "boolean",
+            "description": "Units on hand: not zeroOut and quantity above 0 (the records rule)."
+          },
+          "type_mg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What the row weighs on the By type pie; null with no units on hand."
+          }
+        }
+      }
+    },
+    "type_words": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

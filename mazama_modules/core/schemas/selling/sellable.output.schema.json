@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "selling.sellable output",
-  "description": "Per check, in order: why it can't be sold (null: it can), and whether the record is one the server would sell at all (sellable_record: a truthy productGuid and nothing against one unit, SL-7).",
+  "description": "Per check, in order: why it can't be sold (null: it can), and whether the record is one the server would sell at all (sellable_record: a truthy productGuid, checked first, and nothing against one unit).",
   "type": "array",
   "items": {
     "type": "object",

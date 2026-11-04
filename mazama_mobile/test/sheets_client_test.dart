@@ -1,4 +1,4 @@
-// SP-R16: the phone's client for GET /p/sheets/{state_id} (lib/sheets_client.dart) against the vendored API example
+// The phone's client for GET /p/sheets/{state_id} (lib/sheets_client.dart) against the vendored API example
 // (assets/shared/api/examples/sheets.*.json, from ../mazama_modules/api/), how it reports what can go wrong, and how a
 // sheet matches the strain picked on the stock page. api_contract_test.dart checks the route, key and 401 / 429.
 import 'dart:convert';

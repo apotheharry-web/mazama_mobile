@@ -1,5 +1,5 @@
-// secret_store.dart and SessionStore on it (foundations LS-R4, LS-R5): the session's tokens are kept by a SecretStore
-// (Keychain/Keystore on the phones, a LocalStore document elsewhere, P-D6), and an older build's session.json is moved
+// secret_store.dart and SessionStore on it: the session's tokens are kept by a SecretStore
+// (Keychain/Keystore on the phones, a LocalStore document elsewhere), and a session.json of the older form is moved
 // into it and deleted. The tokens here are invented.
 import 'dart:convert';
 import 'dart:io';
@@ -125,7 +125,7 @@ void main() {
     expect(legacyFile().existsSync(), isFalse);
   });
 
-  // Final review I-2: iOS keeps Keychain items after the app is deleted; session.json went with the app. A reinstalled
+  // IOS keeps Keychain items after the app is deleted; session.json went with the app. A reinstalled
   // app (or a phone passed to another worker after a reinstall) must not sign in as the previous worker.
   test('a reinstalled app does not sign in as the previous worker', () async {
     final secrets = _MemorySecrets()..value = jsonEncode(session); // what the deleted install left in the Keychain
@@ -145,7 +145,7 @@ void main() {
     expect(await SessionStore(dataDir: () => tempDir, secrets: (_) => secrets).load(), session);
   });
 
-  // Final review M-2: a load and a save racing while session.json is still there must not bring the old session back.
+  // A load and a save racing while session.json is still there must not bring the old session back.
   test('a save racing the first launch\'s move of session.json wins', () async {
     legacyFile().writeAsStringSync(jsonEncode(session));
     final secrets = _SlowSecrets();
@@ -167,7 +167,7 @@ void main() {
   test('a failing secret store loads no session and saves nothing elsewhere', () async {
     final store = SessionStore(dataDir: () => tempDir, secrets: (_) => _ThrowingSecrets());
 
-    await store.save(session); // no throw: nothing is kept, the worker signs in again next launch (LS-R4)
+    await store.save(session); // no throw: nothing is kept, the worker signs in again next launch
     expect(await store.load(), isNull);
     await store.clear();
     expect(legacyFile().existsSync(), isFalse);
@@ -177,7 +177,7 @@ void main() {
         reason: 'no file of its own: only the database, if anything opened it');
   });
 
-  // Re-review N-1: a delete that failed once left the marker unwritten, so the next launch's successful delete wiped the
+  // A delete that fails once must still leave the marker written, or the next launch's successful delete would wipe the
   // session the worker had signed into in between.
   test('a session saved after a failed delete of the previous one is kept, and the previous one never loads', () async {
     // What a deleted install left in the Keychain; the deletes of the load's and the save's opening both fail.
@@ -198,7 +198,7 @@ void main() {
     expect(secrets.value, isNull, reason: 'deleted once the keychain answers');
   });
 
-  // Re-review N-2: a database SQLite can't open (busy, read-only, not openable) made load() throw at start-up.
+  // A database SQLite can't open (busy, read-only, not openable) must not make load() throw at start-up.
   test('a database that cannot be opened loads no session, and nothing throws or falls back to a file', () async {
     Directory('${tempDir.path}/$localStoreFileName').createSync(); // SQLite answers CANTOPEN (14), not damage
     legacyFile().writeAsStringSync(jsonEncode(session));

@@ -1,11 +1,11 @@
 // What a sale record looks like when it's sent to the state system, and the dates it may carry: the shared core's
-// rules (mazama_core::selling::sale, specs/core row 7), the same ones the server sends with (selling.py and
+// rules (mazama_core::selling::sale), the same ones the server sends with (selling.py and
 // salejobs.py call them through the core's Python binding). Nothing of the rules is written here: these are thin calls
 // that fail closed. Held to the golden vectors (../../mazama_modules/selling/vectors/ sale_record.json, sale_date.json
-// and sale_cases.json, the SALE rows the owner approved on 2026-10-31; test/selling_vectors_test.dart,
+// and sale_cases.json, the cases the owner approved; test/selling_vectors_test.dart,
 // test/sale_cases_vectors_test.dart).
 //
-// Fails closed (SALE-14): when the core can't answer, no record is built (StateError: nothing is sent), no date is
+// Fails closed: when the core can't answer, no record is built (StateError: nothing is sent), no date is
 // accepted, and a reply is never taken as proof of a sale (it may have been recorded).
 import 'mazama_core.dart';
 
@@ -14,7 +14,7 @@ const doseSecondary = 'secondary';
 
 CoreFunctions _core(CoreFunctions? core) => core ?? MazamaCore.instance;
 
-/// The core refused to build a sale's record (SALE-10, SALE-13): [message] is its words. Nothing is sent.
+/// The core refused to build a sale's record: [message] is its words. Nothing is sent.
 class SaleRefused implements Exception {
   final String message;
   const SaleRefused(this.message);
@@ -30,7 +30,7 @@ DateTime _day(String iso) {
   return DateTime.utc(p[0], p[1], p[2]);
 }
 
-/// The same string the server's pacific_midnight_utc returns: "2026-10-11T07:00:00.000Z" (the 2007 US rule, SALE-1).
+/// The same string the server's pacific_midnight_utc returns: "2026-10-11T07:00:00.000Z" (the 2007 US rule).
 /// StateError when the core can't answer.
 String pacificMidnightUtc(DateTime date, {CoreFunctions? core}) {
   try {
@@ -43,9 +43,9 @@ String pacificMidnightUtc(DateTime date, {CoreFunctions? core}) {
 }
 
 /// The record the state system's own web page sends to CreateSalesRecords, for [qty] units of [item] at [priceCents]
-/// each: the core's (selling.build_sale), [item]'s values passed through as given (SALE-12). Throws [SaleRefused] with
-/// the core's words when [item] lacks what a sale copies or the price each or quantity is out of bounds (SALE-10,
-/// SALE-13), StateError when the core can't answer (nothing is sent either way).
+/// each: the core's (selling.build_sale), [item]'s values passed through as given. Throws [SaleRefused] with
+/// the core's words when [item] lacks what a sale copies or the price each or quantity is out of bounds,
+/// StateError when the core can't answer (nothing is sent either way).
 Map<String, Object?> buildSale(
   Map<String, Object?> item,
   int priceCents,
@@ -69,7 +69,7 @@ Map<String, Object?> buildSale(
 
 /// Whether [created] (sale.yaml's own `created` output: the state's copy of every record just submitted) proves the
 /// sale for the [expectedCount] records sent: one object back per record, every saleNumber the same text that isn't
-/// blank or the same whole number above 0 (SM-D2, SALE-5, SALE-6; the core's selling.sale_proof, as the server's).
+/// blank or the same whole number above 0 (the core's selling.sale_proof, as the server's).
 /// False when the core can't answer: a reply this phone can't read may still have been recorded.
 bool looksLikeConfirmedSale(Object? created, int expectedCount, {CoreFunctions? core}) =>
     saleNumberOf(created, expectedCount, core: core) != null;
@@ -85,8 +85,8 @@ String? saleNumberOf(Object? created, int expectedCount, {CoreFunctions? core}) 
 }
 
 /// Throws a FormatException('bad') for anything that isn't a date in a form the server's parse_sale_date reads, or
-/// FormatException('future') for a date after [today] - the core's rule (selling.parse_sale_date, SM-D6), held to
-/// sale_date.json. How far back a date may go is [checkSaleDate]'s (SALE-1). StateError when the core can't answer.
+/// FormatException('future') for a date after [today] - the core's rule (selling.parse_sale_date), held to
+/// sale_date.json. How far back a date may go is [checkSaleDate]'s. StateError when the core can't answer.
 DateTime parseSaleDate(String text, DateTime today, {CoreFunctions? core}) {
   Map<String, Object?> reply;
   try {
@@ -100,8 +100,8 @@ DateTime parseSaleDate(String text, DateTime today, {CoreFunctions? core}) {
   throw StateError('mazama_core answered a sale date with ${reply.keys.toList()}');
 }
 
-/// Null when a sale may be dated [date]; 'future' after [today], 'too_old' more than 365 days back (SALE-1): the core's
-/// selling.check_sale_date. 'unchecked' when the core can't answer (refused: SALE-14).
+/// Null when a sale may be dated [date]; 'future' after [today], 'too_old' more than 365 days back: the core's
+/// selling.check_sale_date. 'unchecked' when the core can't answer (refused).
 String? checkSaleDate(DateTime date, DateTime today, {CoreFunctions? core}) {
   try {
     final reply = _core(core).sellingCheckSaleDate({'date': _ymd(date), 'today': _ymd(today)});
@@ -114,6 +114,20 @@ String? checkSaleDate(DateTime date, DateTime today, {CoreFunctions? core}) {
   return 'unchecked';
 }
 
+/// The days a sale may be dated for [today] (the Pacific date of now): from 365 days back to today, the bound
+/// [checkSaleDate] holds, as the date pickers offer them (the core's selling.sale_date_bounds), as date-only
+/// DateTimes. StateError when the core can't answer.
+({DateTime earliest, DateTime latest}) saleDateBounds(DateTime today, {CoreFunctions? core}) {
+  try {
+    final reply = _core(core).sellingSaleDateBounds({'today': _ymd(today)});
+    final earliest = reply['earliest'], latest = reply['latest'];
+    if (earliest is String && latest is String) return (earliest: _day(earliest), latest: _day(latest));
+  } catch (_) {
+    // below: no answer
+  }
+  throw StateError("mazama_core couldn't work out the days a sale may be dated");
+}
+
 /// The words for [checkSaleDate]'s answer.
 String saleDateRefusal(String why) => switch (why) {
       'future' => "The sale date can't be in the future.",
@@ -121,7 +135,7 @@ String saleDateRefusal(String why) => switch (why) {
       _ => "This phone can't check the sale date (its shared core failed), so the sale was never attempted.",
     };
 
-/// The Pacific date of [now] (SALE-2: a sale's default date and the date pickers' last day, whatever the device's own
+/// The Pacific date of [now] (a sale's default date and the date pickers' last day, whatever the device's own
 /// zone), as a date-only DateTime. StateError when the core can't answer.
 DateTime pacificToday(DateTime now, {CoreFunctions? core}) {
   final u = now.toUtc();
@@ -138,7 +152,7 @@ DateTime pacificToday(DateTime now, {CoreFunctions? core}) {
 
 /// A state-site date as ISO ("2026-05-27"): MM/DD/YYYY (a one-digit month or day allowed, anything after a space
 /// ignored) or ISO YYYY-MM-DD (a time after it ignored); an impossible date is null. The core's
-/// selling.parse_state_date (moved from state_date.dart, specs/core row 7). Null when the core can't answer.
+/// selling.parse_state_date. Null when the core can't answer.
 String? stateDateIso(String? s, {CoreFunctions? core}) {
   if (s == null) return null;
   try {

@@ -1,5 +1,5 @@
-// MI-D21, SP-D19 (specs/mazama-inventory, specs/stock-page): the order's first step (lib/order_par_page.dart): the
-// par table (lib/par_levels_editor.dart, SP-R9, SP-R14, SP-D13..D15, moved here from the stock page) set or confirmed
+// The order's first step (lib/order_par_page.dart): the
+// par table (lib/par_levels_editor.dart) set or confirmed
 // before the order form, which starts from the levels confirmed or saved. Data comes through the injected loaders, and
 // the order form is a stand-in that records the levels it was given.
 import 'package:flutter/material.dart';
@@ -111,7 +111,7 @@ void main() {
     expect(find.text('5 units below par'), findsOneWidget); // Golden Teacher 25 mg short 2, Huautla 5 mg short 3
     expect(find.text('10 / 12'), findsOneWidget);
     expect(find.text('short 2'), findsOneWidget);
-    expect(find.text('6 / 5'), findsOneWidget); // SP-D4: Penis Envy is another maker's, and still counts
+    expect(find.text('6 / 5'), findsOneWidget); // Penis Envy is another maker's, and still counts
     expect(find.text('ok'), findsOneWidget);
     // Huautla has a par level and only expired stock: a row of its own, with nothing on hand.
     expect(find.byKey(const ValueKey('par-row-Huautla')), findsOneWidget);
@@ -224,7 +224,7 @@ void main() {
   });
 
   testWidgets('edibles sit below the strains with only Booster and Microdose', (tester) async {
-    // specs/edibles ED-D1..D3, ED-A6; SP-D15: an edible adds no column to the strains' rows
+    // an edible adds no column to the strains' rows
     List<ParLevel>? sent;
     await tester.pumpWidget(_page(
       loadRows: () async => const [
@@ -313,7 +313,7 @@ void main() {
       savePar: (levels) async => fail('nothing is saved while the server is unreachable'),
     ));
     await tester.pumpAndSettle();
-    // R87: no notice of the page's own for the server: the app-wide banner says it; the editor says why it can't save.
+    // No notice of the page's own for the server: the app-wide banner says it; the editor says why it can't save.
     expect(find.textContaining('Partial'), findsNothing);
     expect(find.text('Edit par levels'), findsNothing);
     expect(find.text(_cantSave), findsOneWidget);
@@ -323,7 +323,7 @@ void main() {
     expect(_opened.single.map(_level), _par.map(_level));
   });
 
-  // --- SP-D13..D14: the combined row, the columns this center uses, deleting strains ------------------------------
+  // --- the combined row, the columns this center uses, deleting strains --------------------------------------------
 
   testWidgets('only the sizes with stock or a par show; a column deleted while editing takes its pars with it', (tester) async {
     List<ParLevel>? sent;
@@ -441,7 +441,7 @@ void main() {
 
   // --- Mazama's server unreachable: the copy kept on the phone, and saves that say to try later -------------------
 
-  // R87: no notice of the page's own over the kept levels: the app-wide banner says the server can't be reached.
+  // No notice of the page's own over the kept levels: the app-wide banner says the server can't be reached.
   testWidgets('par levels kept on the phone show read-only, with no notice of their own, and can be confirmed',
       (tester) async {
     final at = DateTime.utc(2026, 10, 20, 15, 5);

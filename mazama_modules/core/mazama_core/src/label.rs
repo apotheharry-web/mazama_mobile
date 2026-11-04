@@ -1,10 +1,19 @@
 //! Label spec: what goes on a package's label, from the package record and its lot's report section. The one
-//! implementation (SM-05): the server builds its input and reads the answer (mazama_sales `labelspec.py`), the phone
-//! through mazama_core_ffi. The rules started as the server's (`package_label_spec`, `payloads.label_amounts`,
-//! `plans.default_best_by`, `names.parse_product_name`, `strains.clean_strain`); owner decisions since: SM-D14 (TPE),
-//! SM-D17 (rounding), SM-D18 (best-by from the state's test date), SM-D19 (every reason). Pure: no I/O, `today` is an
-//! input. Golden cases in mazama_modules/coa/corpus/labels/ (expected.json generated from this module, reviewed).
-//! Design: specs/coa/08-phone-label-debug.md.
+//! implementation: the server builds its input and reads the answer (mazama_sales `labelspec.py`), the phone
+//! through mazama_core_ffi. Pure: no I/O, `today` is an input. Golden cases in mazama_modules/coa/corpus/labels/
+//! (expected.json generated from this module, reviewed).
+//!
+//! The numbers on a label:
+//! - psilocybin (mg/g): the state record's `analyteWeight` when it is above 0, else the report section's of-record
+//!   psilocybin; psilocin (mg/g) is always the section's. ND and below-LOQ count as 0, not missing.
+//! - TPE (mg/g): [`crate::tpe::tpe`] (the state's figure + 284.25 / 204.27 x psilocin when the state has one, else
+//!   the lab's printed total, else the report's psilocybin + that factor x psilocin), rounded to 2 decimals.
+//! - each analyte per unit (mg): unit weight (g) x mg/g, rounded to 4 decimals.
+//! - dose (mg): the one chosen for a planned package, else a whole `<n> mg` in the name, else unit weight x the
+//!   rounded TPE, rounded **up** to a whole mg (ceil(x - 1e-9), so float noise alone never adds a mg), so the
+//!   labelled dose is never below what a unit holds.
+//! - best-by: the one chosen, else the name's, else counted from the date the state recorded the lot's accepted
+//!   potency test, else from `today` (with a warning), by the shelf-life settings (freeze-dried has its own).
 
 use crate::coa::result::{Section, Value};
 use regex::Regex;
@@ -20,7 +29,7 @@ pub struct LabelInput {
     pub settings: ShelfLife,
     /// ISO date, "2026-10-20".
     pub today: String,
-    /// SM-D18: the date the state recorded the lot's accepted potency test as completed (ISO), which best-by counts
+    /// The date the state recorded the lot's accepted potency test as completed (ISO), which best-by counts
     /// from when the name has none; with none, best-by counts from `today` (with a warning).
     #[serde(default)]
     pub test_date: Option<String>,
@@ -65,7 +74,7 @@ pub struct ShelfLife {
     pub fd_days: Option<i64>,
 }
 
-/// LabelSpec version 2 (specs/labels/04-label-spec.md).
+/// LabelSpec version 2.
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct LabelSpec {
     pub spec_version: u32,
@@ -96,23 +105,26 @@ pub const TPE_FACTOR: f64 = 284.25 / 204.27;
 
 pub const NO_DATE: &str = "no certificate date: best-by counted from today";
 
-use crate::names_table::{self, CODE_WORDS, STRAIN_MAX};   // the shared names table (SM-19)
+pub use crate::names::{canonical_strain, canonical_strain_with, clean_strain};
 static NAME_DOSE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"(?i)^([0-9]{1,4}(?:\.[0-9]{1,2})?)\s*mg").unwrap());
-static DOSE_ANYWHERE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"(?i)^(\d{1,4}(?:\.\d{1,2})?)\s*mg\b").unwrap());
-static CANONICAL: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(&format!(
-        r"(?i)^(?P<strain>.+?)\s+(?P<dose>\d{{1,4}}(?:\.\d{{1,2}})?)\s*mg(?:\s+TPE)?(?:\s+(?P<code>{CODE_WORDS}))?(?:\s*\((?P<exp>\d{{4}}-\d\d-\d\d)\))?$"
-    ))
-    .unwrap()
-});
-static TRAILING_EXPIRY: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\(\s*(\d{4}-\d\d-\d\d)\s*\)\s*$").unwrap());
-static TRAILING_CODE: LazyLock<Regex> = LazyLock::new(|| Regex::new(&format!(r"(?i)\s+(?P<code>{CODE_WORDS})$")).unwrap());
-static MISSPELLINGS: LazyLock<Regex> = LazyLock::new(|| {
-    let words: Vec<String> = names_table::MISSPELLINGS.iter().map(|(w, _)| regex::escape(w)).collect();
-    Regex::new(&format!(r"(?i)\b({})\b", words.join("|"))).unwrap()
-});
-static STRAIN_BAD: LazyLock<Regex> = LazyLock::new(|| Regex::new(&format!("[^{}]", names_table::STRAIN_ALLOWED)).unwrap());
-static SOURCE: LazyLock<Regex> = LazyLock::new(|| Regex::new(crate::id_patterns::LOT_ID).unwrap()); // SM-09, SM-D7
+static SOURCE: LazyLock<Regex> = LazyLock::new(|| Regex::new(crate::id_patterns::LOT_ID).unwrap()); // the shared batch/lot id pattern
+
+/// The first `<n> mg` in a package's name, `n` as the name writes it (1 to 4 digits, with up to 2 decimals; not
+/// after a digit or a point; "mg" in any case, spaces allowed before it): the dose a label takes from the name when
+/// no dose was chosen (a whole `n` only). `None` when the name has none.
+pub fn name_dose(description: &str) -> Option<&str> {
+    search_not_after_digit(description, &NAME_DOSE).map(|(_, _, d)| d)
+}
+
+/// [`name_dose`] on JSON, for bindings: `{"name": str}` in, `{"dose": str | null}` out.
+pub fn name_dose_json(input_json: &str) -> Result<String, crate::api::Error> {
+    #[derive(Deserialize)]
+    struct Input {
+        name: String,
+    }
+    let input: Input = serde_json::from_str(input_json)?;
+    Ok(serde_json::json!({"dose": name_dose(&input.name)}).to_string())
+}
 
 /// Python's `(?<![0-9.])` + `pattern` searched left to right: the first position not preceded by a digit or a
 /// dot where `anchored` (which starts with `^`) matches. -> (start, end, first group).
@@ -130,83 +142,7 @@ fn search_not_after_digit<'a>(s: &'a str, anchored: &Regex) -> Option<(usize, us
     None
 }
 
-fn code_of(word: &str) -> Option<String> {
-    let w = word.to_uppercase();
-    names_table::CODES.iter().find(|(spelling, _)| *spelling == w).map(|(_, code)| code.to_string())
-}
-
-/// `strains.fix_spelling`: a misspelt word ("Mazatapec") spelled right, wherever it is a whole word.
-fn fix_spelling(s: &str) -> String {
-    MISSPELLINGS
-        .replace_all(s, |c: &regex::Captures| {
-            let w = c[1].to_lowercase();
-            names_table::MISSPELLINGS.iter().find(|(m, _)| *m == w).map_or(c[1].to_string(), |(_, right)| right.to_string())
-        })
-        .into_owned()
-}
-
-/// `strains.strain_key`: lower case, every run of other characters one space.
-fn strain_key(name: &str) -> String {
-    let lower = name.to_lowercase();
-    let mut out = String::new();
-    for part in lower.split(|c: char| !(c.is_ascii_lowercase() || c.is_ascii_digit())).filter(|p| !p.is_empty()) {
-        if !out.is_empty() {
-            out.push(' ');
-        }
-        out.push_str(part);
-    }
-    out
-}
-
-/// `strains.canonical_strain` with the built-in spellings only ('GT' / 'golden' -> 'Golden Teacher'); a name it
-/// doesn't know comes back unchanged. (The server also has the Strains page's spellings, which the phone can't see.)
-pub fn canonical_strain(name: &str) -> String {
-    builtin_strain(&strain_key(name)).unwrap_or_else(|| name.to_string())
-}
-
-fn builtin_strain(key: &str) -> Option<String> {
-    names_table::BUILTIN_ALIASES
-        .iter()
-        .find(|(canon, aliases)| strain_key(canon) == key || aliases.iter().any(|a| strain_key(a) == key))
-        .map(|(canon, _)| canon.to_string())
-}
-
-/// `strains.canonical_strain(name, extra)` with the Strains page's (spelling, name to show) pairs: they come first (a
-/// later pair for the same spelling wins), and the name they point to is itself looked up among the built-in ones.
-pub fn canonical_strain_with(name: &str, extras: &[(String, String)]) -> String {
-    let key = strain_key(name);
-    let mut chosen: Option<&String> = None;
-    for (spelling, shown) in extras {
-        let k = strain_key(spelling);
-        if !k.is_empty() && k == key {
-            chosen = Some(shown);
-        }
-    }
-    match chosen {
-        Some(shown) => builtin_strain(&strain_key(shown)).unwrap_or_else(|| shown.clone()),
-        None => canonical_strain(name),
-    }
-}
-
-/// `strains.clean_strain`: only safe characters, "Mazatapec" spelled "Maztapec", at most 30 characters.
-pub fn clean_strain(s: &str) -> String {
-    let fixed = fix_spelling(s);
-    let safe = STRAIN_BAD.replace_all(&fixed, "");
-    let trimmed = safe.trim_matches(|c| c == ' ' || c == '.');
-    trimmed.chars().take(STRAIN_MAX).collect::<String>().trim().to_string()
-}
-
-/// `names._strain`'s validity check: no characters outside the safe set, and some letters left after cleaning.
-pub(crate) fn strain_ok(raw: &str) -> bool {
-    let raw = raw.trim();
-    if STRAIN_BAD.is_match(&fix_spelling(raw)) {
-        return false;
-    }
-    let c = clean_strain(raw);
-    !c.is_empty() && c.chars().any(|ch| ch.is_ascii_alphabetic())
-}
-
-/// What `names.parse_product_name` reads from a product name, as far as labels need it.
+/// What a product name says, as far as labels need it ([`crate::names::parse_product`], the server's reading).
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct NameInfo {
     /// The strain as written (before cleaning), when the name has one.
@@ -218,30 +154,8 @@ pub struct NameInfo {
 }
 
 pub fn parse_name(desc: &str) -> NameInfo {
-    let t = desc.trim();
-    if t.is_empty() {
-        return NameInfo::default();
-    }
-    if let Some(m) = CANONICAL.captures(t) {
-        let raw = m["strain"].trim().to_string();
-        if !strain_ok(&raw) {
-            return NameInfo { strain: Some(raw), ..Default::default() };
-        }
-        let expiry = m.name("exp").and_then(|e| iso_date(e.as_str())).map(|_| m["exp"].to_string());
-        return NameInfo { strain: Some(raw), code: m.name("code").and_then(|c| code_of(c.as_str())), expiry };
-    }
-    let Some((start, end, _)) = search_not_after_digit(t, &DOSE_ANYWHERE) else {
-        return NameInfo::default();
-    };
-    let raw = t[..start].trim().to_string();
-    if !strain_ok(&raw) {
-        return NameInfo { strain: (!raw.is_empty()).then_some(raw), ..Default::default() };
-    }
-    let rest = &t[end..];
-    let expiry = TRAILING_EXPIRY.captures(rest).and_then(|c| iso_date(&c[1]).map(|_| c[1].to_string()));
-    let without_date = TRAILING_EXPIRY.replace(rest, "");
-    let code = TRAILING_CODE.captures(without_date.trim_end()).and_then(|c| code_of(&c["code"]));
-    NameInfo { strain: Some(raw), code, expiry }
+    let p = crate::names::parse_product(desc, &[], None).expect("no name format is given");
+    NameInfo { strain: p.strain_raw, code: p.code, expiry: p.expiry }
 }
 
 // --- civil dates (proleptic Gregorian, days since 1970-01-01; H. Hinnant's algorithms) -----------------------
@@ -286,15 +200,6 @@ fn iso_date(s: &str) -> Option<i64> {
     Some(days_from_civil(y, m, d))
 }
 
-/// The report's "MM/DD/YYYY" -> days, when it is a real date.
-fn us_date(s: &str) -> Option<i64> {
-    let p: Vec<&str> = s.trim().split('/').collect();
-    if p.len() != 3 {
-        return None;
-    }
-    iso_date(&format!("{:0>4}-{:0>2}-{:0>2}", p[2], p[0], p[1]))
-}
-
 fn iso(days: i64) -> String {
     let (y, m, d) = civil_from_days(days);
     format!("{y:04}-{m:02}-{d:02}")
@@ -323,17 +228,8 @@ fn amount(v: &Value) -> Option<f64> {
     v.amount()
 }
 
-/// `plans.SUBTYPE_CODE` / `plans.type_code`: a certificate subtype's code, "HG" for a homogenized product without one.
-fn subtype_code(subtype: &str, product_type: &str) -> String {
-    let sub = subtype.trim();
-    if sub.is_empty() && product_type.to_lowercase().contains("homogenized") {
-        return "HG".to_string();
-    }
-    names_table::SUBTYPE_CODE.iter().find(|(s, _)| *s == sub).map_or(String::new(), |(_, c)| c.to_string())
-}
-
 /// The label for a package, or why there can be none. The checks run in the server's order (unit weight, lab
-/// certificate and best-by, lab values, dose, strain) and every one that fails is reported (SM-D19); a check that
+/// certificate and best-by, lab values, dose, strain) and every one that fails is reported; a check that
 /// can't run because an earlier one failed for the same missing input is left out rather than said twice.
 pub fn build_label_spec(input: &LabelInput) -> Result<LabelOutcome, String> {
     let p = &input.package;
@@ -362,9 +258,10 @@ pub fn build_label_spec(input: &LabelInput) -> Result<LabelOutcome, String> {
     let mut blocked: Vec<String> = Vec::new();
 
     // dose: the one the person chose for a planned package, else the first "<n> mg" in the name when it is a whole
-    // number, else worked out below from the unit weight and the label's own TPE, rounded up (AD-20, SM-D17)
+    // number, else worked out below from the unit weight and the label's own TPE, rounded up so a unit never holds
+    // more than the label says
     let name_dose = p.dose_mg.map(|d| d as f64).or_else(|| {
-        search_not_after_digit(&p.description, &NAME_DOSE).and_then(|(_, _, d)| d.parse::<f64>().ok()).filter(|d| d.fract() == 0.0)
+        name_dose(&p.description).and_then(|d| d.parse::<f64>().ok()).filter(|d| d.fract() == 0.0)
     });
     let per = p.weight_per_unit;
     let has_weight = per > 0.0;
@@ -372,10 +269,10 @@ pub fn build_label_spec(input: &LabelInput) -> Result<LabelOutcome, String> {
         blocked.push("the package has no unit weight".into());
     }
     let (fd, type_code) = match &p.subtype {
-        Some(sub) => (sub.trim() == "Freeze dried", subtype_code(sub, &p.product_type)),
+        Some(sub) => (sub.trim() == "Freeze dried", crate::names::type_code(sub, &p.product_type)),
         None => (
             name.code.as_deref() == Some("FD"),
-            name.code.clone().unwrap_or_else(|| subtype_code("", &p.product_type)),
+            name.code.clone().unwrap_or_else(|| crate::names::type_code("", &p.product_type)),
         ),
     };
     let best = match (given_best_by, &name.expiry, sec) {
@@ -413,15 +310,15 @@ pub fn build_label_spec(input: &LabelInput) -> Result<LabelOutcome, String> {
                 per_unit_mg.insert(key.to_string(), round_to(per * v, 4));
             }
         }
-        // TPE (SM-03: AD-18 as amended by SM-D14): the state's figure + factor x psilocin when the state has one,
-        // else the lab's printed total, else the report's psilocybin + factor x psilocin
+        // TPE: the state's figure + factor x psilocin when the state has one, else the lab's printed total, else the
+        // report's psilocybin + factor x psilocin; rounded to 2 decimals before the dose is worked out from it
         let state_psilocybin = state.then_some(p.analyte_weight);
         tpe = crate::tpe::tpe(Some(psilocybin), Some(psilocin), s.lab_totals.get("tpe").copied(), state_psilocybin, TPE_FACTOR)
             .map(|t| round_to(t, 2));
     }
     let dose = match name_dose {
         Some(d) => Some(d as i64),
-        // SM-D17: ceil(x - 1e-9), so 2.0 x 6.0 stays 12, not 13 through float noise
+        // rounded up, ceil(x - 1e-9), so 2.0 x 6.0 stays 12, not 13 through float noise
         None => tpe.filter(|_| has_weight).map(|t| (per * t - 1e-9).ceil() as i64).filter(|&d| d > 0),
     };
     // no dose: worth saying unless it only follows from the missing unit weight already reported
