@@ -1,9 +1,9 @@
 {
   "kind": "mazama-mobile-release",
-  "version": "0.3.1",
-  "build": 26110601,
-  "apk": "https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.3.1%2B26110601/mazama_mobile-v0.3.1%2B26110601.apk",
-  "sha256": "4f37a60d47be4f7249b33213d8b072e6c29a08569ebbf87d1d1821b73b5c1c80",
-  "size": 122339236,
+  "version": "0.3.2",
+  "build": 26110602,
+  "apk": "https://github.com/apotheharry-web/mazama_mobile/releases/download/v0.3.2%2B26110602/mazama_mobile-v0.3.2%2B26110602.apk",
+  "sha256": "38d7fbbbb6be23e1558bea7feaf562c4da6e7c7d69dfa0f711190c3518d48ee8",
+  "size": 122519544,
   "minSdk": 24
 }
