@@ -59,6 +59,24 @@ void main() {
     expect(find.text('229'), findsOneWidget);
   });
 
+  testWidgets('the transport manifest entry opens that page with the selected center filled in', (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      home: DebugToolsPage(
+        session: _session(),
+        spec: _dummySpec,
+        sessionStore: SessionStore(dataDir: () => Directory.systemTemp.createTempSync()),
+        initialStateId: 229,
+      ),
+    ));
+    // like the Sign-in files entry, this one sits below a 600 px test screen
+    await tester.scrollUntilVisible(find.text('Transport manifest PDF'), 200);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Transport manifest PDF'));
+    await tester.pumpAndSettle();
+    expect(find.text('Transport manifest (debug)'), findsOneWidget);
+    expect(find.text('229'), findsOneWidget);
+  });
+
   testWidgets('lists the Sign-in files page last, and tapping it opens that page', (tester) async {
     await tester.pumpWidget(MaterialApp(
       home: DebugToolsPage(

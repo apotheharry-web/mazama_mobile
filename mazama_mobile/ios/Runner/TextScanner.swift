@@ -1,11 +1,11 @@
-// The iOS half of lib/text_scanner.dart's "mazama/text_scanner" MethodChannel ('scanLabel' method) - Apple's
-// own UIImagePickerController for the camera capture and the Vision framework's VNRecognizeTextRequest for
-// the OCR itself, both already part of iOS. No CocoaPods dependency needed for either half. AppDelegate.swift
-// registers it on the channel.
+// The iOS half of lib/text_scanner.dart's "mazama/text_scanner" MethodChannel ('scanLabel' method, its `source`
+// argument "camera" or "photos") - Apple's own UIImagePickerController for the camera capture or the photo
+// library, and the Vision framework's VNRecognizeTextRequest for the OCR itself, both already part of iOS. No
+// CocoaPods dependency needed for either half. AppDelegate.swift registers it on the channel.
 //
 // Returns exactly what text_scanner.dart's scanLabel expects: `result(nil)` when the worker cancels out of the
-// camera screen (text_scanner.dart turns that into ScanCancelled - not an error), `result([String])` - one
-// entry per recognized line, in Vision's own best-effort reading order - on a successful capture, or a
+// camera screen or the photo picker (text_scanner.dart turns that into ScanCancelled - not an error),
+// `result([String])` - one entry per recognized line, in Vision's own best-effort reading order - on a photo, or a
 // FlutterError for anything that actually went wrong (no camera on this device, Vision itself erroring). The
 // real fuzzy matching against inventory - mazama_sales' own ocr.find_ids/ocr.closest - happens server-side
 // (see scan_match_client.dart); this file's only job is handing those lines over exactly as read, never trying
@@ -26,11 +26,13 @@ final class TextScanner: NSObject, UIImagePickerControllerDelegate, UINavigation
                 result(FlutterMethodNotImplemented)
                 return
             }
-            self?.scanLabel(result: result)
+            // "photos" picks one already on the phone; anything else (and a call without the argument) is the camera
+            let source = (call.arguments as? [String: Any])?["source"] as? String
+            self?.scanLabel(fromPhotos: source == "photos", result: result)
         }
     }
 
-    private func scanLabel(result: @escaping FlutterResult) {
+    private func scanLabel(fromPhotos: Bool, result: @escaping FlutterResult) {
         // One scan at a time - cart_page.dart's own Scan button is already disabled while a dialog from the
         // previous one is still up, but this guards the native side too rather than trusting the Dart side
         // alone to never call scanLabel twice in a row.
@@ -38,8 +40,14 @@ final class TextScanner: NSObject, UIImagePickerControllerDelegate, UINavigation
             result(FlutterError(code: "scan_in_progress", message: "A scan is already in progress.", details: nil))
             return
         }
-        guard UIImagePickerController.isSourceTypeAvailable(.camera) else {
-            result(FlutterError(code: "no_camera", message: "This device has no camera.", details: nil))
+        // The photo library through the picker needs no photo-library permission: the picker runs outside this app
+        // and hands back only the one photo the worker chose.
+        let sourceType: UIImagePickerController.SourceType = fromPhotos ? .photoLibrary : .camera
+        guard UIImagePickerController.isSourceTypeAvailable(sourceType) else {
+            let error = fromPhotos
+                ? FlutterError(code: "no_photos", message: "This device's photos can't be opened.", details: nil)
+                : FlutterError(code: "no_camera", message: "This device has no camera.", details: nil)
+            result(error)
             return
         }
         guard let presenter = presentingController else {
@@ -48,7 +56,7 @@ final class TextScanner: NSObject, UIImagePickerControllerDelegate, UINavigation
         }
         pendingResult = result
         let picker = UIImagePickerController()
-        picker.sourceType = .camera
+        picker.sourceType = sourceType
         picker.delegate = self
         // No crop/edit step a worker could use to fiddle with the photo before it's read - the same "read it
         // exactly as the camera saw it" reasoning the server's own Tesseract path already has for an uploaded
@@ -66,7 +74,7 @@ final class TextScanner: NSObject, UIImagePickerControllerDelegate, UINavigation
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
         picker.dismiss(animated: true)
         guard let image = info[.originalImage] as? UIImage, let cgImage = image.cgImage else {
-            complete(FlutterError(code: "no_image", message: "Could not read the captured photo.", details: nil))
+            complete(FlutterError(code: "no_image", message: "Could not read the photo.", details: nil))
             return
         }
         recognizeText(in: cgImage, orientation: cgOrientation(from: image.imageOrientation))

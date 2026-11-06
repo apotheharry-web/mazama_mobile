@@ -97,6 +97,29 @@ List<String?> _tabLabels(WidgetTester tester) =>
     [for (final t in tester.widget<TabBar>(find.byType(TabBar)).tabs) (t as Tab).text];
 
 void main() {
+  // The home's Scaffold already makes room for the keyboard; a page under it that made room again lost the
+  // keyboard's height twice (the cart: its field and lines gone, Total/Sell up under the app bar).
+  testWidgets('with the keyboard up, a page makes room for it once, not twice', (tester) async {
+    const screen = Size(800, 800);
+    const keyboard = 300.0;
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = screen;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(_home());
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Cart'));
+    await tester.pumpAndSettle();
+
+    tester.view.viewInsets = const FakeViewPadding(bottom: keyboard);
+    await tester.pumpAndSettle();
+
+    final cartScaffold = find.ancestor(of: find.text('the cart'), matching: find.byType(Scaffold)).first; // the nearest: the cart's own
+    final cartBody = find.ancestor(of: find.text('add a line'), matching: find.byType(Center)).first;
+    expect(tester.getRect(cartScaffold).bottom, screen.height - keyboard);
+    expect(tester.getRect(cartBody).bottom, screen.height - keyboard);
+    expect(MediaQuery.viewInsetsOf(tester.element(find.text('add a line'))).bottom, 0);
+  });
+
   testWidgets('opens on Stock', (tester) async {
     await tester.pumpWidget(_home());
     await tester.pumpAndSettle();

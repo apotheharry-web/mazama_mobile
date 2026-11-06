@@ -264,10 +264,93 @@ void main() {
   });
 
   group('scanning', () {
+    /// Presses Scan and picks [choice] from the sheet it opens.
+    Future<void> scan(WidgetTester tester, [String choice = 'Take a photo']) async {
+      await tester.tap(find.byTooltip('Scan'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(choice));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('Scan offers a new photo or one from the phone\'s photos, and passes the choice on', (tester) async {
+      final asked = <ScanSource>[];
+      await tester.pumpWidget(cartPage(
+        fetchPackages: (id) async => inventory,
+        scanLabelText: (source) async {
+          asked.add(source);
+          return ['Lot: ab12c'];
+        },
+        scanMatch: (stateId, lines, {typed = false}) async => ScanMatchResult(matches: const [], guesses: const []),
+      ));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip('Scan'));
+      await tester.pumpAndSettle();
+      expect(find.text('Take a photo'), findsOneWidget);
+      expect(find.text('Choose from photos'), findsOneWidget);
+      await tester.tap(find.text('Take a photo'));
+      await tester.pumpAndSettle();
+
+      await scan(tester, 'Choose from photos');
+      expect(asked, [ScanSource.camera, ScanSource.photos]);
+    });
+
+    testWidgets('a photo chosen from the phone is matched and added like a camera scan', (tester) async {
+      List<String>? matchedLines;
+      await tester.pumpWidget(cartPage(
+        fetchPackages: (id) async => inventory,
+        scanLabelText: (source) async => source == ScanSource.photos ? ['Lot: ab12c'] : throw ScanCancelled(),
+        scanMatch: (stateId, lines, {typed = false}) async {
+          matchedLines = lines;
+          return ScanMatchResult(
+            matches: [ScanMatch(guid: 'PKPR-ab12c', name: 'Extract', dist: 0, line: 'Lot: ab12c', stock: 10, sellable: true)],
+            guesses: const [],
+          );
+        },
+      ));
+      await tester.pumpAndSettle();
+
+      await scan(tester, 'Choose from photos');
+
+      expect(matchedLines, ['Lot: ab12c']);
+      expect(find.widgetWithText(TextFormField, 'Quantity'), findsOneWidget); // the same add dialog a typed PKPR opens
+    });
+
+    testWidgets('closing the choice without picking scans nothing', (tester) async {
+      var scans = 0;
+      await tester.pumpWidget(cartPage(
+        fetchPackages: (id) async => inventory,
+        scanLabelText: (source) async {
+          scans++;
+          return ['Lot: ab12c'];
+        },
+      ));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip('Scan'));
+      await tester.pumpAndSettle();
+      await tester.tapAt(const Offset(10, 10)); // outside the sheet
+      await tester.pumpAndSettle();
+
+      expect(find.text('Choose from photos'), findsNothing);
+      expect(scans, 0);
+      expect(find.byType(SnackBar), findsNothing);
+    });
+
+    testWidgets('a photo the phone cannot read is shown as a readable snackbar', (tester) async {
+      await tester.pumpWidget(cartPage(
+          fetchPackages: (id) async => inventory, scanLabelText: (source) async => throw Exception('no text recognizer')));
+      await tester.pumpAndSettle();
+
+      await scan(tester, 'Choose from photos');
+
+      expect(find.textContaining('Could not read the photo'), findsOneWidget);
+    });
+
     testWidgets('a single exact match goes straight to the same add dialog a typed PKPR would open', (tester) async {
       await tester.pumpWidget(cartPage(
         fetchPackages: (id) async => inventory,
-        scanLabelText: () async => ['Lot: ab12c'],
+        scanLabelText: (source) async => ['Lot: ab12c'],
         scanMatch: (stateId, lines, {typed = false}) async => ScanMatchResult(
           matches: [ScanMatch(guid: 'PKPR-ab12c', name: 'Extract', dist: 0, line: 'Lot: ab12c', stock: 10, sellable: true)],
           guesses: const [],
@@ -275,8 +358,7 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byTooltip('Scan'));
-      await tester.pumpAndSettle();
+      await scan(tester);
 
       expect(find.textContaining('PKPR-ab12c'), findsWidgets); // the add dialog is up, showing the matched package
       await tester.enterText(find.widgetWithText(TextFormField, 'Quantity'), '1');
@@ -293,7 +375,7 @@ void main() {
     testWidgets('several matches are offered as a chooser, and picking one opens the add dialog for it', (tester) async {
       await tester.pumpWidget(cartPage(
         fetchPackages: (id) async => inventory,
-        scanLabelText: () async => ['a blurry label'],
+        scanLabelText: (source) async => ['a blurry label'],
         scanMatch: (stateId, lines, {typed = false}) async => ScanMatchResult(
           matches: [
             ScanMatch(guid: 'PKPR-ab12c', name: 'Extract', dist: 2, line: 'a blurry label', stock: 10, sellable: true),
@@ -304,8 +386,7 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byTooltip('Scan'));
-      await tester.pumpAndSettle();
+      await scan(tester);
 
       expect(find.text('Which package?'), findsOneWidget);
       await tester.tap(find.widgetWithText(ListTile, 'Whole Fungi'));
@@ -317,24 +398,22 @@ void main() {
     testWidgets('no matches and no guesses leaves the cart alone and says so', (tester) async {
       await tester.pumpWidget(cartPage(
         fetchPackages: (id) async => inventory,
-        scanLabelText: () async => ['nothing readable'],
+        scanLabelText: (source) async => ['nothing readable'],
         scanMatch: (stateId, lines, {typed = false}) async => ScanMatchResult(matches: const [], guesses: const []),
       ));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byTooltip('Scan'));
-      await tester.pumpAndSettle();
+      await scan(tester);
 
       expect(find.text('No package found in that scan - enter the PKPR directly.'), findsOneWidget);
       expect(find.text('Nothing in the cart yet.'), findsOneWidget);
     });
 
     testWidgets('backing out of the camera screen does nothing and shows no error', (tester) async {
-      await tester.pumpWidget(cartPage(fetchPackages: (id) async => inventory, scanLabelText: () async => throw ScanCancelled()));
+      await tester.pumpWidget(cartPage(fetchPackages: (id) async => inventory, scanLabelText: (source) async => throw ScanCancelled()));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byTooltip('Scan'));
-      await tester.pumpAndSettle();
+      await scan(tester);
 
       expect(find.byType(SnackBar), findsNothing);
       expect(find.byType(AlertDialog), findsNothing);
@@ -342,11 +421,10 @@ void main() {
 
     testWidgets('a camera/recognizer failure is shown as a readable snackbar', (tester) async {
       await tester.pumpWidget(
-          cartPage(fetchPackages: (id) async => inventory, scanLabelText: () async => throw Exception('camera unavailable')));
+          cartPage(fetchPackages: (id) async => inventory, scanLabelText: (source) async => throw Exception('camera unavailable')));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byTooltip('Scan'));
-      await tester.pumpAndSettle();
+      await scan(tester);
 
       expect(find.textContaining('Could not read the camera'), findsOneWidget);
     });
@@ -354,13 +432,12 @@ void main() {
     testWidgets('a matching-server failure is shown as a readable snackbar when the phone cannot match it either', (tester) async {
       await tester.pumpWidget(cartPage(
         fetchPackages: (id) async => inventory,
-        scanLabelText: () async => ['Lot: ab12c'],
+        scanLabelText: (source) async => ['Lot: ab12c'],
         scanMatch: (stateId, lines, {typed = false}) async => throw ScanMatchError('the server answered HTTP 500', status: 500),
       ));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byTooltip('Scan'));
-      await tester.pumpAndSettle();
+      await scan(tester);
 
       expect(find.textContaining('Could not match the scan: the server answered HTTP 500'), findsOneWidget);
     });
@@ -370,7 +447,7 @@ void main() {
       List<String>? matchedLines;
       await tester.pumpWidget(cartPage(
         fetchPackages: (id) async => inventory,
-        scanLabelText: () async => ['Lot: ab12c'],
+        scanLabelText: (source) async => ['Lot: ab12c'],
         scanMatch: (stateId, lines, {typed = false}) async => throw ScanMatchError('cannot reach sales.example: ClientException'),
         localScanMatch: (inventory, lines, {typed = false}) {
           matchedAgainst = inventory;
@@ -383,8 +460,7 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byTooltip('Scan'));
-      await tester.pumpAndSettle();
+      await scan(tester);
 
       expect(matchedLines, ['Lot: ab12c']);
       expect(matchedAgainst?.map((p) => p.productGuid), inventory.map((p) => p.productGuid));
@@ -395,7 +471,7 @@ void main() {
     testWidgets('guesses matched on the phone are offered the same way as the server\'s', (tester) async {
       await tester.pumpWidget(cartPage(
         fetchPackages: (id) async => inventory,
-        scanLabelText: () async => ['Net wt: 0.50 g'],
+        scanLabelText: (source) async => ['Net wt: 0.50 g'],
         scanMatch: (stateId, lines, {typed = false}) async => throw ScanMatchError('the server answered HTTP 502', status: 502),
         localScanMatch: (inventory, lines, {typed = false}) => ScanMatchResult(
           matches: const [],
@@ -404,8 +480,7 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byTooltip('Scan'));
-      await tester.pumpAndSettle();
+      await scan(tester);
 
       expect(find.text('No exact lot number was read - best guesses'), findsOneWidget);
       expect(find.textContaining('net weight 0.50 g'), findsOneWidget);
@@ -415,7 +490,7 @@ void main() {
       var localCalls = 0;
       await tester.pumpWidget(cartPage(
         fetchPackages: (id) async => inventory,
-        scanLabelText: () async => ['Lot: ab12c'],
+        scanLabelText: (source) async => ['Lot: ab12c'],
         scanMatch: (stateId, lines, {typed = false}) async => throw ScanMatchError('No such service center.', status: 404),
         localScanMatch: (inventory, lines, {typed = false}) {
           localCalls++;
@@ -424,8 +499,7 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byTooltip('Scan'));
-      await tester.pumpAndSettle();
+      await scan(tester);
 
       expect(localCalls, 0);
       expect(find.textContaining('Could not match the scan: No such service center.'), findsOneWidget);

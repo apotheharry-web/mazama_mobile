@@ -6,6 +6,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mazama_mobile/local_store.dart';
 import 'package:mazama_mobile/packages_client.dart';
@@ -15,6 +16,9 @@ import 'cart_page_test_support.dart';
 void main() {
   setUp(() => tempDir = Directory.systemTemp.createTempSync('mazama_cart_state_only_lot_test_'));
   tearDown(() {
+    // as cart_page_sell_test.dart: no Future straddling two tests (CI's bundle shares one isolate, so a
+    // rootBundle cache this file leaves behind would otherwise hang the next widget test's pumpAndSettle)
+    rootBundle.clear();
     LocalStore.debugCloseAll();
     tempDir.deleteSync(recursive: true);
   });

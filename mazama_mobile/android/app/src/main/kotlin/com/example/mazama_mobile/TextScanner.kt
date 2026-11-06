@@ -5,6 +5,7 @@ import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.provider.MediaStore
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -26,7 +27,32 @@ class TextScanner(private val activity: Activity) : MethodChannel.MethodCallHand
             result.notImplemented()
             return
         }
-        scanLabel(result)
+        // "photos" picks one already on the phone; anything else (and a call without the argument) is the camera
+        if (call.argument<String>("source") == "photos") pickPhoto(result) else scanLabel(result)
+    }
+
+    /// A photo already on the phone, through the system's own picker: it runs outside this app and hands back only
+    /// the one photo chosen, so no storage permission is asked for, and no camera permission either.
+    private fun pickPhoto(result: MethodChannel.Result) {
+        if (pendingResult != null) {
+            result.error("scan_in_progress", "A scan is already in progress.", null)
+            return
+        }
+        pendingResult = result
+        val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            Intent(MediaStore.ACTION_PICK_IMAGES) // the photo picker
+        } else {
+            Intent(Intent.ACTION_GET_CONTENT).apply {
+                type = "image/*"
+                addCategory(Intent.CATEGORY_OPENABLE)
+            }
+        }
+        try {
+            activity.startActivityForResult(intent, PICK_REQUEST_CODE)
+        } catch (e: Exception) {
+            pendingResult = null
+            result.error("photos_launch_failed", e.message, null)
+        }
     }
 
     private fun scanLabel(result: MethodChannel.Result) {
@@ -90,6 +116,17 @@ class TextScanner(private val activity: Activity) : MethodChannel.MethodCallHand
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
+        if (requestCode == PICK_REQUEST_CODE) {
+            val result = pendingResult ?: return true
+            pendingResult = null
+            val picked = data?.data
+            if (resultCode != Activity.RESULT_OK || picked == null) {
+                result.success(null) // backed out of the picker: ScanCancelled on the Dart side
+            } else {
+                recognizeText(picked, result)
+            }
+            return true
+        }
         if (requestCode != REQUEST_CODE) return false
         val result = pendingResult ?: return true
         val uri = photoUri
@@ -107,7 +144,7 @@ class TextScanner(private val activity: Activity) : MethodChannel.MethodCallHand
         val image = try {
             InputImage.fromFilePath(activity, uri)
         } catch (e: Exception) {
-            result.error("no_image", "Could not read the captured photo.", e.message)
+            result.error("no_image", "Could not read the photo.", e.message)
             return
         }
         val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
@@ -122,5 +159,6 @@ class TextScanner(private val activity: Activity) : MethodChannel.MethodCallHand
     companion object {
         private const val REQUEST_CODE = 0x5A4D
         private const val PERMISSION_REQUEST_CODE = 0x5A4E
+        private const val PICK_REQUEST_CODE = 0x5A4F
     }
 }

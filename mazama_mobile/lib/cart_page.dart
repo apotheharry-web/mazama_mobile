@@ -392,7 +392,8 @@ class CartPage extends StatefulWidget {
   /// answer one in a test run at all) - see text_scanner.dart's own file comment for why this is a platform
   /// channel rather than a pub.dev plugin. Defaults to the real scanLabelText, referenced through the aliased
   /// import above for the same reason as fetchLabel.
-  final Future<List<String>> Function() scanLabelText;
+  /// Called with where the worker chose to take the photo from.
+  final Future<List<String>> Function(ScanSource source) scanLabelText;
 
   /// Overridable for tests, so a widget test never makes a real network call for this either. Defaults to the
   /// real scanMatch (against Mazama's own public /p/scan-match/{state_id} - see scan_match_client.dart's own
@@ -1745,14 +1746,17 @@ class _CartPageState extends State<CartPage> {
   /// _onAddPkpr(), so nothing downstream of that (the label-compare dialog, the quantity/price/dose dialog, merging
   /// into an existing line) needs to know a scan was ever involved.
   Future<void> _onScanPressed() async {
+    final source = await _chooseScanSource();
+    if (source == null || !mounted) return; // the worker closed the choice - nothing to scan
     List<String> lines;
     try {
-      lines = await widget.scanLabelText();
+      lines = await widget.scanLabelText(source);
     } on ScanCancelled {
-      return; // the worker backed out of the camera screen - nothing went wrong, nothing to say
+      return; // the worker backed out of the camera screen or the picker - nothing went wrong, nothing to say
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not read the camera: $e')));
+      final what = source == ScanSource.camera ? 'the camera' : 'the photo';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not read $what: $e')));
       return;
     }
     ScanMatchResult result;
@@ -1773,6 +1777,29 @@ class _CartPageState extends State<CartPage> {
     _pkprController.text = stripPkprPrefix(guid);
     await _onAddPkpr();
   }
+
+  /// Asks where the label's photo comes from: a new one from the camera, or one already among the phone's photos.
+  /// Null when the worker closes the sheet without choosing.
+  Future<ScanSource?> _chooseScanSource() => showModalBottomSheet<ScanSource>(
+        context: context,
+        builder: (context) => SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.photo_camera_outlined),
+                title: const Text('Take a photo'),
+                onTap: () => Navigator.of(context).pop(ScanSource.camera),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined),
+                title: const Text('Choose from photos'),
+                onTap: () => Navigator.of(context).pop(ScanSource.photos),
+              ),
+            ],
+          ),
+        ),
+      );
 
   /// The scan matched on this phone (widget.localScanMatch: mazama_core through the FFI) against the stock the cart
   /// already holds, when the server's matcher failed with [error] because it couldn't answer - unreachable or

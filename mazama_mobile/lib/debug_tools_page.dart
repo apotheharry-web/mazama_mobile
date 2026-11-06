@@ -12,6 +12,7 @@ import 'debug_local_storage_page.dart';
 import 'debug_server_link_page.dart';
 import 'debug_signin_files_page.dart';
 import 'debug_state_data_page.dart';
+import 'debug_transport_manifest_page.dart';
 import 'flow/flow_spec.dart';
 import 'session.dart';
 import 'session_store.dart';
@@ -86,6 +87,14 @@ class DebugToolsPage extends StatelessWidget {
                 'step on this phone; no server calls.'),
             onTap: () => Navigator.of(context).push(MaterialPageRoute(
               builder: (_) => DebugCoaLabelPage(session: session, initialStateId: initialStateId),
+            )),
+          ),
+          ListTile(
+            title: const Text('Transport manifest PDF'),
+            subtitle: const Text("Reads a service center's own manifest list from the state system and pulls "
+                'the newest transport manifest PDF, shown on this phone.'),
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) => DebugTransportManifestPage(session: session, initialStateId: initialStateId),
             )),
           ),
           ListTile(

@@ -133,7 +133,7 @@ Widget cartPage({
   DeviceIdStore? deviceIdStore,
   Future<void> Function(int, {required String workerEmail, required String deviceId, required List<Map<String, Object?>> request, required Object? response})? postSaleLog,
   Future<void> Function(int, {required String workerEmail, required String deviceId, required String reason, required List<Map<String, Object?>> request})? postSaleFailure,
-  Future<List<String>> Function()? scanLabelText,
+  Future<List<String>> Function(ScanSource source)? scanLabelText,
   Future<ScanMatchResult> Function(int, List<String>, {bool typed})? scanMatch,
   ScanMatchResult? Function(List<Package>, List<String>, {bool typed})? localScanMatch,
   CartPricingMode? pricingMode,
@@ -275,7 +275,7 @@ Widget cartPage({
         // rather than ever reach a real platform channel or a real network call if _onScanPressed is somehow
         // reached - throwing ScanCancelled is the cheapest fixture and reads the same as "nothing happened" the
         // scan button's own tooltip/snackbar already treats a cancelled scan as.
-        scanLabelText: scanLabelText ?? () async => throw ScanCancelled(),
+        scanLabelText: scanLabelText ?? (_) async => throw ScanCancelled(),
         scanMatch: scanMatch ?? (stateId, lines, {typed = false}) async => ScanMatchResult(matches: const [], guesses: const []),
         // never the real one (the core's matcher over the test's stock): no local match unless a test gives one
         localScanMatch: localScanMatch ?? (inventory, lines, {typed = false}) => null,

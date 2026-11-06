@@ -337,7 +337,7 @@ const Map<String, Feature> features = {
     onWeb: <String>[],
     onPhone: <String>['ServiceCenter', 'Manufacturer'],
     onPhoneDebug: <String>[],
-    pages: <String>['DebugToolsPage', 'DebugAdhocCoaDiagnosticsPage', 'DebugBackgroundFeaturesPage', 'DebugCoaLabelPage', 'DebugLaunchCartPage', 'DebugLocalStoragePage', 'DebugServerLinkPage', 'DebugSigninFilesPage', 'DebugStateDataPage'],
+    pages: <String>['DebugToolsPage', 'DebugAdhocCoaDiagnosticsPage', 'DebugBackgroundFeaturesPage', 'DebugCoaLabelPage', 'DebugLaunchCartPage', 'DebugLocalStoragePage', 'DebugServerLinkPage', 'DebugSigninFilesPage', 'DebugStateDataPage', 'DebugTransportManifestPage'],
     uses: <String>[],
     shared: 'none',
     logic: <String>[],

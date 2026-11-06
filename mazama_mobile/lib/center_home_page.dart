@@ -185,14 +185,18 @@ class _CenterHomePageState extends State<CenterHomePage> with SingleTickerProvid
           ),
           Expanded(
             // The tab labels already sit below the status bar: the pages' own app bars needn't pad for it again.
-            child: MediaQuery.removePadding(
-              context: context,
-              removeTop: true,
-              child: PageView(
-                controller: _pages,
-                allowImplicitScrolling: true, // builds the pages beside the visible one: both load on open
-                onPageChanged: _onPageChanged,
-                children: [for (final t in _shown) _KeepAlive(child: _page(t))],
+            // Read from inside this Scaffold's body, where the keyboard is already taken out: this page's own
+            // context still carries it, and a page's Scaffold would then make room for the keyboard a second time.
+            child: Builder(
+              builder: (bodyContext) => MediaQuery.removePadding(
+                context: bodyContext,
+                removeTop: true,
+                child: PageView(
+                  controller: _pages,
+                  allowImplicitScrolling: true, // builds the pages beside the visible one: both load on open
+                  onPageChanged: _onPageChanged,
+                  children: [for (final t in _shown) _KeepAlive(child: _page(t))],
+                ),
               ),
             ),
           ),
