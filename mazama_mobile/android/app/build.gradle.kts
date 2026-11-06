@@ -50,6 +50,9 @@ if (buildingRelease) {
     }
 }
 
+// the only ABI a release build packs (defaultConfig below)
+val releaseAbis = listOf("arm64-v8a")
+
 // where buildMazamaCoreFfi (below) puts the compiled library, one folder per ABI
 val coreJniLibs: File = layout.buildDirectory.dir("coreJniLibs").get().asFile
 
@@ -80,6 +83,17 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        // A release build is for 64-bit ARM phones only: every library (Flutter's, ML Kit's, pdfium's, the core's) is
+        // otherwise packed once per ABI, and x86_64 (emulators) and armeabi-v7a (32-bit phones) nearly tripled the APK.
+        // A 32-bit-only phone is refused at install. Debug builds keep the Flutter plugin's ABIs, emulators included.
+        // Set here, not on buildTypes.release: the plugin fills defaultConfig's filters, and a build type's are added to
+        // them rather than replacing them.
+        if (buildingRelease) {
+            ndk {
+                abiFilters.clear()
+                abiFilters += releaseAbis
+            }
+        }
     }
 
     signingConfigs {
@@ -132,14 +146,15 @@ android {
 // above). Nothing is written to the source tree. When cargo or a Rust Android target is missing, or the build fails,
 // the BUILD FAILS with the fix: the core is part of every build, and an app without it can't start.
 // Install once: rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android.
-// ios/build_mazama_core_ffi.sh is the iOS twin. armeabi-v7a is for 32-bit-only phones, which otherwise install the app
-// (Flutter packs its own armeabi-v7a libraries) and then show "This build is missing a part".
+// A release build needs only aarch64-linux-android (releaseAbis). ios/build_mazama_core_ffi.sh is the iOS twin.
+// A debug build's armeabi-v7a is for 32-bit-only phones, which otherwise install it (Flutter packs its own armeabi-v7a
+// libraries) and then show "This build is missing a part".
 val coreFfiManifest: File = rootProject.file("../../mazama_modules/core/mazama_core_ffi/Cargo.toml")
 val coreTargets = mapOf(
     "aarch64-linux-android" to "arm64-v8a",
     "armv7-linux-androideabi" to "armeabi-v7a",
     "x86_64-linux-android" to "x86_64",
-)
+).filterValues { !buildingRelease || it in releaseAbis }
 // The NDK's clang for a Rust target, where the names differ: Rust's armv7-linux-androideabi is the NDK's armv7a-...
 fun ndkClangPrefix(rustTriple: String): String = when (rustTriple) {
     "armv7-linux-androideabi" -> "armv7a-linux-androideabi"

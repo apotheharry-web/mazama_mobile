@@ -87,8 +87,13 @@ root `codemagic.yaml`):
   `CM_KEY_PASSWORD`).
 
 ```
-flutter build apk --release --dart-define=APP_API_KEY="$APP_API_KEY"         # or: flutter build appbundle ...
+flutter build apk --release --target-platform android-arm64 --dart-define=APP_API_KEY="$APP_API_KEY"
 ```
+
+A release build is for 64-bit ARM phones only (`arm64-v8a`; `releaseAbis` in `android/app/build.gradle.kts`): with
+the emulators' `x86_64` and the 32-bit phones' `armeabi-v7a` it was nearly three times the size, every native library
+(Flutter, ML Kit's text recognition, pdfium, the core) being packed once per ABI. A 32-bit-only phone can't install it.
+Debug builds keep all three.
 
 To try a release build on your own phone without either, set `MAZAMA_DEV_RELEASE=1`: it is signed with the debug key,
 and with no app key the real server refuses its `/p/` calls. Not for distribution.

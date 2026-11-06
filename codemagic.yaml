@@ -130,7 +130,8 @@ workflows:
         script: flutter pub get
       - *icons
       - name: Install Rust for the shared core
-        # android/app/build.gradle.kts compiles ../mazama_modules/core/mazama_core_ffi for its three ABIs with the NDK
+        # android/app/build.gradle.kts compiles ../mazama_modules/core/mazama_core_ffi with the NDK; a release build is
+        # arm64-v8a only, so it needs only aarch64-linux-android
         script: |
           if ! command -v rustup >/dev/null 2>&1 && [ ! -x "$HOME/.cargo/bin/rustup" ]; then
             curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
@@ -138,7 +139,7 @@ workflows:
           export PATH="$HOME/.cargo/bin:$PATH"
           rustup toolchain install stable --profile minimal
           rustup default stable
-          rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android
+          rustup target add aarch64-linux-android
           rustc --version
       - name: Check the signing key
         # android_signing above gives these four only when Team settings > codemagic.yaml settings > Code signing
@@ -157,14 +158,16 @@ workflows:
         script: |
           unset MAZAMA_DEV_RELEASE
           export PATH="$HOME/.cargo/bin:$PATH"
-          flutter build apk --release --dart-define=APP_API_KEY="$APP_API_KEY"
+          # 64-bit ARM phones only (android/app/build.gradle.kts packs only arm64-v8a in a release)
+          flutter build apk --release --target-platform android-arm64 --dart-define=APP_API_KEY="$APP_API_KEY"
       - name: Check the shared core is in the app
         script: |
           apk=build/app/outputs/flutter-apk/app-release.apk
-          for abi in arm64-v8a armeabi-v7a x86_64; do
-            unzip -l "$apk" | grep -q "lib/$abi/libmazama_core_ffi.so" || { echo "error: lib/$abi/libmazama_core_ffi.so is missing from $apk"; exit 1; }
-          done
-          echo "mazama_core: present for arm64-v8a, armeabi-v7a and x86_64"
+          unzip -l "$apk" | grep -q "lib/arm64-v8a/libmazama_core_ffi.so" || { echo "error: lib/arm64-v8a/libmazama_core_ffi.so is missing from $apk"; exit 1; }
+          # a release is arm64-v8a only: any other ABI's folder means the filter in build.gradle.kts was lost
+          others="$(unzip -l "$apk" | awk '{print $4}' | grep '^lib/' | grep -v '^lib/arm64-v8a/' || true)"
+          [ -z "$others" ] || { echo "error: $apk packs libraries for other ABIs:"; echo "$others"; exit 1; }
+          echo "mazama_core: present for arm64-v8a, the only ABI in the APK ($(du -h "$apk" | cut -f1))"
       - name: Publish the GitHub release
         script: |
           name="mazama_mobile-${CM_TAG}.apk"

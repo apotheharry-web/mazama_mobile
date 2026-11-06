@@ -77,7 +77,7 @@ You need Flutter (stable) and Rust (`rustup`), with the targets for your phone:
 
 ```
 cd mazama_mobile
-rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android   # Android; iPhone: aarch64-apple-ios
+rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android   # Android (a release needs only the first); iPhone: aarch64-apple-ios
 flutter pub get
 (cd ../mazama_modules/core/mazama_core_ffi && cargo build --release)    # the core, which the tests load
 MAZAMA_CORE_FFI_LIB=$PWD/../mazama_modules/core/mazama_core_ffi/target/release/libmazama_core_ffi.so flutter test
