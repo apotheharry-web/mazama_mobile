@@ -45,19 +45,31 @@ String pacificMidnightUtc(DateTime date, {CoreFunctions? core}) {
 /// The record the state system's own web page sends to CreateSalesRecords, for [qty] units of [item] at [priceCents]
 /// each: the core's (selling.build_sale), [item]'s values passed through as given. Throws [SaleRefused] with
 /// the core's words when [item] lacks what a sale copies or the price each or quantity is out of bounds,
-/// StateError when the core can't answer (nothing is sent either way).
+/// StateError when the core can't answer (nothing is sent either way). The record's notes are the core's from [strain]
+/// and [lotTpe], the drawn lot's own (its lab report's TPE, never the state's psilocybin): the strain and the unit's
+/// mg TPE, each left out when not known.
 Map<String, Object?> buildSale(
   Map<String, Object?> item,
   int priceCents,
   DateTime saleDate, {
   String dose = doseInitial,
   int qty = 1,
+  String? strain,
+  double? lotTpe,
   CoreFunctions? core,
 }) {
   Map<String, Object?> reply;
   try {
     reply = _core(core).sellingBuildSale(
-        {'item': item, 'price_cents': priceCents, 'sale_date': _ymd(saleDate), 'dose': dose, 'qty': qty});
+        {
+          'item': item,
+          'price_cents': priceCents,
+          'sale_date': _ymd(saleDate),
+          'dose': dose,
+          'qty': qty,
+          if (strain != null && strain.isNotEmpty) 'strain': strain,
+          if (lotTpe != null) 'lot_tpe': lotTpe,
+        });
   } catch (e) {
     throw StateError("mazama_core couldn't build the sale's record ($e)");
   }

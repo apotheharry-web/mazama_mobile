@@ -291,6 +291,8 @@ Package _filled(Package p, PackageEnrichment e) => copyPackage(
       stateEstimate: false,
       enrichedAt: e.seenAt,
       enrichedBy: e.source,
+      // the lab report's TPE only from the phone's own reading of it; a figure kept from the server carries none
+      lotTpe: e.source == EnrichmentSource.phone ? e.tpeMgPerG : null,
     );
 
 /// [p] with the given display fields replaced; every other field copied as it is. [enrichedAt] and [enrichedBy] are
@@ -304,6 +306,7 @@ Package copyPackage(
   required bool stateEstimate,
   required DateTime? enrichedAt,
   EnrichmentSource? enrichedBy,
+  double? lotTpe,
 }) =>
     Package(
       productGuid: p.productGuid,
@@ -331,6 +334,8 @@ Package copyPackage(
       stateOnly: p.stateOnly,
       labelInput: labelInput ?? p.labelInput,
       confirmed: p.confirmed,
+      // a record whose state figure changed keeps no lab-report TPE: its mg is the state's
+      lotTpe: stateEstimate ? null : (lotTpe ?? p.lotTpe),
     );
 
 const _months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];

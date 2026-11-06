@@ -549,6 +549,19 @@ const Map<String, Feature> features = {
     shared: 'complete',
     logic: <String>['mazama_modules/core/functions.yaml', 'mazama_modules/features_vectors/hex_keypad/'],
   ),
+  'quick_add': Feature(
+    name: 'quick_add',
+    id: 'F-42',
+    what: 'The cart\'s one-screen add: the label on top, a tap per primary or secondary unit (specs/quick-add)',
+    built: <String>['phone'],
+    onWeb: <String>[],
+    onPhone: <String>['ServiceCenter'],
+    onPhoneDebug: <String>[],
+    pages: <String>[],
+    uses: <String>[],
+    shared: 'complete',
+    logic: <String>['mazama_modules/selling/'],
+  ),
 };
 
 /// Pages that belong to no feature and are never gated.

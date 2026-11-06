@@ -3209,6 +3209,9 @@ class _CartPageState extends State<CartPage> {
               saleDate,
               dose: _lines[i].dose,
               qty: take,
+              // the record's notes: this lot's own strain and lab-report TPE, none for a lot the state alone knows
+              strain: lot.strain,
+              lotTpe: lot.stateOnly || lot.stateEstimate ? null : lot.lotTpe,
             ),
       ];
 

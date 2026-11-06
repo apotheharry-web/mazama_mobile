@@ -282,7 +282,7 @@ pub extern "C" fn mz_selling_allocate_json(input_json: *const c_char) -> *mut c_
     run(input_json, mazama_core::selling::cart::allocate_json)
 }
 
-/// selling.build_sale: {item, price_cents, sale_date, dose, qty} -> {record, refusal} the record CreateSalesRecords is sent, the state's values copied unchanged.
+/// selling.build_sale: {item, price_cents, sale_date, dose, qty, strain?, lot_tpe?} -> {record, refusal} the record CreateSalesRecords is sent, the state's values copied unchanged, its notes the lot's strain and mg TPE.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_selling_build_sale_json(input_json: *const c_char) -> *mut c_char {
     run(input_json, mazama_core::selling::sale::build_sale_json)

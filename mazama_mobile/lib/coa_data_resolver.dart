@@ -80,6 +80,7 @@ Package _applyCoaData(Package p, CoaData data) {
     quantity: p.quantity,
     lotGuid: p.lotGuid,
     confirmed: p.confirmed,
+    lotTpe: tpePerG, // the lab report's TPE; none when the lookup has none (never the state's figure)
   );
 }
 

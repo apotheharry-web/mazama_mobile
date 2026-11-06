@@ -143,6 +143,11 @@ class Package {
   /// a saved draft without it has its typed values used instead ([toSaleItem]).
   final Map<String, Object?>? saleValues;
 
+  /// The TPE (mg/g) of the batch or lot this record was made from, from its lab report: the server's `lotTpe`
+  /// (/p/packages), the batch lookup's, or the phone's own reading of the report. Never the state's psilocybin (which
+  /// [tpeMg] and [unitMgTpe] fall back to); null when not known. A sale record's notes give the unit's mg TPE from it.
+  final double? lotTpe;
+
   Package({
     required this.productGuid,
     required this.productType,
@@ -169,6 +174,7 @@ class Package {
     this.labelInput,
     this.confirmed = true,
     this.saleValues,
+    this.lotTpe,
   })  : _exactQuantity = exactQuantity,
         enrichedBy = enrichedAt == null ? null : (enrichedBy ?? EnrichmentSource.server);
 
@@ -200,6 +206,7 @@ class Package {
         labelInput: j['labelInput'] is Map ? Map<String, Object?>.from(j['labelInput'] as Map) : null,
         confirmed: j['confirmed'] != false,
         saleValues: j['sale'] is Map ? Map<String, Object?>.from(j['sale'] as Map) : saleValuesOf(j),
+        lotTpe: _lotTpeOrNull(j['lotTpe']),
       );
 
   /// This package as the stock rules see it (stock_summary.dart): the server's own figures.
@@ -261,8 +268,12 @@ class Package {
         if (labelInput != null) 'labelInput': labelInput,
         if (!confirmed) 'confirmed': false,
         if (saleValues != null) 'sale': saleValues,
+        if (lotTpe != null) 'lotTpe': lotTpe,
       };
 }
+
+/// A lot TPE as received: a finite number of 0 or more, else not known.
+double? _lotTpeOrNull(Object? v) => v is num && v.isFinite && v >= 0 ? v.toDouble() : null;
 
 /// What a sale record copies of a state record, as received: only the keys it has.
 const saleKeys = ['productGuid', 'productType', 'id', 'weightPerUnit', 'analyteWeight'];

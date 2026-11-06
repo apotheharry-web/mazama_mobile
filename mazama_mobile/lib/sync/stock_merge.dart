@@ -188,6 +188,7 @@ Package _joined(Package sp, Package mp) => Package(
       description: mp.description,
       type: mp.type, // the server's kind code
       labelInput: mp.labelInput, // the server's, for a label drawn without the lab report
+      lotTpe: mp.lotTpe, // the certificate's TPE, as the server has it
     );
 
 /// A record only the state knows this time: its own figures, and no COA or label known (not known to be missing, but
@@ -231,5 +232,6 @@ Package _withCoaData(Package p, CoaData data) {
     quantity: p.quantity,
     lotGuid: p.lotGuid,
     confirmed: p.confirmed,
+    lotTpe: tpePerG, // the lab report's TPE; none when the lookup has none (never the state's figure)
   );
 }

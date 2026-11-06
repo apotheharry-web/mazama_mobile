@@ -15,6 +15,7 @@
   "mazama": true,
   "expired": false,
   "unitMgTpe": 4.992,
+  "lotTpe": 10.4,
   "description": "Golden Teacher 5 mg TPE DH (2027-06-01)",
   "type": "DH",
   "labelInput": {
@@ -91,6 +92,7 @@
   "mazama": true,
   "expired": false,
   "unitMgTpe": 4.992,
+  "lotTpe": 10.4,
   "description": "Golden Teacher 5 mg TPE DH (2027-03-01)",
   "type": "DH",
   "labelInput": {
@@ -167,6 +169,7 @@
   "mazama": false,
   "expired": false,
   "unitMgTpe": null,
+  "lotTpe": null,
   "description": "Extract 50 mg (2027-09-01)",
   "type": "EX",
   "labelInput": null

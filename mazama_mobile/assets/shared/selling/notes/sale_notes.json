@@ -1,0 +1,484 @@
+{
+ "about": "A sale record's notes (specs/core SALE-20): for the record's item, the strain and lot_tpe given beside it, the note build_sale writes. Every other field of the record is the same as without them (SALE-21). Hand-written; mazama_core's sale_notes tests, the binding and the phone's selling tests run every case.",
+ "cases": [
+  {
+   "why": "strain and the lot's TPE: the unit's mg, rounded up",
+   "item": {
+    "analyteWeight": 7.25,
+    "id": 5,
+    "productGuid": "PKPR-aaaa0001",
+    "productType": "Edible Psilocybin Product",
+    "serviceCenterId": 225,
+    "weightPerUnit": 0.5
+   },
+   "note": "Golden Teacher - 5 mg TPE",
+   "strain": "Golden Teacher",
+   "lot_tpe": 10.0
+  },
+  {
+   "why": "the mg rounds up: 0.5 g x 10.01 mg/g = 5.005 mg is 6",
+   "item": {
+    "analyteWeight": 7.25,
+    "id": 5,
+    "productGuid": "PKPR-aaaa0001",
+    "productType": "Edible Psilocybin Product",
+    "serviceCenterId": 225,
+    "weightPerUnit": 0.5
+   },
+   "note": "Golden Teacher - 6 mg TPE",
+   "strain": "Golden Teacher",
+   "lot_tpe": 10.01
+  },
+  {
+   "why": "float noise of a billionth of a mg doesn't round up: 0.5 x 10.000000001",
+   "item": {
+    "analyteWeight": 7.25,
+    "id": 5,
+    "productGuid": "PKPR-aaaa0001",
+    "productType": "Edible Psilocybin Product",
+    "serviceCenterId": 225,
+    "weightPerUnit": 0.5
+   },
+   "note": "Golden Teacher - 5 mg TPE",
+   "strain": "Golden Teacher",
+   "lot_tpe": 10.000000001
+  },
+  {
+   "why": "an integer TPE",
+   "item": {
+    "analyteWeight": 7.25,
+    "id": 5,
+    "productGuid": "PKPR-aaaa0001",
+    "productType": "Edible Psilocybin Product",
+    "serviceCenterId": 225,
+    "weightPerUnit": 0.5
+   },
+   "note": "Enigma - 6 mg TPE",
+   "strain": "Enigma",
+   "lot_tpe": 12
+  },
+  {
+   "why": "no lot TPE: the strain alone",
+   "item": {
+    "analyteWeight": 7.25,
+    "id": 5,
+    "productGuid": "PKPR-aaaa0001",
+    "productType": "Edible Psilocybin Product",
+    "serviceCenterId": 225,
+    "weightPerUnit": 0.5
+   },
+   "note": "Golden Teacher",
+   "strain": "Golden Teacher"
+  },
+  {
+   "why": "no strain: the mg alone",
+   "item": {
+    "analyteWeight": 7.25,
+    "id": 5,
+    "productGuid": "PKPR-aaaa0001",
+    "productType": "Edible Psilocybin Product",
+    "serviceCenterId": 225,
+    "weightPerUnit": 0.5
+   },
+   "note": "5 mg TPE",
+   "strain": "",
+   "lot_tpe": 10.0
+  },
+  {
+   "why": "neither: empty, as before",
+   "item": {
+    "analyteWeight": 7.25,
+    "id": 5,
+    "productGuid": "PKPR-aaaa0001",
+    "productType": "Edible Psilocybin Product",
+    "serviceCenterId": 225,
+    "weightPerUnit": 0.5
+   },
+   "note": ""
+  },
+  {
+   "why": "a TPE below the state's psilocybin (7.25) is no TPE",
+   "item": {
+    "analyteWeight": 7.25,
+    "id": 5,
+    "productGuid": "PKPR-aaaa0001",
+    "productType": "Edible Psilocybin Product",
+    "serviceCenterId": 225,
+    "weightPerUnit": 0.5
+   },
+   "note": "Golden Teacher",
+   "strain": "Golden Teacher",
+   "lot_tpe": 7.0
+  },
+  {
+   "why": "a TPE equal to the state's psilocybin is used",
+   "item": {
+    "analyteWeight": 7.25,
+    "id": 5,
+    "productGuid": "PKPR-aaaa0001",
+    "productType": "Edible Psilocybin Product",
+    "serviceCenterId": 225,
+    "weightPerUnit": 0.5
+   },
+   "note": "Golden Teacher - 4 mg TPE",
+   "strain": "Golden Teacher",
+   "lot_tpe": 7.25
+  },
+  {
+   "why": "a TPE of 0 is no TPE",
+   "item": {
+    "analyteWeight": 7.25,
+    "id": 5,
+    "productGuid": "PKPR-aaaa0001",
+    "productType": "Edible Psilocybin Product",
+    "serviceCenterId": 225,
+    "weightPerUnit": 0.5
+   },
+   "note": "Golden Teacher",
+   "strain": "Golden Teacher",
+   "lot_tpe": 0
+  },
+  {
+   "why": "a negative TPE is no TPE",
+   "item": {
+    "analyteWeight": 7.25,
+    "id": 5,
+    "productGuid": "PKPR-aaaa0001",
+    "productType": "Edible Psilocybin Product",
+    "serviceCenterId": 225,
+    "weightPerUnit": 0.5
+   },
+   "note": "Golden Teacher",
+   "strain": "Golden Teacher",
+   "lot_tpe": -10.0
+  },
+  {
+   "why": "a TPE that is text is no TPE",
+   "item": {
+    "analyteWeight": 7.25,
+    "id": 5,
+    "productGuid": "PKPR-aaaa0001",
+    "productType": "Edible Psilocybin Product",
+    "serviceCenterId": 225,
+    "weightPerUnit": 0.5
+   },
+   "note": "Golden Teacher",
+   "strain": "Golden Teacher",
+   "lot_tpe": "10"
+  },
+  {
+   "why": "a TPE that is true is no TPE",
+   "item": {
+    "analyteWeight": 7.25,
+    "id": 5,
+    "productGuid": "PKPR-aaaa0001",
+    "productType": "Edible Psilocybin Product",
+    "serviceCenterId": 225,
+    "weightPerUnit": 0.5
+   },
+   "note": "Golden Teacher",
+   "strain": "Golden Teacher",
+   "lot_tpe": true
+  },
+  {
+   "why": "a strain that is a number is no strain",
+   "item": {
+    "analyteWeight": 7.25,
+    "id": 5,
+    "productGuid": "PKPR-aaaa0001",
+    "productType": "Edible Psilocybin Product",
+    "serviceCenterId": 225,
+    "weightPerUnit": 0.5
+   },
+   "note": "5 mg TPE",
+   "strain": 42,
+   "lot_tpe": 10.0
+  },
+  {
+   "why": "a strain that is a list is no strain",
+   "item": {
+    "analyteWeight": 7.25,
+    "id": 5,
+    "productGuid": "PKPR-aaaa0001",
+    "productType": "Edible Psilocybin Product",
+    "serviceCenterId": 225,
+    "weightPerUnit": 0.5
+   },
+   "note": "",
+   "strain": [
+    "Golden Teacher"
+   ]
+  },
+  {
+   "why": "accents made plain, whitespace and newlines made one space, trimmed",
+   "item": {
+    "analyteWeight": 7.25,
+    "id": 5,
+    "productGuid": "PKPR-aaaa0001",
+    "productType": "Edible Psilocybin Product",
+    "serviceCenterId": 225,
+    "weightPerUnit": 0.5
+   },
+   "note": "Cafe Creme Brulee",
+   "strain": "  Café\nCrème\t Brûlée  "
+  },
+  {
+   "why": "characters outside the allowed set dropped: < > & \" \\ ` ; emoji",
+   "item": {
+    "analyteWeight": 7.25,
+    "id": 5,
+    "productGuid": "PKPR-aaaa0001",
+    "productType": "Edible Psilocybin Product",
+    "serviceCenterId": 225,
+    "weightPerUnit": 0.5
+   },
+   "note": "bPenis Envy/b Co x",
+   "strain": "<b>Penis Envy</b> & \"Co\" \\ `x`; 🍄"
+  },
+  {
+   "why": "the allowed punctuation kept",
+   "item": {
+    "analyteWeight": 7.25,
+    "id": 5,
+    "productGuid": "PKPR-aaaa0001",
+    "productType": "Edible Psilocybin Product",
+    "serviceCenterId": 225,
+    "weightPerUnit": 0.5
+   },
+   "note": "Albino A+ (Tidal-Wave) #2 / P.E.'s",
+   "strain": "Albino A+ (Tidal-Wave) #2 / P.E.'s"
+  },
+  {
+   "why": "a strain of only dropped characters is no strain",
+   "item": {
+    "analyteWeight": 7.25,
+    "id": 5,
+    "productGuid": "PKPR-aaaa0001",
+    "productType": "Edible Psilocybin Product",
+    "serviceCenterId": 225,
+    "weightPerUnit": 0.5
+   },
+   "note": "5 mg TPE",
+   "strain": "🍄🍄",
+   "lot_tpe": 10.0
+  },
+  {
+   "why": "long: the strain cut so the whole mg part fits in 100 (85 + ' - 5 mg TPE' is 96)",
+   "item": {
+    "analyteWeight": 7.25,
+    "id": 5,
+    "productGuid": "PKPR-aaaa0001",
+    "productType": "Edible Psilocybin Product",
+    "serviceCenterId": 225,
+    "weightPerUnit": 0.5
+   },
+   "note": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA - 5 mg TPE",
+   "strain": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+   "lot_tpe": 10.0
+  },
+  {
+   "why": "long: a strain of 86 still fits with ' - 5 mg TPE' (97)",
+   "item": {
+    "analyteWeight": 7.25,
+    "id": 5,
+    "productGuid": "PKPR-aaaa0001",
+    "productType": "Edible Psilocybin Product",
+    "serviceCenterId": 225,
+    "weightPerUnit": 0.5
+   },
+   "note": "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB - 5 mg TPE",
+   "strain": "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+   "lot_tpe": 10.0
+  },
+  {
+   "why": "long: a strain of 120 is cut to 100 less ' - 5 mg TPE' (89)",
+   "item": {
+    "analyteWeight": 7.25,
+    "id": 5,
+    "productGuid": "PKPR-aaaa0001",
+    "productType": "Edible Psilocybin Product",
+    "serviceCenterId": 225,
+    "weightPerUnit": 0.5
+   },
+   "note": "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC - 5 mg TPE",
+   "strain": "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
+   "lot_tpe": 10.0
+  },
+  {
+   "why": "long: a strain alone is cut to 100",
+   "item": {
+    "analyteWeight": 7.25,
+    "id": 5,
+    "productGuid": "PKPR-aaaa0001",
+    "productType": "Edible Psilocybin Product",
+    "serviceCenterId": 225,
+    "weightPerUnit": 0.5
+   },
+   "note": "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+   "strain": "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD"
+  },
+  {
+   "why": "a cut that ends on a space is trimmed",
+   "item": {
+    "analyteWeight": 7.25,
+    "id": 5,
+    "productGuid": "PKPR-aaaa0001",
+    "productType": "Edible Psilocybin Product",
+    "serviceCenterId": 225,
+    "weightPerUnit": 0.5
+   },
+   "note": "EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE - 5 mg TPE",
+   "strain": "EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE FFFFFFFFFFFFFFFFFFFF",
+   "lot_tpe": 10.0
+  },
+  {
+   "why": "an mg over 99,999 (1000 g x 200 mg/g) is left out",
+   "item": {
+    "analyteWeight": 7.25,
+    "id": 5,
+    "productGuid": "PKPR-aaaa0001",
+    "productType": "Edible Psilocybin Product",
+    "serviceCenterId": 225,
+    "weightPerUnit": 1000
+   },
+   "strain": "Golden Teacher",
+   "lot_tpe": 200,
+   "note": "Golden Teacher"
+  },
+  {
+   "why": "a weightPerUnit that isn't a number: no mg (the record itself is refused)",
+   "item": {
+    "analyteWeight": 7.25,
+    "id": 5,
+    "productGuid": "PKPR-aaaa0001",
+    "productType": "Edible Psilocybin Product",
+    "serviceCenterId": 225,
+    "weightPerUnit": "0.5"
+   },
+   "strain": "GT",
+   "lot_tpe": 10,
+   "note": "GT"
+  },
+  {
+   "why": "a strain that is a lot id (the batch lookup's stand-in) is no strain",
+   "item": {
+    "analyteWeight": 7.25,
+    "id": 5,
+    "productGuid": "PKPR-aaaa0001",
+    "productType": "Edible Psilocybin Product",
+    "serviceCenterId": 225,
+    "weightPerUnit": 0.5
+   },
+   "note": "5 mg TPE",
+   "strain": "hb-1234abcd",
+   "lot_tpe": 10.0
+  },
+  {
+   "why": "a batch id, any case, is no strain either",
+   "item": {
+    "analyteWeight": 7.25,
+    "id": 5,
+    "productGuid": "PKPR-aaaa0001",
+    "productType": "Edible Psilocybin Product",
+    "serviceCenterId": 225,
+    "weightPerUnit": 0.5
+   },
+   "note": "",
+   "strain": "PL-ABCDEF12"
+  },
+  {
+   "why": "a strain that only contains an id is a strain",
+   "item": {
+    "analyteWeight": 7.25,
+    "id": 5,
+    "productGuid": "PKPR-aaaa0001",
+    "productType": "Edible Psilocybin Product",
+    "serviceCenterId": 225,
+    "weightPerUnit": 0.5
+   },
+   "note": "HB-1234abcd Blend",
+   "strain": "HB-1234abcd Blend"
+  },
+  {
+   "why": "ligatures and sharp s spelled out",
+   "item": {
+    "analyteWeight": 7.25,
+    "id": 5,
+    "productGuid": "PKPR-aaaa0001",
+    "productType": "Edible Psilocybin Product",
+    "serviceCenterId": 225,
+    "weightPerUnit": 0.5
+   },
+   "note": "Weiss AEnima oeuvre o",
+   "strain": "Weiß Ænima œuvre ø"
+  },
+  {
+   "why": "a letter outside Latin is dropped, not turned into anything",
+   "item": {
+    "analyteWeight": 7.25,
+    "id": 5,
+    "productGuid": "PKPR-aaaa0001",
+    "productType": "Edible Psilocybin Product",
+    "serviceCenterId": 225,
+    "weightPerUnit": 0.5
+   },
+   "note": "Gold",
+   "strain": "Αλφα Gold 金"
+  },
+  {
+   "why": "an apostrophe and accent together",
+   "item": {
+    "analyteWeight": 7.25,
+    "id": 5,
+    "productGuid": "PKPR-aaaa0001",
+    "productType": "Edible Psilocybin Product",
+    "serviceCenterId": 225,
+    "weightPerUnit": 0.5
+   },
+   "note": "Zoe's Gold",
+   "strain": "Zoë's Gold"
+  },
+  {
+   "why": "a TPE within 0.005 below the state's psilocybin (7.246 vs 7.25) is used: TPE is to 2 places",
+   "item": {
+    "analyteWeight": 7.25,
+    "id": 5,
+    "productGuid": "PKPR-aaaa0001",
+    "productType": "Edible Psilocybin Product",
+    "serviceCenterId": 225,
+    "weightPerUnit": 0.5
+   },
+   "note": "GT - 4 mg TPE",
+   "strain": "GT",
+   "lot_tpe": 7.246
+  },
+  {
+   "why": "a TPE more than 0.005 below it (7.24 vs 7.25) is no TPE",
+   "item": {
+    "analyteWeight": 7.25,
+    "id": 5,
+    "productGuid": "PKPR-aaaa0001",
+    "productType": "Edible Psilocybin Product",
+    "serviceCenterId": 225,
+    "weightPerUnit": 0.5
+   },
+   "note": "GT",
+   "strain": "GT",
+   "lot_tpe": 7.24
+  },
+  {
+   "why": "a cut never leaves a dangling - ( / +",
+   "item": {
+    "analyteWeight": 7.25,
+    "id": 5,
+    "productGuid": "PKPR-aaaa0001",
+    "productType": "Edible Psilocybin Product",
+    "serviceCenterId": 225,
+    "weightPerUnit": 0.5
+   },
+   "note": "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG - 5 mg TPE",
+   "strain": "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG-(Tidal) Wave",
+   "lot_tpe": 10.0
+  }
+ ]
+}

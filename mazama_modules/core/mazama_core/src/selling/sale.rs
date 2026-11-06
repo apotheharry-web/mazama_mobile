@@ -341,7 +341,94 @@ fn lacks(item: &Py) -> Option<String> {
 /// or why it can't be built. Its weightPerUnit, analyteWeight, productGuid, productType (as productGroup), id and
 /// serviceCenterId are the state record's own values, copied unchanged; productCost is cents x units / 100 and
 /// costEach cents / 100, in dollars; dateOfSale is Pacific midnight of the sale's day.
-fn build(item: &Py, cents: &Py, z: i64, dose: &Py, qty: &Py) -> Result<String, String> {
+/// The longest note a record carries.
+pub const NOTE_MAX: usize = 100;
+
+/// The strain as a note may carry it: text only; whitespace and control characters made spaces, accented Latin letters
+/// made plain, every character but A-Z, a-z, 0-9, space and `- ' . + # ( ) /` dropped, runs of spaces made one,
+/// trimmed. A batch or lot id (HB-/PL-, as the batch lookup gives when it knows no strain) is no strain.
+fn note_strain(strain: &Py) -> String {
+    let Py::Str(s) = strain else { return String::new() };
+    let mut out = String::with_capacity(s.len());
+    for c in s.chars() {
+        let plain = if c.is_whitespace() || c.is_control() { " " } else { plain_letters(c) };
+        for c in plain.chars() {
+            if (c.is_ascii_alphanumeric() || " -'.+#()/".contains(c)) && !(c == ' ' && out.ends_with(' ')) {
+                out.push(c);
+            }
+        }
+    }
+    let out = out.trim().to_string();
+    let lot_id = regex::Regex::new(&format!("(?i){}", crate::id_patterns::LOT_ID)).expect("the shared lot id pattern");
+    if lot_id.is_match(&out) { String::new() } else { out }
+}
+
+/// A Latin letter with an accent or a ligature as plain letters (é to e, ß to ss); anything else as it is (and dropped
+/// later when it isn't allowed).
+fn plain_letters(c: char) -> &'static str {
+    const MAP: &[(&str, &str)] = &[
+        ("ÀÁÂÃÄÅĀĂĄ", "A"), ("àáâãäåāăą", "a"), ("ÇĆĈĊČ", "C"), ("çćĉċč", "c"), ("ĎĐ", "D"), ("ďđ", "d"),
+        ("ÈÉÊËĒĔĖĘĚ", "E"), ("èéêëēĕėęě", "e"), ("ĜĞĠĢ", "G"), ("ĝğġģ", "g"), ("ĤĦ", "H"), ("ĥħ", "h"),
+        ("ÌÍÎÏĨĪĬĮİ", "I"), ("ìíîïĩīĭįı", "i"), ("Ĵ", "J"), ("ĵ", "j"), ("Ķ", "K"), ("ķ", "k"), ("ĹĻĽĿŁ", "L"),
+        ("ĺļľŀł", "l"), ("ÑŃŅŇ", "N"), ("ñńņň", "n"), ("ÒÓÔÕÖØŌŎŐ", "O"), ("òóôõöøōŏő", "o"), ("ŔŖŘ", "R"),
+        ("ŕŗř", "r"), ("ŚŜŞŠ", "S"), ("śŝşš", "s"), ("ŢŤŦ", "T"), ("ţťŧ", "t"), ("ÙÚÛÜŨŪŬŮŰŲ", "U"),
+        ("ùúûüũūŭůűų", "u"), ("Ŵ", "W"), ("ŵ", "w"), ("ÝŸŶ", "Y"), ("ýÿŷ", "y"), ("ŹŻŽ", "Z"), ("źżž", "z"),
+        ("ß", "ss"), ("Æ", "AE"), ("æ", "ae"), ("Œ", "OE"), ("œ", "oe"), ("Þ", "TH"), ("þ", "th"), ("Ð", "D"), ("ð", "d"),
+    ];
+    for (from, to) in MAP {
+        if from.contains(c) {
+            return to;
+        }
+    }
+    // not in the table: kept only when it is itself allowed (an ASCII character), else dropped by the caller
+    const ASCII: &str = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
+    ASCII.find(c).map(|i| &ASCII[i..i + 1]).unwrap_or("")
+}
+
+/// The unit's mg TPE for the note: the record's own weightPerUnit x [lot_tpe] (mg/g, the lot's lab-report TPE), rounded
+/// up by the dose rule; None when lot_tpe isn't a finite number above 0, is more than 0.005 below the record's
+/// analyteWeight (the TPE is to 2 places; one below the state's own psilocybin is doubtful), the weight isn't a number,
+/// or the mg isn't 1 to 99,999.
+fn note_mg(item: &Py, lot_tpe: &Py) -> Option<i64> {
+    let tpe = match lot_tpe {
+        Py::Int(n) => n.as_f64(),
+        Py::Float(x) => *x,
+        _ => return None,
+    };
+    if !tpe.is_finite() || tpe <= 0.0 {
+        return None;
+    }
+    let psilocybin = match item.get("analyteWeight") {
+        Py::Int(n) => Some(n.as_f64()),
+        Py::Float(x) => Some(*x),
+        _ => None,
+    };
+    if psilocybin.is_some_and(|aw| aw.is_finite() && tpe < aw - 0.005) {
+        return None;
+    }
+    crate::dose::unit_mg_at(item, tpe).filter(|mg| (1..=99_999).contains(mg))
+}
+
+/// A record's notes: `<strain> - <n> mg TPE`, the strain alone, `<n> mg TPE` alone, or empty; at most [NOTE_MAX]
+/// characters, the strain cut first. Never refuses anything.
+pub(crate) fn sale_note(item: &Py, strain: &Py, lot_tpe: &Py) -> String {
+    let strain = note_strain(strain);
+    let mg = note_mg(item, lot_tpe);
+    // a cut strain never ends in a space or a dangling - ( / +
+    let cut = |s: &str, n: usize| s.chars().take(n).collect::<String>().trim_end_matches([' ', '-', '(', '/', '+']).to_string();
+    match (strain.is_empty(), mg) {
+        (true, None) => String::new(),
+        (true, Some(mg)) => format!("{mg} mg TPE"),
+        (false, None) => cut(&strain, NOTE_MAX),
+        (false, Some(mg)) => {
+            let tail = format!(" - {mg} mg TPE");
+            let head = cut(&strain, NOTE_MAX - tail.len());
+            if head.is_empty() { format!("{mg} mg TPE") } else { format!("{head}{tail}") }
+        }
+    }
+}
+
+fn build(item: &Py, cents: &Py, z: i64, dose: &Py, qty: &Py, note: &str) -> Result<String, String> {
     if let Some(why) = lacks(item) {
         return Err(why);
     }
@@ -365,11 +452,12 @@ fn build(item: &Py, cents: &Py, z: i64, dose: &Py, qty: &Py) -> Result<String, S
     Ok(format!(
         "{{\"analyteWeight\":{},\"changes\":null,\"costEach\":{cost_each},\"dateCreated\":\"\",\"dateDeleted\":null,\
          \"dateOfSale\":\"{}\",\"deleted\":false,\"deletedBy\":null,\"id\":0,\"initialDose\":{ini},\"isRefund\":\"\",\
-         \"notes\":\"\",\"numberSold\":{qty},\"productCost\":{product_cost},\"productGroup\":{},\"productGuid\":{},\
+         \"notes\":{},\"numberSold\":{qty},\"productCost\":{product_cost},\"productGroup\":{},\"productGuid\":{},\
          \"productId\":{},\"reasonDeleted\":null,\"saleNumber\":\"\",\"secondaryDose\":{sec},\"serviceCenterId\":{},\
          \"wasteOuts\":[],\"weightPerUnit\":{}}}",
         dump(item.get("analyteWeight")),
         pacific_midnight(z),
+        quoted(note),
         dump(item.get("productType")),
         dump(item.get("productGuid")),
         dump(item.get("id")),
@@ -388,7 +476,9 @@ pub fn build_sale_json(input_json: &str) -> R<String> {
     obj(F, &v, "the input")?;
     let item = obj(F, need(F, &v, "item")?, "item")?;
     let z = plain_date(F, &serde_json::to_value(py_text(F, need(F, &v, "sale_date")?, "sale_date")?)?, "sale_date")?;
-    Ok(match build(item, need(F, &v, "price_cents")?, z, need(F, &v, "dose")?, need(F, &v, "qty")?) {
+    // the note's inputs are the record's lot's, given beside the item, never read from it
+    let note = sale_note(item, v.get("strain"), v.get("lot_tpe"));
+    Ok(match build(item, need(F, &v, "price_cents")?, z, need(F, &v, "dose")?, need(F, &v, "qty")?, &note) {
         Ok(record) => format!("{{\"record\":{record},\"refusal\":null}}"),
         Err(why) => format!("{{\"record\":null,\"refusal\":{}}}", quoted(&why)),
     })

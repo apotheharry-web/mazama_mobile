@@ -283,4 +283,60 @@ void main() {
       expect(neither.merged, throwsA(isA<StockMergeError>()));
     });
   });
+
+  // The lab report's TPE a sale's notes are written from (specs/core SALE-20): only ever the report's, never the state's
+  // psilocybin that tpeMg falls back to.
+  group("a lot's lab-report TPE (lotTpe)", () {
+    final withLotTpe = Package(productGuid: 'PKPR-ab12c', productType: 'Extract', id: 101, weightPerUnit: 5, analyteWeight: 1,
+        strain: 'Golden Teacher', tpeMg: 8, quantity: 9, lotTpe: 1.6);
+
+    test("the state's record joined with the server's row takes the row's", () {
+      final r = mergeStock(stateRecords: [_record(101), _record(102, guid: 'PKPR-ff99aa')], serverRows: [withLotTpe],
+          enrichment: const {}, configured: true);
+      final byId = {for (final p in r.packages) p.id: p};
+      expect(byId[101]!.lotTpe, 1.6);
+      expect(byId[102]!.lotTpe, isNull); // the state's alone: its mg is the state's psilocybin, not a TPE
+    });
+
+    test("a state read filled from a figure kept from the server has none; the phone's own reading gives its TPE", () {
+      final fromServer = mergeStock(stateRecords: [_record(101)], serverRows: null, enrichment: known(kept()), configured: true);
+      expect([fromServer.packages.single.tpeMg, fromServer.packages.single.lotTpe], [8, null]);
+
+      final reading = PackageEnrichment(productGuid: 'PKPR-ab12c', id: 101, weightPerUnit: 5, analyteWeight: 1,
+          strain: 'Golden Teacher', tpeMg: 9, expires: null, seenAt: t0, source: EnrichmentSource.phone, tpeMgPerG: 1.8);
+      final fromPhone = mergeStock(stateRecords: [_record(101)], serverRows: null, enrichment: known(reading), configured: true);
+      expect(fromPhone.packages.single.lotTpe, 1.8);
+    });
+
+    test("a record whose state potency changed keeps none", () {
+      final reading = PackageEnrichment(productGuid: 'PKPR-ab12c', id: 101, weightPerUnit: 5, analyteWeight: 1,
+          strain: 'Golden Teacher', tpeMg: 9, expires: null, seenAt: t0, source: EnrichmentSource.phone, tpeMgPerG: 1.8);
+      final r = mergeStock(stateRecords: [_record(101, aw: 1.5)], serverRows: null, enrichment: known(reading), configured: true);
+      expect([r.packages.single.stateEstimate, r.packages.single.lotTpe], [true, null]);
+    });
+
+    test("an unconfigured center's lot takes the batch lookup's TPE; a lot it doesn't have has none", () {
+      final r = mergeStock(
+        stateRecords: [_record(101, lot: 'HB-aaaa0001'), _record(102, lot: 'HB-bbbb0002')],
+        serverRows: null,
+        enrichment: const {},
+        configured: false,
+        coaData: {
+          'hb-AAAA0001': CoaData(guid: 'hb-AAAA0001', strain: 'Golden Teacher', baeocystin: 0, norbaeocystin: 0, norpsilocin: 0, tpe: 1.75),
+          'hb-BBBB0002': CoaData(guid: 'hb-BBBB0002', strain: 'Enigma', baeocystin: 0, norbaeocystin: 0, norpsilocin: 0),
+        },
+      );
+      final byId = {for (final p in r.packages) p.id: p};
+      expect(byId[101]!.lotTpe, 1.75);
+      expect([byId[102]!.strain, byId[102]!.tpeMg, byId[102]!.lotTpe], ['Enigma', 5, null]); // the state's mg stays, no TPE
+    });
+
+    test('it goes through JSON (a saved cart, a kept stock copy) as it is', () {
+      expect(Package.fromJson(withLotTpe.toJson()).lotTpe, 1.6);
+      expect(Package.fromJson(serverRow.toJson()).lotTpe, isNull);
+      expect(Package.fromJson({...withLotTpe.toJson(), 'lotTpe': -1}).lotTpe, isNull);
+      expect(Package.fromJson({...withLotTpe.toJson(), 'lotTpe': 'x'}).lotTpe, isNull);
+    });
+  });
 }
+

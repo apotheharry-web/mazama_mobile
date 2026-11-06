@@ -57,7 +57,7 @@ functions:
   - {area: selling, name: with_tax, rust: "selling::pricing::with_tax_json", what: "{cents, percent} -> {cents} cents x (100 + percent) / 100, half up to the cent"}
   - {area: selling, name: money, rust: "selling::pricing::money_json", what: "{cents} -> {text} '$1,234.56'"}
   - {area: selling, name: allocate, rust: "selling::cart::allocate_json", what: "{lots, qty} -> {order, positions, takes, take_positions} which lot a unit is drawn from: lab lots first, earliest expiry, fewest units, lowest id"}
-  - {area: selling, name: build_sale, rust: "selling::sale::build_sale_json", what: "{item, price_cents, sale_date, dose, qty} -> {record, refusal} the record CreateSalesRecords is sent, the state's values copied unchanged"}
+  - {area: selling, name: build_sale, rust: "selling::sale::build_sale_json", what: "{item, price_cents, sale_date, dose, qty, strain?, lot_tpe?} -> {record, refusal} the record CreateSalesRecords is sent, the state's values copied unchanged, its notes the lot's strain and mg TPE"}
   - {area: selling, name: allocate_sale, rust: "selling::sale::allocate_sale_json", what: "{lines, lots} -> {draws, short} one draw across a sale's lines"}
   - {area: selling, name: check_sale, rust: "selling::sale::check_sale_json", what: "{lines, fresh, center, sent?, cap?} -> {refusal} the check on the state's records just before sending"}
   - {area: selling, name: parse_sale_date, rust: "selling::sale::parse_sale_date_json", what: "{text, today} -> {date, error} a typed sale date"}

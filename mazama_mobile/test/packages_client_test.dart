@@ -64,6 +64,7 @@ void main() {
       expect(first.description, 'Golden Teacher 5 mg TPE DH (2027-06-01)');
       expect(packages.last.mazama, isFalse);
       expect(packages.last.unitMgTpe, isNull);
+      expect([first.lotTpe, packages.last.lotTpe], [10.4, null]); // the certificate's TPE, null with none
     });
 
     test("toStockRow gives the stock rules the server's figures", () async {

@@ -2,8 +2,10 @@
 
 import 'feature_entry.dart';
 import 'features/hex_keypad/entry.dart' as f_hex_keypad;
+import 'features/quick_add/entry.dart' as f_quick_add;
 
 /// Each feature folder's entry point, by feature name (FR-11); the rest of lib/ reaches a folder only here.
 const Map<String, FeatureEntry> featureEntries = {
   'hex_keypad': f_hex_keypad.entry,
+  'quick_add': f_quick_add.entry,
 };

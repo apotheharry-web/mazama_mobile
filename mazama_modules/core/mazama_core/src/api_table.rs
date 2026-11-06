@@ -49,7 +49,7 @@ pub const FUNCTIONS: &[(&str, &str, crate::api::Function)] = &[
     ("selling", "with_tax", crate::selling::pricing::with_tax_json),  // {cents, percent} -> {cents} cents x (100 + percent) / 100, half up to the cent
     ("selling", "money", crate::selling::pricing::money_json),  // {cents} -> {text} '$1,234.56'
     ("selling", "allocate", crate::selling::cart::allocate_json),  // {lots, qty} -> {order, positions, takes, take_positions} which lot a unit is drawn from: lab lots first, earliest expiry, fewest units, lowest id
-    ("selling", "build_sale", crate::selling::sale::build_sale_json),  // {item, price_cents, sale_date, dose, qty} -> {record, refusal} the record CreateSalesRecords is sent, the state's values copied unchanged
+    ("selling", "build_sale", crate::selling::sale::build_sale_json),  // {item, price_cents, sale_date, dose, qty, strain?, lot_tpe?} -> {record, refusal} the record CreateSalesRecords is sent, the state's values copied unchanged, its notes the lot's strain and mg TPE
     ("selling", "allocate_sale", crate::selling::sale::allocate_sale_json),  // {lines, lots} -> {draws, short} one draw across a sale's lines
     ("selling", "check_sale", crate::selling::sale::check_sale_json),  // {lines, fresh, center, sent?, cap?} -> {refusal} the check on the state's records just before sending
     ("selling", "parse_sale_date", crate::selling::sale::parse_sale_date_json),  // {text, today} -> {date, error} a typed sale date

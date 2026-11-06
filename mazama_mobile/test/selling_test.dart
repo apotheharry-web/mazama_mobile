@@ -3,6 +3,9 @@
 // both DST transition boundary days themselves, where getting the strict-vs-non-strict comparison wrong would
 // show up as an off-by-one-hour error. The Pacific midnight rule was also checked against
 // zoneinfo for every single day across 2024-2028 (0 mismatches).
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mazama_mobile/selling.dart';
 
@@ -68,11 +71,38 @@ void main() {
       expect(sale['secondaryDose'], 3);
     });
 
-    test('notes are empty, with or without a description (SM-D4, the same as the server)', () {
+    test("notes are empty without a strain or lot TPE, never the item's description (SALE-20)", () {
       expect(item['description'], isNotNull);
       expect(buildSale(item, 100, DateTime.utc(2026, 1, 1))['notes'], '');
       final noDesc = Map<String, Object?>.from(item)..remove('description');
       expect(buildSale(noDesc, 100, DateTime.utc(2026, 1, 1))['notes'], '');
+    });
+
+    test("notes are the lot's strain and mg TPE, as every shared case says, the rest of the record unchanged (SALE-20, SALE-21)",
+        () {
+      final doc = jsonDecode(File('assets/shared/selling/notes/sale_notes.json').readAsStringSync()) as Map;
+      final cases = (doc['cases'] as List).cast<Map>();
+      expect(cases.length, greaterThanOrEqualTo(20));
+      var built = 0;
+      for (final c in cases) {
+        final it = Map<String, Object?>.from(c['item'] as Map);
+        final strain = c['strain'], tpe = c['lot_tpe'];
+        // buildSale passes the strain as text and the TPE as a number: the cases that give either some other way
+        // are the core's own (its Rust and Python tests run them)
+        if ((strain != null && strain is! String) || (tpe != null && (tpe is! num))) continue;
+        Map<String, Object?> plain;
+        try {
+          plain = buildSale(it, 2050, DateTime.utc(2026, 9, 28));
+        } on SaleRefused {
+          continue; // a refused record has no note
+        }
+        final got = buildSale(it, 2050, DateTime.utc(2026, 9, 28),
+            strain: strain as String?, lotTpe: (tpe as num?)?.toDouble());
+        expect(got['notes'], c['note'], reason: c['why'] as String);
+        expect({...got}..remove('notes'), {...plain}..remove('notes'), reason: c['why'] as String);
+        built++;
+      }
+      expect(built, greaterThanOrEqualTo(20));
     });
   });
 

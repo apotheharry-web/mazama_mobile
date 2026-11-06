@@ -92,6 +92,12 @@ fn unit(record: &Py, tpe: Option<f64>) -> (Option<f64>, Option<i64>) {
     (Some(per_g), ceil(w * per_g))
 }
 
+/// A unit's mg TPE for [record] (its weightPerUnit) at a lot TPE of [tpe] mg/g, rounded up as [unit] does; None when the
+/// record's figures can't be read or the result isn't a whole mg in 64 bits.
+pub(crate) fn unit_mg_at(record: &Py, tpe: f64) -> Option<i64> {
+    unit(record, Some(tpe)).1
+}
+
 fn object<'a>(v: &'a Py, what: &str) -> Result<&'a Py, crate::api::Error> {
     match v {
         Py::Obj(_) => Ok(v),

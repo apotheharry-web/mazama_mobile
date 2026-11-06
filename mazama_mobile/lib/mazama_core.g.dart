@@ -180,7 +180,7 @@ abstract interface class CoreFunctions {
   Map<String, Object?> sellingMoney(Map<String, Object?> input);
   /// selling.allocate: {lots, qty} -> {order, positions, takes, take_positions} which lot a unit is drawn from: lab lots first, earliest expiry, fewest units, lowest id.
   Map<String, Object?> sellingAllocate(Map<String, Object?> input);
-  /// selling.build_sale: {item, price_cents, sale_date, dose, qty} -> {record, refusal} the record CreateSalesRecords is sent, the state's values copied unchanged.
+  /// selling.build_sale: {item, price_cents, sale_date, dose, qty, strain?, lot_tpe?} -> {record, refusal} the record CreateSalesRecords is sent, the state's values copied unchanged, its notes the lot's strain and mg TPE.
   Map<String, Object?> sellingBuildSale(Map<String, Object?> input);
   /// selling.allocate_sale: {lines, lots} -> {draws, short} one draw across a sale's lines.
   Map<String, Object?> sellingAllocateSale(Map<String, Object?> input);

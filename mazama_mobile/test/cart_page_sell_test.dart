@@ -83,9 +83,39 @@ void main() {
       expect(records.single['productCost'], 25.0); // 2 x $12.50
       expect(records.single['serviceCenterId'], 231); // this cart's own center, not anything from the package payload
       expect(records.single['initialDose'], 2); // the add-dialog's own default dose
+      expect(records.single['notes'], 'Golden Teacher'); // the lot's strain; no lab-report TPE known, so no mg (SALE-20)
 
       expect(find.text('Nothing in the cart yet.'), findsOneWidget); // the cart was cleared on confirmed success
       expect(find.textContaining('Sale recorded'), findsOneWidget);
+    });
+
+    testWidgets("each record's notes are its lot's strain and mg TPE from the lot's lab-report TPE (SALE-20)", (tester) async {
+      final fake = FakeState();
+      final login = await runFlow(loginSpec, 'login', {'email': fakeEmail, 'password': fakePassword}, client: fake.client());
+      fake.data['CreateSalesRecords/false'] = [
+        {'id': 9001, 'saleNumber': 'S-1'},
+      ];
+      // 5 g x 5.1 mg/g = 25.5, rounded up: 26 mg TPE; the cart's own tpeMg figure (5) plays no part in the note
+      final withReport = [
+        Package(productGuid: 'PKPR-ab12c', productType: 'Extract', id: 101, weightPerUnit: 5.0, analyteWeight: 4.5,
+            strain: 'Golden Teacher', tpeMg: 5, quantity: 10, lotTpe: 5.1),
+      ];
+      await tester.pumpWidget(cartPage(
+        fetchPackages: (id) async => withReport,
+        session: freshSession(accessToken: login['access_token'] as String),
+        saleSpec: Future.value(realSaleSpec),
+        httpClientFactory: fake.client,
+      ));
+      await tester.pumpAndSettle();
+      await addLine(tester, pkpr: 'ab12c', qty: '1', price: '12.50');
+      await tester.tap(find.widgetWithText(FilledButton, 'Sell'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Confirm sale'));
+      await tester.pumpAndSettle();
+
+      final records = fake.posted.single.$2 as List;
+      expect(records.single['notes'], 'Golden Teacher - 26 mg TPE');
+      expect(records.single['analyteWeight'], 4.5); // the record's own values unchanged
     });
 
     // The server came back while this cart had lines: the state-only stock is loaded again once the sale has
