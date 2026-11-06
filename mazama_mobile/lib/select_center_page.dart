@@ -29,6 +29,7 @@ import 'debug_tools_page.dart';
 import 'demo/demo_backend.dart';
 import 'demo/demo_banner.dart';
 import 'device_id.dart';
+import 'center_menu.dart';
 import 'feature_entry.dart';
 import 'feature_pages.g.dart';
 import 'features.g.dart';
@@ -535,7 +536,10 @@ class _SelectCenterPageState extends State<SelectCenterPage> {
 
   /// The demo's cart: every function from the demo backend, its stores in the demo's own folder, and the sale through
   /// the demo's confirming client.
-  CartPage _demoCart(DemoBackend d, License center, ValueChanged<int> onDraftCountChanged) => CartPage(
+  CartPage _demoCart(DemoBackend d, License center, ValueChanged<int> onDraftCountChanged, CenterMenu menu) => CartPage(
+        centerMenu: menu,
+        // the cart as the release app has it: no feature takes over its PKPR field (the demo's ids aren't hex)
+        featureEntries: const {},
         session: _session,
         center: center,
         spec: widget.spec,
@@ -596,9 +600,12 @@ class _SelectCenterPageState extends State<SelectCenterPage> {
     final sheetsEngine = _engineFor(Dataset.sheets, defaultFetch: widget.fetchProductSheets == _productSheets);
     final mazama = mazamaEngine == null ? null : mazamaInventoryFeed(mazamaEngine);
     final sheets = sheetsEngine == null ? null : sheetsFeed(sheetsEngine, center.id);
+    // the center bar's menu: the cart attaches Change service center and Sign out to it
+    final menu = CenterMenu();
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (_) => CenterHomePage(
+          menu: menu,
           center: center,
           featureTable: widget.featureTable,
           engine: mazamaEngine ?? sheetsEngine, // one engine when both are given (the demo's, this page's or the app's)
@@ -624,8 +631,9 @@ class _SelectCenterPageState extends State<SelectCenterPage> {
                         draftCount == 0 && await centerCartsEmpty(center.id, dataDir: widget.sessionStore.dataDir),
                   ),
           buildCart: (onDraftCountChanged) => widget.demo != null
-              ? _demoCart(widget.demo!, center, onDraftCountChanged)
+              ? _demoCart(widget.demo!, center, onDraftCountChanged, menu)
               : CartPage(
+            centerMenu: menu,
             session: _session,
             center: center,
             spec: widget.spec,

@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mazama_mobile/center_menu.dart';
 import 'package:mazama_mobile/cart_page.dart';
 import 'package:mazama_mobile/cart_slots.dart';
 import 'package:mazama_mobile/cart_store.dart';
@@ -34,6 +36,60 @@ void main() {
 
   setUp(() => tempDir = Directory.systemTemp.createTempSync('mazama_cart_test_'));
   tearDown(() => tempDir.deleteSync(recursive: true));
+
+  group("under the home's center bar (a center menu given)", () {
+    testWidgets("the cart attaches Change service center and Sign out, and its bar keeps only its name and View stock",
+        (tester) async {
+      final menu = CenterMenu();
+      await tester.pumpWidget(cartPage(fetchPackages: (id) async => inventory, centerMenu: menu));
+      await tester.pumpAndSettle();
+
+      expect(menu.ready, isTrue);
+      expect(menu.signedInAs, 'worker@example.com');
+      expect(find.byTooltip('Switch center'), findsNothing);
+      expect(find.byTooltip('Sign out'), findsNothing);
+      expect(find.byKey(const Key('cartsButton')), findsNothing);
+      expect(find.text('Bendable Service Center'), findsNothing); // the center bar has the name
+      expect(find.byTooltip('View stock'), findsOneWidget);
+      expect(tester.widget<Text>(find.byKey(const Key('cartsTitleText'))).data, 'Cart 1');
+    });
+
+    testWidgets("tapping the cart's name opens the carts", (tester) async {
+      await tester.pumpWidget(cartPage(fetchPackages: (id) async => inventory, centerMenu: CenterMenu()));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('cartsTitle')));
+      await tester.pumpAndSettle();
+      expect(find.byType(BottomSheet), findsOneWidget);
+    });
+
+    testWidgets("the menu's Change service center asks first when a cart has lines, as the button did", (tester) async {
+      final menu = CenterMenu();
+      await tester.pumpWidget(cartPage(fetchPackages: (id) async => inventory, centerMenu: menu));
+      await tester.pumpAndSettle();
+      await addLine(tester, pkpr: 'ab12c', qty: '1', price: '10.00');
+
+      unawaited(menu.switchCenter());
+      await tester.pumpAndSettle();
+      expect(find.widgetWithText(AlertDialog, 'Switch service center?'), findsOneWidget);
+      await tester.tap(find.widgetWithText(FilledButton, 'Discard cart'));
+      await tester.pumpAndSettle();
+      expect(find.text('Choose a service center'), findsOneWidget);
+      expect(menu.ready, isFalse); // the cart is gone, and detached itself
+    });
+
+    testWidgets("the menu's Sign out signs out, as the button did", (tester) async {
+      final store = SessionStore(dataDir: () => tempDir);
+      await store.save(freshSession().toJson());
+      final menu = CenterMenu();
+      await tester.pumpWidget(cartPage(fetchPackages: (id) async => inventory, sessionStore: store, centerMenu: menu));
+      await tester.pumpAndSettle();
+
+      unawaited(menu.signOut());
+      await tester.pumpAndSettle();
+      expect(find.text('Mazama sign-in'), findsOneWidget);
+      expect(await store.load(), isNull);
+    });
+  });
 
   group('switching centers and signing out', () {
     testWidgets('switching centers with an empty cart goes straight to the picker, no confirmation needed', (tester) async {

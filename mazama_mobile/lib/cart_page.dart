@@ -46,6 +46,9 @@ import 'center_status_client.dart' as center_status_client; // see CartPage.fetc
 import 'demo/demo_backend.dart'; // see CartPage.submitCoaForLot: avoids a same-name default-value ambiguity
 import 'device_id.dart';
 import 'dose.dart';
+import 'center_menu.dart';
+import 'feature_entry.dart';
+import 'feature_pages.g.dart' as feature_pages; // see CartPage.featureEntries: avoids a same-name default-value ambiguity
 import 'features.g.dart';
 import 'flow/flow_runner.dart';
 import 'flow/flow_spec.dart';
@@ -453,6 +456,16 @@ class CartPage extends StatefulWidget {
   /// center's license type. The generated one in the app; tests pass a copy with features off.
   final Map<String, Feature> featureTable;
 
+  /// The feature folders' entries (feature_pages.g.dart's featureEntries in the app): the first whose feature is on
+  /// for this center's license and offers a PKPR input takes over the PKPR field. Tests pass their own.
+  final Map<String, FeatureEntry> featureEntries;
+
+  /// The center home's menu (center_home_page.dart): the cart does its Change service center and Sign out, since it
+  /// knows which carts leaving would discard. With one, the home's center bar carries the center's name and those
+  /// two, and the cart's own bar keeps only its name (tap: the carts) and View stock; without one (the cart on its
+  /// own) the cart's bar has them all.
+  final CenterMenu? centerMenu;
+
   /// Where the cart's own session stopwatch (_sessionTimerRow) persists its start time across app restarts -
   /// see session_timer_store.dart's own file comment for why. Overridable for tests, so a test never touches
   /// the real app-data directory for this either. Defaults to a real SessionTimerStore, same as cartStore's
@@ -522,6 +535,8 @@ class CartPage extends StatefulWidget {
     this.onDraftCountChanged,
     this.demo,
     this.featureTable = features,
+    this.featureEntries = feature_pages.featureEntries,
+    this.centerMenu,
     this.health,
     this.requestStockRefresh = server_link.linkRequestStockRefresh,
     this.watchStock = server_link.linkWatchStock,
@@ -835,6 +850,8 @@ class _CartPageState extends State<CartPage> {
   void initState() {
     super.initState();
     _session = widget.session;
+    widget.centerMenu?.attach(this,
+        switchCenter: _onSwitchCenterPressed, signOut: _onSignOutPressed, signedInAs: widget.session.email);
     try {
       _stockWatch = widget.watchStock(widget.center.id)?.listen(_onStockRow, onError: (Object _) {});
     } catch (_) {
@@ -1084,6 +1101,7 @@ class _CartPageState extends State<CartPage> {
 
   @override
   void dispose() {
+    widget.centerMenu?.detach(this);
     unawaited(_stockWatch?.cancel());
     widget.health?.removeListener(_onHealth);
     _renewTimer?.cancel();
@@ -1382,24 +1400,29 @@ class _CartPageState extends State<CartPage> {
     }
     setState(() => _lookupError = null);
     final priceEditable = _pricingMode == CartPricingMode.each;
+    final editor = _featureLineEditor();
+    if (editor != null) {
+      // a feature's one-screen add: up to one line per dose, placed as any add, and no separate label popup after
+      final choice = await _openLineEditor(editor, matches.single, priceEditable: priceEditable);
+      if (choice == null || !mounted) return; // cancelled
+      setState(() {
+        final placed = [
+          for (final (dose, qty) in [(doseInitial, choice.primary), (doseSecondary, choice.secondary)])
+            if (qty > 0)
+              _placeLine(CartLine(group: matches.single, qty: qty, priceCentsEach: choice.priceCentsEach ?? 0, dose: dose),
+                  priceEditable: priceEditable),
+        ];
+        if (placed.contains(true)) _pkprController.clear();
+      });
+      _recomputeCartPricing();
+      _pkprFocus.requestFocus();
+      unawaited(_ensureCoaForCartLine(matches.single));
+      return;
+    }
     final added = await _showLineDialog(matches.single, priceEditable: priceEditable);
     if (added == null) return; // cancelled
     setState(() {
-      // In "each" mode a matching price is part of what makes two adds the same line (a worker who priced
-      // some units differently gets two lines, deliberately). In the cart-wide modes price isn't something a
-      // worker chose at all - it's about to be overwritten by _recomputeCartPricing below regardless - so two
-      // adds of the same PKPR and dose always merge there, whatever placeholder price this one happened to
-      // carry in the meantime.
-      final i = _lines.indexWhere((l) =>
-          l.productGuid == added.productGuid &&
-          (!priceEditable || l.priceCentsEach == added.priceCentsEach) &&
-          l.dose == added.dose);
-      if (i != -1) {
-        if (!_mergeWithinLineCap(i, added)) return;
-      } else {
-        if (!_addWithinStock(added)) return;
-      }
-      _pkprController.clear();
+      if (_placeLine(added, priceEditable: priceEditable)) _pkprController.clear();
     });
     _recomputeCartPricing();
     _pkprFocus.requestFocus();
@@ -1410,6 +1433,72 @@ class _CartPageState extends State<CartPage> {
     // Item 3b - same "never blocks the add" reasoning as the label-compare popup right above.
     unawaited(_ensureCoaForCartLine(matches.single));
   }
+
+  /// Puts [added] in the cart: merged into the line of the same PKPR and dose (and, pricing each line, price), else a
+  /// new line, within the cart's stock and per-line checks. False, with the reason shown, when it doesn't fit. Called
+  /// inside a setState.
+  ///
+  /// In "each" mode a matching price is part of what makes two adds the same line (a worker who priced some units
+  /// differently gets two lines, deliberately). In the cart-wide modes price isn't something a worker chose at all -
+  /// it's about to be overwritten by _recomputeCartPricing regardless - so two adds of the same PKPR and dose always
+  /// merge there, whatever placeholder price this one happened to carry in the meantime.
+  bool _placeLine(CartLine added, {required bool priceEditable}) {
+    final i = _lines.indexWhere((l) =>
+        l.productGuid == added.productGuid &&
+        (!priceEditable || l.priceCentsEach == added.priceCentsEach) &&
+        l.dose == added.dose);
+    return i != -1 ? _mergeWithinLineCap(i, added) : _addWithinStock(added);
+  }
+
+  /// The add-line screen of the first feature entry that offers one and whose feature is on for this center's
+  /// license; the cart names no feature, so it builds the same where a feature is left out.
+  LineEditorBuilder? _featureLineEditor() {
+    for (final MapEntry(key: name, value: entry) in widget.featureEntries.entries) {
+      final editor = entry.lineEditor;
+      if (editor != null && featureOnForLicense(name, widget.center.licenseType, table: widget.featureTable)) return editor;
+    }
+    return null;
+  }
+
+  /// Opens a feature's add-line screen for [group], or, with [existing], for that line: its label, the counts to
+  /// start from, each dose's limits and, pricing each line, the price check. Its choice, or null when cancelled.
+  Future<LineChoice?> _openLineEditor(LineEditorBuilder editor, PkprGroup group,
+      {CartLine? existing, CartLine? also, required bool priceEditable}) {
+    // listened to at once, so a failed fetch is the picture's to show, never an unhandled error before it is up
+    final label = _labelFor(group)..ignore();
+    final elsewhere = _lines
+        .where((l) => l.productGuid == group.productGuid && !identical(l, existing) && !identical(l, also))
+        .fold<int>(0, (sum, l) => sum + l.qty);
+    final args = LineEditorArgs(
+      group: group,
+      label: _labelPicture(label),
+      primary: [existing, also].fold(0, (n, l) => l != null && l.dose != doseSecondary ? n + l.qty : n),
+      secondary: [existing, also].fold(0, (n, l) => l != null && l.dose == doseSecondary ? n + l.qty : n),
+      editing: existing != null,
+      maxUnitsPerLine: _cartSettings.maxUnitsPerLine,
+      stockLeft: group.quantity - elsewhere,
+      price: !priceEditable
+          ? null
+          : ({required bool perMg, required String text}) {
+              final p = linePrice(perMg: perMg, text: text, mg: group.tpeMg, core: widget.core);
+              return (cents: p.cents, error: _linePriceMessage(p.error, group));
+            },
+      priceCentsEach: existing?.priceCentsEach,
+      perMgLabel: group.mgFigure == MgFigure.psilocybin ? 'Price per mg psilocybin' : 'Price per mg (TPE)',
+    );
+    return showDialog<LineChoice>(context: context, builder: (context) => editor(context, args));
+  }
+
+  /// The words for a line price the shared core refused ([code], linePrice's error), or null when it priced it.
+  String? _linePriceMessage(String? code, PkprGroup group) => switch (code) {
+        null => null,
+        'price' => 'Enter a price from \$0 to \$10,000',
+        // as on the server: an unknown mg TPE is refused, never priced at nothing
+        'no_mg' => "No ${group.mgLabel} is known for this product, so it can't be priced per mg",
+        'rate' => 'Enter a rate from \$0 to \$1,000 per mg',
+        'unit_cap' => 'A single unit would cost more than \$10,000', // a rate times the unit's mg over $10,000
+        _ => coreFailedPriceMessage, // the core failed: refused, never priced
+      };
 
   /// For a CONFIGURED center, submits a lab report for every lot behind [group] that still has
   /// coaAvailable false (packages_client.dart's own Package field, carried through the merge - see
@@ -1667,15 +1756,8 @@ class _CartPageState extends State<CartPage> {
                       // the each-mode price has nothing downstream of it to keep in sync while typing.
                       onChanged: (_) => setDialogState(() {}),
                       // the shared core's line price: a price each, or the rate times the unit's mg
-                      validator: (v) => switch (linePrice(perMg: mode == _pricePerMg, text: v ?? '', mg: group.tpeMg, core: widget.core).error) {
-                            null => null,
-                            'price' => 'Enter a price from \$0 to \$10,000',
-                            // as on the server: an unknown mg TPE is refused, never priced at nothing
-                            'no_mg' => "No ${group.mgLabel} is known for this product, so it can't be priced per mg",
-                            'rate' => 'Enter a rate from \$0 to \$1,000 per mg',
-                            'unit_cap' => 'A single unit would cost more than \$10,000', // a rate times the unit's mg over $10,000
-                            _ => coreFailedPriceMessage, // the core failed: refused, never priced
-                          },
+                      validator: (v) => _linePriceMessage(
+                          linePrice(perMg: mode == _pricePerMg, text: v ?? '', mg: group.tpeMg, core: widget.core).error, group),
                     ),
                     if (mode == _pricePerMg &&
                         linePrice(perMg: true, text: priceController.text, mg: group.tpeMg, core: widget.core).cents != null)
@@ -1732,12 +1814,45 @@ class _CartPageState extends State<CartPage> {
   /// exact line with whatever comes back - never merges it into another line the way adding a fresh PKPR can,
   /// since the worker is deliberately changing this one, not adding more of something.
   Future<void> _onEditLine(int i) async {
+    final editor = _featureLineEditor();
+    if (editor != null) return _onEditLineWith(editor, i);
     final edited =
         await _showLineDialog(_lines[i].group, existing: _lines[i], priceEditable: _pricingMode == CartPricingMode.each);
     if (edited == null || !mounted) return; // cancelled
     setState(() => _lines[i] = edited);
     _recomputeCartPricing();
   }
+  /// Editing the line at [i] through a feature's add-line screen: the line keeps its own dose's new count (removed at
+  /// 0) and its price, and the other dose's units are added as a new add would add them.
+  Future<void> _onEditLineWith(LineEditorBuilder editor, int i) async {
+    final line = _lines[i];
+    final priceEditable = _pricingMode == CartPricingMode.each;
+    final choice = await _openLineEditor(editor, line.group, existing: line, priceEditable: priceEditable);
+    if (choice == null || !mounted) return; // cancelled
+    final at = _lines.indexWhere((l) => identical(l, line));
+    if (at == -1) return; // the line went while the screen was up
+    final price = priceEditable ? (choice.priceCentsEach ?? line.priceCentsEach) : line.priceCentsEach;
+    final own = line.dose == doseSecondary ? choice.secondary : choice.primary;
+    final other = line.dose == doseSecondary ? choice.primary : choice.secondary;
+    setState(() {
+      if (own > 0) {
+        _lines[at] = CartLine(group: line.group, qty: own, priceCentsEach: price, dose: line.dose);
+      } else {
+        _lines.removeAt(at);
+      }
+      if (other > 0) {
+        _placeLine(
+            CartLine(
+                group: line.group,
+                qty: other,
+                priceCentsEach: price,
+                dose: line.dose == doseSecondary ? doseInitial : doseSecondary),
+            priceEditable: priceEditable);
+      }
+    });
+    _recomputeCartPricing();
+  }
+
 
   /// Opens the native camera + on-device text recognizer (text_scanner.dart), sends what it read to the
   /// server's matcher (scan_match_client.dart - mazama_core's, the same a label photo gets on the web) or, when the
@@ -1859,10 +1974,79 @@ class _CartPageState extends State<CartPage> {
     );
   }
 
-  void _removeLine(int i) {
-    setState(() => _lines.removeAt(i));
+  /// The cart's rows: the positions in [_lines] of each PKPR's lines, a row per PKPR in the order each was first added.
+  /// A product can have a line per dose (and, pricing each line, per price); the row shows them all.
+  List<List<int>> _cartRows() {
+    final byGuid = <String, List<int>>{};
+    for (final (i, l) in _lines.indexed) {
+      (byGuid[l.productGuid.toUpperCase()] ??= []).add(i);
+    }
+    return byGuid.values.toList();
+  }
+
+  /// Removes a row: every line of its PKPR.
+  void _removeRow(List<int> at) {
+    setState(() {
+      for (final i in [...at]..sort((a, b) => b.compareTo(a))) {
+        _lines.removeAt(i);
+      }
+    });
     _recomputeCartPricing();
     _reloadIfServerBack();
+  }
+
+  /// Edits a row. With a feature's add screen and one line of each dose, the screen opens with both doses' counts and
+  /// Save rewrites both; a row of one line edits it as before; otherwise the worker picks the line first.
+  Future<void> _onEditRow(List<int> at) async {
+    final editor = _featureLineEditor();
+    final lines = [for (final i in at) _lines[i]];
+    final primaries = lines.where((l) => l.dose != doseSecondary).toList();
+    final secondaries = lines.where((l) => l.dose == doseSecondary).toList();
+    if (editor != null && primaries.length == 1 && secondaries.length == 1) {
+      return _onEditBothDoses(editor, primaries.single, secondaries.single);
+    }
+    if (at.length == 1) return _onEditLine(at.single);
+    final pick = await showDialog<int>(
+      context: context,
+      builder: (context) => SimpleDialog(
+        title: const Text('Which line?'),
+        children: [
+          for (final i in at)
+            SimpleDialogOption(
+              onPressed: () => Navigator.of(context).pop(i),
+              child: Text('${_lines[i].dose == doseSecondary ? 'Secondary' : 'Primary'} · ${_lines[i].qty} x '
+                  '${money(_lines[i].priceCentsEach)}'),
+            ),
+        ],
+      ),
+    );
+    if (pick == null || !mounted) return;
+    return _onEditLine(pick);
+  }
+
+  /// Both doses of one product through a feature's add screen: it opens with each dose's count, and Save sets each
+  /// line to its new count (removed at 0) at the price given (pricing each line; else as it was).
+  Future<void> _onEditBothDoses(LineEditorBuilder editor, CartLine primary, CartLine secondary) async {
+    final priceEditable = _pricingMode == CartPricingMode.each;
+    final choice = await _openLineEditor(editor, primary.group,
+        existing: primary, also: secondary, priceEditable: priceEditable);
+    if (choice == null || !mounted) return; // cancelled
+    setState(() {
+      for (final (line, qty) in [(primary, choice.primary), (secondary, choice.secondary)]) {
+        final at = _lines.indexWhere((l) => identical(l, line));
+        if (at == -1) continue; // gone while the screen was up
+        if (qty > 0) {
+          _lines[at] = CartLine(
+              group: line.group,
+              qty: qty,
+              priceCentsEach: priceEditable ? (choice.priceCentsEach ?? line.priceCentsEach) : line.priceCentsEach,
+              dose: line.dose);
+        } else {
+          _lines.removeAt(at);
+        }
+      }
+    });
+    _recomputeCartPricing();
   }
 
   /// Asks before throwing away unsold carts - shared by switching centers and signing out, the two ways a worker can
@@ -2590,6 +2774,47 @@ class _CartPageState extends State<CartPage> {
     );
   }
 
+  /// Under the home's center bar, the cart's bar title: the showing cart's name with ▾, how many carts there are once
+  /// there's more than one, and the stock's age under it; tap for the carts sheet, long press to bulk sell, as the
+  /// cart button.
+  Widget _cartTitleButton() {
+    final count = _slots.carts.length;
+    final theme = Theme.of(context);
+    final readAt = _inventory == null ? null : _stockReadAt;
+    return Semantics(
+      button: true,
+      label: 'Carts',
+      hint: 'Long press to bulk sell',
+      child: InkWell(
+        key: const Key('cartsTitle'),
+        borderRadius: BorderRadius.circular(8),
+        onTap: _selling ? null : _onCartsPressed,
+        onLongPress: _selling ? null : _onBulkSellPressed,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: Text(count > 1 ? '${_slots.active.name} · $count carts' : _slots.active.name,
+                        key: const Key('cartsTitleText'), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  ),
+                  const Icon(Icons.arrow_drop_down),
+                ],
+              ),
+              if (readAt != null)
+                Text(updatedLine(readAt, widget.now()), style: theme.textTheme.bodySmall, key: updatedLineKey),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   /// Every cart with how many lines it has, its timer if one is running, and the dose its session is timed against
   /// its lines, or - once it's been sold and is empty - what it sold. The showing cart's lines and timer
   /// come from memory, the others' from disk. A saved timer past sessionTimerMaxAge counts as not running, as it would
@@ -3180,6 +3405,43 @@ class _CartPageState extends State<CartPage> {
   /// underlying lot/transfer, and a worker typing a PKPR has no reason to see the same one listed twice),
   /// matched against the PKPR's own hex part so "pkpr-" (typed or not, any case) never has to be typed to get a
   /// match.
+  /// The PKPR field with the Scan and Add buttons beside it: a feature's PKPR input when one is on for this center's
+  /// license (it lays out the row, the cart's buttons included), else the cart's own keyboard field.
+  Widget _pkprRow() {
+    final actions = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SizedBox(width: 8),
+        IconButton(onPressed: _onScanPressed, icon: const Icon(Icons.qr_code_scanner), tooltip: 'Scan'),
+        FilledButton(onPressed: _onAddPkpr, child: const Text('Add')),
+      ],
+    );
+    final input = _featurePkprInput();
+    if (input == null) return Row(children: [Expanded(child: _pkprField()), actions]);
+    final inventory = _inventory;
+    return input(
+      context,
+      PkprInputArgs(
+        controller: _pkprController,
+        focusNode: _pkprFocus,
+        stock: inventory == null ? null : groupByPkpr(inventory),
+        errorText: _lookupError,
+        onAdd: _onAddPkpr,
+        actions: actions,
+      ),
+    );
+  }
+
+  /// The PKPR input of the first feature entry that offers one and whose feature is on for this center's license; the
+  /// cart names no feature, so it builds the same where a feature is left out.
+  PkprInputBuilder? _featurePkprInput() {
+    for (final MapEntry(key: name, value: entry) in widget.featureEntries.entries) {
+      final input = entry.pkprInput;
+      if (input != null && featureOnForLicense(name, widget.center.licenseType, table: widget.featureTable)) return input;
+    }
+    return null;
+  }
+
   Widget _pkprField() {
     return RawAutocomplete<PkprGroup>(
       textEditingController: _pkprController,
@@ -3324,9 +3586,9 @@ class _CartPageState extends State<CartPage> {
   /// waits for the frame to end because the host's setState can't run during this build.
   void _reportDraftCount() {
     final report = widget.onDraftCountChanged;
-    if (report == null || _lines.length == _reportedDraftCount) return;
-    _reportedDraftCount = _lines.length;
-    final count = _lines.length;
+    final count = _cartRows().length; // one per PKPR, as the cart shows them
+    if (report == null || count == _reportedDraftCount) return;
+    _reportedDraftCount = count;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) report(count);
     });
@@ -3337,25 +3599,38 @@ class _CartPageState extends State<CartPage> {
     _reportDraftCount();
     // the cart's totals, the core's; none (and no Sell) when it can't add the cart up
     final totals = _cartTotalsNow();
+    final rows = _cartRows();
     String moneyOrNone(int? cents) => cents == null ? '—' : money(cents);
+    final viewStock = featureOnForLicense('center_stock', widget.center.licenseType, table: widget.featureTable);
     return Scaffold(
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(widget.center.licenseName),
-            _cartNameLine(),
-          ],
-        ),
-        actions: [
-          if (featureOnForLicense('center_stock', widget.center.licenseType, table: widget.featureTable))
-            IconButton(onPressed: _onViewStockPressed, icon: const Icon(Icons.inventory_2_outlined), tooltip: 'View stock'),
-          IconButton(onPressed: _onSwitchCenterPressed, icon: const Icon(Icons.store_outlined), tooltip: 'Switch center'),
-          IconButton(onPressed: _onSignOutPressed, icon: const Icon(Icons.logout), tooltip: 'Sign out'),
-          _cartButton(),
-        ],
-      ),
+      appBar: widget.centerMenu != null
+          // under the home's center bar: the cart's name opens the carts (long press: bulk sell), and View stock
+          ? AppBar(
+              title: _cartTitleButton(),
+              actions: [
+                if (viewStock)
+                  IconButton(
+                      onPressed: _onViewStockPressed, icon: const Icon(Icons.inventory_2_outlined), tooltip: 'View stock'),
+              ],
+            )
+          : AppBar(
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(widget.center.licenseName),
+                  _cartNameLine(),
+                ],
+              ),
+              actions: [
+                if (viewStock)
+                  IconButton(
+                      onPressed: _onViewStockPressed, icon: const Icon(Icons.inventory_2_outlined), tooltip: 'View stock'),
+                IconButton(onPressed: _onSwitchCenterPressed, icon: const Icon(Icons.store_outlined), tooltip: 'Switch center'),
+                IconButton(onPressed: _onSignOutPressed, icon: const Icon(Icons.logout), tooltip: 'Sign out'),
+                _cartButton(),
+              ],
+            ),
       body: ResponsiveBody(
         child: Column(
           children: [
@@ -3371,15 +3646,7 @@ class _CartPageState extends State<CartPage> {
                         _inventoryBanner(),
                         Padding(
                           padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                          child: Row(
-                            children: [
-                              Expanded(child: _pkprField()),
-                              const SizedBox(width: 8),
-                              IconButton(
-                                  onPressed: _onScanPressed, icon: const Icon(Icons.qr_code_scanner), tooltip: 'Scan'),
-                              FilledButton(onPressed: _onAddPkpr, child: const Text('Add')),
-                            ],
-                          ),
+                          child: _pkprRow(),
                         ),
                         const Divider(height: 24),
                         _pricingBar(),
@@ -3394,35 +3661,48 @@ class _CartPageState extends State<CartPage> {
                     )
                   else
                     SliverList.separated(
-                      itemCount: _lines.length,
+                      itemCount: rows.length,
                       separatorBuilder: (_, __) => const Divider(height: 1),
-                      itemBuilder: (context, i) {
-                        final l = _lines[i];
-                        final title = l.productType.isEmpty ? l.productGuid : l.productType;
-                        final doseLabel = l.dose == doseSecondary ? ' · secondary dose' : '';
-                        final strainLabel = l.group.strain.isEmpty ? '' : '${l.group.strain} · ';
-                        final summary = Text(
-                            '${l.productGuid} · $strainLabel${l.qty} x ${money(l.priceCentsEach)} · ${l.group.tpeMg}${l.group.mgLabel} each$doseLabel');
+                      itemBuilder: (context, r) {
+                        // one row per PKPR: its details, then a line per dose line of the cart under it
+                        final at = rows[r];
+                        final first = _lines[at.first];
+                        final g = first.group;
+                        final title = first.productType.isEmpty ? first.productGuid : first.productType;
+                        final strainLabel = g.strain.isEmpty ? '' : ' · ${g.strain}';
                         // the line stays priced and capped by the product's figure; units
                         // only the state knows are noted under it with their own figure
-                        final stateOnlyNote = l.group.stateOnlyNote;
+                        final stateOnlyNote = g.stateOnlyNote;
                         return ListTile(
+                          key: ValueKey('cart-row-${first.productGuid}'),
                           title: Text(title),
-                          subtitle: stateOnlyNote == null
-                              ? summary
-                              : Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [summary, Text(stateOnlyNote)],
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text('${first.productGuid}$strainLabel'),
+                              for (final i in at)
+                                Row(
+                                  key: ValueKey('cart-dose-$i'),
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                          '${_lines[i].dose == doseSecondary ? 'Secondary' : 'Primary'} · ${_lines[i].qty} x '
+                                          '${money(_lines[i].priceCentsEach)} · ${g.tpeMg}${g.mgLabel} each'),
+                                    ),
+                                    Text(moneyOrNone(totals?.lineTotals[i])),
+                                  ],
                                 ),
-                          onTap: () => _onEditLine(i), // same dialog a fresh add uses, pre-filled from this line
+                              if (stateOnlyNote != null) Text(stateOnlyNote),
+                            ],
+                          ),
+                          onTap: () => _onEditRow(at), // the add screen, pre-filled from this product's lines
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Text(moneyOrNone(totals?.lineTotals[i])),
                               IconButton(
-                                  onPressed: () => _onEditLine(i), icon: const Icon(Icons.edit_outlined), tooltip: 'Edit'),
-                              IconButton(onPressed: () => _removeLine(i), icon: const Icon(Icons.close), tooltip: 'Remove'),
+                                  onPressed: () => _onEditRow(at), icon: const Icon(Icons.edit_outlined), tooltip: 'Edit'),
+                              IconButton(onPressed: () => _removeRow(at), icon: const Icon(Icons.close), tooltip: 'Remove'),
                             ],
                           ),
                         );

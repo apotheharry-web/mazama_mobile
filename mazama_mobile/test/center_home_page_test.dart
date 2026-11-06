@@ -9,6 +9,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mazama_mobile/center_home_page.dart';
+import 'package:mazama_mobile/center_menu.dart';
 import 'package:mazama_mobile/center_stock_page.dart';
 import 'package:mazama_mobile/licenses_client.dart';
 import 'package:mazama_mobile/local_store.dart';
@@ -82,9 +83,10 @@ class _FakeSalesState extends State<_FakeSales> {
   Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: const Text('the sales')));
 }
 
-Widget _home({int draftCount = 0, List<String> off = const [], List<int>? salesStarted}) => MaterialApp(
+Widget _home({int draftCount = 0, List<String> off = const [], List<int>? salesStarted, CenterMenu? menu}) => MaterialApp(
       home: CenterHomePage(
         center: _center,
+        menu: menu,
         buildMazama: () => Scaffold(appBar: AppBar(title: const Text('the mazama stock'))),
         buildStock: () => Scaffold(appBar: AppBar(title: const Text('the stock'))),
         buildCart: (onCount) => _FakeCart(onCount, draftCount),
@@ -97,6 +99,52 @@ List<String?> _tabLabels(WidgetTester tester) =>
     [for (final t in tester.widget<TabBar>(find.byType(TabBar)).tabs) (t as Tab).text];
 
 void main() {
+  group('the center bar', () {
+    testWidgets("without a menu there is none: the tabs are at the top, as they were", (tester) async {
+      await tester.pumpWidget(_home());
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('center-name')), findsNothing);
+    });
+
+    testWidgets("shows the center's name on every tab, and the menu once the cart has attached its actions",
+        (tester) async {
+      final menu = CenterMenu();
+      await tester.pumpWidget(_home(menu: menu));
+      await tester.pumpAndSettle();
+      expect(find.text('Bendable Service Center'), findsOneWidget);
+      expect(find.byKey(const ValueKey('center-menu')), findsNothing); // nothing attached yet
+
+      final done = <String>[];
+      final owner = Object();
+      menu.attach(owner,
+          switchCenter: () async => done.add('switch'), signOut: () async => done.add('signout'), signedInAs: 'w@example.com');
+      await tester.pumpAndSettle();
+      for (final tab in ['Mazama', 'Stock', 'Cart', 'Sales']) {
+        await tester.tap(find.text(tab));
+        await tester.pumpAndSettle();
+        expect(find.byKey(const ValueKey('center-menu')), findsOneWidget, reason: tab);
+      }
+
+      await tester.tap(find.byKey(const ValueKey('center-menu')));
+      await tester.pumpAndSettle();
+      expect(find.text('Signed in as w@example.com'), findsOneWidget);
+      await tester.tap(find.text('Change service center'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('center-menu')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Sign out'));
+      await tester.pumpAndSettle();
+      expect(done, ['switch', 'signout']);
+
+      menu.detach(Object()); // someone else's detach changes nothing
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('center-menu')), findsOneWidget);
+      menu.detach(owner);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('center-menu')), findsNothing);
+    });
+  });
+
   // The home's Scaffold already makes room for the keyboard; a page under it that made room again lost the
   // keyboard's height twice (the cart: its field and lines gone, Total/Sell up under the app bar).
   testWidgets('with the keyboard up, a page makes room for it once, not twice', (tester) async {

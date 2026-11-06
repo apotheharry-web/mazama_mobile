@@ -144,20 +144,22 @@ void main() {
       await tester.pumpAndSettle();
       await _expectDemoStock(tester);
 
-      // Switch center stays in the demo, and its fresh Stock page reloads the demo stock: still as it was (
+      // Change service center stays in the demo, and its fresh Stock page reloads the demo stock: still as it was (
       // the Stock page has no pull to refresh, only the PKPR list does).
-      await tester.tap(find.text('Cart'));
+      // from the center bar's menu, on any tab
+      await tester.tap(find.byKey(const ValueKey('center-menu')));
       await tester.pumpAndSettle();
-      await tester.tap(find.byTooltip('Switch center'));
+      expect(find.textContaining('Signed in as'), findsOneWidget);
+      await tester.tap(find.text('Change service center'));
       await tester.pumpAndSettle();
       expect(find.byType(CenterStockPage), findsOneWidget);
       expect(find.text(demoBannerText), findsOneWidget);
       await _expectDemoStock(tester);
 
       // Sign out: the sign-in page, no banner, nothing saved.
-      await tester.tap(find.text('Cart'));
+      await tester.tap(find.byKey(const ValueKey('center-menu')));
       await tester.pumpAndSettle();
-      await tester.tap(find.byTooltip('Sign out'));
+      await tester.tap(find.text('Sign out'));
       await tester.pumpAndSettle();
       expect(find.text('Mazama sign-in'), findsOneWidget);
       expect(find.text(demoBannerText), findsNothing);

@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "selling.sale_groups input",
+  "description": "The Sales tab's records, in the order it lists them: each one's sale number, date (YYYY-MM-DD), units sold and cost in dollars.",
+  "type": "object",
+  "required": [
+    "sales"
+  ],
+  "properties": {
+    "sales": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "sale_number": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "date": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "number_sold": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "cost": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

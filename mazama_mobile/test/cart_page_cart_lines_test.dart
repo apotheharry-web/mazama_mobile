@@ -430,4 +430,71 @@ void main() {
       expect(find.text('Extract'), findsOneWidget);
     });
   });
+
+  // one row per PKPR, whatever doses its lines are
+  group('one row per PKPR', () {
+    /// Adds PKPR-ab12c as the secondary dose through the cart's own dialog.
+    Future<void> addSecondary(WidgetTester tester, String qty) async {
+      await tester.enterText(find.widgetWithText(TextField, 'PKPR'), 'ab12c');
+      await tester.tap(find.widgetWithText(FilledButton, 'Add'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.widgetWithText(TextFormField, 'Quantity'), qty);
+      await tester.enterText(find.widgetWithText(TextFormField, 'Price each'), '10.00');
+      await tester.tap(find.text('Secondary dose'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.descendant(of: find.byType(AlertDialog), matching: find.widgetWithText(FilledButton, 'Add')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(TextButton, 'Close'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets("a PKPR's primary and secondary lines are one row, a line of text per dose with its own total",
+        (tester) async {
+      final counts = <int>[];
+      await tester.pumpWidget(cartPage(fetchPackages: (id) async => inventory, onDraftCountChanged: counts.add));
+      await tester.pumpAndSettle();
+      await addLine(tester, pkpr: 'ab12c', qty: '1', price: '10.00');
+      await addSecondary(tester, '2');
+
+      expect(find.byKey(const ValueKey('cart-row-PKPR-ab12c')), findsOneWidget);
+      expect(find.byTooltip('Remove'), findsOneWidget);
+      expect(find.textContaining('Primary · 1 x \$10.00'), findsOneWidget);
+      expect(find.textContaining('Secondary · 2 x \$10.00'), findsOneWidget);
+      expect(find.text('\$20.00'), findsWidgets); // the secondary line's own total
+      expect(counts.last, 1); // the Cart tab counts rows: one PKPR
+    });
+
+    testWidgets('editing a row of two lines asks which, then edits that line', (tester) async {
+      await tester.pumpWidget(cartPage(fetchPackages: (id) async => inventory));
+      await tester.pumpAndSettle();
+      await addLine(tester, pkpr: 'ab12c', qty: '1', price: '10.00');
+      await addSecondary(tester, '2');
+
+      await tester.tap(find.byTooltip('Edit'));
+      await tester.pumpAndSettle();
+      expect(find.text('Which line?'), findsOneWidget);
+      await tester.tap(find.text('Secondary · 2 x \$10.00'));
+      await tester.pumpAndSettle();
+      expect(tester.widget<TextFormField>(find.widgetWithText(TextFormField, 'Quantity')).controller!.text, '2');
+      await tester.enterText(find.widgetWithText(TextFormField, 'Quantity'), '3');
+      await tester.tap(find.descendant(of: find.byType(AlertDialog), matching: find.widgetWithText(FilledButton, 'Save')));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Secondary · 3 x \$10.00'), findsOneWidget);
+      expect(find.textContaining('Primary · 1 x \$10.00'), findsOneWidget);
+    });
+
+    testWidgets('removing the row removes every line of its PKPR', (tester) async {
+      await tester.pumpWidget(cartPage(fetchPackages: (id) async => inventory));
+      await tester.pumpAndSettle();
+      await addLine(tester, pkpr: 'ab12c', qty: '1', price: '10.00');
+      await addSecondary(tester, '2');
+      await addLine(tester, pkpr: 'ff99aa', qty: '1', price: '5.00');
+
+      await tester.tap(find.descendant(of: find.byKey(const ValueKey('cart-row-PKPR-ab12c')), matching: find.byTooltip('Remove')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('cart-row-PKPR-ab12c')), findsNothing);
+      expect(find.byKey(const ValueKey('cart-row-PKPR-ff99aa')), findsOneWidget);
+    });
+  });
 }
+

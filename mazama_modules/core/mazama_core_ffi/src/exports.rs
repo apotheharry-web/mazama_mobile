@@ -342,6 +342,12 @@ pub extern "C" fn mz_selling_sale_proof_json(input_json: *const c_char) -> *mut 
     run(input_json, mazama_core::selling::sale::sale_proof_json)
 }
 
+/// selling.sale_groups: {sales: [{sale_number, date, number_sold, cost}]} -> {groups: [{sale_number, rows, units, total_cents}], days: [{date, groups, sales, total_cents}]} a center's recent sales, one line per sale number, by day.
+#[unsafe(no_mangle)]
+pub extern "C" fn mz_selling_sale_groups_json(input_json: *const c_char) -> *mut c_char {
+    run(input_json, mazama_core::selling::history::sale_groups_json)
+}
+
 /// selling.review_each: {cost, qty} -> {cents} a reviewed sale's price each: the total in cents / qty, half up.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_selling_review_each_json(input_json: *const c_char) -> *mut c_char {
@@ -456,6 +462,12 @@ pub extern "C" fn mz_names_name_dose_json(input_json: *const c_char) -> *mut c_c
     run(input_json, mazama_core::label::name_dose_json)
 }
 
+/// keypad.keys: {typed, pkprs} -> {keys, matches, only} the cart keypad's lit keys and matching PKPRs (specs/hex-keypad).
+#[unsafe(no_mangle)]
+pub extern "C" fn mz_keypad_keys_json(input_json: *const c_char) -> *mut c_char {
+    run(input_json, mazama_core::features::hex_keypad::keys_json)
+}
+
 /// A C function of the table.
 pub type Export = extern "C" fn(*const c_char) -> *mut c_char;
 
@@ -517,6 +529,7 @@ pub const EXPORTS: &[(&str, &str, &str, Export)] = &[
     ("selling", "review_sale_date", "mz_selling_review_sale_date_json", mz_selling_review_sale_date_json),
     ("selling", "sale_outcome", "mz_selling_sale_outcome_json", mz_selling_sale_outcome_json),
     ("selling", "sale_proof", "mz_selling_sale_proof_json", mz_selling_sale_proof_json),
+    ("selling", "sale_groups", "mz_selling_sale_groups_json", mz_selling_sale_groups_json),
     ("selling", "review_each", "mz_selling_review_each_json", mz_selling_review_each_json),
     ("selling", "expiry", "mz_selling_expiry_json", mz_selling_expiry_json),
     ("selling", "parse_state_date", "mz_selling_parse_state_date_json", mz_selling_parse_state_date_json),
@@ -536,4 +549,5 @@ pub const EXPORTS: &[(&str, &str, &str, Export)] = &[
     ("records", "dry_grams", "mz_records_dry_grams_json", mz_records_dry_grams_json),
     ("records", "licenses_of_type", "mz_records_licenses_of_type_json", mz_records_licenses_of_type_json),
     ("names", "name_dose", "mz_names_name_dose_json", mz_names_name_dose_json),
+    ("keypad", "keys", "mz_keypad_keys_json", mz_keypad_keys_json),
 ];

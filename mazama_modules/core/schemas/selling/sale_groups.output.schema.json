@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "selling.sale_groups output",
+  "description": "One group per sale, where its first record is: its sale number (trimmed), its records' positions, its units (null when a record has none) and its total in cents (null when a record has no cost). Then the days, in the order their first sale comes: the date, the positions of its groups, how many sales and its total in cents (null when any of its sales' totals is).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "groups",
+    "days"
+  ],
+  "properties": {
+    "groups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sale_number",
+          "rows",
+          "units",
+          "total_cents"
+        ],
+        "properties": {
+          "sale_number": {
+            "type": "string"
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "units": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "total_cents": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "days": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "date",
+          "groups",
+          "sales",
+          "total_cents"
+        ],
+        "properties": {
+          "date": {
+            "type": "string"
+          },
+          "groups": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "sales": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "total_cents": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

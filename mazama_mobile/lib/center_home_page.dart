@@ -16,6 +16,10 @@
 // tab first becomes the current page: it reads the center's whole sales history, which must not run while the worker
 // is on the Cart beside it (the pre-build below would otherwise start it there).
 //
+// Above the tabs, the center bar: the center's name and a menu (center_menu.dart) with who is signed in, Change service
+// center and Sign out, on every tab. The cart attaches those two actions (it knows which carts leaving would discard);
+// the menu shows once it has.
+//
 // Opening the home asks the sync engine once for the refresh of each dataset its pages
 // read through the engine ([CenterHomePage.refreshOnOpen]: the Mazama tab's mazama_inventory and the Stock page's
 // sheets, sync/dataset_feed.dart), before the pages are built, so each page joins that read rather than starting its
@@ -30,6 +34,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import 'center_menu.dart';
 import 'features.g.dart';
 import 'licenses_client.dart';
 import 'sync/sync_datasets.dart' show Dataset;
@@ -46,6 +51,7 @@ class CenterHomePage extends StatefulWidget {
       this.buildUpdateCard,
       this.engine,
       this.refreshOnOpen = const [],
+      this.menu,
       this.featureTable = features});
 
   final License center;
@@ -75,6 +81,10 @@ class CenterHomePage extends StatefulWidget {
   /// The datasets (and keys) asked for once as the home opens (the file comment): only those its pages read through
   /// [engine]'s watch, never one a page still reads for itself.
   final List<(Dataset, String)> refreshOnOpen;
+
+  /// The center bar's menu (Change service center, Sign out), which the cart attaches its actions to; without one
+  /// (tests of the tabs alone) there is no center bar.
+  final CenterMenu? menu;
 
   @override
   State<CenterHomePage> createState() => _CenterHomePageState();
@@ -155,6 +165,47 @@ class _CenterHomePageState extends State<CenterHomePage> with SingleTickerProvid
         _Tab.sales => _salesOpened ? _sales : const SizedBox.shrink(),
       };
 
+  /// The center's name, and the menu once the cart has attached its actions.
+  Widget _centerBar(CenterMenu menu) => ListenableBuilder(
+        listenable: menu,
+        builder: (context, _) => Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 4, 0),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(widget.center.licenseName,
+                    key: const ValueKey('center-name'),
+                    style: Theme.of(context).textTheme.titleMedium,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis),
+              ),
+              if (menu.ready)
+                PopupMenuButton<String>(
+                  key: const ValueKey('center-menu'),
+                  tooltip: 'Center menu',
+                  icon: const Icon(Icons.more_vert),
+                  onSelected: (choice) {
+                    if (choice == 'switch') unawaited(menu.switchCenter());
+                    if (choice == 'signout') unawaited(menu.signOut());
+                  },
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'switch',
+                      child: ListTile(leading: Icon(Icons.store_outlined), title: Text('Change service center')),
+                    ),
+                    const PopupMenuItem(
+                      value: 'signout',
+                      child: ListTile(leading: Icon(Icons.logout), title: Text('Sign out')),
+                    ),
+                    if (menu.signedInAs case final who?)
+                      PopupMenuItem(enabled: false, child: Text('Signed in as $who')),
+                  ],
+                ),
+            ],
+          ),
+        ),
+      );
+
   @override
   Widget build(BuildContext context) {
     if (_shown.isEmpty) {
@@ -173,6 +224,7 @@ class _CenterHomePageState extends State<CenterHomePage> with SingleTickerProvid
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  if (widget.menu case final menu?) _centerBar(menu),
                   if (widget.buildUpdateCard != null && _on('app_updates')) widget.buildUpdateCard!(_draftCount),
                   TabBar(
                     controller: _tabs,

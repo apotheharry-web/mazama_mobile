@@ -21,6 +21,7 @@
 use serde_json::{Value, json};
 
 pub mod cart;
+pub mod history;
 pub mod pricing;
 pub mod sale;
 

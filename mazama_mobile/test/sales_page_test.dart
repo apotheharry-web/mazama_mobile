@@ -10,9 +10,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:mazama_mobile/local_store.dart';
+import 'package:mazama_mobile/mazama_core.dart';
 import 'package:mazama_mobile/sales_page.dart';
 import 'package:mazama_mobile/sync/sync_datasets.dart';
 import 'package:mazama_mobile/sync/updated_line.dart';
+
+import 'support/core.dart';
 
 late Directory _dir;
 
@@ -39,10 +42,17 @@ final _records = <Object?>[
   _sale(5, 'S-0005', '2026-10-28T07:00:00.000Z', name: 'Voided', deleted: true),
 ];
 
+/// A core that can't answer anything.
+class _NoCore implements CoreFunctions {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw MazamaCoreError('no core');
+}
+
 Widget _page({
   required Future<List<Object?>> Function() load,
   Future<void> Function(List<Object?>)? upload,
   bool demo = false,
+  CoreFunctions? core,
 }) =>
     MaterialApp(
       home: SalesPage(
@@ -52,6 +62,7 @@ Widget _page({
         datasets: Datasets.forDir(() => _dir),
         now: () => _now,
         demo: demo,
+        core: core,
       ),
     );
 
@@ -61,6 +72,7 @@ List<String> _shownNumbers(WidgetTester tester) => [
     ];
 
 void main() {
+  setUpAll(loadTestCore);
   setUp(() => _dir = Directory.systemTemp.createTempSync('mazama_sales_page_test_'));
   tearDown(() {
     LocalStore.debugCloseAll();
@@ -110,7 +122,7 @@ void main() {
     expect(_shownNumbers(tester), ['S-0004', 'S-0003', 'S-0002']);
     expect(find.text('Voided'), findsNothing);
     expect(find.text('Too old'), findsNothing);
-    expect(find.text(r'$1,250.00'), findsOneWidget);
+    expect(find.descendant(of: find.byKey(const ValueKey('sale-S-0004')), matching: find.text(r'$1,250.00')), findsOneWidget);
     expect(uploads, [_records]); // all records read, not only the 30 days shown
     expect(keptRecords(), _records); // the recent_sales dataset
     expect(datasets().read(Dataset.recentSales, '231')!.source, sourceState);
@@ -249,5 +261,120 @@ void main() {
     await tester.fling(find.byKey(const ValueKey('sale-number')).first, const Offset(0, 400), 1000);
     await tester.pumpAndSettle();
     expect(reads, 2);
+  });
+
+  group('one line per sale (CW-R14)', () {
+    // the product rows of the open sales
+    final products = find.byWidgetPredicate((w) => w.key is ValueKey<String> && (w.key as ValueKey<String>).value.startsWith('sale-product-'));
+    // a sale of three products (S-0007), one of one (S-0006), both today
+    final sale = <Object?>[
+      _sale(20, 'S-0007', '2026-10-29', name: 'Golden Teacher Extract', sold: 2, cost: 50),
+      _sale(21, 'S-0007', '2026-10-29', name: 'Enigma Whole Fungi', sold: 1, cost: 40),
+      _sale(22, 'S-0007', '2026-10-29', name: 'Golden Teacher Choc', sold: 1, cost: 30.25),
+      _sale(19, 'S-0006', '2026-10-29', name: 'Penis Envy Extract', sold: 1, cost: 35),
+    ];
+
+    test("groupRecentSales: the core's groups, in the page's order, with units and total", () {
+      final groups = groupRecentSales(recentSales(sale, now: _now));
+      expect([for (final g in groups) g.saleNumber], ['S-0007', 'S-0006']);
+      expect([for (final r in groups.first.rows) r.product],
+          ['Golden Teacher Choc', 'Enigma Whole Fungi', 'Golden Teacher Extract']);
+      expect(groups.first.units, 4);
+      expect(groups.first.totalCents, 12025);
+      expect(groups.first.totalText, r'$120.25');
+    });
+
+    test('every shared case of selling.sale_groups, through the FFI', () {
+      final doc = jsonDecode(File('assets/shared/selling/history/sale_groups.json').readAsStringSync()) as Map;
+      for (final c in (doc['cases'] as List).cast<Map>()) {
+        expect(MazamaCore.instance.sellingSaleGroups({'sales': c['sales']})['groups'], c['groups'], reason: c['why'] as String);
+      }
+    });
+
+    test("a core that can't answer: each record a line of its own, with its own cost", () {
+      final groups = groupRecentSales(recentSales(sale, now: _now), core: _NoCore());
+      expect(groups.length, 4);
+      expect(groups.first.totalText, r'$30.25');
+    });
+
+    testWidgets('a sale of several products is one line; tapping it opens its products in place', (tester) async {
+      await tester.pumpWidget(_page(load: () async => sale));
+      await tester.pumpAndSettle();
+      expect(_shownNumbers(tester), ['S-0007', 'S-0006']);
+      expect(find.text('3 products'), findsOneWidget);
+      expect(find.text(r'$120.25'), findsOneWidget);
+      expect(find.textContaining('Golden Teacher Choc, Enigma Whole Fungi, Golden Teacher Extract'), findsOneWidget);
+      expect(find.textContaining('2026-10-29 · 4 units'), findsOneWidget);
+      expect(products, findsNothing);
+
+      await tester.tap(find.text(r'$120.25'));
+      await tester.pumpAndSettle();
+      expect(products, findsNWidgets(3));
+      expect(find.text(r'2 × · $50.00'), findsOneWidget);
+      expect(find.text(r'1 × · $30.25'), findsOneWidget);
+
+      await tester.tap(find.text(r'$35.00')); // another sale opens beside it
+      await tester.pumpAndSettle();
+      expect(products, findsNWidgets(4));
+
+      await tester.tap(find.text(r'$120.25')); // and tapping again closes it
+      await tester.pumpAndSettle();
+      expect(products, findsNWidgets(1));
+    });
+  });
+
+  group('the sales by calendar date', () {
+    final week = <Object?>[
+      _sale(30, 'S-30', '2026-10-29', name: 'A', sold: 1, cost: 10),
+      _sale(31, 'S-30', '2026-10-29', name: 'B', sold: 1, cost: 5),
+      _sale(29, 'S-29', '2026-10-29', name: 'C', sold: 2, cost: 20),
+      _sale(28, 'S-28', '2026-10-28', name: 'D', sold: 1, cost: 7.5),
+      _sale(27, 'S-27', '2026-10-25', name: 'E', sold: 1, cost: 3),
+    ];
+
+    test('recentSaleDays: the dates newest first, each with its sales and total, from the core', () {
+      final days = recentSaleDays(recentSales(week, now: _now));
+      expect([for (final d in days) d.date], ['2026-10-29', '2026-10-28', '2026-10-25']);
+      expect([for (final d in days) [for (final s in d.sales) s.saleNumber]], [['S-30', 'S-29'], ['S-28'], ['S-27']]);
+      expect([for (final d in days) d.totalText], [r'$35.00', r'$7.50', r'$3.00']);
+    });
+
+    test("a core that can't answer: still by date, each record its own line, no day total", () {
+      final days = recentSaleDays(recentSales(week, now: _now), core: _NoCore());
+      expect([for (final d in days) d.sales.length], [3, 1, 1]);
+      expect([for (final d in days) d.totalText], ['—', '—', '—']);
+    });
+
+    testWidgets('a header per date (Today, Yesterday, else the date) with its sales and total', (tester) async {
+      await tester.pumpWidget(_page(load: () async => week));
+      await tester.pumpAndSettle();
+      expect(find.text('Today · 2026-10-29'), findsOneWidget);
+      expect(find.text('Yesterday · 2026-10-28'), findsOneWidget);
+      expect(find.text('2026-10-25'), findsOneWidget);
+      expect(find.text('2 sales · '), findsOneWidget);
+      expect(find.text('1 sale · '), findsNWidgets(2));
+      expect(_shownNumbers(tester), ['S-30', 'S-29', 'S-28', 'S-27']);
+      // each date below the one before, its sales in between
+      double top(String key) => tester.getTopLeft(find.byKey(ValueKey(key))).dy;
+      expect(top('sale-day-2026-10-29') < top('sale-S-30'), isTrue);
+      expect(top('sale-S-29') < top('sale-day-2026-10-28'), isTrue);
+      expect(top('sale-day-2026-10-28') < top('sale-S-28'), isTrue);
+    });
+
+    testWidgets('tapping a date collapses it to its header, and tapping again opens it', (tester) async {
+      await tester.pumpWidget(_page(load: () async => week));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Today · 2026-10-29'));
+      await tester.pumpAndSettle();
+      expect(_shownNumbers(tester), ['S-28', 'S-27']);
+      expect(find.text('Today · 2026-10-29'), findsOneWidget); // its header stays
+      await tester.tap(find.text('2026-10-25'));
+      await tester.pumpAndSettle();
+      expect(_shownNumbers(tester), ['S-28']);
+
+      await tester.tap(find.text('Today · 2026-10-29'));
+      await tester.pumpAndSettle();
+      expect(_shownNumbers(tester), ['S-30', 'S-29', 'S-28']);
+    });
   });
 }

@@ -15,6 +15,8 @@ import 'package:mazama_mobile/coa_data_client.dart';
 import 'package:mazama_mobile/coa_data_resolver.dart';
 import 'package:mazama_mobile/coa_uploader.dart';
 import 'package:mazama_mobile/device_id.dart';
+import 'package:mazama_mobile/center_menu.dart';
+import 'package:mazama_mobile/feature_entry.dart';
 import 'package:mazama_mobile/features.g.dart';
 import 'package:mazama_mobile/flow/flow_spec.dart';
 import 'package:mazama_mobile/mazama_core.dart';
@@ -141,6 +143,8 @@ Widget cartPage({
   FlowSpec? spec,
   ServerHealth? health,
   Map<String, Feature>? featureTable,
+  Map<String, FeatureEntry>? featureEntries,
+  CenterMenu? centerMenu,
   void Function(int stateId)? requestStockRefresh,
   Stream<DatasetRow?>? Function(int stateId)? watchStock,
 }) {
@@ -171,6 +175,9 @@ Widget cartPage({
   return MaterialApp(
       home: CartPage(
         featureTable: featureTable ?? features,
+        // No feature takes over the PKPR field unless a test gives one: these tests type into the cart's own field.
+        featureEntries: featureEntries ?? const {},
+        centerMenu: centerMenu,
         // The refresh a confirmed sale asks for; never the app's own engine in a test.
         requestStockRefresh: requestStockRefresh ?? (stateId) {},
         // The engine's copy of the stock; none unless a test gives one (never the app's link)

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -5,7 +6,10 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mazama_mobile/center_status_client.dart';
 import 'package:mazama_mobile/coa_data_resolver.dart';
+import 'package:mazama_mobile/cart_pricing.dart' show CartPricingMode;
 import 'package:mazama_mobile/coa_uploader.dart';
+import 'package:mazama_mobile/feature_entry.dart';
+import 'package:mazama_mobile/features.g.dart';
 import 'package:mazama_mobile/sync/enrichment.dart';
 import 'package:mazama_mobile/sync/center_stock.dart' show keepCenterStock;
 import 'package:mazama_mobile/packages_client.dart';
@@ -762,6 +766,238 @@ void main() {
       expect(find.textContaining('mg psilocybin'), findsNothing);
       expect(find.textContaining('Duration:'), findsNothing);
       expect(find.text('Start Timer'), findsNothing);
+    });
+  });
+
+  // A feature can take over the PKPR field (specs/features FT-D13). The cart never names it: these tests use a
+  // stand-in feature, on or off for the center's license.
+  group("a feature's PKPR input", () {
+    Feature standIn(List<String> onPhone) => Feature(
+          name: 'trial_input',
+          id: 'F-99',
+          what: 'a stand-in',
+          built: const ['phone'],
+          onWeb: const [],
+          onPhone: onPhone,
+          onPhoneDebug: const [],
+          pages: const [],
+          uses: const [],
+          shared: 'complete',
+          logic: const [],
+        );
+
+    PkprInputArgs? given;
+    Widget standInInput(BuildContext context, PkprInputArgs args) {
+      given = args;
+      return Column(children: [
+        const Text('the feature input'),
+        Row(children: [Expanded(child: TextField(key: const ValueKey('trial-field'), controller: args.controller)), args.actions]),
+      ]);
+    }
+
+    setUp(() => given = null);
+
+    testWidgets('on for the center: the cart uses it, with its stock, its field and its Scan and Add', (tester) async {
+      await tester.pumpWidget(cartPage(
+        fetchPackages: (id) async => inventory,
+        featureTable: {...features, 'trial_input': standIn(const ['ServiceCenter'])},
+        featureEntries: {'trial_input': FeatureEntry(pkprInput: standInInput)},
+      ));
+      await tester.pumpAndSettle();
+
+      expect(find.text('the feature input'), findsOneWidget);
+      expect(find.widgetWithText(TextField, 'PKPR'), findsNothing); // the cart's own field is gone
+      expect(given!.stock!.map((g) => g.productGuid), ['PKPR-ab12c', 'PKPR-ff99aa']);
+      expect(find.byTooltip('Scan'), findsOneWidget);
+
+      await tester.enterText(find.byKey(const ValueKey('trial-field')), 'ab12c');
+      await tester.tap(find.widgetWithText(FilledButton, 'Add'));
+      await tester.pumpAndSettle();
+      expect(find.widgetWithText(TextFormField, 'Quantity'), findsOneWidget); // the cart's Add, through its field
+    });
+
+    testWidgets('while the stock is loading the feature is told there is none yet', (tester) async {
+      final load = Completer<List<Package>>();
+      await tester.pumpWidget(cartPage(
+        fetchPackages: (id) => load.future,
+        featureTable: {...features, 'trial_input': standIn(const ['ServiceCenter'])},
+        featureEntries: {'trial_input': FeatureEntry(pkprInput: standInInput)},
+      ));
+      await tester.pump();
+
+      expect(find.text('the feature input'), findsOneWidget);
+      expect(given!.stock, isNull);
+
+      load.complete(inventory); // and once it has loaded, the stock is given
+      await tester.pumpAndSettle();
+      expect(given!.stock!.map((g) => g.productGuid), ['PKPR-ab12c', 'PKPR-ff99aa']);
+    });
+
+    testWidgets('off for the center, or offering no input: the cart keeps its own field', (tester) async {
+      await tester.pumpWidget(cartPage(
+        fetchPackages: (id) async => inventory,
+        featureTable: {...features, 'trial_input': standIn(const ['Manufacturer']), 'trial_tab': standIn(const ['ServiceCenter'])},
+        featureEntries: {
+          'trial_input': FeatureEntry(pkprInput: standInInput),
+          'trial_tab': FeatureEntry(tab: (context, license) => const SizedBox()),
+        },
+      ));
+      await tester.pumpAndSettle();
+
+      expect(find.text('the feature input'), findsNothing);
+      expect(given, isNull);
+      expect(find.widgetWithText(TextField, 'PKPR'), findsOneWidget);
+    });
+  });
+
+  // A feature can take over the cart's add-line screen (specs/features FT-D14): a stand-in screen here, closing with
+  // what each test has it choose.
+  group("a feature's add-line screen", () {
+    Feature standIn(List<String> onPhone) => Feature(
+          name: 'trial_editor',
+          id: 'F-98',
+          what: 'a stand-in',
+          built: const ['phone'],
+          onWeb: const [],
+          onPhone: onPhone,
+          onPhoneDebug: const [],
+          pages: const [],
+          uses: const [],
+          shared: 'complete',
+          logic: const [],
+        );
+
+    late List<LineEditorArgs> opened;
+    late LineChoice? Function(LineEditorArgs) choose;
+    Widget standInEditor(BuildContext context, LineEditorArgs args) {
+      opened.add(args);
+      return AlertDialog(
+        content: const Text('the stand-in screen'),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(choose(args)), child: const Text('choose')),
+        ],
+      );
+    }
+
+    setUp(() {
+      opened = [];
+      choose = (_) => null;
+    });
+
+    Widget page({CartPricingMode pricingMode = CartPricingMode.each, List<String> onPhone = const ['ServiceCenter']}) =>
+        cartPage(
+          fetchPackages: (id) async => inventory,
+          pricingMode: pricingMode,
+          featureTable: {...features, 'trial_editor': standIn(onPhone)},
+          featureEntries: {'trial_editor': FeatureEntry(lineEditor: standInEditor)},
+        );
+
+    Future<void> add(WidgetTester tester, String pkpr) async {
+      await tester.enterText(find.widgetWithText(TextField, 'PKPR'), pkpr);
+      await tester.tap(find.widgetWithText(FilledButton, 'Add'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('choose'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('an add opens it, and its counts become a primary and a secondary line, with no label popup after',
+        (tester) async {
+      choose = (_) => const LineChoice(primary: 2, secondary: 1, priceCentsEach: 1000);
+      await tester.pumpWidget(page());
+      await tester.pumpAndSettle();
+      await add(tester, 'ab12c');
+
+      final args = opened.single;
+      expect(args.group.productGuid, 'PKPR-ab12c');
+      expect(args.editing, isFalse);
+      expect((args.primary, args.secondary), (0, 0));
+      expect(args.stockLeft, 10);
+      expect(args.price, isNotNull); // pricing each line: the screen asks for the price
+      expect(args.price!(perMg: false, text: '12.50').cents, 1250);
+      expect(args.price!(perMg: false, text: 'nope').error, isNotNull);
+
+      expect(find.textContaining('Compare label'), findsNothing);
+      expect(find.textContaining('2 x \$10.00'), findsOneWidget);
+      expect(find.textContaining('Secondary · 1 x \$10.00'), findsOneWidget);
+      expect(find.byKey(const ValueKey('cart-row-PKPR-ab12c')), findsOneWidget); // both doses: one row
+      expect(tester.widget<TextField>(find.widgetWithText(TextField, 'PKPR')).controller!.text, '');
+    });
+
+    testWidgets('a second add of the same dose and price merges into its line, and counts against the stock left',
+        (tester) async {
+      choose = (_) => const LineChoice(primary: 3, secondary: 0, priceCentsEach: 1000);
+      await tester.pumpWidget(page());
+      await tester.pumpAndSettle();
+      await add(tester, 'ab12c');
+      await add(tester, 'ab12c');
+
+      expect(opened.last.stockLeft, 7);
+      expect(find.textContaining('6 x \$10.00'), findsOneWidget);
+    });
+
+    testWidgets('in a cart-wide pricing mode the screen asks no price', (tester) async {
+      choose = (_) => const LineChoice(primary: 1, secondary: 0);
+      await tester.pumpWidget(page(pricingMode: CartPricingMode.total));
+      await tester.pumpAndSettle();
+      await add(tester, 'ab12c');
+      expect(opened.single.price, isNull);
+      expect(find.textContaining('1 x '), findsOneWidget);
+    });
+
+    testWidgets('closed with nothing, nothing is added', (tester) async {
+      await tester.pumpWidget(page());
+      await tester.pumpAndSettle();
+      await add(tester, 'ab12c');
+      expect(find.text('Nothing in the cart yet.'), findsOneWidget);
+    });
+
+    testWidgets("editing a product with both doses opens it with both counts; Save sets each, removing one at 0",
+        (tester) async {
+      choose = (_) => const LineChoice(primary: 2, secondary: 1, priceCentsEach: 1000);
+      await tester.pumpWidget(page());
+      await tester.pumpAndSettle();
+      await add(tester, 'ab12c');
+
+      choose = (_) => const LineChoice(primary: 0, secondary: 3, priceCentsEach: 1000);
+      await tester.tap(find.byTooltip('Edit'));
+      await tester.pumpAndSettle();
+      final args = opened.last;
+      expect(args.editing, isTrue);
+      expect((args.primary, args.secondary), (2, 1));
+      expect(args.stockLeft, 10); // neither of the product's own lines counted against it
+      expect(args.priceCentsEach, 1000);
+      await tester.tap(find.text('choose'));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Primary ·'), findsNothing);
+      expect(find.textContaining('Secondary · 3 x \$10.00'), findsOneWidget);
+    });
+
+    testWidgets('a product with one line edits that line, its other dose added into the same row', (tester) async {
+      choose = (_) => const LineChoice(primary: 2, secondary: 0, priceCentsEach: 1000);
+      await tester.pumpWidget(page());
+      await tester.pumpAndSettle();
+      await add(tester, 'ab12c');
+
+      choose = (_) => const LineChoice(primary: 2, secondary: 1, priceCentsEach: 1000);
+      await tester.tap(find.byTooltip('Edit'));
+      await tester.pumpAndSettle();
+      expect((opened.last.primary, opened.last.secondary), (2, 0));
+      await tester.tap(find.text('choose'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('cart-row-PKPR-ab12c')), findsOneWidget);
+      expect(find.textContaining('Primary · 2 x \$10.00'), findsOneWidget);
+      expect(find.textContaining('Secondary · 1 x \$10.00'), findsOneWidget);
+    });
+
+    testWidgets("off for the center's license: the cart's own dialog", (tester) async {
+      await tester.pumpWidget(page(onPhone: const ['Manufacturer']));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.widgetWithText(TextField, 'PKPR'), 'ab12c');
+      await tester.tap(find.widgetWithText(FilledButton, 'Add'));
+      await tester.pumpAndSettle();
+      expect(opened, isEmpty);
+      expect(find.widgetWithText(TextFormField, 'Quantity'), findsOneWidget);
     });
   });
 }

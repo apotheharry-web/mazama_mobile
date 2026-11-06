@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "keypad.keys output",
+  "description": "The keys that can come next (keypad order), the PKPRs whose hex part holds the typed text anywhere (stock order, each once), and the one left when exactly one matches.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "keys",
+    "matches",
+    "only"
+  ],
+  "properties": {
+    "keys": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[0-9a-f]$"
+      }
+    },
+    "matches": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "only": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}

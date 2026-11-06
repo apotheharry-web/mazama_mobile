@@ -63,6 +63,7 @@ const coreFunctionSymbols = [
   'mz_selling_review_sale_date_json',
   'mz_selling_sale_outcome_json',
   'mz_selling_sale_proof_json',
+  'mz_selling_sale_groups_json',
   'mz_selling_review_each_json',
   'mz_selling_expiry_json',
   'mz_selling_parse_state_date_json',
@@ -82,6 +83,7 @@ const coreFunctionSymbols = [
   'mz_records_dry_grams_json',
   'mz_records_licenses_of_type_json',
   'mz_names_name_dose_json',
+  'mz_keypad_keys_json',
 ];
 
 /// The shared core's functions.
@@ -198,6 +200,8 @@ abstract interface class CoreFunctions {
   Map<String, Object?> sellingSaleOutcome(Map<String, Object?> input);
   /// selling.sale_proof: {reply, sent} -> {sale_number} what a reply already read proves.
   Map<String, Object?> sellingSaleProof(Map<String, Object?> input);
+  /// selling.sale_groups: {sales: [{sale_number, date, number_sold, cost}]} -> {groups: [{sale_number, rows, units, total_cents}], days: [{date, groups, sales, total_cents}]} a center's recent sales, one line per sale number, by day.
+  Map<String, Object?> sellingSaleGroups(Map<String, Object?> input);
   /// selling.review_each: {cost, qty} -> {cents} a reviewed sale's price each: the total in cents / qty, half up.
   Map<String, Object?> sellingReviewEach(Map<String, Object?> input);
   /// selling.expiry: {expires, today, fresh_months} -> {expired, words, hue} expired from the day after the date.
@@ -236,6 +240,8 @@ abstract interface class CoreFunctions {
   List<Object?> recordsLicensesOfType(Map<String, Object?> input);
   /// names.name_dose: {name} -> {dose: text | null} the first <n> mg in a product's name as written, read as the label reads a dose from a name.
   Map<String, Object?> namesNameDose(Map<String, Object?> input);
+  /// keypad.keys: {typed, pkprs} -> {keys, matches, only} the cart keypad's lit keys and matching PKPRs (specs/hex-keypad).
+  Map<String, Object?> keypadKeys(Map<String, Object?> input);
 }
 
 /// Every function of [CoreFunctions], forwarded to its C function: the input encoded as JSON, the reply checked to be
@@ -470,6 +476,10 @@ mixin CoreForwarders implements CoreFunctions {
       _object('selling.sale_proof', _call('mz_selling_sale_proof_json', jsonEncode(input)));
 
   @override
+  Map<String, Object?> sellingSaleGroups(Map<String, Object?> input) =>
+      _object('selling.sale_groups', _call('mz_selling_sale_groups_json', jsonEncode(input)));
+
+  @override
   Map<String, Object?> sellingReviewEach(Map<String, Object?> input) =>
       _object('selling.review_each', _call('mz_selling_review_each_json', jsonEncode(input)));
 
@@ -544,6 +554,10 @@ mixin CoreForwarders implements CoreFunctions {
   @override
   Map<String, Object?> namesNameDose(Map<String, Object?> input) =>
       _object('names.name_dose', _call('mz_names_name_dose_json', jsonEncode(input)));
+
+  @override
+  Map<String, Object?> keypadKeys(Map<String, Object?> input) =>
+      _object('keypad.keys', _call('mz_keypad_keys_json', jsonEncode(input)));
 
   Map<String, Object?> _object(String fn, Object? reply) => reply is Map<String, Object?>
       ? reply

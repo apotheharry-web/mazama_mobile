@@ -59,6 +59,7 @@ pub const FUNCTIONS: &[(&str, &str, crate::api::Function)] = &[
     ("selling", "review_sale_date", crate::selling::sale::review_sale_date_json),  // {text} -> {date} a failed sale's own date of sale
     ("selling", "sale_outcome", crate::selling::sale::sale_outcome_json),  // {event, sent} -> {outcome, sale_number} how a sale's reply ends: recorded, not sent or uncertain
     ("selling", "sale_proof", crate::selling::sale::sale_proof_json),  // {reply, sent} -> {sale_number} what a reply already read proves
+    ("selling", "sale_groups", crate::selling::history::sale_groups_json),  // {sales: [{sale_number, date, number_sold, cost}]} -> {groups: [{sale_number, rows, units, total_cents}], days: [{date, groups, sales, total_cents}]} a center's recent sales, one line per sale number, by day
     ("selling", "review_each", crate::selling::sale::review_each_json),  // {cost, qty} -> {cents} a reviewed sale's price each: the total in cents / qty, half up
     ("selling", "expiry", crate::selling::sale::expiry_json),  // {expires, today, fresh_months} -> {expired, words, hue} expired from the day after the date
     ("selling", "parse_state_date", crate::selling::sale::parse_state_date_json),  // {text} -> {date} a state-site date as ISO
@@ -78,4 +79,5 @@ pub const FUNCTIONS: &[(&str, &str, crate::api::Function)] = &[
     ("records", "dry_grams", crate::records::dry_grams_json),  // {values} -> [grams] a dry weight as every record rule reads it: a number, or text that is a plain number; anything else 0 g
     ("records", "licenses_of_type", crate::contracts::licenses_of_type_json),  // {licenses, license_type} -> [{state_id, name, license}] the GetApplicableLicenses entries of one license type (ServiceCenter or Manufacturer)
     ("names", "name_dose", crate::label::name_dose_json),  // {name} -> {dose: text | null} the first <n> mg in a product's name as written, read as the label reads a dose from a name
+    ("keypad", "keys", crate::features::hex_keypad::keys_json),  // {typed, pkprs} -> {keys, matches, only} the cart keypad's lit keys and matching PKPRs (specs/hex-keypad)
 ];

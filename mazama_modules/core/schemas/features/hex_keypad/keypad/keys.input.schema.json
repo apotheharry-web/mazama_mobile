@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "keypad.keys input",
+  "description": "What the worker has typed into the cart's PKPR field, and the PKPRs in the center's stock.",
+  "type": "object",
+  "required": [
+    "typed",
+    "pkprs"
+  ],
+  "properties": {
+    "typed": {
+      "type": "string"
+    },
+    "pkprs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

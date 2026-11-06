@@ -54,6 +54,7 @@ mz_selling_pacific_midnight_json
 mz_selling_review_sale_date_json
 mz_selling_sale_outcome_json
 mz_selling_sale_proof_json
+mz_selling_sale_groups_json
 mz_selling_review_each_json
 mz_selling_expiry_json
 mz_selling_parse_state_date_json
@@ -73,5 +74,6 @@ mz_names_type_code_json
 mz_records_dry_grams_json
 mz_records_licenses_of_type_json
 mz_names_name_dose_json
+mz_keypad_keys_json
 mz_version
 mz_free

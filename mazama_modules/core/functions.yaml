@@ -67,6 +67,7 @@ functions:
   - {area: selling, name: review_sale_date, rust: "selling::sale::review_sale_date_json", what: "{text} -> {date} a failed sale's own date of sale"}
   - {area: selling, name: sale_outcome, rust: "selling::sale::sale_outcome_json", what: "{event, sent} -> {outcome, sale_number} how a sale's reply ends: recorded, not sent or uncertain"}
   - {area: selling, name: sale_proof, rust: "selling::sale::sale_proof_json", what: "{reply, sent} -> {sale_number} what a reply already read proves"}
+  - {area: selling, name: sale_groups, rust: "selling::history::sale_groups_json", what: "{sales: [{sale_number, date, number_sold, cost}]} -> {groups: [{sale_number, rows, units, total_cents}], days: [{date, groups, sales, total_cents}]} a center's recent sales, one line per sale number, by day"}
   - {area: selling, name: review_each, rust: "selling::sale::review_each_json", what: "{cost, qty} -> {cents} a reviewed sale's price each: the total in cents / qty, half up"}
   - {area: selling, name: expiry, rust: "selling::sale::expiry_json", what: "{expires, today, fresh_months} -> {expired, words, hue} expired from the day after the date"}
   - {area: selling, name: parse_state_date, rust: "selling::sale::parse_state_date_json", what: "{text} -> {date} a state-site date as ISO"}
@@ -86,3 +87,4 @@ functions:
   - {area: records, name: dry_grams, rust: "records::dry_grams_json", what: "{values} -> [grams] a dry weight as every record rule reads it: a number, or text that is a plain number; anything else 0 g"}
   - {area: records, name: licenses_of_type, rust: "contracts::licenses_of_type_json", what: "{licenses, license_type} -> [{state_id, name, license}] the GetApplicableLicenses entries of one license type (ServiceCenter or Manufacturer)"}
   - {area: names, name: name_dose, rust: "label::name_dose_json", what: "{name} -> {dose: text | null} the first <n> mg in a product's name as written, read as the label reads a dose from a name"}
+  - {area: keypad, name: keys, rust: "features::hex_keypad::keys_json", what: "{typed, pkprs} -> {keys, matches, only} the cart keypad's lit keys and matching PKPRs (specs/hex-keypad)", feature: hex_keypad}

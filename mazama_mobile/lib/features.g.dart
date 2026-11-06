@@ -202,7 +202,7 @@ const Map<String, Feature> features = {
     pages: <String>['SalesPage'],
     uses: <String>['POST /p/ingest/{dataset}/{state_id}'],
     shared: 'partial',
-    logic: <String>['mazama_modules/api/'],
+    logic: <String>['mazama_modules/api/', 'mazama_modules/selling/history/'],
     item: 'FM-15',
   ),
   'mazama_tab': Feature(
@@ -535,6 +535,19 @@ const Map<String, Feature> features = {
     uses: <String>['GET /p/app/latest', 'GET /p/app/apk/{build}'],
     shared: 'complete',
     logic: <String>['mazama_modules/flows/contracts/app_release_vectors.json'],
+  ),
+  'hex_keypad': Feature(
+    name: 'hex_keypad',
+    id: 'F-41',
+    what: 'The cart\'s PKPR keypad: only the hex keys a package in stock can follow (specs/hex-keypad)',
+    built: <String>['phone'],
+    onWeb: <String>[],
+    onPhone: <String>['ServiceCenter'],
+    onPhoneDebug: <String>[],
+    pages: <String>[],
+    uses: <String>[],
+    shared: 'complete',
+    logic: <String>['mazama_modules/core/functions.yaml', 'mazama_modules/features_vectors/hex_keypad/'],
   ),
 };
 

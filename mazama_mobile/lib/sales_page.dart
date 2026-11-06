@@ -1,7 +1,11 @@
 // The center home's fourth tab (Mazama | Stock | Cart | Sales, still
 // opening on Stock): the center's sales of the last 30 days, newest first, read from the state system (GetSalesRecords
-// through the shared get_json flow, state_client.dart). Each row: the date, the sale number, the product (its name,
-// else its id), how many were sold and the line's cost in dollars; a deleted (voided) record isn't shown.
+// through the shared get_json flow, state_client.dart). One line per sale: the state writes a record per
+// product sold, all carrying the sale's number, so the records are grouped by it (the shared core's
+// selling.sale_groups): the sale number, how many products, the products' names, the date, the units and the total.
+// Tapping a line opens it in place to show each product with its units and cost. The sales sit under a header per
+// calendar date (Today, Yesterday, else the date; how many sales; the day's total, the core's too), with a gap above
+// each; tapping a header collapses that date or opens it again. A deleted (voided) record isn't shown.
 //
 // After a good read the page keeps it on the phone (the sync engine's recent_sales dataset) and hands every record
 // read (not only the 30 days shown) to [SalesPage.upload], which sends them to Mazama's server for invoicing
@@ -17,6 +21,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 
+import 'mazama_core.dart';
 import 'pricing.dart' show money;
 import 'responsive.dart';
 import 'state_client.dart';
@@ -65,6 +70,82 @@ bool _deleted(Object? v) => v == true || v == 1 || (v is String && const {'true'
 
 String _text(Object? v) => v == null ? '' : '$v'.trim();
 
+/// One line of the page: a sale, its records (one per product) in the page's order, its units and its total in cents
+/// (null when the core couldn't add them up, or a record lacks the figure).
+class RecentSaleGroup {
+  const RecentSaleGroup({required this.saleNumber, required this.rows, required this.units, required this.totalCents});
+
+  final String saleNumber;
+  final List<RecentSale> rows;
+  final num? units;
+  final int? totalCents;
+
+  /// The sale's date: its first record's.
+  String get date => rows.first.date;
+  String get totalText => totalCents == null ? '—' : money(totalCents!);
+}
+
+/// One calendar date of the page: its sales (in the page's order), how many, and its total in cents (null when the
+/// core couldn't add it up, or a sale's total is unknown).
+class RecentSaleDay {
+  const RecentSaleDay({required this.date, required this.sales, required this.totalCents});
+
+  /// ISO (YYYY-MM-DD).
+  final String date;
+  final List<RecentSaleGroup> sales;
+  final int? totalCents;
+
+  String get totalText => totalCents == null ? '—' : money(totalCents!);
+}
+
+/// [rows] (the page's order) by calendar date, one line per sale, by the shared core's selling.sale_groups. When the
+/// core can't answer, each record is a line of its own with its own cost, and no day has a total: never a figure the
+/// core didn't give.
+List<RecentSaleDay> recentSaleDays(List<RecentSale> rows, {CoreFunctions? core}) {
+  try {
+    final reply = (core ?? MazamaCore.instance).sellingSaleGroups({
+      'sales': [
+        for (final r in rows) {'sale_number': r.saleNumber, 'date': r.date, 'number_sold': r.numberSold, 'cost': r.cost},
+      ],
+    });
+    final groups = reply['groups'], days = reply['days'];
+    if (groups is! List || days is! List) throw const FormatException('selling.sale_groups answered in another shape');
+    final sales = [
+      for (final g in groups.cast<Map>())
+        RecentSaleGroup(
+          saleNumber: g['sale_number'] as String,
+          rows: [for (final i in (g['rows'] as List).cast<int>()) rows[i]],
+          units: g['units'] as num?,
+          totalCents: g['total_cents'] as int?,
+        ),
+    ];
+    return [
+      for (final d in days.cast<Map>())
+        RecentSaleDay(
+          date: d['date'] as String,
+          sales: [for (final i in (d['groups'] as List).cast<int>()) sales[i]],
+          totalCents: d['total_cents'] as int?,
+        ),
+    ];
+  } catch (_) {
+    final out = <RecentSaleDay>[];
+    for (final r in rows) {
+      final line = RecentSaleGroup(
+          saleNumber: r.saleNumber, rows: [r], units: r.numberSold, totalCents: r.cost == null ? null : (r.cost! * 100).round());
+      if (out.isNotEmpty && out.last.date == r.date) {
+        out.last.sales.add(line);
+      } else {
+        out.add(RecentSaleDay(date: r.date, sales: [line], totalCents: null));
+      }
+    }
+    return out;
+  }
+}
+
+/// [rows] (the page's order) one line per sale ([recentSaleDays]' sales, day after day).
+List<RecentSaleGroup> groupRecentSales(List<RecentSale> rows, {CoreFunctions? core}) =>
+    [for (final d in recentSaleDays(rows, core: core)) ...d.sales];
+
 /// The sales of [records] dated in the last [recentSalesDays] days ([now]'s date and the days before it), newest first
 /// (within a day by record id, highest first, else by sale number); deleted records, and records without a usable
 /// date, are left out.
@@ -107,6 +188,7 @@ class SalesPage extends StatefulWidget {
     required this.datasets,
     this.now = DateTime.now,
     this.demo = false,
+    this.core,
   });
 
   /// The center's state id.
@@ -128,12 +210,21 @@ class SalesPage extends StatefulWidget {
   /// Demo mode: nothing is uploaded.
   final bool demo;
 
+  /// The shared core, which groups the records into sales; [MazamaCore.instance] when null. Tests pass a fake.
+  final CoreFunctions? core;
+
   @override
   State<SalesPage> createState() => _SalesPageState();
 }
 
 class _SalesPageState extends State<SalesPage> {
   List<RecentSale>? _rows;
+
+  /// The sales open to show their products, by [_openKey].
+  final _open = <String>{};
+
+  /// The dates collapsed to their header (every date starts open).
+  final _closedDays = <String>{};
   String? _error;
   bool _loading = true;
 
@@ -248,17 +339,105 @@ class _SalesPageState extends State<SalesPage> {
         ),
       );
 
-  Widget _row(RecentSale s) => ListTile(
-        title: Row(
-          children: [
-            Text(s.saleNumber, key: const ValueKey('sale-number')),
-            const SizedBox(width: 8),
-            Expanded(child: Text(s.product, overflow: TextOverflow.ellipsis)),
-          ],
+  /// "Today", "Yesterday" or the date itself, by the page's clock.
+  String _dayName(String iso) {
+    final now = widget.now();
+    String ymd(DateTime d) =>
+        '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+    final today = DateTime(now.year, now.month, now.day);
+    if (iso == ymd(today)) return 'Today · $iso';
+    if (iso == ymd(today.subtract(const Duration(days: 1)))) return 'Yesterday · $iso';
+    return iso;
+  }
+
+  /// A date's header: the date, how many sales and the day's total; a tap collapses or opens the date.
+  Widget _dayHeader(RecentSaleDay day, {required bool first, required bool closed}) {
+    final theme = Theme.of(context);
+    final count = day.sales.length;
+    return Padding(
+      key: ValueKey('sale-day-${day.date}'),
+      padding: EdgeInsets.only(top: first ? 4 : 20),
+      child: Material(
+        color: theme.colorScheme.surfaceContainer,
+        child: InkWell(
+          onTap: () => setState(() => closed ? _closedDays.remove(day.date) : _closedDays.add(day.date)),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 10, 12, 10),
+            child: Row(
+              children: [
+                Expanded(child: Text(_dayName(day.date), style: theme.textTheme.titleSmall)),
+                Text(count == 1 ? '1 sale · ' : '$count sales · ', style: theme.textTheme.bodySmall),
+                Text(day.totalText, style: theme.textTheme.titleSmall),
+                Icon(closed ? Icons.expand_more : Icons.expand_less),
+              ],
+            ),
+          ),
         ),
-        subtitle: Text('${s.date} · ${s.numberSold ?? '—'} sold'),
-        trailing: Text(s.costText),
-      );
+      ),
+    );
+  }
+
+  /// A sale's key for [_open]: its number; a sale without one by its first record's place.
+  String _openKey(RecentSaleGroup g, int at) => g.saleNumber.isEmpty ? '#$at' : g.saleNumber;
+
+  static String _units(num? n) => n == null ? '—' : (n == 1 ? '1 unit' : '$n units');
+
+  Widget _sale(RecentSaleGroup g, int at) {
+    final key = _openKey(g, at);
+    final open = _open.contains(key);
+    final theme = Theme.of(context);
+    final count = g.rows.length;
+    final names = [for (final r in g.rows) r.product].join(', ');
+    return Column(
+      key: ValueKey('sale-$key'),
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ListTile(
+          tileColor: open ? theme.colorScheme.surfaceContainerHighest : null,
+          onTap: () => setState(() => open ? _open.remove(key) : _open.add(key)),
+          title: Row(
+            children: [
+              const Text('Sale '),
+              Text(g.saleNumber, key: const ValueKey('sale-number')),
+              if (count > 1) ...[
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                  decoration: BoxDecoration(
+                      color: theme.colorScheme.secondaryContainer, borderRadius: BorderRadius.circular(8)),
+                  child: Text('$count products', style: theme.textTheme.labelSmall),
+                ),
+              ],
+            ],
+          ),
+          subtitle: Text(open ? '${g.date} · ${_units(g.units)}' : '$names\n${g.date} · ${_units(g.units)}'),
+          isThreeLine: !open,
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(g.totalText, style: const TextStyle(fontWeight: FontWeight.bold)),
+              Icon(open ? Icons.expand_less : Icons.expand_more),
+            ],
+          ),
+        ),
+        if (open)
+          for (final (i, r) in g.rows.indexed)
+            Container(
+              key: ValueKey('sale-product-$i'), // siblings: each its own key
+              color: theme.colorScheme.surfaceContainerHighest,
+              padding: const EdgeInsets.fromLTRB(32, 6, 16, 6),
+              child: Row(
+                children: [
+                  Expanded(child: Text(r.product, overflow: TextOverflow.ellipsis)),
+                  Text('${r.numberSold ?? '—'} × · ${r.costText}'),
+                ],
+              ),
+            ),
+        const Divider(height: 1),
+      ],
+    );
+  }
 
   Widget _body() {
     final rows = _rows;
@@ -269,7 +448,19 @@ class _SalesPageState extends State<SalesPage> {
         _retry(),
       ]);
     }
-    // The heading (and Retry, after a failed read), then the rows, built as they scroll into view.
+    final days = recentSaleDays(rows, core: widget.core);
+    // a header per date (with a gap above it after the first), then its sales unless it is collapsed
+    final items = <Widget>[];
+    var at = 0;
+    for (final (n, day) in days.indexed) {
+      final closed = _closedDays.contains(day.date);
+      items.add(_dayHeader(day, first: n == 0, closed: closed));
+      for (final sale in day.sales) {
+        if (!closed) items.add(_sale(sale, at));
+        at++;
+      }
+    }
+    // The heading (and Retry, after a failed read), then one line per sale, built as they scroll into view.
     final head = <Widget>[
       Padding(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
@@ -285,8 +476,8 @@ class _SalesPageState extends State<SalesPage> {
       onRefresh: _load,
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
-        itemCount: head.length + rows.length,
-        itemBuilder: (context, i) => i < head.length ? head[i] : _row(rows[i - head.length]),
+        itemCount: head.length + items.length,
+        itemBuilder: (context, i) => i < head.length ? head[i] : items[i - head.length],
       ),
     );
   }
