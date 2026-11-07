@@ -213,7 +213,13 @@ class _OrderFormPageState extends State<OrderFormPage> {
 
   Widget _typeChoice(Key key, String? selected, ValueChanged<String?> onChanged) => SegmentedButton<String>(
         key: key,
-        segments: [for (final e in orderKinds.entries) ButtonSegment(value: e.key, label: Text(e.value))],
+        // each word stays on one line, shrinking a little on a narrow phone rather than breaking ("Homogenize/d")
+        segments: [
+          for (final e in orderKinds.entries)
+            ButtonSegment(
+                value: e.key,
+                label: FittedBox(fit: BoxFit.scaleDown, child: Text(e.value, maxLines: 1, softWrap: false))),
+        ],
         selected: {if (selected != null) selected},
         emptySelectionAllowed: true,
         showSelectedIcon: false,

@@ -679,12 +679,15 @@ class _SelectCenterPageState extends State<SelectCenterPage> {
             ),
         ],
       ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: _body(),
-        ),
-      ),
+      // The list starts at the top, under the title, where the eye already is; a message or spinner sits centred.
+      body: _centers != null && _centers!.isNotEmpty && _error == null && !_autoOpening
+          ? _body()
+          : Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: _body(),
+              ),
+            ),
     );
   }
 
@@ -725,7 +728,12 @@ class _SelectCenterPageState extends State<SelectCenterPage> {
           ],
           for (final c in _centers!) ...[
             Card(
+              margin: EdgeInsets.zero,
+              clipBehavior: Clip.antiAlias,
               child: ListTile(
+                contentPadding: const EdgeInsets.fromLTRB(16, 6, 12, 6),
+                leading: Icon(c.isManufacturer ? Icons.factory_outlined : Icons.storefront_outlined),
+                trailing: const Icon(Icons.chevron_right),
                 title: Text(c.licenseName),
                 subtitle: Text(c.isManufacturer ? ['Manufacturer', if (c.licenseId.isNotEmpty) c.licenseId].join(' · ') : c.licenseId),
                 onTap: () => _open(c),
@@ -741,8 +749,8 @@ class _SelectCenterPageState extends State<SelectCenterPage> {
       key: const ValueKey('licenses-refresh'),
       onRefresh: _load,
       child: ListView(
-        shrinkWrap: true,
         physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [Center(child: list)],
       ),
     );

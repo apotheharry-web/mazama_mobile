@@ -22,6 +22,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'headline_figure.dart';
 import 'mazama_contact.dart';
 import 'mazama_inventory_client.dart';
 import 'mazama_lot_table.dart';
@@ -294,7 +295,6 @@ class _MazamaInventoryPageState extends State<MazamaInventoryPage> with ServerRe
       if (_error == null) return const Center(child: CircularProgressIndicator());
       return LoadFailed(message: 'Mazama inventory did not load: $_error', onRetry: retry);
     }
-    final theme = Theme.of(context);
     final total = mix['total'] as num;
     final picked = total > 0 ? _card(mix) : null;
     return SingleChildScrollView(
@@ -309,7 +309,7 @@ class _MazamaInventoryPageState extends State<MazamaInventoryPage> with ServerRe
               child: Text('Nothing in stock.', textAlign: TextAlign.center),
             )
           else ...[
-            Text('${formatMixMg(total)} mg TPE in all', textAlign: TextAlign.center, style: theme.textTheme.titleMedium),
+            HeadlineFigure(formatMixMg(total), 'mg TPE in all', textAlign: TextAlign.center),
             const SizedBox(height: 8),
             SwipePies(
               key: const ValueKey('mix-pies'),

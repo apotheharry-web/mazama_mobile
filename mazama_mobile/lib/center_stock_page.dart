@@ -30,6 +30,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'headline_figure.dart';
 import 'licenses_client.dart';
 import 'mazama_lot_table.dart';
 import 'responsive.dart';
@@ -373,11 +374,11 @@ class _CenterStockPageState extends State<CenterStockPage> with ServerReload<Cen
           else ...[
             Wrap(
               alignment: WrapAlignment.center,
-              spacing: 16,
+              crossAxisAlignment: WrapCrossAlignment.end,
+              spacing: 20,
               children: [
-                Text('${formatG(summary['total'] as num)} units', style: Theme.of(context).textTheme.titleMedium),
-                if (mg != null)
-                  Text('${formatG(summary['mg_total'] as num)} $_mgUnit', style: Theme.of(context).textTheme.titleMedium),
+                HeadlineFigure(formatG(summary['total'] as num), 'units'),
+                if (mg != null) HeadlineFigure(formatG(summary['mg_total'] as num), _mgUnit),
               ],
             ),
             const SizedBox(height: 8),

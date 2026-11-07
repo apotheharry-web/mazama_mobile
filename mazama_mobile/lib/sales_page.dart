@@ -179,6 +179,16 @@ List<RecentSale> recentSales(List<Object?> records, {required DateTime now}) {
   return rows;
 }
 
+/// A sale's products for its collapsed line, in order, each named once: a product sold on more than one record of
+/// the sale reads "PKPR-579b4701 ×2" rather than the same name over again.
+String saleProductNames(List<String> products) {
+  final counts = <String, int>{};
+  for (final p in products) {
+    counts[p] = (counts[p] ?? 0) + 1;
+  }
+  return [for (final MapEntry(key: p, value: n) in counts.entries) n > 1 ? '$p ×$n' : p].join(', ');
+}
+
 class SalesPage extends StatefulWidget {
   const SalesPage({
     super.key,
@@ -358,17 +368,23 @@ class _SalesPageState extends State<SalesPage> {
       key: ValueKey('sale-day-${day.date}'),
       padding: EdgeInsets.only(top: first ? 4 : 20),
       child: Material(
-        color: theme.colorScheme.surfaceContainer,
+        color: theme.colorScheme.surfaceContainerHigh,
         child: InkWell(
           onTap: () => setState(() => closed ? _closedDays.remove(day.date) : _closedDays.add(day.date)),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 10, 12, 10),
+            padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
             child: Row(
               children: [
                 Expanded(child: Text(_dayName(day.date), style: theme.textTheme.titleSmall)),
-                Text(count == 1 ? '1 sale · ' : '$count sales · ', style: theme.textTheme.bodySmall),
-                Text(day.totalText, style: theme.textTheme.titleSmall),
-                Icon(closed ? Icons.expand_more : Icons.expand_less),
+                Text(count == 1 ? '1 sale · ' : '$count sales · ',
+                    style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                // the day's total in the same right-hand column as each sale's, so the money lines up down the page
+                SizedBox(
+                  width: _moneyWidth,
+                  child: Text(day.totalText,
+                      textAlign: TextAlign.end, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+                ),
+                Icon(closed ? Icons.expand_more : Icons.expand_less, color: theme.colorScheme.onSurfaceVariant),
               ],
             ),
           ),
@@ -382,12 +398,15 @@ class _SalesPageState extends State<SalesPage> {
 
   static String _units(num? n) => n == null ? '—' : (n == 1 ? '1 unit' : '$n units');
 
+  /// The width of the money column, wide enough for "$10,000.00".
+  static const double _moneyWidth = 88;
+
   Widget _sale(RecentSaleGroup g, int at) {
     final key = _openKey(g, at);
     final open = _open.contains(key);
     final theme = Theme.of(context);
     final count = g.rows.length;
-    final names = [for (final r in g.rows) r.product].join(', ');
+    final names = saleProductNames([for (final r in g.rows) r.product]);
     return Column(
       key: ValueKey('sale-$key'),
       mainAxisSize: MainAxisSize.min,
@@ -416,8 +435,12 @@ class _SalesPageState extends State<SalesPage> {
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(g.totalText, style: const TextStyle(fontWeight: FontWeight.bold)),
-              Icon(open ? Icons.expand_less : Icons.expand_more),
+              SizedBox(
+                width: _moneyWidth,
+                child: Text(g.totalText,
+                    textAlign: TextAlign.end, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+              ),
+              Icon(open ? Icons.expand_less : Icons.expand_more, color: theme.colorScheme.onSurfaceVariant),
             ],
           ),
         ),

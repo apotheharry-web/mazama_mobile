@@ -72,6 +72,14 @@ List<String> _shownNumbers(WidgetTester tester) => [
     ];
 
 void main() {
+  test("a sale's collapsed line names each product once, in order, with how many times it was sold", () {
+    expect(saleProductNames(['PKPR-579b4701', 'PKPR-579b4701']), 'PKPR-579b4701 ×2');
+    expect(saleProductNames(['Choc', 'Gummy', 'Choc']), 'Choc ×2, Gummy');
+    expect(saleProductNames(['A', 'B', 'C']), 'A, B, C'); // nothing repeated: as before
+    expect(saleProductNames(['Only']), 'Only');
+    expect(saleProductNames(const []), '');
+  });
+
   setUpAll(loadTestCore);
   setUp(() => _dir = Directory.systemTemp.createTempSync('mazama_sales_page_test_'));
   tearDown(() {

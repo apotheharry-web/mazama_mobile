@@ -34,6 +34,11 @@ the phone read from the state, sign-in files and app updates). Selling never wai
   Home tab), `make_products` (its Make tab: make page, review, job page) and `transfers` (its Transfer tab: send or
   retrieve, review with the manifest preview through pdfrx, job page). Their reads are kept in the `manufacturer`
   dataset; their writes are never queued and need the owner's approval of the pair and grant for the manufacturer.
+- **The app's look is set once**, in `lib/app_theme.dart` (`mazamaTheme()`, used by both MaterialApps): the server's
+  own colours from `web/static/app.css` (brand green `#3B5D3A` on warm paper `#FBFAF7`, ink text, warm hairlines),
+  flat outlined cards, compact segmented buttons and tabular figures in every text style. Pages read
+  `Theme.of(context)` and don't set colours of their own, except the stock pies, which draw the server's strain colours
+  (`lib/stock_pie.dart`).
 - Tests run in CI (`mobile-analyze`, `mobile-public-analyze`: the public copy on its own, `mobile-test`); see
   `AGENTS.md` for reading the results. After adding, renaming
   or removing a test file, run `dart run tool/gen_test_bundle.dart` and commit the bundle it writes.

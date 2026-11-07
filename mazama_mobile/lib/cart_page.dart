@@ -3503,6 +3503,8 @@ class _CartPageState extends State<CartPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SegmentedButton<CartPricingMode>(
+            // the fill shows which is chosen; a tick as well left too little room and broke the words over two lines
+            showSelectedIcon: false,
             segments: const [
               ButtonSegment(value: CartPricingMode.each, label: Text('Price each item')),
               ButtonSegment(value: CartPricingMode.total, label: Text('Whole cart total')),
@@ -3516,43 +3518,39 @@ class _CartPageState extends State<CartPage> {
           ),
           if (sharedMode) ...[
             const SizedBox(height: 8),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _pricingMode == CartPricingMode.total ? _cartTotalController : _cartPerMgController,
-                    decoration: InputDecoration(
-                      labelText: _pricingMode == CartPricingMode.total
-                          ? 'Total price for the whole cart'
-                          : _lines.any((l) => l.group.mgFigure == MgFigure.psilocybin)
-                              // some lines' only figure is the state's psilocybin, and are priced by it
-                              ? 'Price per mg (TPE; mg psilocybin where no TPE is known), whole cart'
-                              : 'Price per mg (TPE), whole cart',
-                      prefixText: '\$',
-                    ),
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    onChanged: (_) => _recomputeCartPricing(),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                // "The state record has no tax field, so tax is included in the unit prices" - same reasoning
-                // mazama_sales' own cart.html states directly; this only decides whether the typed figure above
-                // already has that baked in, or still needs the server's tax percent added before it's shared out.
-                SegmentedButton<CartTaxMode>(
-                  segments: [
-                    const ButtonSegment(value: CartTaxMode.included, label: Text('Tax included')),
-                    ButtonSegment(value: CartTaxMode.addPercent, label: Text('+${_cartSettings.taxPercent}% tax')),
-                  ],
-                  selected: {_cartTax},
-                  onSelectionChanged: (selection) {
-                    setState(() => _cartTax = selection.first);
-                    _recomputeCartPricing();
-                  },
-                ),
-              ],
+            // The price field gets the whole width, so its label reads in full; the tax choice sits under it.
+            TextField(
+              controller: _pricingMode == CartPricingMode.total ? _cartTotalController : _cartPerMgController,
+              decoration: InputDecoration(
+                labelText: _pricingMode == CartPricingMode.total
+                    ? 'Total price for the whole cart'
+                    : _lines.any((l) => l.group.mgFigure == MgFigure.psilocybin)
+                        // some lines' only figure is the state's psilocybin, and are priced by it
+                        ? 'Price per mg (TPE; mg psilocybin where no TPE is known), whole cart'
+                        : 'Price per mg (TPE), whole cart',
+                prefixText: '\$',
+              ),
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              onChanged: (_) => _recomputeCartPricing(),
             ),
-            if (_pricingError != null)
+            const SizedBox(height: 8),
+            // "The state record has no tax field, so tax is included in the unit prices" - same reasoning
+            // mazama_sales' own cart.html states directly; this only decides whether the typed figure above
+            // already has that baked in, or still needs the server's tax percent added before it's shared out.
+            SegmentedButton<CartTaxMode>(
+              showSelectedIcon: false,
+              segments: [
+                const ButtonSegment(value: CartTaxMode.included, label: Text('Tax included')),
+                ButtonSegment(value: CartTaxMode.addPercent, label: Text('+${_cartSettings.taxPercent}% tax')),
+              ],
+              selected: {_cartTax},
+              onSelectionChanged: (selection) {
+                setState(() => _cartTax = selection.first);
+                _recomputeCartPricing();
+              },
+            ),
+            // An empty cart already says "Nothing in the cart yet." below, with Sell off: no need to call it an error.
+            if (_pricingError != null && _lines.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Text(_pricingError!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
@@ -3714,43 +3712,57 @@ class _CartPageState extends State<CartPage> {
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (_capError != null)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Text(_capError!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
-                    ),
-                  if (totals == null && _lines.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Text(_sentence(coreFailedTotalMessage), style: TextStyle(color: Theme.of(context).colorScheme.error)),
-                    ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Total', style: TextStyle(fontWeight: FontWeight.bold)),
-                          Text(moneyOrNone(totals?.total), style: const TextStyle(fontWeight: FontWeight.bold)),
-                        ],
+            // pinned under the scrolling list on a slightly raised strip, so Total and Sell read as one place
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerLow,
+                border: Border(top: BorderSide(color: Theme.of(context).colorScheme.outlineVariant)),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (_capError != null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Text(_capError!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
                       ),
-                      FilledButton(
-                        onPressed:
-                            (_lines.isEmpty || _selling || _pricingError != null || _capError != null || totals == null)
-                                ? null
-                                : _onSellPressed,
-                        child: _selling
-                            ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                            : const Text('Sell'),
+                    if (totals == null && _lines.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Text(_sentence(coreFailedTotalMessage), style: TextStyle(color: Theme.of(context).colorScheme.error)),
                       ),
-                    ],
-                  ),
-                ],
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // the figure the worker reads out to the client, so it is the largest on the screen
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Total',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .labelLarge
+                                    ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                            Text(moneyOrNone(totals?.total),
+                                style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                        FilledButton(
+                          style: FilledButton.styleFrom(minimumSize: const Size(140, 56)),
+                          onPressed:
+                              (_lines.isEmpty || _selling || _pricingError != null || _capError != null || totals == null)
+                                  ? null
+                                  : _onSellPressed,
+                          child: _selling
+                              ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                              : const Text('Sell'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -3921,17 +3933,37 @@ class _CartPageState extends State<CartPage> {
     // there's nothing meaningful left to show here; this just never gets the chance to look wrong.
     final primaryDuration = limits.sessionInitial;
     final bothDosesDuration = limits.session;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(totalPsilocybinMg == null
-            ? '$tpePart · mg psilocybin not known'
-            : '$tpePart · ${totalPsilocybinMg.toStringAsFixed(1)} mg psilocybin in the cart'),
-        if (primaryDuration != null && bothDosesDuration != null)
-          Text('Duration: ${formatSessionDuration(primaryDuration)} · ${formatSessionDuration(bothDosesDuration)} w/ booster'),
-        const SizedBox(height: 4),
-        _sessionTimerRow(),
-      ],
+    // On a tinted band of its own, the dose read first and the timer beside it, so it reads as the cart's one summary.
+    final theme = Theme.of(context);
+    return Container(
+      key: const ValueKey('cart-dose-band'),
+      padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                    totalPsilocybinMg == null
+                        ? '$tpePart · mg psilocybin not known'
+                        : '$tpePart · ${totalPsilocybinMg.toStringAsFixed(1)} mg psilocybin in the cart',
+                    style: theme.textTheme.titleSmall),
+                if (primaryDuration != null && bothDosesDuration != null)
+                  Text(
+                      'Duration: ${formatSessionDuration(primaryDuration)} · ${formatSessionDuration(bothDosesDuration)} w/ booster',
+                      style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          _sessionTimerRow(),
+        ],
+      ),
     );
   }
 
@@ -3944,7 +3976,12 @@ class _CartPageState extends State<CartPage> {
     if (_sessionTimerStart == null) {
       return Align(
         alignment: Alignment.centerLeft,
-        child: OutlinedButton(onPressed: _startSessionTimer, child: const Text('Start Timer')),
+        child: OutlinedButton(
+          onPressed: _startSessionTimer,
+          style: OutlinedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow, minimumSize: const Size(0, 40)),
+          child: const Text('Start Timer'),
+        ),
       );
     }
     final elapsed = widget.now().difference(_sessionTimerStart!);

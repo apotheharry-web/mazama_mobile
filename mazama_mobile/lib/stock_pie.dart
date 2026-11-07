@@ -109,11 +109,14 @@ String? stockPieSliceAt(List<Map<String, Object?>> slices, Size size, Offset poi
 }
 
 class StockPiePainter extends CustomPainter {
-  StockPiePainter({required this.slices, this.strainSlot = 's1', this.brightness = Brightness.light});
+  StockPiePainter({required this.slices, this.strainSlot = 's1', this.brightness = Brightness.light, this.gapColor});
 
   final List<Map<String, Object?>> slices;
   final String strainSlot;
   final Brightness brightness;
+
+  /// When set, a thin line of this colour (the card's own) between slices, so neighbouring shades stay apart.
+  final Color? gapColor;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -133,11 +136,22 @@ class StockPiePainter extends CustomPainter {
     for (final (s, start, sweep) in angles) {
       canvas.drawArc(rect, start, sweep, true, fill(s));
     }
+    final gap = gapColor;
+    if (gap == null) return;
+    final line = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2
+      ..strokeCap = StrokeCap.round
+      ..isAntiAlias = true
+      ..color = gap;
+    for (final (_, start, _) in angles) {
+      canvas.drawLine(centre, centre + Offset(math.cos(start), math.sin(start)) * r, line);
+    }
   }
 
   @override
   bool shouldRepaint(StockPiePainter old) =>
-      old.slices != slices || old.strainSlot != strainSlot || old.brightness != brightness;
+      old.slices != slices || old.strainSlot != strainSlot || old.brightness != brightness || old.gapColor != gapColor;
 }
 
 /// A pie of [slices] ({"name", "value", "slot", "pct"}) [size] pixels square; tapping a slice calls [onTapSlice]
@@ -158,7 +172,11 @@ class StockPie extends StatelessWidget {
     final brightness = Theme.of(context).brightness;
     final pie = CustomPaint(
       size: Size.square(size),
-      painter: StockPiePainter(slices: slices, strainSlot: strainSlot, brightness: brightness),
+      painter: StockPiePainter(
+          slices: slices,
+          strainSlot: strainSlot,
+          brightness: brightness,
+          gapColor: Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface),
     );
     final tap = onTapSlice;
     final child = tap == null

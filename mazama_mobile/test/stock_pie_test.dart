@@ -23,6 +23,11 @@ class _RecordingCanvas implements Canvas {
     if (paint.style == PaintingStyle.fill) circles.add((center: c, radius: radius, color: paint.color));
   }
 
+  final lines = <({Offset from, Offset to, Color color})>[];
+
+  @override
+  void drawLine(Offset p1, Offset p2, Paint paint) => lines.add((from: p1, to: p2, color: paint.color));
+
   @override
   dynamic noSuchMethod(Invocation invocation) => null;
 }
@@ -67,6 +72,30 @@ void main() {
     expect(canvas.arcs[1].sweep, closeTo(0.5 * math.pi, 1e-9));
     expect(canvas.arcs[0].color.toARGB32(), stockSlotColor('s1').toARGB32()); // Paint stores 32-bit colour: compare as ARGB
     expect(canvas.arcs[1].color.toARGB32(), stockSlotColor('s2').toARGB32()); // Paint stores 32-bit colour: compare as ARGB
+  });
+
+  test('with a gap colour, a line from the centre to the edge at the start of every slice; without one, none', () {
+    final canvas = _RecordingCanvas();
+    StockPiePainter(slices: [_slice('A', 3, 's1'), _slice('B', 1, 's2')], gapColor: const Color(0xFFFCFCFB))
+        .paint(canvas, const Size(100, 100));
+    expect(canvas.arcs, hasLength(2)); // the slices themselves are unchanged
+    expect(canvas.lines, hasLength(2));
+    for (final l in canvas.lines) {
+      expect(l.from, const Offset(50, 50));
+      expect((l.to - l.from).distance, closeTo(48, 1e-9));
+      expect(l.color.toARGB32(), 0xFFFCFCFB);
+    }
+    expect(canvas.lines[0].to.dx, closeTo(50, 1e-9)); // A starts at the top
+    expect(canvas.lines[0].to.dy, closeTo(2, 1e-9));
+    expect(canvas.lines[1].to.dx, closeTo(2, 1e-9)); // B starts three quarters round, at the left
+    expect(canvas.lines[1].to.dy, closeTo(50, 1e-9));
+
+    final plain = _RecordingCanvas();
+    StockPiePainter(slices: [_slice('A', 3, 's1'), _slice('B', 1, 's2')]).paint(plain, const Size(100, 100));
+    expect(plain.lines, isEmpty);
+    final single = _RecordingCanvas();
+    StockPiePainter(slices: [_slice('Only', 5, 'c')], gapColor: const Color(0xFFFFFFFF)).paint(single, const Size(100, 100));
+    expect(single.lines, isEmpty); // a whole circle has no seam to mark
   });
 
   test('a slice of 0 draws nothing and an empty pie draws nothing', () {

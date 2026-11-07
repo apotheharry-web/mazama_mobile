@@ -5,6 +5,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import 'app_theme.dart';
 import 'main.dart' show MazamaApp;
 import 'mazama_core.dart';
 
@@ -31,6 +32,7 @@ class MissingCoreApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) => MaterialApp(
         debugShowCheckedModeBanner: false,
+        theme: mazamaTheme(),
         home: Scaffold(
           body: SafeArea(
             child: Center(

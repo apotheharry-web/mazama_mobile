@@ -15,6 +15,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart' show getTemporaryDirectory;
 
+import 'app_theme.dart';
 import 'app_update_check.dart';
 import 'app_update_download.dart' show clearUpdates;
 import 'app_update_store.dart';
@@ -247,6 +248,7 @@ class _MazamaAppState extends State<MazamaApp> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Mazama',
+      theme: mazamaTheme(),
       // "Demo: nothing here is real" above every page while the demo is open; under it, while Mazama's server
       // can't be reached (and never in the demo), the server link's banner.
       builder: (context, child) => demoBannerBuilder(context, ServerLinkBanner(link: _link, child: child ?? const SizedBox.shrink())),
