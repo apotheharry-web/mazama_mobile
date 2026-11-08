@@ -21,7 +21,10 @@ class ResponsiveBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
+    // Top-aligned: a page shorter than the screen starts under the app bar rather than floating in the middle (a
+    // scroll view inside sizes to its content, which Center then centred vertically).
+    return Align(
+      alignment: Alignment.topCenter,
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: maxWidth),
         child: child,

@@ -713,6 +713,8 @@ void main() {
 
       expect(find.textContaining('more than the 50 mg limit per sale'), findsOneWidget);
 
+      await tester.ensureVisible(find.byIcon(Icons.close).last); // the second line can sit below the test screen's edge
+      await tester.pumpAndSettle();
       await tester.tap(find.byIcon(Icons.close).last); // remove the ff99aa line just added
       await tester.pumpAndSettle();
 

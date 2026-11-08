@@ -87,6 +87,11 @@ class _ParLevelsEditorState extends State<ParLevelsEditor> {
   final Map<String, TextEditingController> _parCells = {};
   final List<_NewParRow> _newRows = [];
 
+  /// The two tables' sideways scrolling, each with its scrollbar always shown so a table wider than the phone
+  /// plainly carries on to the right.
+  final _strainScroll = ScrollController();
+  final _edibleScroll = ScrollController();
+
   /// The columns chosen on this phone (kept), and while editing the ones added or deleted since Edit and the
   /// strains deleted (by name, lower case), all sent or kept only by Save.
   late ParColumns _columns = widget.columns;
@@ -115,6 +120,8 @@ class _ParLevelsEditorState extends State<ParLevelsEditor> {
   @override
   void dispose() {
     _clearEdits(now: true);
+    _strainScroll.dispose();
+    _edibleScroll.dispose();
     super.dispose();
   }
 
@@ -331,8 +338,9 @@ class _ParLevelsEditorState extends State<ParLevelsEditor> {
     widget.onContinue(stored);
   }
 
+  // wide enough for the few digits a par holds, so the size columns fit across a phone
   Widget _parInput(Key key, TextEditingController c, String label) => SizedBox(
-        width: 64,
+        width: 52,
         child: Semantics(
           label: label,
           child: TextField(
@@ -359,14 +367,14 @@ class _ParLevelsEditorState extends State<ParLevelsEditor> {
     final allRow = _allRow(par);
     final edibles = _edibleRows(par);
     final combinedSet = (allRow['cells'] as List).cast<Map<String, Object?>>().any((c) => c['par'] != null);
-    const pad = EdgeInsets.symmetric(horizontal: 8, vertical: 6);
+    const pad = EdgeInsets.symmetric(horizontal: 6, vertical: 6);
 
     Widget cell(String name, Map<String, Object?> c) {
       final size = c['size'] as int;
       final have = formatG(c['have'] as num);
       if (_canEdit) {
         return Row(mainAxisSize: MainAxisSize.min, mainAxisAlignment: MainAxisAlignment.end, children: [
-          Text('$have / '),
+          Text('$have / ', style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
           _parInput(
             ValueKey('par-$name-$size'),
             _parCells.putIfAbsent(_cellKey(name, size), TextEditingController.new), // a strain or size added mid-edit
@@ -467,12 +475,18 @@ class _ParLevelsEditorState extends State<ParLevelsEditor> {
     // A strain with nothing in stock (one added in the par editor, or whose stock has gone) can be deleted.
     bool noStock(Map<String, Object?> r) => (r['cells'] as List).cast<Map<String, Object?>>().every((c) => (c['have'] as num) == 0);
 
-    Widget table(List<TableRow> rows) => SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Table(
-            defaultColumnWidth: const IntrinsicColumnWidth(),
-            defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-            children: rows,
+    Widget table(List<TableRow> rows, ScrollController scroll) => Scrollbar(
+          controller: scroll,
+          thumbVisibility: true,
+          child: SingleChildScrollView(
+            controller: scroll,
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.only(bottom: 10), // room for the scrollbar under the last row
+            child: Table(
+              defaultColumnWidth: const IntrinsicColumnWidth(),
+              defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+              children: rows,
+            ),
           ),
         );
 
@@ -508,7 +522,7 @@ class _ParLevelsEditorState extends State<ParLevelsEditor> {
                   Text('combined', style: theme.textTheme.bodySmall),
                 ]),
               ),
-            ]),
+            ], _strainScroll),
             if (visible.isEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 4),
@@ -528,7 +542,7 @@ class _ParLevelsEditorState extends State<ParLevelsEditor> {
               table([
                 head('Edible', stockEdibleSizeCodes),
                 for (final r in edibles) row(r, stockEdibleSizeCodes),
-              ]),
+              ], _edibleScroll),
             ],
             const SizedBox(height: 8),
             if (widget.readOnly) ...[

@@ -3505,10 +3505,16 @@ class _CartPageState extends State<CartPage> {
           SegmentedButton<CartPricingMode>(
             // the fill shows which is chosen; a tick as well left too little room and broke the words over two lines
             showSelectedIcon: false,
-            segments: const [
-              ButtonSegment(value: CartPricingMode.each, label: Text('Price each item')),
-              ButtonSegment(value: CartPricingMode.total, label: Text('Whole cart total')),
-              ButtonSegment(value: CartPricingMode.perMg, label: Text('Cart \$/mg')),
+            // each choice stays on one line, shrinking a little on a narrow phone rather than breaking in two
+            segments: [
+              for (final (mode, words) in const [
+                (CartPricingMode.each, 'Price each item'),
+                (CartPricingMode.total, 'Whole cart total'),
+                (CartPricingMode.perMg, 'Cart \$/mg'),
+              ])
+                ButtonSegment(
+                    value: mode,
+                    label: FittedBox(fit: BoxFit.scaleDown, child: Text(words, maxLines: 1, softWrap: false))),
             ],
             selected: {_pricingMode},
             onSelectionChanged: (selection) {
@@ -3550,10 +3556,19 @@ class _CartPageState extends State<CartPage> {
               },
             ),
             // An empty cart already says "Nothing in the cart yet." below, with Sell off: no need to call it an error.
+            // Before anything is typed in the price field the message is what to do next, in grey; once something
+            // is typed, a message is a mistake to fix, in red.
             if (_pricingError != null && _lines.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 4),
-                child: Text(_pricingError!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                child: Text(_pricingError!,
+                    style: TextStyle(
+                        color: (_pricingMode == CartPricingMode.total ? _cartTotalController : _cartPerMgController)
+                                .text
+                                .trim()
+                                .isEmpty
+                            ? Theme.of(context).colorScheme.onSurfaceVariant
+                            : Theme.of(context).colorScheme.error)),
               )
             else if (_lines.isNotEmpty)
               _groupBreakdown(),
@@ -3942,26 +3957,29 @@ class _CartPageState extends State<CartPage> {
         color: theme.colorScheme.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Row(
+      // the dose across the whole band; under it the duration, with the timer beside it
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                    totalPsilocybinMg == null
-                        ? '$tpePart · mg psilocybin not known'
-                        : '$tpePart · ${totalPsilocybinMg.toStringAsFixed(1)} mg psilocybin in the cart',
-                    style: theme.textTheme.titleSmall),
-                if (primaryDuration != null && bothDosesDuration != null)
-                  Text(
-                      'Duration: ${formatSessionDuration(primaryDuration)} · ${formatSessionDuration(bothDosesDuration)} w/ booster',
-                      style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
-              ],
-            ),
+          Text(
+              totalPsilocybinMg == null
+                  ? '$tpePart · mg psilocybin not known'
+                  : '$tpePart · ${totalPsilocybinMg.toStringAsFixed(1)} mg psilocybin in the cart',
+              style: theme.textTheme.titleSmall),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Expanded(
+                child: primaryDuration != null && bothDosesDuration != null
+                    ? Text(
+                        'Duration: ${formatSessionDuration(primaryDuration)} · ${formatSessionDuration(bothDosesDuration)} w/ booster',
+                        style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant))
+                    : const SizedBox.shrink(),
+              ),
+              const SizedBox(width: 8),
+              _sessionTimerRow(),
+            ],
           ),
-          const SizedBox(width: 8),
-          _sessionTimerRow(),
         ],
       ),
     );

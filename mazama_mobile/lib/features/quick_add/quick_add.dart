@@ -175,11 +175,13 @@ class _DoseButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final chosen = count > 0;
-    final style = FilledButton.styleFrom(minimumSize: const Size.fromHeight(72));
+    // little padding, and the name shrinks rather than breaking ("Secondar / y") on a narrow phone
+    final style = FilledButton.styleFrom(
+        minimumSize: const Size.fromHeight(72), padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8));
     final child = Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(label, style: const TextStyle(fontSize: 16)),
+        FittedBox(fit: BoxFit.scaleDown, child: Text(label, maxLines: 1, softWrap: false, style: const TextStyle(fontSize: 16))),
         Text('$count', style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
       ],
     );
