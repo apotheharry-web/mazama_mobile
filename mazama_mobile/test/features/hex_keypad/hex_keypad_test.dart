@@ -116,6 +116,31 @@ void main() {
       expect(tester.testTextInput.isVisible, isFalse);
     });
 
+    testWidgets('on a tablet the keypad stays phone-sized, centred under the field, not stretched to the width',
+        (tester) async {
+      tester.view.physicalSize = const Size(1180, 820); // an iPad in landscape, in logical pixels
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(page(stock: _stock));
+      await open(tester);
+      final pad = tester.getRect(keys);
+      expect(pad.width, lessThanOrEqualTo(keypadMaxWidth));
+      final screen = tester.getRect(find.byType(Scaffold));
+      expect(pad.center.dx, closeTo(screen.center.dx, 1));
+      final key = tester.getSize(find.byKey(const ValueKey('keypad-key-1')));
+      expect(key.height, lessThan(80)); // a finger-sized key, not a 220-by-140 slab
+    });
+
+    testWidgets('on a phone the keypad still spans the field, as before', (tester) async {
+      tester.view.physicalSize = const Size(360, 780);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(page(stock: _stock));
+      await open(tester);
+      final field = tester.getRect(find.byKey(const ValueKey('keypad-field')));
+      expect(tester.getRect(keys).left, closeTo(field.left, 1));
+    });
+
     testWidgets('only the keys some PKPR in stock can take are shown, in keypad order', (tester) async {
       await tester.pumpWidget(page(stock: _stock));
       await open(tester);

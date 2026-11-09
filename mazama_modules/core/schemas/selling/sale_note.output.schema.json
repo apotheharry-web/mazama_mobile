@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "selling.sale_note output",
+  "description": "The notes: plain ASCII, at most 100 characters, empty when neither the strain nor the mg TPE is known.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "note"
+  ],
+  "properties": {
+    "note": {
+      "type": "string",
+      "maxLength": 100
+    }
+  }
+}

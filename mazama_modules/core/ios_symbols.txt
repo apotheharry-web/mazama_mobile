@@ -45,6 +45,7 @@ mz_selling_with_tax_json
 mz_selling_money_json
 mz_selling_allocate_json
 mz_selling_build_sale_json
+mz_selling_sale_note_json
 mz_selling_allocate_sale_json
 mz_selling_check_sale_json
 mz_selling_parse_sale_date_json

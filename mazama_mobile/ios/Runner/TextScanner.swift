@@ -14,9 +14,12 @@ import Flutter
 import UIKit
 import Vision
 
-final class TextScanner: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+final class TextScanner: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate,
+    UIAdaptivePresentationControllerDelegate {
     private weak var presentingController: UIViewController?
     private var pendingResult: FlutterResult?
+    /// True from the photo being taken or chosen until Vision's answer is handed back.
+    private var reading = false
 
     init(channel: FlutterMethodChannel, presentingController: UIViewController) {
         self.presentingController = presentingController
@@ -36,6 +39,11 @@ final class TextScanner: NSObject, UIImagePickerControllerDelegate, UINavigation
         // One scan at a time - cart_page.dart's own Scan button is already disabled while a dialog from the
         // previous one is still up, but this guards the native side too rather than trusting the Dart side
         // alone to never call scanLabel twice in a row.
+        // A scan left waiting with no picker on screen and no photo being read has ended without a word to this
+        // file (a way of closing the picker it isn't told about): it counts as cancelled, and this one goes ahead.
+        if pendingResult != nil && !reading && presentingController?.presentedViewController == nil {
+            complete(nil)
+        }
         guard pendingResult == nil else {
             result(FlutterError(code: "scan_in_progress", message: "A scan is already in progress.", details: nil))
             return
@@ -62,12 +70,22 @@ final class TextScanner: NSObject, UIImagePickerControllerDelegate, UINavigation
         // exactly as the camera saw it" reasoning the server's own Tesseract path already has for an uploaded
         // photo.
         picker.allowsEditing = false
+        // On an iPad (and for the photo library on a phone) the picker is a sheet the worker can swipe down or tap
+        // outside of. That closes it without imagePickerControllerDidCancel; the sheet's presentation controller
+        // says so instead (presentationControllerDidDismiss below), so the scan still ends as cancelled. Without it
+        // the scan stayed "in progress" for good and every later scan was refused with scan_in_progress.
+        picker.presentationController?.delegate = self
         presenter.present(picker, animated: true)
+    }
+
+    func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
+        complete(nil) // swiped away or tapped outside: the same as Cancel
     }
 
     private func complete(_ value: Any?) {
         guard let result = pendingResult else { return } // already completed (or never started) - ignore
         pendingResult = nil
+        reading = false
         result(value)
     }
 
@@ -77,6 +95,7 @@ final class TextScanner: NSObject, UIImagePickerControllerDelegate, UINavigation
             complete(FlutterError(code: "no_image", message: "Could not read the photo.", details: nil))
             return
         }
+        reading = true
         recognizeText(in: cgImage, orientation: cgOrientation(from: image.imageOrientation))
     }
 

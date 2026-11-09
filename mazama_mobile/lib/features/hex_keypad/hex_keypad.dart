@@ -7,6 +7,9 @@ import '../../feature_entry.dart';
 import '../../mazama_core.dart';
 import '../../packages_client.dart' show PkprGroup;
 
+/// The widest the keypad gets (logical pixels): a phone's width, so a tablet shows the same keys at the same size.
+const double keypadMaxWidth = 440;
+
 /// The keypad's keys, in the order they are shown.
 const keypadLayout = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'a', 'b', 'c', 'd', 'e', 'f'];
 
@@ -233,63 +236,70 @@ class _HexKeypadInputState extends State<HexKeypadInput> {
     final matches = answer == null || typed.length < _minListChars ? const <String>[] : answer.matches;
     final byGuid = {for (final g in widget.args.stock ?? const <PkprGroup>[]) g.productGuid: g};
     final keys = answer == null ? const <String>[] : [for (final k in keypadLayout) if (answer.keys.contains(k)) k];
+    // At most a phone's width, centred: the keys are a share of the width, so on a tablet they would otherwise
+    // grow into slabs a hand-span wide.
     return Padding(
       padding: const EdgeInsets.only(top: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (problem != null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Text(problem, key: const ValueKey('keypad-problem'), style: TextStyle(color: scheme.error)),
-            ),
-          if (keys.isNotEmpty)
-            GridView.count(
-              key: const ValueKey('keypad-keys'),
-              crossAxisCount: 4,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              childAspectRatio: 1.6,
-              mainAxisSpacing: 6,
-              crossAxisSpacing: 6,
-              children: [
-                for (final k in keys)
-                  FilledButton.tonal(
-                    key: ValueKey('keypad-key-$k'),
-                    onPressed: () => _press(k),
-                    child: Text(k.toUpperCase(), style: const TextStyle(fontSize: 26)),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: keypadMaxWidth),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (problem != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(problem, key: const ValueKey('keypad-problem'), style: TextStyle(color: scheme.error)),
+                ),
+              if (keys.isNotEmpty)
+                GridView.count(
+                  key: const ValueKey('keypad-keys'),
+                  crossAxisCount: 4,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  childAspectRatio: 1.6,
+                  mainAxisSpacing: 6,
+                  crossAxisSpacing: 6,
+                  children: [
+                    for (final k in keys)
+                      FilledButton.tonal(
+                        key: ValueKey('keypad-key-$k'),
+                        onPressed: () => _press(k),
+                        child: Text(k.toUpperCase(), style: const TextStyle(fontSize: 26)),
+                      ),
+                  ],
+                ),
+              if (matches.isNotEmpty)
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 144),
+                  child: ListView(
+                    key: const ValueKey('keypad-matches'),
+                    shrinkWrap: true,
+                    padding: EdgeInsets.zero,
+                    children: [
+                      for (final m in matches)
+                        ListTile(
+                          dense: true,
+                          title: Text(m),
+                          subtitle: Text(_matchLine(byGuid[m])),
+                          onTap: () => _fill(m),
+                        ),
+                    ],
                   ),
-              ],
-            ),
-          if (matches.isNotEmpty)
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 144),
-              child: ListView(
-                key: const ValueKey('keypad-matches'),
-                shrinkWrap: true,
-                padding: EdgeInsets.zero,
-                children: [
-                  for (final m in matches)
-                    ListTile(
-                      dense: true,
-                      title: Text(m),
-                      subtitle: Text(_matchLine(byGuid[m])),
-                      onTap: () => _fill(m),
-                    ),
-                ],
+                ),
+              Align(
+                alignment: Alignment.centerRight,
+                child: IconButton(
+                  key: const ValueKey('keypad-backspace'),
+                  onPressed: widget.args.controller.text.isEmpty ? null : _backspace,
+                  icon: const Icon(Icons.backspace_outlined),
+                  tooltip: 'Backspace',
+                ),
               ),
-            ),
-          Align(
-            alignment: Alignment.centerRight,
-            child: IconButton(
-              key: const ValueKey('keypad-backspace'),
-              onPressed: widget.args.controller.text.isEmpty ? null : _backspace,
-              icon: const Icon(Icons.backspace_outlined),
-              tooltip: 'Backspace',
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

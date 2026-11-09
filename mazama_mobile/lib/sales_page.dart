@@ -7,6 +7,12 @@
 // calendar date (Today, Yesterday, else the date; how many sales; the day's total, the core's too), with a gap above
 // each; tapping a header collapses that date or opens it again. A deleted (voided) record isn't shown.
 //
+// Each product shows with its line, the strain and mg TPE its sale record's notes hold (the cart writes them there):
+// "PKPR-ab12c · Golden Teacher - 26 mg TPE". A record with blank notes (sold before the cart wrote them, or on the
+// state's own page) gets the same line from the center's stock kept on the phone (sync/center_stock.dart) through the
+// core's selling.sale_note: its own lot (the record's productId), else every lot of its PKPR when they all give the same
+// line. Neither: the product alone, never a guessed line.
+//
 // After a good read the page keeps it on the phone (the sync engine's recent_sales dataset) and hands every record
 // read (not only the 30 days shown) to [SalesPage.upload], which sends them to Mazama's server for invoicing
 // (server_link.dart's uploadSalesSnapshot, kept while the server can't be reached). The page never waits on the upload
@@ -22,10 +28,12 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 
 import 'mazama_core.dart';
+import 'packages_client.dart' show Package;
 import 'pricing.dart' show money;
 import 'responsive.dart';
 import 'state_client.dart';
 import 'selling.dart' show stateDateIso;
+import 'sync/center_stock.dart' show keptCenterStock;
 import 'sync/sync_datasets.dart';
 import 'sync/updated_line.dart';
 
@@ -47,7 +55,10 @@ class RecentSale {
       required this.product,
       required this.numberSold,
       required this.cost,
-      this.id});
+      this.id,
+      this.productGuid = '',
+      this.productId,
+      this.notes = ''});
 
   /// The state's record id, when a number: orders the sales of one day (a later sale has a higher id).
   final num? id;
@@ -62,6 +73,11 @@ class RecentSale {
 
   /// `productCost`, in dollars as the state writes it.
   final num? cost;
+
+  /// The record's PKPR (`productGuid`), the state's id of the lot it was drawn from (`productId`) and its `notes`.
+  final String productGuid;
+  final num? productId;
+  final String notes;
 
   String get costText => cost == null ? '—' : money((cost! * 100).round());
 }
@@ -146,6 +162,37 @@ List<RecentSaleDay> recentSaleDays(List<RecentSale> rows, {CoreFunctions? core})
 List<RecentSaleGroup> groupRecentSales(List<RecentSale> rows, {CoreFunctions? core}) =>
     [for (final d in recentSaleDays(rows, core: core)) ...d.sales];
 
+/// The line [sale]'s product shows beside its name: its record's notes; when blank, the note the core writes for its
+/// lot from [stock] (the center's kept stock): the record's own lot (productId), else every lot of its PKPR when all of
+/// them give the same note. '' when there is neither, or the core can't answer.
+String saleProductLine(RecentSale sale, List<Package>? stock, {CoreFunctions? core}) {
+  if (sale.notes.isNotEmpty) return sale.notes;
+  if (stock == null || sale.productGuid.isEmpty) return '';
+  final pkpr = sale.productGuid.toUpperCase();
+  final same = [for (final p in stock) if (p.productGuid.trim().toUpperCase() == pkpr) p];
+  final own = [for (final p in same) if (sale.productId != null && p.id == sale.productId) p];
+  final lots = own.isNotEmpty ? own : same;
+  if (lots.isEmpty) return '';
+  String? line;
+  try {
+    for (final p in lots) {
+      final reply = (core ?? MazamaCore.instance).sellingSaleNote({
+        'item': p.toSaleItem(),
+        if (p.strain.isNotEmpty) 'strain': p.strain,
+        // the lot's lab-report TPE only, never one the state alone knows or the phone estimated (as the cart's notes)
+        if (!p.stateOnly && !p.stateEstimate && p.lotTpe != null) 'lot_tpe': p.lotTpe,
+      });
+      final note = reply['note'];
+      if (note is! String) return '';
+      if (line != null && line != note) return '';
+      line = note;
+    }
+  } catch (_) {
+    return '';
+  }
+  return line ?? '';
+}
+
 /// The sales of [records] dated in the last [recentSalesDays] days ([now]'s date and the days before it), newest first
 /// (within a day by record id, highest first, else by sale number); deleted records, and records without a usable
 /// date, are left out.
@@ -167,6 +214,9 @@ List<RecentSale> recentSales(List<Object?> records, {required DateTime now}) {
       numberSold: r['numberSold'] is num ? r['numberSold'] as num : null,
       cost: r['productCost'] is num ? r['productCost'] as num : null,
       id: r['id'] is num ? r['id'] as num : null,
+      productGuid: _text(r['productGuid']),
+      productId: r['productId'] is num ? r['productId'] as num : null,
+      notes: _text(r['notes']),
     ));
   }
   rows.sort((a, b) {
@@ -199,6 +249,7 @@ class SalesPage extends StatefulWidget {
     this.now = DateTime.now,
     this.demo = false,
     this.core,
+    this.stock,
   });
 
   /// The center's state id.
@@ -223,6 +274,10 @@ class SalesPage extends StatefulWidget {
   /// The shared core, which groups the records into sales; [MazamaCore.instance] when null. Tests pass a fake.
   final CoreFunctions? core;
 
+  /// The center's stock for a record's line when its notes are blank ([saleProductLine]): the copy kept on the phone
+  /// (keptCenterStock) when null. Tests pass their own.
+  final List<Package>? Function()? stock;
+
   @override
   State<SalesPage> createState() => _SalesPageState();
 }
@@ -246,11 +301,43 @@ class _SalesPageState extends State<SalesPage> {
 
   String get _key => '${widget.stateId}';
 
+  /// Each record's line, worked out once per read (the kept stock is read once with it).
+  final _lines = <RecentSale, String>{};
+  List<Package>? _stockRead;
+  bool _stockLoaded = false;
+
+  List<Package>? _stock() {
+    if (!_stockLoaded) {
+      _stockLoaded = true;
+      try {
+        _stockRead = widget.stock != null
+            ? widget.stock!()
+            : keptCenterStock(widget.datasets, widget.stateId)?.packages;
+      } catch (_) {
+        _stockRead = null; // no kept stock: the notes alone
+      }
+    }
+    return _stockRead;
+  }
+
+  /// [r]'s product as shown: its name, then its line when it has one.
+  String _product(RecentSale r) {
+    final line = _lines.putIfAbsent(r, () => saleProductLine(r, _stock(), core: widget.core));
+    return line.isEmpty ? r.product : '${r.product} · $line';
+  }
+
+  /// New rows: their lines (and the kept stock) are read again.
+  void _forgetLines() {
+    _lines.clear();
+    _stockLoaded = false;
+  }
+
   @override
   void initState() {
     super.initState();
     final kept = _kept();
     if (kept != null) {
+      _forgetLines();
       _rows = recentSales(kept.$1, now: widget.now());
       _readAt = kept.$2;
     }
@@ -310,7 +397,8 @@ class _SalesPageState extends State<SalesPage> {
         _loading = false;
         _failed = true;
         if (kept != null) {
-          _rows = recentSales(kept.$1, now: widget.now());
+          _forgetLines();
+      _rows = recentSales(kept.$1, now: widget.now());
           _readAt = kept.$2;
         } else {
           _rows = null;
@@ -332,6 +420,7 @@ class _SalesPageState extends State<SalesPage> {
     setState(() {
       _loading = false;
       _failed = false;
+      _forgetLines();
       _rows = recentSales(records, now: widget.now());
       _readAt = at;
     });
@@ -406,7 +495,7 @@ class _SalesPageState extends State<SalesPage> {
     final open = _open.contains(key);
     final theme = Theme.of(context);
     final count = g.rows.length;
-    final names = saleProductNames([for (final r in g.rows) r.product]);
+    final names = saleProductNames([for (final r in g.rows) _product(r)]);
     return Column(
       key: ValueKey('sale-$key'),
       mainAxisSize: MainAxisSize.min,
@@ -452,7 +541,7 @@ class _SalesPageState extends State<SalesPage> {
               padding: const EdgeInsets.fromLTRB(32, 6, 16, 6),
               child: Row(
                 children: [
-                  Expanded(child: Text(r.product, overflow: TextOverflow.ellipsis)),
+                  Expanded(child: Text(_product(r))),
                   Text('${r.numberSold ?? '—'} × · ${r.costText}'),
                 ],
               ),

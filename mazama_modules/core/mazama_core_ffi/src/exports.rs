@@ -288,6 +288,12 @@ pub extern "C" fn mz_selling_build_sale_json(input_json: *const c_char) -> *mut 
     run(input_json, mazama_core::selling::sale::build_sale_json)
 }
 
+/// selling.sale_note: {item, strain?, lot_tpe?} -> {note} the notes build_sale writes for a record of that lot, on their own.
+#[unsafe(no_mangle)]
+pub extern "C" fn mz_selling_sale_note_json(input_json: *const c_char) -> *mut c_char {
+    run(input_json, mazama_core::selling::sale::sale_note_json)
+}
+
 /// selling.allocate_sale: {lines, lots} -> {draws, short} one draw across a sale's lines.
 #[unsafe(no_mangle)]
 pub extern "C" fn mz_selling_allocate_sale_json(input_json: *const c_char) -> *mut c_char {
@@ -520,6 +526,7 @@ pub const EXPORTS: &[(&str, &str, &str, Export)] = &[
     ("selling", "money", "mz_selling_money_json", mz_selling_money_json),
     ("selling", "allocate", "mz_selling_allocate_json", mz_selling_allocate_json),
     ("selling", "build_sale", "mz_selling_build_sale_json", mz_selling_build_sale_json),
+    ("selling", "sale_note", "mz_selling_sale_note_json", mz_selling_sale_note_json),
     ("selling", "allocate_sale", "mz_selling_allocate_sale_json", mz_selling_allocate_sale_json),
     ("selling", "check_sale", "mz_selling_check_sale_json", mz_selling_check_sale_json),
     ("selling", "parse_sale_date", "mz_selling_parse_sale_date_json", mz_selling_parse_sale_date_json),

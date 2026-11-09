@@ -54,6 +54,7 @@ const coreFunctionSymbols = [
   'mz_selling_money_json',
   'mz_selling_allocate_json',
   'mz_selling_build_sale_json',
+  'mz_selling_sale_note_json',
   'mz_selling_allocate_sale_json',
   'mz_selling_check_sale_json',
   'mz_selling_parse_sale_date_json',
@@ -182,6 +183,8 @@ abstract interface class CoreFunctions {
   Map<String, Object?> sellingAllocate(Map<String, Object?> input);
   /// selling.build_sale: {item, price_cents, sale_date, dose, qty, strain?, lot_tpe?} -> {record, refusal} the record CreateSalesRecords is sent, the state's values copied unchanged, its notes the lot's strain and mg TPE.
   Map<String, Object?> sellingBuildSale(Map<String, Object?> input);
+  /// selling.sale_note: {item, strain?, lot_tpe?} -> {note} the notes build_sale writes for a record of that lot, on their own.
+  Map<String, Object?> sellingSaleNote(Map<String, Object?> input);
   /// selling.allocate_sale: {lines, lots} -> {draws, short} one draw across a sale's lines.
   Map<String, Object?> sellingAllocateSale(Map<String, Object?> input);
   /// selling.check_sale: {lines, fresh, center, sent?, cap?} -> {refusal} the check on the state's records just before sending.
@@ -438,6 +441,10 @@ mixin CoreForwarders implements CoreFunctions {
   @override
   Map<String, Object?> sellingBuildSale(Map<String, Object?> input) =>
       _object('selling.build_sale', _call('mz_selling_build_sale_json', jsonEncode(input)));
+
+  @override
+  Map<String, Object?> sellingSaleNote(Map<String, Object?> input) =>
+      _object('selling.sale_note', _call('mz_selling_sale_note_json', jsonEncode(input)));
 
   @override
   Map<String, Object?> sellingAllocateSale(Map<String, Object?> input) =>

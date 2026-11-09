@@ -484,6 +484,18 @@ pub fn build_sale_json(input_json: &str) -> R<String> {
     })
 }
 
+/// `{"item": object, "strain"?, "lot_tpe"?}` -> `{"note": text}` (schemas/selling/sale_note.*): the notes [build_sale_json]
+/// writes for a record of [item]'s lot, on their own; for a screen that shows a sale's product as its record says it
+/// (the phone's Sales tab, for a record sent with blank notes). Only an item that isn't an object is an error.
+pub fn sale_note_json(input_json: &str) -> R<String> {
+    const F: &str = "selling.sale_note";
+    let v = Py::parse(input_json)?;
+    obj(F, &v, "the input")?;
+    let item = obj(F, need(F, &v, "item")?, "item")?;
+    let note = sale_note(item, v.get("strain"), v.get("lot_tpe"));
+    Ok(format!("{{\"note\":{}}}", quoted(&note)))
+}
+
 // --- dates --------------------------------------------------------------------------------------------------------
 
 /// `{"text", "today": "YYYY-MM-DD"}` -> `{"date": "YYYY-MM-DD" | null, "error": null | "bad" | "future"}`: the forms

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "selling.sale_note input",
+  "description": "A record and its lot's strain and TPE: the notes build_sale writes for that record, on their own.",
+  "type": "object",
+  "required": [
+    "item"
+  ],
+  "properties": {
+    "item": {
+      "type": "object",
+      "description": "The state's record (productGuid, weightPerUnit, analyteWeight); its other fields are ignored."
+    },
+    "strain": {
+      "description": "The lot's strain; anything but text is no strain."
+    },
+    "lot_tpe": {
+      "description": "The lot's TPE in mg/g from its lab report; anything but a finite number above 0 and at least the item's analyteWeight is no TPE."
+    }
+  }
+}

@@ -11,6 +11,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:mazama_mobile/local_store.dart';
 import 'package:mazama_mobile/mazama_core.dart';
+import 'package:mazama_mobile/packages_client.dart';
 import 'package:mazama_mobile/sales_page.dart';
 import 'package:mazama_mobile/sync/sync_datasets.dart';
 import 'package:mazama_mobile/sync/updated_line.dart';
@@ -22,7 +23,13 @@ late Directory _dir;
 final _now = DateTime(2026, 10, 29, 15, 30);
 
 Map<String, Object?> _sale(int id, String number, String date,
-        {String? name, String guid = 'PKPR-aaaa0001', num sold = 1, num cost = 25, Object? deleted = false}) =>
+        {String? name,
+        String guid = 'PKPR-aaaa0001',
+        num sold = 1,
+        num cost = 25,
+        Object? deleted = false,
+        int? productId,
+        String? notes}) =>
     {
       'id': id,
       'saleNumber': number,
@@ -32,6 +39,8 @@ Map<String, Object?> _sale(int id, String number, String date,
       'numberSold': sold,
       'productCost': cost,
       'deleted': deleted,
+      if (productId != null) 'productId': productId,
+      if (notes != null) 'notes': notes,
     };
 
 final _records = <Object?>[
@@ -53,6 +62,7 @@ Widget _page({
   Future<void> Function(List<Object?>)? upload,
   bool demo = false,
   CoreFunctions? core,
+  List<Package>? Function()? stock,
 }) =>
     MaterialApp(
       home: SalesPage(
@@ -63,6 +73,7 @@ Widget _page({
         now: () => _now,
         demo: demo,
         core: core,
+        stock: stock,
       ),
     );
 
@@ -383,6 +394,64 @@ void main() {
       await tester.tap(find.text('Today · 2026-10-29'));
       await tester.pumpAndSettle();
       expect(_shownNumbers(tester), ['S-30', 'S-29', 'S-28']);
+    });
+  });
+
+  group("each product's strain and mg TPE", () {
+    Package lot(int id, String guid, {String strain = 'Golden Teacher', double? lotTpe = 10.0, bool stateOnly = false}) =>
+        Package(
+            productGuid: guid,
+            productType: 'Edible Psilocybin Product',
+            id: id,
+            weightPerUnit: 0.5,
+            analyteWeight: 7.25,
+            strain: strain,
+            lotTpe: lotTpe,
+            stateOnly: stateOnly);
+    RecentSale row(Map<String, Object?> r) => recentSales([r], now: _now).single;
+
+    test("the record's own notes come first", () {
+      final r = row(_sale(1, 'S-1', '2026-10-29', notes: 'Enigma - 6 mg TPE', productId: 5));
+      expect(saleProductLine(r, [lot(5, 'PKPR-aaaa0001')]), 'Enigma - 6 mg TPE');
+    });
+
+    test('blank notes: the line the core writes for its own lot in the kept stock', () {
+      final r = row(_sale(1, 'S-1', '2026-10-29', notes: '', productId: 5));
+      final stock = [lot(4, 'PKPR-aaaa0001', strain: 'Enigma', lotTpe: 12), lot(5, 'PKPR-aaaa0001')];
+      expect(saleProductLine(r, stock), 'Golden Teacher - 5 mg TPE'); // lot 5, not lot 4
+    });
+
+    test('its lot not kept: every lot of its PKPR, only when they agree', () {
+      final r = row(_sale(1, 'S-1', '2026-10-29', productId: 99));
+      expect(saleProductLine(r, [lot(4, 'pkpr-AAAA0001'), lot(5, 'PKPR-aaaa0001')]), 'Golden Teacher - 5 mg TPE');
+      expect(saleProductLine(r, [lot(4, 'PKPR-aaaa0001', strain: 'Enigma'), lot(5, 'PKPR-aaaa0001')]), '');
+    });
+
+    test("a TPE the state alone knows is left out, as the cart's notes leave it; no lot, no line", () {
+      final r = row(_sale(1, 'S-1', '2026-10-29', productId: 5));
+      expect(saleProductLine(r, [lot(5, 'PKPR-aaaa0001', stateOnly: true)]), 'Golden Teacher');
+      expect(saleProductLine(r, [lot(5, 'PKPR-bbbb0002')]), '');
+      expect(saleProductLine(r, null), '');
+    });
+
+    test("the core can't answer: no line, never a guess", () {
+      final r = row(_sale(1, 'S-1', '2026-10-29', productId: 5));
+      expect(saleProductLine(r, [lot(5, 'PKPR-aaaa0001')], core: _NoCore()), '');
+    });
+
+    testWidgets('the sale line and its opened products show the PKPR with its line', (tester) async {
+      final records = <Object?>[
+        _sale(30, 'S-0030', '2026-10-29', productId: 5, notes: ''),
+        _sale(31, 'S-0030', '2026-10-29', guid: 'PKPR-bbbb0002', notes: 'Enigma - 6 mg TPE'),
+      ];
+      await tester.pumpWidget(_page(load: () async => records, stock: () => [lot(5, 'PKPR-aaaa0001')]));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('PKPR-bbbb0002 · Enigma - 6 mg TPE, PKPR-aaaa0001 · Golden Teacher - 5 mg TPE'),
+          findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('sale-number')));
+      await tester.pumpAndSettle();
+      expect(find.text('PKPR-aaaa0001 · Golden Teacher - 5 mg TPE'), findsOneWidget);
+      expect(find.text('PKPR-bbbb0002 · Enigma - 6 mg TPE'), findsOneWidget);
     });
   });
 }
